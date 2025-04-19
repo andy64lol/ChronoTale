@@ -111,20 +111,20 @@ LOCATIONS = {
 
 # Character classes
 CHARACTER_CLASSES = {
-    "Warrior": {"health_bonus": 20, "attack_bonus": 10, "defense_bonus": 15},
-    "Mage": {"health_bonus": -10, "attack_bonus": 25, "defense_bonus": 0},
-    "Rogue": {"health_bonus": 0, "attack_bonus": 15, "defense_bonus": 5},
-    "Paladin": {"health_bonus": 30, "attack_bonus": 15, "defense_bonus": 20},
-    "Archer": {"health_bonus": -10, "attack_bonus": 20, "defense_bonus": 5},
-    "Berserker": {"health_bonus": 20, "attack_bonus": 30, "defense_bonus": -10},
-    "Priest": {"health_bonus": 10, "attack_bonus": 5, "defense_bonus": 10},
-    "Assassin": {"health_bonus": -15, "attack_bonus": 35, "defense_bonus": -5},
-    "Druid": {"health_bonus": 15, "attack_bonus": 10, "defense_bonus": 15},
-    "Samurai": {"health_bonus": 0, "attack_bonus": 20, "defense_bonus": 10},
-    "Ninja": {"health_bonus": -5, "attack_bonus": 25, "defense_bonus": 5},
-    "Knight": {"health_bonus": 40, "attack_bonus": 10, "defense_bonus": 20},
-    "Hunter": {"health_bonus": 0, "attack_bonus": 15, "defense_bonus": 10},
-    "Tamer": {"health_bonus": 35, "attack_bonus": 50, "defense_bonus": -25},
+    "Warrior": {"health_bonus": 20, "attack_bonus": 10, "defense_bonus": 15, "speed_bonus": 5},
+    "Mage": {"health_bonus": -10, "attack_bonus": 25, "defense_bonus": 0, "speed_bonus": 7},
+    "Rogue": {"health_bonus": 0, "attack_bonus": 15, "defense_bonus": 5, "speed_bonus": 10},
+    "Paladin": {"health_bonus": 30, "attack_bonus": 15, "defense_bonus": 20, "speed_bonus": 4},
+    "Archer": {"health_bonus": -10, "attack_bonus": 20, "defense_bonus": 5, "speed_bonus": 8},
+    "Berserker": {"health_bonus": 20, "attack_bonus": 30, "defense_bonus": -10, "speed_bonus": 6},
+    "Priest": {"health_bonus": 10, "attack_bonus": 5, "defense_bonus": 10, "speed_bonus": 5},
+    "Assassin": {"health_bonus": -15, "attack_bonus": 35, "defense_bonus": -5, "speed_bonus": 12},
+    "Druid": {"health_bonus": 15, "attack_bonus": 10, "defense_bonus": 15, "speed_bonus": 6},
+    "Samurai": {"health_bonus": 0, "attack_bonus": 20, "defense_bonus": 10, "speed_bonus": 9},
+    "Ninja": {"health_bonus": -5, "attack_bonus": 25, "defense_bonus": 5, "speed_bonus": 11},
+    "Knight": {"health_bonus": 40, "attack_bonus": 10, "defense_bonus": 20, "speed_bonus": 4},
+    "Hunter": {"health_bonus": 0, "attack_bonus": 15, "defense_bonus": 10, "speed_bonus": 7},
+    "Tamer": {"health_bonus": 35, "attack_bonus": 50, "defense_bonus": -25, "speed_bonus": 5},
 }
 
 # Item rarity
@@ -328,7 +328,9 @@ user_data: Dict = {
     "completed_quests": [],
     "materials": {},
     "tools": ["Axe", "Pickaxe", "Flask", "Hunting Knife"],  # Starting tools
-    "current_area": "Greenwood Village"
+    "current_area": "Greenwood Village",
+    "monsters_killed": 0,
+    "dungeons_completed": []
 }
 
 # Shop items
@@ -396,7 +398,7 @@ monsters: List[Dict] = [
     {"name": "Forest Spider", "level": 1, "health": 45, "attack": 8, "drops": ["Spider Silk", "Gold Coin"]},
     {"name": "Bandit", "level": 2, "health": 65, "attack": 14, "drops": ["Leather Armor", "Gold Coin"]},
     {"name": "Dire Wolf", "level": 2, "health": 70, "attack": 15, "drops": ["Wolf Fang", "Gold Coin"]},
-    {"name": "Goblin Shaman", "level": 2, "health": 55, "attack": 13, "drops": ["Goblin Staff", "Gold Coin"]},
+    {"name": "Goblin Shaman", "level": 2, "health": 55, "attack": 13, "drops": ["Goblin Staff", "Gold Coin"], "boss": True},
 
     # Stormhaven Monsters (Level 2-3)
     {"name": "Skeleton", "level": 2, "health": 75, "attack": 15, "drops": ["Gold Coin", "Bone Armor"]},
@@ -405,7 +407,7 @@ monsters: List[Dict] = [
     {"name": "Pirate Scout", "level": 2, "health": 70, "attack": 16, "drops": ["Cutlass", "Gold Coin"]},
     {"name": "Haunted Armor", "level": 3, "health": 80, "attack": 22, "drops": ["Cursed Shield", "Gold Coin"]},
     {"name": "Sea Serpent", "level": 3, "health": 90, "attack": 25, "drops": ["Serpent Scale", "Gold Coin"]},
-    {"name": "Dreadlord Varkhull, the Crimson Abyss Pirate Captain", "level": 5, "health": 150, "attack": 30, "drops": ["Crimson Cutlass", "Gold Coin"]},
+    {"name": "Dreadlord Varkhull, the Crimson Abyss Pirate Captain", "level": 5, "health": 150, "attack": 30, "drops": ["Crimson Cutlass", "Gold Coin"], "boss": True},
 
     # Dragon's Peak Monsters (Level 5-6)
     {"name": "Fire Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Flame Sword"]},
@@ -743,14 +745,17 @@ def handle_command(cmd: str) -> None:
     commands = {
         "/start": start_guide,
         "/help": show_help,
+        "/h": show_help,
         "/pet": show_pets,
         "/search": search_resources,
         "/location": show_location,
         "/location_check": check_location,
         "/professions": show_professions,
         "/stats": show_stats,
+        "/s": show_stats,
         "/shop": visit_shop,
         "/inventory": show_inventory,
+        "/i": show_inventory,
         "/quests": show_quests,
         "/gather": lambda: gather_materials(user_data["current_area"]),
         "/craft": craft_item,
@@ -796,7 +801,20 @@ def handle_command(cmd: str) -> None:
         "/inventory_sort": sort_inventory,
         "/inventory_filter": filter_inventory,
         "/quest_complete": complete_quest,
-        "/quest_list": list_active_quests
+        "/quest_list": list_active_quests,
+        "/q": list_active_quests,
+        "/l": load_prompt,
+        "/x": exit_game,
+        "/c": create_character,
+        "/g": guild_guide,
+        "/d": dungeon_guides,
+        "/f": fight_monster,
+        "/t": travel_to_area,
+        "/a": show_achievements,
+        "/m": print_materials,
+        "/r": redeem_codes,
+        "/u": user_settings,
+        "/z": show_save_slots
     }
 
     # Handle commands with arguments
@@ -1013,8 +1031,9 @@ def show_save_slots() -> None:
             with open(save_path, "r") as f:
                 data = json.load(f)
                 slot = save.split("_")[1].split(".")[0]
+                name = data['user_data'].get('name', 'Unknown')
                 print(f"\nSlot {slot}:")
-                print(f"Character: Level {data['user_data']['level']} {data['user_data']['class']}")
+                print(f"Character: {name}, Level {data['user_data']['level']} {data['user_data']['class']}")
                 print(f"Location: {data['user_data']['current_area']}")
                 print(f"Saved: {data['timestamp']}")
         except Exception:
@@ -1069,30 +1088,54 @@ def enter_dungeon(dungeon_name: str) -> None:
     try:
         dungeon = next((d for d in dungeons if d["name"].lower() == dungeon_name.lower()), None)
         if not dungeon:
-            print(f"Dungeon '{dungeon_name}' not found!")
+            print(f"{FAIL}Dungeon '{dungeon_name}' not found!{ENDC}")
             return
 
         print_header(f"Entering {dungeon['name']}...")
-        print("Prepare yourself for tough battles and great loot!")
+        print_colored("Prepare yourself for tough battles and great loot!", CYAN)
 
+        # Check if dungeon has any boss monsters
+        boss_monsters = []
         for monster_name in dungeon["monsters"]:
+            monster = next((m for m in monsters if m["name"].lower() == monster_name.lower()), None)
+            if monster and monster.get("boss", False):
+                boss_monsters.append(monster)
+
+        # If no boss monsters, limit number of monsters fought to random 10-15
+        max_monsters = len(dungeon["monsters"])
+        if not boss_monsters:
+            max_monsters = random.randint(10, 15)
+            max_monsters = min(max_monsters, len(dungeon["monsters"]))
+
+        monsters_fought = 0
+        for monster_name in dungeon["monsters"]:
+            if monsters_fought >= max_monsters:
+                print_colored(f"Reached limit of {max_monsters} monsters for this dungeon (no boss present).", YELLOW)
+                break
             try:
                 monster = next(m for m in monsters if m["name"].lower() == monster_name.lower())
                 if user_data["health"] <= 0:
-                    print("You were defeated! Dungeon run failed.")
+                    print_colored("You were defeated! Dungeon run failed.", FAIL)
                     return
+                # If monster is a boss, print special styled name
+                if monster.get("boss", False):
+                    boss_name = f"⋆༺ 𓆩{monster['name'].upper()}𓆪 ༻ ⋆"
+                    print_colored(boss_name, FAIL)
+                else:
+                    print_colored(f"Encountered: {monster['name']}", CYAN)
                 fight(monster)
+                monsters_fought += 1
             except StopIteration:
-                print(f"Warning: Monster '{monster_name}' not found in database")
+                print_colored(f"Warning: Monster '{monster_name}' not found in database", WARNING)
                 continue
 
         if user_data["health"] > 0:
-            print(f"You have completed the {dungeon['name']}!")
+            print_colored(f"You have completed the {dungeon['name']}!", OKGREEN)
             loot_item = random.choice(dungeon["loot"])
-            print(f"At the end of the dungeon, you found: {loot_item}")
+            print_colored(f"At the end of the dungeon, you found: {loot_item}", MAGENTA)
             user_data["inventory"].append(loot_item)
     except Exception as e:
-        print(f"Error in dungeon: {e}")
+        print_colored(f"Error in dungeon: {e}", FAIL)
 
 # Shop functions
 def visit_shop() -> None:
@@ -1174,8 +1217,21 @@ def show_stats() -> None:
 # New functions for additional commands
 def list_dungeons() -> None:
     print_header("Dungeon List")
+    listed_dungeons = set()
     for dungeon in dungeons:
-        print(f"Name: {dungeon['name']}, Monsters: {', '.join(dungeon['monsters'])}, Loot: {', '.join(dungeon['loot'])}")
+        if dungeon['name'] not in listed_dungeons:
+            if dungeon['name'] in user_data.get("dungeons_completed", []):
+                print(f"\033[92m- {dungeon['name']} (Completed!)\033[0m")
+            else:
+                print(f"- {dungeon['name']}")
+            listed_dungeons.add(dungeon['name'])
+    # Check for any dungeons referenced in monsters but not listed
+    monster_dungeon_names = set()
+    for dungeon in dungeons:
+        monster_dungeon_names.add(dungeon['name'])
+    unlisted_dungeons = monster_dungeon_names - listed_dungeons
+    for dungeon_name in unlisted_dungeons:
+        print(f"- {dungeon_name}: (Dungeon referenced by monsters but not listed)")
 
 def show_bestiary() -> None:
     print_header("Bestiary")
@@ -1324,6 +1380,16 @@ def create_character() -> None:
         return
 
     print_header("Character Creation")
+
+    # Prompt for character name
+    while True:
+        name = input("Enter your character's name: ").strip()
+        if name:
+            user_data["name"] = name
+            break
+        else:
+            print("Name cannot be empty. Please enter a valid name.")
+
     print("Choose your class:")
     for class_name in CHARACTER_CLASSES:
         print(f"[{class_name}]")
@@ -1340,7 +1406,8 @@ def create_character() -> None:
             user_data["health"] = user_data["max_health"]
             user_data["attack"] += stats["attack_bonus"]
             user_data["defense"] += stats["defense_bonus"]
-            print(f"\nWelcome, {choice}! Your adventure begins...")
+            user_data["speed"] = stats.get("speed_bonus", 5)  # Default speed 5 if not set
+            print(f"\nWelcome, {name} the {choice}! Your adventure begins...")
             break
         print("Invalid class. Try again.")
 
@@ -1357,7 +1424,6 @@ villages = [
     {"name": "Long Shui Zhen", "population": 140, "special_items": ["Dragon Scale", "Water Orb"]},
 ]
 
-# Sample biomes (added for completeness)
 biomes = [
 {
    "name":"Forest",
@@ -1794,7 +1860,15 @@ def fight_monster(monster_name: str) -> None:
                         continue
 
                 elif choice == "4":
-                    if random.random() < 0.6:
+                    # Calculate flee chance based on speed
+                    player_speed = user_data.get("speed", 5)
+                    monster_speed = monster.get("speed", 5)  # Default monster speed 5 if not set
+                    base_chance = 0.4  # Base flee chance
+                    speed_diff = player_speed - monster_speed
+                    flee_chance = base_chance + (speed_diff * 0.05)
+                    flee_chance = max(0.1, min(flee_chance, 0.9))  # Clamp between 10% and 90%
+
+                    if random.random() < flee_chance:
                         print("You successfully fled!")
                         return
                     print("Failed to flee!")
@@ -1823,11 +1897,43 @@ def fight_monster(monster_name: str) -> None:
             user_data["exp"] += exp_gain
             print(f"Gained {exp_gain} experience!")
 
-            # Handle loot
-            loot(monster)
+            # Increment monsters killed count
+            user_data["monsters_killed"] += 1
 
-            # Check for level up
-            check_level_up()
+            # Check if monster is a boss
+            if monster.get("boss", False):
+                print(f"Congratulations! You defeated the boss {monster['name']}!")
+                # Mark dungeon as completed if in a dungeon
+                for dungeon in dungeons:
+                    if monster['name'] in dungeon['monsters']:
+                        if dungeon['name'] not in user_data["dungeons_completed"]:
+                            user_data["dungeons_completed"].append(dungeon['name'])
+                            print(f"You have completed the dungeon: {dungeon['name']}!")
+                            # Reward player (example: gold and exp bonus)
+                            reward_gold = 500
+                            reward_exp = 1000
+                            user_data["gold"] += reward_gold
+                            user_data["exp"] += reward_exp
+                            print(f"You received {reward_gold} gold and {reward_exp} experience as a reward!")
+                        break
+            else:
+                # Check for level up
+                check_level_up()
+                # Trigger boss encounter if monsters killed between 12 and 26
+                if 12 <= user_data["monsters_killed"] <= 26:
+                    # Find a boss in current area dungeons
+                    bosses_in_area = []
+                    for dungeon in dungeons:
+                        if user_data["current_area"] in dungeon.get("monsters", []) or user_data["current_area"] in dungeon.get("name", ""):
+                            for m_name in dungeon["monsters"]:
+                                m = next((mon for mon in monsters if mon["name"] == m_name and mon.get("boss", False)), None)
+                                if m:
+                                    bosses_in_area.append(m)
+                    if bosses_in_area:
+                        boss = random.choice(bosses_in_area)
+                        print(f"\nA boss {boss['name']} appears!")
+                        fight_monster(boss["name"])
+            loot(monster)
         else:
             print("You were defeated!")
 
@@ -1869,7 +1975,10 @@ PETS = {
     "Battle Wolf": {"price": 150, "boost": {"attack": 4}, "description": "A fierce wolf that boosts attack"},
     "Guardian Bear": {"price": 150, "boost": {"defense": 4}, "description": "A strong bear that boosts defense"},
     "Spirit Fox": {"price": 175, "boost": {"exp_gain": 10}, "description": "A mystical fox that boosts experience gain"},
-    "Lucky Rabbit": {"price": 100, "boost": {"gold_find": 10}, "description": "A lucky companion that helps find more gold"}
+    "Lucky Rabbit": {"price": 100, "boost": {"gold_find": 10}, "description": "A lucky companion that helps find more gold"},
+    "Mystic Owl": {"price": 125, "boost": {"intelligence": 3}, "description": "An intelligent owl that boosts intelligence"},
+    "Shadow Panther": {"price": 175, "boost": {"stealth": 5}, "description": "A stealthy panther that boosts stealth"},
+    "Thunder Eagle": {"price": 200, "boost": {"speed": 5}, "description": "A fast eagle that boosts speed"},
 }
 
 
@@ -1998,9 +2107,13 @@ def delete_save_prompt() -> None:
 
 # Main loop
 if __name__ == "__main__":
-    print_colored(f"{BOLD}{CYAN}Welcome to TextRP CLI!{ENDC}", CYAN)
-    print_colored(f"{BOLD}{BLUE}Made by andy64lol{ENDC}", BLUE)
+    print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
+    print_colored(f"{BOLD}{CYAN}   Welcome to TextRP CLI!{ENDC}", CYAN)
+    print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
+    print_colored(f"{GREEN}--------------------------------------------------------------------{ENDC}", GREEN)
     print_colored(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}", GREEN)
+    print_colored(f"{GREEN}--------------------------------------------------------------------{ENDC}", GREEN)
+    print_colored(f"{BOLD}{BLUE}Made by andy64lol{ENDC}", BLUE)
 
     # Auto-save interval in seconds
     AUTO_SAVE_INTERVAL = 300  # 5 minutes
