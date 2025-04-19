@@ -30,6 +30,8 @@ WEAPONS = {
     "Crossbow": {"damage": 15, "speed": 0.6, "price": 200},
     "Katana": {"damage": 22, "speed": 1.0, "price": 350},
     "Elder Wand": {"damage": 30, "speed": 1.0, "price": 500, "effect": "ultimate"},
+    "Mjolnir": {"damage": 35, "speed": 0.9, "price": 600, "effect": "lightning"},
+    "Vorpal Blade": {"damage": 25, "speed": 1.0, "price": 700, "effect": "vorpal"},
 }
 
 # Towns and locations
@@ -60,7 +62,23 @@ LOCATIONS = {
         "type": "town",
         "shops": ["Dark Market", "Mystic Shop"],
         "monsters": ["Shadow Beast", "Dark Knight"],
-        "description": "A mysterious town shrouded in eternal twilight"
+        "description": "A mysterious town shrouded in darkness and secrets."
+    },
+    "Sunken Depths": {
+        "type": "dungeon",
+        "monsters": ["Abyssal Serpent", "Sunken Ghost", "Coral Golem"],
+        "description": "Sunken cities and forgotten structures beneath the ocean, filled with ancient artifacts and dangers."
+    },
+    "Blightmoor": {
+        "type": "dangerous",
+        "monsters": ["Blight Beast", "Toxic Sludge", "Mutated Scorpion"],
+        "description": "A dark and twisted environment where the very soil is tainted, giving rise to dangerous, mutated creatures and toxic flora."
+    },
+    "Silverpine": {
+        "type": "town",
+        "shops": ["Silver Smith", "Herbalist", "Hunter's Lodge"],
+        "monsters": ["Silver Wolf", "Forest Spirit"],
+        "description": "A cold and dense forest filled with evergreens and snow, inhabited by resilient wildlife adapted to the harsh conditions."
     },
     "Frostvale": {
         "type": "town",
@@ -106,7 +124,33 @@ LOCATIONS = {
         "type": "dungeon",
         "monsters": ["Ash Revenant", "Cursed Wanderer"],
         "description": "The ruins of a once-great city buried in ash and echoing with whispers of the past"
-    }
+    },
+    "Suirai": {
+        "type": "city",
+        "shops": ["Shogun's Armory", "Suirai Market", "Mystic Dojo"],
+        "monsters": ["Shogun's Guard", "Jade Samurai", "Kitsune Warrior", "Tengu Warrior", "Oni Berserker", "Shadow Samurai"],
+        "description": "A bustling city known for its fierce warriors and ancient traditions, and the capital of the Shogunate of Shirui."
+    },
+    "Dragon's Reach": {
+        "type": "dangerous",
+        "monsters": ["Dragon Whelp", "Dragon Spirit", "Dragon Knight"],
+        "description": "A perilous mountain range where dragons and their knights roam."
+    },
+    "Sunken Abyss": {
+        "type": "dungeon",
+        "monsters": ["Abyssal Kraken", "Sunken Ghost", "Coral Golem"],
+        "description": "An underwater trench filled with ancient ruins and dangerous sea creatures."
+    },
+    "Frostfang Keep": {
+        "type": "dungeon",
+        "monsters": ["Frost Giant", "Ice Revenant", "Frost Wraith"],
+        "description": "A frozen fortress haunted by icy spirits and giants."
+    },
+    "Crimson Abyss": {
+    "type": "dangerous",
+    "monsters": ["Blood Demon", "Abyssal Leviathan"],
+    "description": "A dark and twisted realm where nightmares come to life, ruled by the Crimson Abyss"
+    },
 }
 
 # Character classes
@@ -289,7 +333,14 @@ QUESTS = [
         "description": "Defeat 2 Water Elementals in Long Shui Zhen",
         "target": {"monster": "Water Elemental", "count": 2},
         "reward": {"gold": 110, "exp": 220}
-    }
+    },
+    {
+        "id": 13,
+        "name": "Free the caliphate",
+        "description": "Kill the oprressive caliph",
+        "target": {"monster": "Az-Zālim al-Muqaddas,The Caliph of Al-Khilafah Al-Hadidiyah", "count": 1},
+        "reward": {"gold": 500, "exp": 1000}
+    },
 ]
 
 # Available professions with their bonuses
@@ -399,6 +450,7 @@ monsters: List[Dict] = [
     {"name": "Bandit", "level": 2, "health": 65, "attack": 14, "drops": ["Leather Armor", "Gold Coin"]},
     {"name": "Dire Wolf", "level": 2, "health": 70, "attack": 15, "drops": ["Wolf Fang", "Gold Coin"]},
     {"name": "Goblin Shaman", "level": 2, "health": 55, "attack": 13, "drops": ["Goblin Staff", "Gold Coin"], "boss": True},
+    {"name": "Goblin King", "level": 3, "health": 80, "attack": 20, "drops": ["Goblin Crown", "Gold Coin"],"boss": True},
 
     # Stormhaven Monsters (Level 2-3)
     {"name": "Skeleton", "level": 2, "health": 75, "attack": 15, "drops": ["Gold Coin", "Bone Armor"]},
@@ -423,6 +475,7 @@ monsters: List[Dict] = [
     {"name": "Earth Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"]},
     {"name": "Dragon Knight", "level": 5, "health": 150, "attack": 28, "drops": ["Dragon Armor", "Gold Coin"]},
     {"name": "Water Wyvern", "level": 5, "health": 160, "attack": 30, "drops": ["Wyvern Wing", "Gold Coin"]},
+    {"name": "Dragon Overlord", "level": 12, "health": 600, "attack": 90, "drops": ["Dragon Scale", "Dragonfire Sword", "Gold Coin"], "boss": True},
 
     # Crystal Cave Monsters (Level 3-4)
     {"name": "Crystal Golem", "level": 4, "health": 120, "attack": 25, "drops": ["Crystal Shard", "Gold Coin"]},
@@ -489,8 +542,8 @@ monsters: List[Dict] = [
     {"name": "Storm Guardian", "level": 5, "health": 160, "attack": 34, "drops": ["Guardian's Storm", "Gold Coin"]},
     {"name": "Vision of the Thunder,the core of the storm", "level": 5, "health": 150, "attack": 32, "drops": ["Storm Eye", "Gold Coin"]},
 
-    # Shogunate Of Shirui Monsters (Level 5-9)
-    {"name": "The Shogun", "level": 9, "health": 400, "attack": 70, "drops": ["Samurai Armor", "Gold Coin"]},
+    # Shogunate Of Shirui Monsters (Level 5-12)
+    {"name": "The Shogun", "level": 12, "health": 400, "attack": 70, "drops": ["Samurai Armor", "Gold Coin"]},
     {"name": "Shogun's Guard", "level": 8, "health": 350, "attack": 60, "drops": ["Shogun's Blade", "Gold Coin"]},
     {"name": "Jade Samurai", "level": 7, "health": 300, "attack": 50, "drops": ["Jade Armor", "Gold Coin"]},
     {"name": "Kitsune Warrior", "level": 6, "health": 250, "attack": 40, "drops": ["Kitsune Mask", "Gold Coin"]},
@@ -500,9 +553,41 @@ monsters: List[Dict] = [
     {"name": "Corrupted Ninja", "level": 5, "health": 200, "attack": 30, "drops": ["Ninja Star", "Gold Coin"]},
     {"name": "Shadow Samurai", "level": 6, "health": 260, "attack": 42, "drops": ["Shadow Blade", "Gold Coin"]},
     {"name": "Possessed Katana", "level": 5, "health": 210, "attack": 36, "drops": ["Cursed Katana", "Gold Coin"]},
+
+    # The Iron Caliphate of Al-Khilafah Al-Hadidiyah Monsters (Level 7-12)
+    {"name": "Az-Zālim al-Muqaddas,The Caliph of Al-Khilafah Al-Hadidiyah", "level": 12, "health": 500, "attack": 80, "drops": ["Iron Caliph's Crown", "Gold Coin"], "boss": True},
+    {"name": "Al-Hadidiyah Guardian", "level": 11, "health": 450, "attack": 75, "drops": ["Guardian's Blade", "Gold Coin"]},
+    {"name": "Al-Hadidiyah Knight", "level": 10, "health": 400, "attack": 70, "drops": ["Knight's Shield", "Gold Coin"]},
+    {"name": "Mercenary of the caliphate", "level": 9, "health": 350, "attack": 65, "drops": ["Mercenary's Dagger", "Gold Coin"]},
+    {"name": "Loyalist of the caliphate", "level": 8, "health": 300, "attack": 60, "drops": ["Loyalist's Blade", "Gold Coin"]},
+    {"name": "High Priest of the caliphate", "level": 7, "health": 250, "attack": 55, "drops": ["High Priest's Staff", "Gold Coin"]},
+    {"name": "Al-Hadidiyah Sorcerer", "level": 7, "health": 240, "attack": 50, "drops": ["Sorcerer's Tome", "Gold Coin"]},
+    {"name": "Steel Golem", "level": 8, "health": 280, "attack": 60, "drops": ["Steel Core", "Gold Coin"]},
+    {"name": "Royal Janissary", "level": 9, "health": 320, "attack": 65, "drops": ["Janissary's Blade", "Gold Coin"]},
+    {"name": "Iron Caliphate General", "level": 10, "health": 370, "attack": 70, "drops": ["General's Armor", "Gold Coin"]},
+
+
+    #  Tlācahcāyōtl Tletl Tecpanēcatl/Empire of the Sacred Fire and Chains Monsters (Level 7-12)
+    {"name": "Tēcpatl Tlamacazqui,The Emperor of the Sacred Fire and Chains", "level": 12, "health": 550, "attack": 85, "drops": ["Emperor's Crown", "Gold Coin"], "boss": True},
+    {"name": "Secret Police from The Order of the Black Sun (Yohualli Tōnatiuh)", "level": 10, "health": 400, "attack": 70, "drops": ["Black Sun Dagger", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Knight", "level": 11, "health": 450, "attack": 75, "drops": ["Knight's Shield", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Guardian", "level": 9, "health": 350, "attack": 65, "drops": ["Guardian's Blade", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Sorcerer", "level": 8, "health": 300, "attack": 60, "drops": ["Sorcerer's Tome", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl High Priest", "level": 7, "health": 250, "attack": 55, "drops": ["High Priest's Staff", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Mercenary", "level": 9, "health": 320, "attack": 65, "drops": ["Mercenary's Dagger", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Loyalist", "level": 8, "health": 280, "attack": 60, "drops": ["Loyalist's Blade", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Royal Guard", "level": 10, "health": 370, "attack": 70, "drops": ["Royal Guard's Sword", "Gold Coin"]},
+
+     # Crimson Abyss Monsters (Level 9-16)
+    {"name": "Crimson Abyss Demon", "level": 15, "health": 600, "attack": 100, "drops": ["Demon's Heart", "Gold Coin"]},
+    {"name": "Crimson Abyss Knight", "level": 14, "health": 550, "attack": 90, "drops": ["Knight's Blade", "Gold Coin"]},
+    {"name": "Crimson Abyss Sorcerer", "level": 13, "health": 500, "attack": 80, "drops": ["Sorcerer's Staff", "Gold Coin"]},
+    {"name": "Crimson Abyss Guardian", "level": 12, "health": 450, "attack": 75, "drops": ["Guardian's Shield", "Gold Coin"]},
+    {"name": "Abyssal Leviathan", "level": 16, "health": 700, "attack": 120, "drops": ["Leviathan Scale", "Gold Coin"], "boss": True},
 ]
 
-# Dungeons with monsters and loot
+
+
 dungeons: List[Dict] = [
     # Greenwood Village Dungeons
     {"name": "Goblin's Hideout", "monsters": ["Goblin", "Wolf"], "loot": ["Wooden Sword", "Wolf Pelt", "Gold Coin"]},
@@ -511,6 +596,7 @@ dungeons: List[Dict] = [
     {"name": "Ancient Ruins", "monsters": ["Forest Spider", "Goblin"], "loot": ["Ancient Relic", "Gold Coin"]},
     {"name": "Goblin Fortress", "monsters": ["Goblin", "Dire Wolf"], "loot": ["Goblin Staff", "Gold Coin"]},
     {"name": "Cave of Shadows", "monsters": ["Goblin Shaman"], "loot": ["Gold Coin", "Goblin Staff"]},
+    {"name": "Goblin King's castle", "monsters": ["Goblin King"], "loot": ["Goblin King's Crown", "Gold Coin"]},
 
     # Stormhaven Dungeons
     {"name": "Haunted Crypt", "monsters": ["Skeleton", "Ghost"], "loot": ["Bone Armor", "Spirit Essence", "Gold Coin"]},
@@ -536,6 +622,7 @@ dungeons: List[Dict] = [
     {"name": "Earth Wyvern Den", "monsters": ["Earth Wyvern"], "loot": ["Wyvern Scale", "Gold Coin"]},
     {"name": "Dragon Knight's Fortress", "monsters": ["Dragon Knight"], "loot": ["Dragon Armor", "Gold Coin"]},
     {"name": "Water Wyvern Lagoon", "monsters": ["Water Wyvern"], "loot": ["Wyvern Wing", "Gold Coin"]},
+    {"name": "Dragon Overlord's Lair", "monsters": ["Dragon Overlord"], "loot": ["Dragon Scale", "Dragonfire Sword", "Gold Coin"]},
 
     # Crystal Cave Dungeons
     {"name": "Crystal Depths", "monsters": ["Crystal Golem", "Cave Troll"], "loot": ["Crystal Shard", "Troll Hide", "Gold Coin"]},
@@ -607,7 +694,34 @@ dungeons: List[Dict] = [
     {"name": "Corrupted Ninja's Hideout", "monsters": ["Corrupted Ninja"], "loot": ["Ninja Star", "Gold Coin"]},
     {"name": "Shadow Samurai's Fortress", "monsters": ["Shadow Samurai"], "loot": ["Shadow Blade", "Gold Coin"]},
     {"name": "Possessed Katana's Lair", "monsters": ["Possessed Katana"], "loot": ["Cursed Katana", "Gold Coin"]},
+
+    # The Iron Caliphate of Al-Khilafah Al-Hadidiyah Dungeons
+    {"name": "Caliph's Palace", "monsters": ["Az-Zālim al-Muqaddas,The Caliph of Al-Khilafah Al-Hadidiyah"], "loot": ["Iron Caliph's Crown", "Gold Coin"]},
+    {"name": "Guardian's Keep", "monsters": ["Al-Hadidiyah Guardian"], "loot": ["Guardian's Blade", "Gold Coin"]},
+    {"name": "Knight's Barracks", "monsters": ["Al-Hadidiyah Knight"], "loot": ["Knight's Shield", "Gold Coin"]},
+    {"name": "Mercenary Camp", "monsters": ["Mercenary of the caliphate"], "loot": ["Mercenary's Dagger", "Gold Coin"]},
+    {"name": "Loyalist's mosque", "monsters": ["Loyalist of the caliphate", "High Priest of the caliphate"], "loot": ["Loyalist's Blade", "High Priest's Staff", "Gold Coin"]},
+    {"name": "Sorcerer's Tower", "monsters": ["Al-Hadidiyah Sorcerer"], "loot": ["Sorcerer's Tome", "Gold Coin"]},
+    {"name": "factory of golems", "monsters": ["Steel Golem"], "loot": ["Steel Core", "Gold Coin"]},
+    {"name": "Janissary Barracks", "monsters": ["Royal Janissary"], "loot": ["Janissary's Blade", "Gold Coin"]},
+    {"name": "General's Fortress", "monsters": ["Iron Caliphate General", "Al-Hadidiyah Knight","Mercenary of the caliphate"], "loot": ["General's Armor", "Gold Coin"]},
+
+    # Tlācahcāyōtl Tletl Tecpanēcatl/Empire of the Sacred Fire and Chains Dungeons
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Palace", "monsters": ["Tēcpatl Tlamacazqui,The Emperor of the Sacred Fire and Chains", "Secret Police from The Order of the Black Sun (Yohualli Tōnatiuh)","Tlācahcāyōtl Tletl Tecpanēcatl Knight"], "loot": ["Emperor's Crown", "Black Sun Dagger", "Knight's Shield", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Guardian's Keep", "monsters": ["Tlācahcāyōtl Tletl Tecpanēcatl Guardian"], "loot": ["Guardian's Blade", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Sorcerer's Tower", "monsters": ["Tlācahcāyōtl Tletl Tecpanēcatl Sorcerer"], "loot": ["Sorcerer's Tome", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl High Priest's Sanctuary", "monsters": ["Tlācahcāyōtl Tletl Tecpanēcatl High Priest"], "loot": ["High Priest's Staff", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Mercenary Camp", "monsters": ["Tlācahcāyōtl Tletl Tecpanēcatl Mercenary"], "loot": ["Mercenary's Dagger", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Loyalist Town", "monsters": ["Tlācahcāyōtl Tletl Tecpanēcatl Loyalist"], "loot": ["Loyalist's Blade", "Gold Coin"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Royal Guard's Fortress", "monsters": ["Tlācahcāyōtl Tletl Tecpanēcatl Royal Guard"], "loot": ["Royal Guard's Sword", "Gold Coin"]},
+
+    # Crimson Abyss Dungeons
+    {"name": "Crimson Abyss Fortress", "monsters": ["Crimson Abyss Demon", "Crimson Abyss Knight"], "loot": ["Demon's Heart", "Knight's Blade", "Gold Coin"]},
+    {"name": "Crimson Abyss Sorcerer's Tower", "monsters": ["Crimson Abyss Sorcerer"], "loot": ["Sorcerer's Staff", "Gold Coin"]},
+    {"name": "Crimson Abyss Guardian's Keep", "monsters": ["Crimson Abyss Guardian"], "loot": ["Guardian's Shield", "Gold Coin"]},
+    {"name": "Abyssal Leviathan's Sunken Palace", "monsters": ["Abyssal Leviathan"], "loot": ["Leviathan Scale", "Gold Coin"]},
 ]
+
 
 # ANSI color codes for CLI output
 HEADER = '\033[95m'
