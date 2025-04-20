@@ -30,8 +30,23 @@ WEAPONS = {
     "Crossbow": {"damage": 15, "speed": 0.6, "price": 200},
     "Katana": {"damage": 22, "speed": 1.0, "price": 350},
     "Elder Wand": {"damage": 30, "speed": 1.0, "price": 500, "effect": "ultimate"},
-    "Mjolnir": {"damage": 35, "speed": 0.9, "price": 600, "effect": "lightning"},
-    "Vorpal Blade": {"damage": 25, "speed": 1.0, "price": 700, "effect": "vorpal"},
+
+    "Assassin's Dagger": {"damage": 14, "speed": 1.7, "price": 220},
+    "Miner's Pickaxe": {"damage": 18, "speed": 0.8, "price": 180},
+    "Storm Staff": {"damage": 20, "speed": 1.0, "price": 300, "effect": "storm"},
+    "Cursed Katana": {"damage": 40, "speed": 0.9, "price": 1500, "effect": "self_damage"},
+    "Ninja Star": {"damage": 16, "speed": 1.8, "price": 250},
+    "Cutlass": {"damage": 20, "speed": 1.1, "price": 300},
+    "Shadow Blade": {"damage": 32, "speed": 1.2, "price": 950, "effect": "critical_hit"},
+    "Dragonfire Sword": {"damage": 35, "speed": 1.0, "price": 1200, "effect": "fire_damage"},
+    "Lightning Sword": {"damage": 30, "speed": 1.1, "price": 1100, "effect": "lightning_damage"},
+    "Wind Sword": {"damage": 28, "speed": 1.3, "price": 1000, "effect": "wind_damage"},
+    "Earth Sword": {"damage": 27, "speed": 1.0, "price": 950, "effect": "earth_damage"},
+    "Nature Sword": {"damage": 25, "speed": 1.2, "price": 900, "effect": "nature_damage"},
+    "Jade Sword": {"damage": 24, "speed": 1.1, "price": 850},
+    "Shogun's Blade": {"damage": 38, "speed": 1.0, "price": 1400},
+    "Crimson Cutlass": {"damage": 28, "speed": 1.0, "price": 750, "effect": "bleed"},
+    "Thunder Staff": {"damage": 30, "speed": 1.0, "price": 1000, "effect": "thunder_damage"}
 }
 
 # Towns and locations
@@ -145,12 +160,7 @@ LOCATIONS = {
         "type": "dungeon",
         "monsters": ["Frost Giant", "Ice Revenant", "Frost Wraith"],
         "description": "A frozen fortress haunted by icy spirits and giants."
-    },
-    "Crimson Abyss": {
-    "type": "dangerous",
-    "monsters": ["Blood Demon", "Abyssal Leviathan"],
-    "description": "A dark and twisted realm where nightmares come to life, ruled by the Crimson Abyss"
-    },
+    }
 }
 
 # Character classes
@@ -333,14 +343,7 @@ QUESTS = [
         "description": "Defeat 2 Water Elementals in Long Shui Zhen",
         "target": {"monster": "Water Elemental", "count": 2},
         "reward": {"gold": 110, "exp": 220}
-    },
-    {
-        "id": 13,
-        "name": "Free the caliphate",
-        "description": "Kill the oprressive caliph",
-        "target": {"monster": "Az-Zālim al-Muqaddas,The Caliph of Al-Khilafah Al-Hadidiyah", "count": 1},
-        "reward": {"gold": 500, "exp": 1000}
-    },
+    }
 ]
 
 # Available professions with their bonuses
