@@ -50,7 +50,7 @@ WEAPONS = {
 }
 
 # Towns and locations
-LOCATIONS = {
+LOCATIONS= {
     "Greenwood Village": {
         "type": "town",
         "shops": ["Blacksmith", "General Store", "Magic Shop"],
