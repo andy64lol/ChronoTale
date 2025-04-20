@@ -160,7 +160,12 @@ LOCATIONS= {
         "type": "dungeon",
         "monsters": ["Frost Giant", "Ice Revenant", "Frost Wraith"],
         "description": "A frozen fortress haunted by icy spirits and giants."
-    }
+    },
+    "Glimmering Grotto": {
+        "type": "dungeon",
+        "monsters": ["Crystal Golem", "Glimmering Sprite"],
+        "description": "A cave filled with shimmering crystals and magical creatures."
+    },
 }
 
 # Character classes
@@ -726,7 +731,7 @@ dungeons: List[Dict] = [
 ]
 
 
-# ANSI color codes for CLI output
+# ANSI color codes for output
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
 OKGREEN = '\033[92m'
@@ -767,7 +772,7 @@ def print_header(title: str) -> None:
 # Show the help menu
 def show_help() -> None:
     help_text = """
-TEXTRP CLI - COMMANDS
+TEXTRP - COMMANDS
 
 PROGRESS
 /start            - Starter guide
@@ -2225,7 +2230,7 @@ def delete_save_prompt() -> None:
 # Main loop
 if __name__ == "__main__":
     print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
-    print_colored(f"{BOLD}{CYAN}   Welcome to TextRP CLI!{ENDC}", CYAN)
+    print_colored(f"{BOLD}{CYAN}    Welcome to TextRP!{ENDC}", CYAN)
     print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
     print_colored(f"{GREEN}--------------------------------------------------------------------{ENDC}", GREEN)
     print_colored(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}", GREEN)
