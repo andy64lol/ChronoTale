@@ -13,7 +13,6 @@ EXP_TO_LEVEL = 100
 CRITICAL_CHANCE = 0.15
 DODGE_CHANCE = 0.1
 
-# Weapon types and their properties
 WEAPONS = {
     "Wooden Sword": {"damage": 5, "speed": 1.0, "price": 30},
     "Bone Sword": {"damage": 7, "speed": 1.0, "price": 50},
@@ -30,7 +29,6 @@ WEAPONS = {
     "Crossbow": {"damage": 15, "speed": 0.6, "price": 200},
     "Katana": {"damage": 22, "speed": 1.0, "price": 350},
     "Elder Wand": {"damage": 30, "speed": 1.0, "price": 500, "effect": "ultimate"},
-
     "Assassin's Dagger": {"damage": 14, "speed": 1.7, "price": 220},
     "Miner's Pickaxe": {"damage": 18, "speed": 0.8, "price": 180},
     "Storm Staff": {"damage": 20, "speed": 1.0, "price": 300, "effect": "storm"},
@@ -1010,7 +1008,8 @@ def command_prefix() -> None:
     print("Prefix for commands is '/'. Use '/help' for all available commands.")
 
 def exit_game() -> None:
-    print_colored("Exiting game...", BLUE)
+    print_animated("Exiting game...", BLUE, 0.01)
+    print_animated("Goodbye!", BLUE, 0.01)
     sys.exit()
 
 def show_villages() -> None:
@@ -1375,9 +1374,7 @@ def show_pets() -> None:
 
 def show_support() -> None:
     print_header("Support Information")
-    print("For support, visit our Discord server or check the wiki.")
-    print("Wiki: https://example.com/wiki")
-    print("Discord: https://discord.gg/example")
+    print_animated("For support, visit our Discord server or check the wiki.", CYAN, 0.01)
 
 # Guild management commands
 def guild_join(guild_name: str) -> None:
