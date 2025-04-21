@@ -1304,9 +1304,9 @@ class GameState:
         base_item = ITEMS.get(item_id, {})
         if base_item.get("type") in ["ammo", "material", "food"] and count > 0:
             for inv_item in self.player["inventory"]:
-                if inv_item["id"] == item_id:
-                    inv_item["count"] += count
-                    return True
+              if inv_item["id"] == item_id and len(self.player["inventory"]) < MAX_INVENTORY_SLOTS:
+                nv_item["count"] += count
+                return True
         
         # Create a copy of the item to add to inventory
         if item_id in ITEMS:
@@ -2582,6 +2582,12 @@ class GameState:
         stamina_percent = self.player["stamina"] / self.player["max_stamina"]
         stamina_penalty = 0
         damage_reduction = 0  # Initialize here to avoid unbound variable
+
+        if weapon["durability"] <= 0:
+        print(Colors.colorize(f"Your {weapon['name']} breaks from extensive use!", Colors.RED))
+        self.remove_from_inventory(self.player["equipped_weapon"])
+        self.player["equipped_weapon"] = None
+        return  # Add this to prevent further attack processing
         
         if hardcore_mode and stamina_percent < 0.3:
             stamina_penalty = 0.2  # 20% penalty to hit chance when exhausted
@@ -3389,7 +3395,7 @@ class GameState:
             time_of_day = "Late Night"
             
         print(f"Time of day: {Colors.colorize(time_of_day, Colors.YELLOW)}")
-        print(f"Weather: {Colors.colorize(self.player['weather'], Colors.CYAN)}")
+        print(f"Weather: {Colors.colorize(self.player['current_weather'], Colors.CYAN)}")
         
         # Survival tip based on time
         tips = [
