@@ -1195,6 +1195,45 @@ user_data: Dict = {
     "dungeons_completed": []
 }
 
+def ensure_user_data_keys(data: Dict) -> None:
+    defaults = {
+        "class": None,
+        "profession": None,
+        "has_chosen_profession": False,
+        "level": 1,
+        "inventory": [],
+        "equipped": {"weapon": None, "armor": None},
+        "gold": INITIAL_GOLD,
+        "coolness": 0,
+        "guild": None,
+        "pets": [],
+        "progress": "starter",
+        "exp": 0,
+        "health": INITIAL_HEALTH,
+        "max_health": INITIAL_HEALTH,
+        "attack": 10,
+        "defense": 0,
+        "speed": 5,
+        "skills": [],
+        "active_quests": [],
+        "completed_quests": [],
+        "materials": {},
+        "tools": ["Axe", "Pickaxe", "Flask", "Hunting Knife"],
+        "current_area": "Greenwood Village",
+        "monsters_killed": 0,
+        "dungeons_completed": []
+    }
+    for key, default_value in defaults.items():
+        if key not in data:
+            data[key] = default_value
+        else:
+            # For nested dicts, ensure keys exist recursively
+            if isinstance(default_value, dict) and isinstance(data[key], dict):
+                for subkey, subdefault in default_value.items():
+                    if subkey not in data[key]:
+                        data[key][subkey] = subdefault
+
+
 # Shop items
 shop_items = [
     # === Basic Equipment ===
@@ -2066,6 +2105,7 @@ def load_game(slot: int = 1) -> bool:
                 print("Warning: Save file version mismatch")
             global user_data
             user_data = save_data["user_data"]
+            ensure_user_data_keys(user_data)
             print(f"Game loaded successfully from slot {slot}!")
             print(f"Save timestamp: {save_data['timestamp']}")
             return True
@@ -2079,6 +2119,7 @@ def load_game(slot: int = 1) -> bool:
                 with open(backup_file, "r", encoding='utf-8') as f:
                     save_data = json.load(f)
                     user_data = save_data["user_data"]
+                    ensure_user_data_keys(user_data)
                     print("Backup loaded successfully!")
                     return True
             except Exception:
