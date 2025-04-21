@@ -13,6 +13,7 @@ EXP_TO_LEVEL = 100
 CRITICAL_CHANCE = 0.15
 DODGE_CHANCE = 0.1
 
+# Weapon types and their properties
 WEAPONS = {
     "Wooden Sword": {"damage": 5, "speed": 1.0, "price": 30},
     "Bone Sword": {"damage": 7, "speed": 1.0, "price": 50},
@@ -29,6 +30,7 @@ WEAPONS = {
     "Crossbow": {"damage": 15, "speed": 0.6, "price": 200},
     "Katana": {"damage": 22, "speed": 1.0, "price": 350},
     "Elder Wand": {"damage": 30, "speed": 1.0, "price": 500, "effect": "ultimate"},
+
     "Assassin's Dagger": {"damage": 14, "speed": 1.7, "price": 220},
     "Miner's Pickaxe": {"damage": 18, "speed": 0.8, "price": 180},
     "Storm Staff": {"damage": 20, "speed": 1.0, "price": 300, "effect": "storm"},
@@ -261,7 +263,6 @@ MATERIALS = {
 
 }
 
-# Sample quests
 QUESTS = [
     {
         "id": 1,
@@ -346,7 +347,35 @@ QUESTS = [
         "description": "Defeat 2 Water Elementals in Long Shui Zhen",
         "target": {"monster": "Water Elemental", "count": 2},
         "reward": {"gold": 110, "exp": 220}
-    }
+    },
+    {
+        "id": 13,
+        "name": "Sunken Depths",
+        "description": "Explore the Sunken Depths and gather 3 Coral Golem parts",
+        "target": {"monster": "Coral Golem", "count": 3},
+        "reward": {"gold": 130, "exp": 250}
+    },
+    {
+        "id": 14,
+        "name": "Free the people",
+        "description": "Free the Shogunate from the Shogun's Tyrany",
+        "target": {"monster": "The Shogun", "count": 1},
+        "reward": {"gold": 500, "exp": 1000}
+    },
+    {
+        "id": 15,
+        "name": "Dragon's Reach",
+        "description": "Defeat the Dragon Knight in Dragon's Reach",
+        "target": {"monster": "Dragon Knight", "count": 1},
+        "reward": {"gold": 400, "exp": 600}
+    },
+    {
+        "id": 16,
+        "name": "Blightmoor Cleanup",
+        "description": "Eliminate 5 Blight Beasts in Blightmoor",
+        "target": {"monster": "Blight Beast", "count": 5},
+        "reward": {"gold": 150, "exp": 300}
+    },
 ]
 
 # Available professions with their bonuses
@@ -770,7 +799,7 @@ def print_header(title: str) -> None:
 # Show the help menu
 def show_help() -> None:
     help_text = """
-TEXTRP - COMMANDS
+LEGACIES OF OUR LEGENDS - COMMANDS
 
 PROGRESS
 /start            - Starter guide
@@ -2227,7 +2256,7 @@ def delete_save_prompt() -> None:
 # Main loop
 if __name__ == "__main__":
     print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
-    print_colored(f"{BOLD}{CYAN}    Welcome to TextRP!{ENDC}", CYAN)
+    print_colored(f"{BOLD}{CYAN}     Welcome to Legacies of our Legends RPG!{ENDC}", CYAN)
     print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
     print_colored(f"{GREEN}--------------------------------------------------------------------{ENDC}", GREEN)
     print_colored(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}", GREEN)
