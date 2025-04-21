@@ -13,6 +13,418 @@ EXP_TO_LEVEL = 100
 CRITICAL_CHANCE = 0.15
 DODGE_CHANCE = 0.1
 
+# NPCs and their dialogues
+NPCS = {
+    "Old Sage": {
+        "location": "Greenwood Village",
+        "dialogues": {
+            "greeting": "Welcome, young adventurer. The world needs heroes now more than ever.",
+            "quest": "Dark forces gather in the east. Will you help us?",
+            "story": {
+                "intro": "Long ago, our lands were peaceful...",
+                "chapter1": "But then the Legion Of Darkness, once sealed underground, came back...",
+                "chapter2": "Now we need a hero to unite everyone against the Legion Of Darkness like how the legendary heroes did to seal it..."
+            },
+            "additional": [
+                "Legends speak of an ancient power hidden deep within the mountains.",
+                "Remember, courage and wisdom will guide you through the darkest times."
+            ]
+        },
+        "quests": ["Dragon Hunter", "Skeleton Cleanup"]
+    },
+    "Blacksmith": {
+        "location": "Stormhaven",
+        "dialogues": {
+            "greeting": "Need weapons? I've got the finest steel in all the realms.",
+            "quest": "If you bring me some iron ore, I can forge you special weapons.",
+            "trade": "Take a look at my wares."
+        },
+        "quests": ["Iron Gatherer"],
+        "shop": ["Iron Sword", "Steel Sword", "Iron Armor"]
+    },
+    "Mysterious Stranger": {
+        "location": "Shadowmere",
+        "dialogues": {
+            "greeting": "Psst... seeking rare artifacts?",
+            "quest": "The shadows hold many secrets... and treasures.",
+            "warning": "Beware the Crimson Abyss... death awaits the unprepared.",
+            "additional": [
+                "There are secrets buried beneath the ruins, waiting to be uncovered.",
+                "Trust no one, for the enemy may be closer than you think."
+            ]
+        },
+        "quests": ["Shadow Walker"]
+    },
+    "Village Elder": {
+        "location": "Greenwood Village",
+        "dialogues": {
+            "greeting": "Greetings, traveler. Our village has seen better days.",
+            "quest": "We need help gathering herbs to heal the sick.",
+            "story": "The forest holds many secrets, some better left undisturbed."
+        },
+        "quests": ["Herbal Remedy"]
+    },
+    "Merchant": {
+        "location": "Stormhaven",
+        "dialogues": {
+            "greeting": "Looking for rare goods? You've come to the right place.",
+            "trade": "I have wares from distant lands, take a look."
+        },
+        "shop": ["Exotic Spices", "Rare Gems", "Magic Potions"]
+    },
+    "Wandering Bard": {
+        "location": "Dragon's Peak",
+        "dialogues": {
+            "greeting": "Songs of heroes and legends, care to listen?",
+            "story": "They say the mountains echo with the voices of ancient dragons.",
+            "quest": "Help me collect tales from the nearby villages."
+        },
+        "quests": ["Tales of the Mountain"]
+    },
+    "Resistant Underground Leader": {
+        "location": "Iron Caliphate of Al-Khilafah Al-Hadidiyah",
+        "dialogues": {
+            "greeting": "We must act carefully. The Caliphate's spies are everywhere."
+        },
+        "quests": ["Sabotage Supply Lines", "Rescue Imprisoned Dissidents"],
+        "reward": "Rare blueprints for crafting resistance gear"
+    },
+    "Sympathetic Guard": {
+        "location": "Iron Caliphate of Al-Khilafah Al-Hadidiyah",
+        "dialogues": {
+            "greeting": "The lockdown... it wasn't always like this. Something changed the Caliph."
+        },
+        "quests": ["Infiltrate the Palace", "Recover Stolen Artifacts"],
+        "reward": "Access to guarded areas, special weapons"
+    },
+    "Black Market Supplier": {
+        "location": "Iron Caliphate of Al-Khilafah Al-Hadidiyah",
+        "dialogues": {
+            "greeting": "Need food? Medical supplies? The price is high, but so are the risks."
+        },
+        "shop": ["Rare food items", "Medicinal herbs", "Lock-picking tools"],
+        "quests": ["Distract the Patrols", "Smuggle Supplies"]
+    },
+    "Ronin Mercenary": {
+        "location": "Shogunate of Shirui",
+        "dialogues": {
+            "greeting": "Honor is a luxury I can no longer afford."
+        },
+        "quests": ["Assassinate a Corrupt Official", "Protect a Whistleblower"],
+        "reward": "Unique samurai weapons, ronin armor"
+    },
+    "Imperial Spy": {
+        "location": "Shogunate of Shirui",
+        "dialogues": {
+            "greeting": "The Shogun knows everything... or so he believes."
+        },
+        "quests": ["Infiltrate the Dojo", "Decode Intercepted Messages"],
+        "reward": "Spy tools, intelligence network access"
+    },
+    "Shadow Broker": {
+        "location": "Shadowmere",
+        "dialogues": {
+            "greeting": "Information costs more than gold here."
+        },
+        "quests": ["Retrieve Stolen Secrets", "Eliminate a Rival"],
+        "reward": "Rare magic items, forbidden scrolls"
+    },
+    "Fallen Noble": {
+        "location": "Shadowmere",
+        "dialogues": {
+            "greeting": "The darkness consumes everyone eventually."
+        },
+        "quests": ["Reclaim Family Heirlooms", "Exposing Corruption"],
+        "reward": "Ancient family weapons, noble artifacts"
+    },
+    "Exiled Mage": {
+        "location": "Frostvale",
+        "dialogues": {
+            "greeting": "Cold preserves... and destroys."
+        },
+        "quests": ["Contain the Ice Wraith", "Retrieve Magical Research"],
+        "reward": "Ice-elemental weapons, frost-resistant gear"
+    },
+    "Survival Guide": {
+        "location": "Frostvale",
+        "dialogues": {
+            "greeting": "In Frostvale, respect the elements or perish."
+        },
+        "quests": ["Hunt Polar Creatures", "Establish a Safe House"],
+        "reward": "Survival kits, cold-weather armor"
+    },
+    "Dragon Egg Collector": {
+        "location": "Dragon's Peak",
+        "dialogues": {
+            "greeting": "A dragon's power begins with its egg."
+        },
+        "quests": ["Retrieve a Specific Egg", "Protect a Nest"],
+        "reward": "Dragon egg fragments (crafting materials), rare mounts"
+    },
+    "Mountain Guide": {
+        "location": "Dragon's Peak",
+        "dialogues": {
+            "greeting": "Without a guide, the mountains will bury you."
+        },
+        "quests": ["Map New Routes", "Rescue Lost Climbers"],
+        "reward": "Mountaineering gear, map fragments"
+    },
+    "Dragon Lore Scholar": {
+        "location": "Long Shui Zhen",
+        "dialogues": {
+            "greeting": "Dragons are not just beasts—they are history."
+        },
+        "quests": ["Decode Ancient Dragon Texts", "Find a Legendary Dragon"],
+        "reward": "Knowledge-based items, dragon lore books"
+    },
+    "Martial Arts Rival": {
+        "location": "Long Shui Zhen",
+        "dialogues": {
+            "greeting": "Your form is weak. Let me correct you."
+        },
+        "quests": ["Win the Tournament", "Retrieve Training Weapons"],
+        "reward": "Unique martial arts weapons, prestige items"
+    },
+    "Deserted Researcher": {
+        "location": "Crimson Abyss",
+        "dialogues": {
+            "greeting": "What we unleashed... I fear it's too late to stop."
+        },
+        "quests": ["Contain the Corruption", "Destroy Experimental Devices"],
+        "reward": "Resistance gear, purified abyssal materials"
+    },
+    "Corrupted Survivor": {
+        "location": "Crimson Abyss",
+        "dialogues": {
+            "greeting": "The Abyss... it whispers. It promises power."
+        },
+        "quests": ["Find the Cure", "Destroy the Corruption Source"],
+        "reward": "Anti-corruption items, purification rituals"
+    },
+    "Village Historian": {
+        "location": "Greenwood Village",
+        "dialogues": {
+            "greeting": "The forest holds many secrets older than the village itself."
+        },
+        "quests": ["Research Ancient Trees", "Translate Old Scrolls"],
+        "reward": "Historical artifacts, knowledge points"
+    },
+    "Local Farmer": {
+        "location": "Greenwood Village",
+        "dialogues": {
+            "greeting": "The soil here is rich, but it requires respect."
+        },
+        "quests": ["Harvest Rare Crops", "Scare Off Pests"],
+        "reward": "Farming tools, rare seeds"
+    },
+    "Fisherman": {
+        "location": "Stormhaven",
+        "dialogues": {
+            "greeting": "The sea gives generously to those who understand her."
+        },
+        "quests": ["Catch Legendary Fish", "Repair the Harbor"],
+        "reward": "Fishing gear, rare fish"
+    },
+    "Shipwright": {
+        "location": "Stormhaven",
+        "dialogues": {
+            "greeting": "A good ship is built with patience, not haste."
+        },
+        "quests": ["Find Ship Materials", "Solve Shipyard Sabotage"],
+        "reward": "Boat blueprints, navigation tools"
+    },
+    "Dragon Tamer": {
+        "location": "Dragon's Reach",
+        "dialogues": {
+            "greeting": "Dragons respect strength, but they follow wisdom."
+        },
+        "quests": ["Tame a Specific Dragon", "Retrieve Dragon Eggs", "Dragon Tamer Initiate"],
+        "reward": "Dragon companions, taming gear"
+    },
+    "Mercenary Captain": {
+        "location": "Dragon's Reach",
+        "dialogues": {
+            "greeting": "The mountains are dangerous, but the pay is good."
+        },
+        "quests": ["Escort the Convoy", "Eliminate Bandit Camps"],
+        "reward": "Mercenary gear, gold"
+    },
+    "Garden Master": {
+        "location": "Jade Lotus Village",
+        "dialogues": {
+            "greeting": "A garden reflects the grower's soul."
+        },
+        "quests": ["Cultivate Rare Herbs", "Design a Zen Garden"],
+        "reward": "Special seeds, gardening tools"
+    },
+    "Tea House Owner": {
+        "location": "Jade Lotus Village",
+        "dialogues": {
+            "greeting": "A good cup of tea can change your day."
+        },
+        "shop": ["Temporary stat-boosting teas"],
+        "quests": ["Collect Rare Tea Leaves", "Host a Tea Ceremony"],
+        "reward": "Special tea blends, social reputation"
+    },
+    "Lava Prospector": {
+        "location": "Ember Hollow",
+        "dialogues": {
+            "greeting": "The earth gives treasure to those who endure its heat."
+        },
+        "quests": ["Extract Magma Crystals", "Repair the Cooling System"],
+        "reward": "Volcanic gear, rare minerals"
+    },
+    "Fire Mage": {
+        "location": "Ember Hollow",
+        "dialogues": {
+            "greeting": "Fire is both creator and destroyer."
+        },
+        "quests": ["Contain Lava Elemental", "Retrieve Ancient Tome"],
+        "reward": "Fire-elemental weapons, spellbooks"
+    },
+    "Lunar Cultist": {
+        "location": "Moonveil Harbor",
+        "dialogues": {
+            "greeting": "The moon guides us through the darkest nights."
+        },
+        "quests": ["Harvest Moonlit Herbs", "Restore the Lunar Altar"],
+        "reward": "Moon-based magic items, night vision gear"
+    },
+    "Sea Captain": {
+        "location": "Moonveil Harbor",
+        "dialogues": {
+            "greeting": "The sea is a harsh mistress, but rewarding."
+        },
+        "quests": ["Escort the Trade Ship", "Map New Trade Routes"],
+        "reward": "Nautical gear, rare trade goods"
+    },
+    "Swamp Hermit": {
+        "location": "Blightmoor",
+        "dialogues": {
+            "greeting": "The swamp gives and takes in equal measure."
+        },
+        "quests": ["Develop an Antidote", "Destroy the Toxic Source"],
+        "reward": "Antidote recipes, poison-resistant gear"
+    },
+    "Mutated Creature Tamer": {
+        "location": "Blightmoor",
+        "dialogues": {
+            "greeting": "Even mutation has its uses."
+        },
+        "quests": ["Capture a Mutated Beast", "Retrieve Experimental Data"],
+        "reward": "Mutated pet companions, toxic weapons"
+    },
+    "Elven Archdruid": {
+        "location": "Verdant Spire",
+        "dialogues": {
+            "greeting": "Nature's balance must be preserved at all costs."
+        },
+        "quests": ["Purge the Corruption", "Retrieve the Druidic Staff"],
+        "reward": "Nature magic items, elven armor"
+    },
+    "Sky Gardener": {
+        "location": "Verdant Spire",
+        "dialogues": {
+            "greeting": "The sky holds plants that ground dwellers can't imagine."
+        },
+        "quests": ["Pollinate Rare Flowers", "Save the Floating Garden"],
+        "reward": "Flying mounts, cloudwalking boots"
+    },
+    "Frost Witch": {
+        "location": "Silverpine",
+        "dialogues": {
+            "greeting": "Winter tests us, but also blesses us."
+        },
+        "quests": ["Summon a Snow Spirit", "Protect the Winter Festival"],
+        "reward": "Frost magic items, winter-themed gear"
+    },
+    "Yeti Guide": {
+        "location": "Silverpine",
+        "dialogues": {
+            "greeting": "The mountains are my home. Let me show you their ways."
+        },
+        "quests": ["Escort Through the Pass", "Retrieve Stolen Idol"],
+        "reward": "Yeti companions, cold-resistant gear"
+    },
+    "Imperial Inquisitor": {
+        "location": "Tlācahcāyōtl Tletl Tecpanēcatl",
+        "dialogues": {
+            "greeting": "Heretics will burn for the purification of the realm."
+        },
+        "quests": ["Expose the Heretic Cell", "Retrieve the Sacred Flame"],
+        "reward": "Inquisitor gear, fire magic items"
+    },
+    "Rebel Healer": {
+        "location": "Tlācahcāyōtl Tletl Tecpanēcatl",
+        "dialogues": {
+            "greeting": "We heal the wounds the Empire inflicts."
+        },
+        "quests": ["Gather Medicine", "Save Imprisoned Dissidents"],
+        "reward": "Healing potions, medical supplies"
+    },
+    "Wandering Spirit": {
+        "location": "Cursed Katana",
+        "dialogues": {
+            "greeting": "This blade... it consumes souls."
+        },
+        "quests": ["Purify the Katana", "Find the Spirit's Rest"],
+        "reward": "Purified weapon, spirit companion"
+    },
+}
+
+# Main storyline chapters
+STORYLINE = {
+    "Chapter 1: The Awakening": {
+        "title": "The Awakening",
+        "description": "As darkness spreads across the land, a hero rises to face the looming threat. The fate of the realm hangs in the balance.",
+        "required_level": 1,
+        "quest_line": ["The Beginning", "First Steps", "The Dark Warning"],
+        "reward": {"gold": 200, "exp": 300, "item": "Novice Ring"}
+    },
+    "Chapter 2: The Dragon's Call": {
+        "title": "The Dragon's Call",
+        "description": "Ancient dragons stir from their slumber, their power echoing through the mountains. The hero must prove their worth to tame these mighty beasts.",
+        "required_level": 5,
+        "quest_line": ["Dragon's Peak Journey", "Dragon Trials", "The First Flight"],
+        "reward": {"gold": 500, "exp": 700, "item": "Dragon Scale Armor"}
+    },
+    "Chapter 3: Shadows of the Past": {
+        "title": "Shadows of the Past",
+        "description": "Dark secrets emerge from the shadows of Shadowmere, threatening to unravel the peace. The hero must confront the darkness within.",
+        "required_level": 10,
+        "quest_line": ["The Shadow's Call", "Ancient Secrets", "The Final Shadow"],
+        "reward": {"gold": 1000, "exp": 1500, "item": "Shadow Blade"}
+    },
+    "Chapter 4: The Shogunate's Struggle": {
+        "title": "The Shogunate's Struggle",
+        "description": "The Shogunate of Shirui faces tyranny and rebellion. The hero must navigate political intrigue and battle fierce warriors to restore balance.",
+        "required_level": 15,
+        "quest_line": ["Free the people", "Shogun's Challenge", "Kitsune's Secret"],
+        "reward": {"gold": 1500, "exp": 2000, "item": "Samurai Armor"}
+    },
+    "Chapter 5: The Iron Caliphate": {
+        "title": "The Iron Caliphate",
+        "description": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah rises with an iron fist. The hero must face powerful foes and uncover ancient mysteries.",
+        "required_level": 20,
+        "quest_line": ["Caliph's Wrath", "Guardian's Siege", "Knight's Honor"],
+        "reward": {"gold": 2000, "exp": 2500, "item": "Iron Caliph's Crown"}
+    },
+    "Chapter 6: The Empire of Fire and Chains": {
+        "title": "The Empire of Fire and Chains",
+        "description": "The Tlācahcāyōtl Tletl Tecpanēcatl empire threatens to engulf the land in flames and chains. The hero must rally allies and ignite hope.",
+        "required_level": 25,
+        "quest_line": ["Emperor's Decree", "Order of the Black Sun", "Sacred Fire"],
+        "reward": {"gold": 2500, "exp": 3000, "item": "Emperor's Crown"}
+    },
+    "Chapter 7: The Crimson Abyss": {
+        "title": "The Crimson Abyss",
+        "description": "A dark and foreboding realm where ancient evils stir. The hero's journey continues beyond this point...",
+        "required_level": 30,
+        "quest_line": ["Crimson Abyss Awakening", "Demon's Heart", "Abyssal Leviathan"],
+        "reward": {"gold": 3000, "exp": 3500, "item": "Demon's Heart"}
+    }
+}
+
 # Weapon types and their properties
 WEAPONS = {
     "Wooden Sword": {"damage": 5, "speed": 1.0, "price": 30},
@@ -30,7 +442,6 @@ WEAPONS = {
     "Crossbow": {"damage": 15, "speed": 0.6, "price": 200},
     "Katana": {"damage": 22, "speed": 1.0, "price": 350},
     "Elder Wand": {"damage": 30, "speed": 1.0, "price": 500, "effect": "ultimate"},
-
     "Assassin's Dagger": {"damage": 14, "speed": 1.7, "price": 220},
     "Miner's Pickaxe": {"damage": 18, "speed": 0.8, "price": 180},
     "Storm Staff": {"damage": 20, "speed": 1.0, "price": 300, "effect": "storm"},
@@ -105,7 +516,7 @@ LOCATIONS= {
         "type": "city",
         "shops": ["Dragon Market", "Dragon Temple"],
         "monsters": ["Dragon Knight", "Water Elemental"],
-        "description": "A bustling city with a rich history of dragon taming"
+        "description": "A bustling city with a rich history of dragon taming and martial arts"
     },
     "Jade Lotus Village": {
         "type": "town",
@@ -259,11 +670,209 @@ MATERIALS = {
     "Ancient Relic": {"areas": ["Ruins", "Temple"], "tool_required": "Archaeology Kit"},
     "Salt": {"areas": ["Cave", "Desert Spring"], "tool_required": "Pickaxe"},
     "Venom Sac": {"areas": ["Swamp", "Spider Nest"], "tool_required": "Hunting Knife"},
-    "Feathers": {"areas": ["Plains", "Cliffside"], "tool_required": "None"}
+    "Feathers": {"areas": ["Plains", "Cliffside"], "tool_required": None}
+
 
 }
 
+# Story quests are marked with story=True
 QUESTS = [
+    # Chapter 1: The Awakening Story Quests
+    {
+        "id": 101,
+        "name": "The Beginning",
+        "description": "Meet the Old Sage in Greenwood Village",
+        "target": {"npc": "Old Sage", "count": 1},
+        "reward": {"gold": 100, "exp": 200},
+        "story": True,
+        "chapter": 1,
+        "travel_locations": ["Greenwood Village", "Stormhaven", "Crystal Cave"]
+    },
+    {
+        "id": 102,
+        "name": "First Steps",
+        "description": "Defeat 10 monsters across Greenwood Village and Stormhaven",
+        "target": {"monster": "any", "count": 10},
+        "reward": {"gold": 150, "exp": 250},
+        "story": True,
+        "chapter": 1,
+        "travel_locations": ["Greenwood Village", "Stormhaven"]
+    },
+    {
+        "id": 103,
+        "name": "The Dark Warning",
+        "description": "Investigate the disturbance in Crystal Cave and Shadowmere",
+        "target": {"location": "Crystal Cave", "count": 1},
+        "reward": {"gold": 200, "exp": 300},
+        "story": True,
+        "chapter": 1,
+        "travel_locations": ["Crystal Cave", "Shadowmere"]
+    },
+
+    # Chapter 2: The Dragon's Call Story Quests
+    {
+        "id": 201,
+        "name": "Dragon's Peak Journey",
+        "description": "Travel to Dragon's Peak, Stormhaven, and Greenwood Village to meet the Dragon Tamer",
+        "target": {"npc": "Dragon Tamer", "count": 1},
+        "reward": {"gold": 300, "exp": 400},
+        "story": True,
+        "chapter": 2,
+        "travel_locations": ["Dragon's Peak", "Stormhaven", "Greenwood Village"]
+    },
+    {
+        "id": 202,
+        "name": "Dragon Trials",
+        "description": "Complete the three trials of the Dragon Tamer across Dragon's Peak",
+        "target": {"trials": "Dragon Trials", "count": 3},
+        "reward": {"gold": 400, "exp": 500},
+        "story": True,
+        "chapter": 2,
+        "travel_locations": ["Dragon's Peak"]
+    },
+    {
+        "id": 203,
+        "name": "The First Flight",
+        "description": "Tame your first dragon after traveling through Dragon's Peak and Crystal Cave",
+        "target": {"monster": "Dragon Whelp", "count": 1},
+        "reward": {"gold": 500, "exp": 600, "item": "Dragon Whistle"},
+        "story": True,
+        "chapter": 2,
+        "travel_locations": ["Dragon's Peak", "Crystal Cave"]
+    },
+
+    # Chapter 3: Shadows of the Past Story Quests
+    {
+        "id": 301,
+        "name": "The Shadow's Call",
+        "description": "Investigate the mysterious events in Shadowmere and Frostvale",
+        "target": {"location": "Shadowmere", "count": 1},
+        "reward": {"gold": 600, "exp": 700},
+        "story": True,
+        "chapter": 3,
+        "travel_locations": ["Shadowmere", "Frostvale"]
+    },
+    {
+        "id": 302,
+        "name": "Ancient Secrets",
+        "description": "Recover the lost artifacts from the Silent Ashes and Crystal Cave",
+        "target": {"item": "Ancient Artifact", "count": 3},
+        "reward": {"gold": 700, "exp": 800},
+        "story": True,
+        "chapter": 3,
+        "travel_locations": ["Silent Ashes", "Crystal Cave"]
+    },
+    {
+        "id": 303,
+        "name": "The Shadow's Return",
+        "description": "Confront the Shadow Master in his lair after traveling through Shadowmere and the Sunken Depths",
+        "target": {"monster": "Shadow Master", "count": 1},
+        "reward": {"gold": 1000, "exp": 1200, "item": "Shadow Master's Cloak"},
+        "story": True,
+        "chapter": 3,
+        "travel_locations": ["Shadowmere", "Sunken Depths"]
+    },
+    # New story quests for extended chapters
+    {
+        "id": 401,
+        "name": "Shogun's Challenge",
+        "description": "Face the Shogun's elite guards and prove your strength.",
+        "target": {"monster": "Shogun's Guard", "count": 3},
+        "reward": {"gold": 1200, "exp": 1600, "item": "Shogun's Blade"},
+        "story": True,
+        "chapter": 4,
+        "travel_locations": ["Shogunate Of Shirui"]
+    },
+    {
+        "id": 402,
+        "name": "Kitsune's Secret",
+        "description": "Uncover the mysterious secrets of the Kitsune Warrior.",
+        "target": {"monster": "Kitsune Warrior", "count": 1},
+        "reward": {"gold": 1300, "exp": 1700, "item": "Kitsune Mask"},
+        "story": True,
+        "chapter": 4,
+        "travel_locations": ["Shogunate Of Shirui"]
+    },
+    {
+        "id": 501,
+        "name": "Caliph's Wrath",
+        "description": "Defend against the wrath of the Iron Caliphate's forces.",
+        "target": {"monster": "Al-Hadidiyah Knight", "count": 5},
+        "reward": {"gold": 1800, "exp": 2200, "item": "Knight's Shield"},
+        "story": True,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    {
+        "id": 502,
+        "name": "Guardian's Siege",
+        "description": "Break the siege laid by the Iron Caliphate's guardians.",
+        "target": {"monster": "Al-Hadidiyah Guardian", "count": 3},
+        "reward": {"gold": 1900, "exp": 2300, "item": "Guardian's Blade"},
+        "story": True,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    {
+        "id": 601,
+        "name": "Emperor's Decree",
+        "description": "Carry out the Emperor's decree and face the Order of the Black Sun.",
+        "target": {"monster": "Secret Police from The Order of the Black Sun (Yohualli Tōnatiuh)", "count": 4},
+        "reward": {"gold": 2200, "exp": 2700, "item": "Black Sun Dagger"},
+        "story": True,
+        "chapter": 6,
+        "travel_locations": ["Tlācahcāyōtl Tletl Tecpanēcatl/Empire of the Sacred Fire and Chains"]
+    },
+    {
+        "id": 602,
+        "name": "Order of the Black Sun",
+        "description": "Infiltrate the Order and uncover their dark plans.",
+        "target": {"monster": "Tlācahcāyōtl Tletl Tecpanēcatl Sorcerer", "count": 2},
+        "reward": {"gold": 2300, "exp": 2800, "item": "Sorcerer's Tome"},
+        "story": True,
+        "chapter": 6,
+        "travel_locations": ["Tlācahcāyōtl Tletl Tecpanēcatl/Empire of the Sacred Fire and Chains"]
+    },
+    {
+        "id": 603,
+        "name": "Sacred Fire",
+        "description": "Ignite the sacred fire to rally the people against the empire.",
+        "target": {"location": "Tlācahcāyōtl Tletl Tecpanēcatl Palace", "count": 1},
+        "reward": {"gold": 2400, "exp": 2900, "item": "Sacred Flame"},
+        "story": True,
+        "chapter": 6,
+        "travel_locations": ["Tlācahcāyōtl Tletl Tecpanēcatl/Empire of the Sacred Fire and Chains"]
+    },
+    {
+        "id": 701,
+        "name": "Crimson Abyss Awakening",
+        "description": "Investigate the awakening of dark forces in the Crimson Abyss.",
+        "target": {"monster": "Crimson Abyss Demon", "count": 1},
+        "reward": {"gold": 3000, "exp": 3500, "item": "Demon's Heart"},
+        "story": True,
+        "chapter": 7,
+        "travel_locations": ["Crimson Abyss"]
+    },
+    {
+        "id": 702,
+        "name": "Demon's Heart",
+        "description": "Retrieve the Demon's Heart from the depths of the Crimson Abyss.",
+        "target": {"monster": "Crimson Abyss Demon", "count": 1},
+        "reward": {"gold": 3200, "exp": 3700, "item": "Demon's Heart"},
+        "story": True,
+        "chapter": 7,
+        "travel_locations": ["Crimson Abyss"]
+    },
+    {
+        "id": 703,
+        "name": "Abyssal Leviathan",
+        "description": "Defeat the Abyssal Leviathan terrorizing the Crimson Abyss.",
+        "target": {"monster": "Abyssal Leviathan", "count": 1},
+        "reward": {"gold": 3500, "exp": 4000, "item": "Leviathan Scale"},
+        "story": True,
+        "chapter": 7,
+        "travel_locations": ["Crimson Abyss"]
+    },
     {
         "id": 1,
         "name": "Goblin Slayer",
@@ -376,6 +985,172 @@ QUESTS = [
         "target": {"monster": "Blight Beast", "count": 5},
         "reward": {"gold": 150, "exp": 300}
     },
+    # New quests for Iron Caliphate of Al-Khilafah Al-Hadidiyah
+    {
+        "id": 503,
+        "name": "Sabotage Supply Lines",
+        "description": "Disrupt the Iron Caliphate's supply routes to weaken their forces.",
+        "target": {"location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah", "count": 1},
+        "reward": {"gold": 2000, "exp": 2500, "item": "Blueprints for Resistance Gear"},
+        "story": False,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    {
+        "id": 504,
+        "name": "Rescue Imprisoned Dissidents",
+        "description": "Free the dissidents imprisoned by the Iron Caliphate.",
+        "target": {"npc": "Imprisoned Dissidents", "count": 1},
+        "reward": {"gold": 2100, "exp": 2600, "item": "Resistance Gear"},
+        "story": False,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    {
+        "id": 505,
+        "name": "Infiltrate the Palace",
+        "description": "Sneak into the Iron Caliphate's palace to gather intelligence.",
+        "target": {"location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah Palace", "count": 1},
+        "reward": {"gold": 2200, "exp": 2700, "item": "Special Weapons"},
+        "story": False,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    {
+        "id": 506,
+        "name": "Recover Stolen Artifacts",
+        "description": "Retrieve artifacts stolen by the Iron Caliphate's forces.",
+        "target": {"item": "Stolen Artifact", "count": 3},
+        "reward": {"gold": 2300, "exp": 2800, "item": "Access to Guarded Areas"},
+        "story": False,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    {
+        "id": 507,
+        "name": "Distract the Patrols",
+        "description": "Create diversions to help resistance members move freely.",
+        "target": {"location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah", "count": 1},
+        "reward": {"gold": 1900, "exp": 2300},
+        "story": False,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    {
+        "id": 508,
+        "name": "Smuggle Supplies",
+        "description": "Help smuggle food and medical supplies to the resistance.",
+        "target": {"location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah", "count": 1},
+        "reward": {"gold": 2000, "exp": 2400},
+        "story": False,
+        "chapter": 5,
+        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+    },
+    # New quests for Shogunate of Shirui
+    {
+        "id": 403,
+        "name": "Assassinate a Corrupt Official",
+        "description": "Eliminate a corrupt official threatening the Shogunate's peace.",
+        "target": {"npc": "Corrupt Official", "count": 1},
+        "reward": {"gold": 1400, "exp": 1800, "item": "Unique Samurai Weapons"},
+        "story": False,
+        "chapter": 4,
+        "travel_locations": ["Shogunate of Shirui"]
+    },
+    {
+        "id": 404,
+        "name": "Protect a Whistleblower",
+        "description": "Escort a whistleblower safely out of the Shogunate.",
+        "target": {"npc": "Whistleblower", "count": 1},
+        "reward": {"gold": 1500, "exp": 1900, "item": "Ronin Armor"},
+        "story": False,
+        "chapter": 4,
+        "travel_locations": ["Shogunate of Shirui"]
+    },
+    # New quests for Shadowmere
+    {
+        "id": 304,
+        "name": "Retrieve Stolen Secrets",
+        "description": "Recover secrets stolen by rival factions in Shadowmere.",
+        "target": {"item": "Stolen Secrets", "count": 3},
+        "reward": {"gold": 1100, "exp": 1300, "item": "Rare Magic Items"},
+        "story": False,
+        "chapter": 3,
+        "travel_locations": ["Shadowmere"]
+    },
+    {
+        "id": 305,
+        "name": "Eliminate a Rival",
+        "description": "Take out a rival threatening the Shadow Broker's operations.",
+        "target": {"npc": "Rival", "count": 1},
+        "reward": {"gold": 1200, "exp": 1400, "item": "Forbidden Scrolls"},
+        "story": False,
+        "chapter": 3,
+        "travel_locations": ["Shadowmere"]
+    },
+    # New quests for Frostvale
+    {
+        "id": 306,
+        "name": "Contain the Ice Wraith",
+        "description": "Stop the Ice Wraith from terrorizing Frostvale.",
+        "target": {"monster": "Ice Wraith", "count": 1},
+        "reward": {"gold": 1300, "exp": 1500, "item": "Ice-elemental Weapons"},
+        "story": False,
+        "chapter": 3,
+        "travel_locations": ["Frostvale"]
+    },
+    {
+        "id": 307,
+        "name": "Retrieve Magical Research",
+        "description": "Find lost magical research in Frostvale.",
+        "target": {"item": "Magical Research", "count": 1},
+        "reward": {"gold": 1400, "exp": 1600, "item": "Frost-resistant Gear"},
+        "story": False,
+        "chapter": 3,
+        "travel_locations": ["Frostvale"]
+    },
+    # New quests for Dragon's Peak
+    {
+        "id": 204,
+        "name": "Retrieve a Specific Egg",
+        "description": "Find and retrieve a rare dragon egg.",
+        "target": {"item": "Dragon Egg", "count": 1},
+        "reward": {"gold": 600, "exp": 700, "item": "Dragon Egg Fragments"},
+        "story": False,
+        "chapter": 2,
+        "travel_locations": ["Dragon's Peak"]
+    },
+    {
+        "id": 205,
+        "name": "Protect a Nest",
+        "description": "Defend a dragon's nest from poachers.",
+        "target": {"location": "Dragon's Peak", "count": 1},
+        "reward": {"gold": 650, "exp": 750, "item": "Rare Mounts"},
+        "story": False,
+        "chapter": 2,
+        "travel_locations": ["Dragon's Peak"]
+    },
+    # New quests for Long Shui Zhen
+    {
+        "id": 308,
+        "name": "Decode Ancient Dragon Texts",
+        "description": "Translate ancient texts about dragons.",
+        "target": {"item": "Ancient Dragon Texts", "count": 1},
+        "reward": {"gold": 900, "exp": 1100, "item": "Dragon Lore Books"},
+        "story": False,
+        "chapter": 3,
+        "travel_locations": ["Long Shui Zhen"]
+    },
+    {
+        "id": 309,
+        "name": "Find a Legendary Dragon",
+        "description": "Locate a legendary dragon hidden in the mountains.",
+        "target": {"monster": "Legendary Dragon", "count": 1},
+        "reward": {"gold": 1000, "exp": 1200, "item": "Knowledge-based Items"},
+        "story": False,
+        "chapter": 3,
+        "travel_locations": ["Long Shui Zhen"]
+    }
 ]
 
 # Available professions with their bonuses
@@ -409,6 +1184,7 @@ user_data: Dict = {
     "max_health": INITIAL_HEALTH,
     "attack": 10,
     "defense": 0,
+    "speed": 5,  # Default speed
     "skills": [],
     "active_quests": [],
     "completed_quests": [],
@@ -477,7 +1253,7 @@ shop_items = [
     {"name": "Frozen Soul", "type": "consumable", "effect": "freeze_enemies", "price": 500, "special": "Freezes all enemies for 1 turn", "source": "Hatred frozen soul"},
 ]
 
-monsters: List[Dict] = [
+monsters = [
     # Greenwood Village Monsters (Level 1-2)
     {"name": "Goblin", "level": 1, "health": 50, "attack": 10, "drops": ["Gold Coin", "Wooden Sword"]},
     {"name": "Wolf", "level": 2, "health": 60, "attack": 12, "drops": ["Wolf Pelt", "Gold Coin"]},
@@ -486,6 +1262,11 @@ monsters: List[Dict] = [
     {"name": "Dire Wolf", "level": 2, "health": 70, "attack": 15, "drops": ["Wolf Fang", "Gold Coin"]},
     {"name": "Goblin Shaman", "level": 2, "health": 55, "attack": 13, "drops": ["Goblin Staff", "Gold Coin"], "boss": True},
     {"name": "Goblin King", "level": 3, "health": 80, "attack": 20, "drops": ["Goblin Crown", "Gold Coin"],"boss": True},
+
+    # Added missing monsters
+    {"name": "Dragon Whelp", "level": 4, "health": 100, "attack": 25, "drops": ["Dragon Scale", "Gold Coin"]},
+    {"name": "Shadow Master", "level": 10, "health": 300, "attack": 60, "drops": ["Shadow Master's Cloak", "Gold Coin"], "boss": True},
+    {"name": "Blight Beast", "level": 7, "health": 180, "attack": 40, "drops": ["Blight Beast Claw", "Gold Coin"]},
 
     # Stormhaven Monsters (Level 2-3)
     {"name": "Skeleton", "level": 2, "health": 75, "attack": 15, "drops": ["Gold Coin", "Bone Armor"]},
@@ -623,7 +1404,7 @@ monsters: List[Dict] = [
 
 
 
-dungeons: List[Dict] = [
+dungeons = [
     # Greenwood Village Dungeons
     {"name": "Goblin's Hideout", "monsters": ["Goblin", "Wolf"], "loot": ["Wooden Sword", "Wolf Pelt", "Gold Coin"]},
     {"name": "Bandit Camp", "monsters": ["Bandit"], "loot": ["Leather Armor", "Gold Coin"]},
@@ -777,18 +1558,23 @@ BLUE = '\033[34m'
 import sys
 import time
 
-def print_colored(text: str, color_code: str) -> None:
-    print(f"{color_code}{text}{ENDC}")
+def print_colored(text: str, color_code: str = "") -> None:
+    print(f"{color_code}{text}{ENDC}" if color_code else text)
 
-def print_animated(text: str, color_code: str = ENDC) -> None:
+def print_animated(text: str, color_code: str = "", delay: float = None) -> None:
     length = len(text)
-    # Determine delay per character: longer text = faster (min 0.005s, max 0.03s)
-    delay = max(0.005, min(0.03, 1.0 / (length * 10)))
+    if delay is None:
+        delay = max(0.005, min(0.03, 1.0 / (length * 10)))
+    if color_code:
+        sys.stdout.write(color_code)
     for char in text:
-        sys.stdout.write(f"{color_code}{char}{ENDC}")
+        sys.stdout.write(char)
         sys.stdout.flush()
         time.sleep(delay)
-    print()  # Newline after printing
+    if color_code:
+        sys.stdout.write(ENDC)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
 
 # Function to display headers with color
 def print_header(title: str) -> None:
@@ -815,8 +1601,7 @@ CRAFTING
 /drops             - Monster drops
 /enchants          - Enchantments info
 
-HORSE & PETS
-/horse             - Horse guide
+PETS
 /pet               - Pets guide
 
 TRADING
@@ -824,6 +1609,7 @@ TRADING
 
 PROFESSIONS
 /professions       - Professions guide
+/prof_system       - Professions system
 
 GUILD
 /guild             - Guild guide
@@ -887,6 +1673,14 @@ def show_location() -> None:
 def handle_command(cmd: str) -> None:
     allowed_commands_without_character = {"/new", "/load", "/help", "/exit", "/prefix", "/save"}
 
+    if cmd.startswith("/talk"):
+        npc_name = cmd.split(" ", 1)[1] if len(cmd.split(" ", 1)) > 1 else None
+        talk_to_npc(npc_name)
+    elif cmd == "/npcs":
+        list_npcs()
+    elif cmd == "/story":
+        show_storyline()
+
     if user_data["class"] is None and cmd not in allowed_commands_without_character:
         print_animated("You need to create a character first! Use /new to start your adventure.")
         return
@@ -900,6 +1694,7 @@ def handle_command(cmd: str) -> None:
         "/location": show_location,
         "/location_check": check_location,
         "/professions": show_professions,
+        "/prof_system": professions_system,  # Changed duplicate to a new name
         "/stats": show_stats,
         "/s": show_stats,
         "/shop": visit_shop,
@@ -928,9 +1723,7 @@ def handle_command(cmd: str) -> None:
         "/invcalc": inventory_calculator,
         "/drops": show_drops,
         "/enchants": show_enchants,
-        "/horse": horse_festival,
         "/trading": trading_system,
-        "/professions": professions_system,
         "/gambling": gambling_guide,
         "/codes": redeem_codes,
         "/duel": duel_info,
@@ -1057,7 +1850,14 @@ def join_guild(guild_name: str) -> None:
     print(f"Successfully joined the {guild_name} guild!")
 
 def adopt_pet(pet_name: str) -> None:
-    user_data["pets"].append(pet_name)
+    if pet_name in PETS:
+        if pet_name in user_data["pets"]:
+            print(f"You already have a pet named {pet_name}.")
+        else:
+            user_data["pets"].append(pet_name)
+            print(f"You have adopted a pet: {pet_name}.")
+    else:
+        print(f"No pet named {pet_name} found.")
     print_header("Adopt Pet")
     print(f"Adopted a new pet named {pet_name}!")
 
@@ -1081,21 +1881,143 @@ def show_mobs(area: str = None) -> None:
         else:
             print("No monsters in current area")
 
-# Function to handle a fight with a monster
+# Function to handle a fight with a monster (used in dungeons)
 def fight(monster: Dict) -> None:
     if not user_data["class"]:
         print("You need to create a character first! Use /new")
         return
 
+    if user_data["health"] <= 0:
+        print("You can't fight while defeated! Use a healing potion or rest.")
+        return
+
+    print_header(f"Fighting {monster['name']}")
     monster_health = monster["health"]
     print(f"You encountered a {monster['name']} (Level {monster['level']})!")
 
     while user_data["health"] > 0 and monster_health > 0:
-        print(f"\nYour Health: {user_data['health']}/{user_data['max_health']} | {monster['name']} Health: {monster_health}")
-        print("\nActions:")
-        print("[1] Attack")
-        print("[2] Use Skill") 
-        print("[3] Use Health Potion")
+        try:
+            print(f"\nYour Health: {user_data['health']}/{user_data['max_health']}")
+            print(f"Monster Health: {monster_health}/{monster['health']}")
+            print("\nActions:")
+            print("1. Attack")
+            print("2. Use Skill")
+            print("3. Use Healing Potion")
+            print("4. Flee")
+
+            choice = input("Choose action (1-4): ").strip()
+
+            if choice == "1":
+                # Calculate damage with equipped weapon
+                base_damage = user_data["attack"]
+                weapon_bonus = user_data["equipped"]["weapon"]["effect"] if user_data["equipped"]["weapon"] else 0
+                damage = base_damage + weapon_bonus
+
+                if random.random() < CRITICAL_CHANCE:
+                    damage *= 2
+                    print("Critical hit!")
+
+                monster_health -= damage
+                print(f"You deal {damage} damage!")
+
+            elif choice == "2":
+                if user_data["skills"]:
+                    print("\nAvailable skills:")
+                    for i, skill in enumerate(user_data["skills"], 1):
+                        print(f"[{i}] {skill}")
+                    try:
+                        skill_choice = int(input("Choose skill (0 to cancel): "))
+                        if skill_choice == 0:
+                            continue
+                        if 1 <= skill_choice <= len(user_data["skills"]):
+                            skill = user_data["skills"][skill_choice - 1]
+                            damage = random.randint(15, 25)  # Skills do more damage
+                            monster_health -= damage
+                            print(f"You used {skill} and dealt {damage} damage!")
+                        else:
+                            print("Invalid skill choice.")
+                    except ValueError:
+                        print("Invalid input.")
+                else:
+                    print("You have no skills available!")
+                    continue
+
+            elif choice == "3":
+                if "Healing Potion" in user_data["inventory"]:
+                    user_data["health"] = min(user_data["health"] + 30, user_data["max_health"])
+                    user_data["inventory"].remove("Healing Potion")
+                    print("You used a Healing Potion! Health restored.")
+                    continue
+                else:
+                    print("You have no Healing Potions!")
+                    continue
+
+            elif choice == "4":
+                # Calculate flee chance based on speed
+                player_speed = user_data.get("speed", 5)
+                monster_speed = monster.get("speed", 5)  # Default monster speed 5 if not set
+                base_chance = 0.4  # Base flee chance
+                speed_diff = player_speed - monster_speed
+                flee_chance = base_chance + (speed_diff * 0.05)
+                flee_chance = max(0.1, min(flee_chance, 0.9))  # Clamp between 10% and 90%
+
+                if random.random() < flee_chance:
+                    print("You successfully fled!")
+                    return
+                print("Failed to flee!")
+
+            else:
+                print("Invalid choice!")
+                continue
+
+            # Monster attacks if still alive
+            if monster_health > 0:
+                defense_bonus = user_data["equipped"]["armor"]["effect"] if user_data["equipped"]["armor"] else 0
+                damage_taken = max(1, monster["attack"] - defense_bonus)
+                if random.random() > DODGE_CHANCE:
+                    user_data["health"] -= damage_taken
+                    print(f"Monster deals {damage_taken} damage!")
+                else:
+                    print("You dodged the attack!")
+
+        except Exception as e:
+            print(f"Error during combat: {e}")
+            continue
+
+    if monster_health <= 0:
+        print(f"\nYou defeated the {monster['name']}!")
+        exp_gain = monster["level"] * 20
+        user_data["exp"] += exp_gain
+        print(f"Gained {exp_gain} experience!")
+
+        # Increment monsters killed count
+        user_data["monsters_killed"] += 1
+
+        # Check if monster is a boss
+        if monster.get("boss", False):
+            print(f"Congratulations! You defeated the boss {monster['name']}!")
+            # Mark dungeon as completed if in a dungeon
+            for dungeon in dungeons:
+                if monster['name'] in dungeon['monsters']:
+                    if dungeon['name'] not in user_data["dungeons_completed"]:
+                        user_data["dungeons_completed"].append(dungeon['name'])
+                        print(f"You have completed the dungeon: {dungeon['name']}!")
+                        # Reward player (example: gold and exp bonus)
+                        reward_gold = 500
+                        reward_exp = 1000
+                        user_data["gold"] += reward_gold
+                        user_data["exp"] += reward_exp
+                        print(f"You received {reward_gold} gold and {reward_exp} experience as a reward!")
+                    break
+        else:
+            # Check for level up
+            check_level_up()
+        
+        # Handle loot
+        loot(monster)
+    else:
+        print("You were defeated!")
+        user_data["health"] = 1  # Prevent death, set to 1 HP
 
 def get_save_slots() -> List[str]:
     saves = [f for f in os.listdir() if f.startswith("save_") and f.endswith(".json")]
@@ -1199,14 +2121,52 @@ def delete_save(slot: int) -> None:
 
 def show_quests() -> None:
     print_header("Available Quests")
-    for quest in QUESTS:
-        if quest["id"] not in user_data["completed_quests"] and quest not in user_data["active_quests"]:
-            print(f"\n{quest['name']}")
+
+    # Check if player has Hylit companion for narration
+    has_hylit = "Hylit" in user_data["pets"]
+
+    # Show story quests first
+    print("\nStory Quests:")
+    story_quests = [q for q in QUESTS if q.get("story", False)
+                   and q["id"] not in user_data["completed_quests"]
+                   and q not in user_data["active_quests"]]
+
+    for quest in story_quests:
+        if has_hylit:
+            print_animated(f"Hylit says: 'A new quest awaits you! {quest['name']}'", CYAN)
+            print_animated(f"Hylit narrates: {quest['description']}", CYAN)
+        else:
+            print(f"\n[Chapter {quest['chapter']}] {quest['name']}")
             print(f"Description: {quest['description']}")
-            print(f"Reward: {quest['reward']['gold']} gold, {quest['reward']['exp']} exp")
-            if input("Accept quest? (y/n): ").lower() == 'y':
-                user_data["active_quests"].append(quest)
-                print("Quest accepted!")
+
+        print(f"Reward: {quest['reward']['gold']} gold, {quest['reward']['exp']} exp")
+        if "item" in quest["reward"]:
+            print(f"Special Reward: {quest['reward']['item']}")
+
+        # Add travel requirement narration if quest has travel locations
+        if "travel_locations" in quest:
+            if has_hylit:
+                print_animated(f"Hylit whispers: 'You must travel to these places: {', '.join(quest['travel_locations'])}'", CYAN)
+            else:
+                print(f"Travel to: {', '.join(quest['travel_locations'])}")
+
+        if input("Accept story quest? (y/n): ").lower() == 'y':
+            user_data["active_quests"].append(quest)
+            print("Story quest accepted!")
+
+    # Show side quests
+    print("\nSide Quests:")
+    side_quests = [q for q in QUESTS if not q.get("story", False)
+                  and q["id"] not in user_data["completed_quests"]
+                  and q not in user_data["active_quests"]]
+
+    for quest in side_quests:
+        print(f"\n{quest['name']}")
+        print(f"Description: {quest['description']}")
+        print(f"Reward: {quest['reward']['gold']} gold, {quest['reward']['exp']} exp")
+        if input("Accept side quest? (y/n): ").lower() == 'y':
+            user_data["active_quests"].append(quest)
+            print("Side quest accepted!")
 
 
 # Function to handle loot drops
@@ -1388,19 +2348,6 @@ def show_bestiary() -> None:
     for monster in monsters:
         print(f"Name: {monster['name']}, Level: {monster['level']}, Health: {monster['health']}, Attack: {monster['attack']}, Drops: {', '.join(monster['drops'])}")
 
-def show_pets() -> None:
-    print_header("Your Pets")
-    if not user_data["pets"]:
-        print("You have no pets.")
-        return
-    for pet_name in user_data["pets"]:
-        pet_info = PETS.get(pet_name, None)
-        if pet_info:
-            desc = pet_info.get("description", "No description available.")
-            print(f"- {pet_name}: {desc}")
-        else:
-            print(f"- {pet_name}: No information available.")
-
 def show_support() -> None:
     print_header("Support Information")
     print_animated("For support, visit our Discord server or check the wiki.", CYAN, 0.01)
@@ -1472,8 +2419,15 @@ def show_pets() -> None:
     if not user_data["pets"]:
         print("You have no pets.")
         return
-    for pet in user_data["pets"]:
-        print(f"- {pet}")
+    for pet_name in user_data["pets"]:
+        if pet_name == "Hylit":
+            continue
+        pet_info = PETS.get(pet_name, None)
+        if pet_info:
+            desc = pet_info.get("description", "No description available.")
+            print(f"- {pet_name}: {desc}")
+        else:
+            print(f"- {pet_name}: No information available.")
 
 # Achievements system
 achievements = []
@@ -1519,6 +2473,10 @@ def complete_quest(quest_name: str) -> None:
         user_data["exp"] += exp
         print(f"Quest '{quest['name']}' completed! You received {gold} gold and {exp} experience.")
         check_level_up()
+        # Grant Hylit pet after completing quest 1
+        if quest["id"] == 101 and "Hylit" not in user_data["pets"]:
+            user_data["pets"].append("Hylit")
+            print("Hylit has joined you as a companion!")
     else:
         print(f"No active quest named '{quest_name}' found.")
 
@@ -1813,9 +2771,7 @@ def farming_guide() -> None:
     print("Farming feature is coming soon! Grow your own crops.")
 
 # Horse festival function (added for completeness)
-def horse_festival() -> None:
-    print_header("Horse Festival")
-    print("The annual Horse Festival is a grand event with exciting races and prizes.")
+# Horse festival function removed as it was not useful
 
 # New function for gathering materials
 def gather_materials(area: str) -> None:
@@ -2116,6 +3072,7 @@ def show_weapon_info() -> None:
 
 # Enhanced pet system
 PETS = {
+    "Hylit": {"price": 0, "boost": {}, "description": "Your fairy companion and guide"},
     "Cat": {"price": 50, "boost": {"attack": 2}, "description": "A stealthy companion that boosts attack"},
     "Dog": {"price": 50, "boost": {"defense": 2}, "description": "A loyal friend that boosts defense"},
     "Dragon Hatchling": {"price": 200, "boost": {"attack": 5, "health": 10}, "description": "A baby dragon that boosts attack and health"},
@@ -2155,13 +3112,6 @@ def show_professions() -> None:
         print(f"\nYou are now a {choice}!")
     elif choice:
         print("Invalid profession choice.")
-    for weapon, stats in WEAPONS.items():
-        print(f"\n{weapon}:")
-        print(f"  Damage: {stats['damage']}")
-        print(f"  Speed: {stats['speed']}")
-        print(f"  Price: {stats['price']} gold")
-        if 'effect' in stats:
-            print(f"  Special Effect: {stats['effect']}")
 
 def check_location() -> None:
     print_header("Location Information")
@@ -2251,17 +3201,135 @@ def delete_save_prompt() -> None:
     except ValueError:
         print("Invalid input. Please enter a number.")
 
+def talk_to_npc(npc_name: str = None) -> None:
+    if not npc_name:
+        print("Which NPC would you like to talk to?")
+        return
+
+    npc = next((npc for name, npc in NPCS.items() if name.lower() == npc_name.lower()), None)
+    if not npc:
+        print(f"No NPC named '{npc_name}' found.")
+        return
+
+    if npc["location"] != user_data["current_area"]:
+        print(f"This NPC is in {npc['location']}. You need to travel there first!")
+        return
+
+    print_header(f"Talking to {npc_name}")
+    print_animated(npc["dialogues"]["greeting"], CYAN)
+
+    while True:
+        print("\nOptions:")
+        print("1. Ask about quests")
+        print("2. Listen to story")
+        print("3. Trade/Shop")
+        print("4. End conversation")
+
+        choice = input("\nWhat would you like to do? ")
+
+        if choice == "1" and "quests" in npc:
+            print_animated(npc["dialogues"].get("quest", "No quests available."), YELLOW)
+            for quest_name in npc["quests"]:
+                quest = next((q for q in QUESTS if q["name"] == quest_name), None)
+                if quest and quest["id"] not in user_data["completed_quests"]:
+                    print(f"\nQuest: {quest['name']}")
+                    print(f"Description: {quest['description']}")
+                    if input("Accept quest? (y/n): ").lower() == 'y':
+                        user_data["active_quests"].append(quest)
+                        print("Quest accepted!")
+
+        elif choice == "2":
+            if "story" in npc["dialogues"]:
+                for part, text in npc["dialogues"]["story"].items():
+                    print_animated(f"\n{part.capitalize()}:", MAGENTA)
+                    print_animated(text, CYAN)
+                    input("\nPress Enter to continue...")
+            else:
+                print("This NPC has no story to tell.")
+
+        elif choice == "3" and "shop" in npc:
+            print("\nAvailable items:")
+            for item in npc["shop"]:
+                if item in WEAPONS:
+                    print(f"{item}: {WEAPONS[item]['price']} gold")
+
+            item = input("\nWhat would you like to buy? (or press Enter to cancel): ")
+            if item in npc["shop"]:
+                if item in WEAPONS and user_data["gold"] >= WEAPONS[item]["price"]:
+                    user_data["gold"] -= WEAPONS[item]["price"]
+                    user_data["inventory"].append(item)
+                    print(f"Bought {item}!")
+                else:
+                    print("Not enough gold!")
+
+        elif choice == "4":
+            break
+
+        else:
+            print("Invalid choice.")
+
+def list_npcs() -> None:
+    print_header("NPCs in Current Area")
+    current_area = user_data["current_area"]
+    found = False
+
+    for npc_name, npc in NPCS.items():
+        if npc["location"] == current_area:
+            found = True
+            print(f"\n{npc_name}")
+            print(f"Location: {npc['location']}")
+            if "quests" in npc:
+                print(f"Available Quests: {len(npc['quests'])}")
+            if "shop" in npc:
+                print("Has shop: Yes")
+
+    if not found:
+        print(f"No NPCs found in {current_area}")
+
+def show_storyline() -> None:
+    print_header("Main Storyline")
+    current_chapter = None
+
+    for chapter_name, chapter in STORYLINE.items():
+        if user_data["level"] >= chapter["required_level"]:
+            completed_quests = all(
+                any(q["name"] == quest_name and q["id"] in user_data["completed_quests"] 
+                    for q in QUESTS)
+                for quest_name in chapter["quest_line"]
+            )
+
+            if completed_quests:
+                status = f"{OKGREEN}✓ Completed{ENDC}"
+            elif current_chapter is None:
+                status = f"{YELLOW}► In Progress{ENDC}"
+            else:
+                status = f"{FAIL}- Locked{ENDC}"
+            print(f"\n{BOLD}{chapter['title']} [{status}]{ENDC}")
+            print(f"Required Level: {chapter['required_level']}")
+            print(f"Description: {chapter['description']}")
+
+            if not completed_quests and current_chapter is None:
+                current_chapter = chapter_name
+                print(f"\n{UNDERLINE}Current quest line:{ENDC}")
+                for quest_name in chapter["quest_line"]:
+                    quest = next((q for q in QUESTS if q["name"] == quest_name), None)
+                    if quest:
+                        quest_status = f"{OKGREEN}✓{ENDC}" if quest["id"] in user_data["completed_quests"] else f"{YELLOW}►{ENDC}"
+                        print(f"  {quest_status} {quest_name}")
+
+
 
 
 # Main loop
 if __name__ == "__main__":
-    print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
-    print_colored(f"{BOLD}{CYAN}     Welcome to Legacies of our Legends RPG!{ENDC}", CYAN)
-    print_colored(f"{BOLD}{CYAN}================================{ENDC}", CYAN)
-    print_colored(f"{GREEN}--------------------------------------------------------------------{ENDC}", GREEN)
-    print_colored(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}", GREEN)
-    print_colored(f"{GREEN}--------------------------------------------------------------------{ENDC}", GREEN)
-    print_colored(f"{BOLD}{BLUE}Made by andy64lol{ENDC}", BLUE)
+    print("\n")  # Add a blank line for spacing
+    print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
+    print_animated(f"{BOLD}{CYAN}     Welcome to Legacies of our Legends RPG!{ENDC}")
+    print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
+    print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
+    print_animated(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}")
+    print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
+    print_animated(f"{BOLD}{BLUE}Made by andy64lol{ENDC}")
 
     # Auto-save interval in seconds
     AUTO_SAVE_INTERVAL = 300  # 5 minutes
@@ -2284,6 +3352,7 @@ if __name__ == "__main__":
                 last_save = time.time()
         except Exception as e:
             print(f"{FAIL}Error: {e}{ENDC}")
-            print_colored("Type '/help' for available commands.", YELLOW)
+            print_animated("Type '/help' for available commands.", YELLOW)
 
-      
+
+
