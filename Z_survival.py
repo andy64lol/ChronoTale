@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 Zombie Survival RPG - A text-based survival game with Discord-like commands.
 Use /help to see available commands.
@@ -13,7 +13,6 @@ import sys
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Union
 
-# Terminal colors and formatting
 class Colors:
     HEADER = '\033[95m'
     BLUE = '\033[94m'
