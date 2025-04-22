@@ -2218,21 +2218,27 @@ def loot(monster: Dict) -> None:
     for idx, item in enumerate(drops, 1):
         print(f"{idx}. {item}")
 
-    try:
-        choice = int(input(f"Choose item to take (1-{len(drops)}): "))
-        if 1 <= choice <= len(drops):
-            item = drops[choice - 1]
-            if item == "Gold Coin":
-                gold_amount = random.randint(5, 15)
-                user_data["gold"] += gold_amount
-                print(f"Gained {gold_amount} gold!")
+    while True:
+        try:
+            choice = input(f"Choose item to take (1-{len(drops)}) or press Enter to skip: ").strip()
+            if choice == "":
+                print("No loot taken.")
+                break
+            choice_int = int(choice)
+            if 1 <= choice_int <= len(drops):
+                item = drops[choice_int - 1]
+                if item == "Gold Coin":
+                    gold_amount = random.randint(5, 15)
+                    user_data["gold"] += gold_amount
+                    print(f"Gained {gold_amount} gold!")
+                else:
+                    user_data["inventory"].append(item)
+                    print(f"Added {item} to inventory!")
+                break
             else:
-                user_data["inventory"].append(item)
-                print(f"Added {item} to inventory!")
-        else:
-            print("Invalid choice, no loot taken.")
-    except ValueError:
-        print("Invalid input, no loot taken.")
+                print("Invalid choice, please try again.")
+        except ValueError:
+            print("Invalid input, please enter a number or press Enter to skip.")
 
 # Function to enter a dungeon
 def enter_dungeon(dungeon_name: str) -> None:
@@ -2928,8 +2934,9 @@ def fight_monster(monster_name: str) -> None:
             print("You can't fight while defeated! Use a healing potion or rest.")
             return
 
-        # Check if monster is in current area
-        if monster["name"] not in LOCATIONS.get(user_data["current_area"], {}).get("monsters", []):
+        # Check if monster is in current area (case-insensitive)
+        area_monsters = LOCATIONS.get(user_data["current_area"], {}).get("monsters", [])
+        if not any(monster["name"].lower() == m.lower() for m in area_monsters):
             print(f"{monster['name']} is not in this area! Travel to find it.")
             return
 
@@ -3055,10 +3062,10 @@ def fight_monster(monster_name: str) -> None:
                 check_level_up()
                 # Trigger boss encounter if monsters killed between 12 and 26
                 if 12 <= user_data["monsters_killed"] <= 26:
-                    # Find a boss in current area dungeons
+                    # Find a boss in dungeons of the current area
                     bosses_in_area = []
                     for dungeon in dungeons:
-                        if user_data["current_area"] in dungeon.get("monsters", []) or user_data["current_area"] in dungeon.get("name", ""):
+                        if dungeon.get("name", "").lower() == user_data["current_area"].lower():
                             for m_name in dungeon["monsters"]:
                                 m = next((mon for mon in monsters if mon["name"] == m_name and mon.get("boss", False)), None)
                                 if m:
