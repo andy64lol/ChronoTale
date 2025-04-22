@@ -16,12 +16,11 @@
 
 Clone it using git clone
 
-and then use cd ~/Textrp/
+and then use cd ~/ChronoTale/
 
 Lastly use python3 for the games
 
 ---
 
-Zombie Survival:coming soon!
-
-> Made by andy64lol and buddies!
+> **Made by andy64lol and buddies!**
+> *“Every Tale, A New Timeline."*
