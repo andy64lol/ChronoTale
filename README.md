@@ -1,6 +1,7 @@
-# **TextRP**
+# **ChronoTale**
 
-This is a simple text RPG project in python.
+**This is a set of text RPG projects all made in python.**
+
 ---
 
 **Our games:**
