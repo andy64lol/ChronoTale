@@ -1167,7 +1167,7 @@ PROFESSIONS = {
 }
 
 # Initialize user data with proper typing
-user_data: Dict = {
+user_data = {
     "class": None,
     "profession": None,
     "has_chosen_profession": False,
@@ -1184,12 +1184,12 @@ user_data: Dict = {
     "max_health": INITIAL_HEALTH,
     "attack": 10,
     "defense": 0,
-    "speed": 5,  # Default speed
+    "speed": 5,
     "skills": [],
     "active_quests": [],
     "completed_quests": [],
     "materials": {},
-    "tools": ["Axe", "Pickaxe", "Flask", "Hunting Knife"],  # Starting tools
+    "tools": ["Axe", "Pickaxe", "Flask", "Hunting Knife"],
     "current_area": "Greenwood Village",
     "monsters_killed": 0,
     "dungeons_completed": []
@@ -2437,17 +2437,6 @@ def professions_system() -> None:
             print(f"You are now a {choice}.")
         else:
             print("Invalid profession choice.")
-
-# Pet management commands
-def adopt_pet(pet_name: str) -> None:
-    if pet_name in PETS:
-        if pet_name in user_data["pets"]:
-            print(f"You already have a pet named {pet_name}.")
-        else:
-            user_data["pets"].append(pet_name)
-            print(f"You have adopted a pet: {pet_name}.")
-    else:
-        print(f"No pet named {pet_name} found.")
 
 def train_pet(pet_name: str) -> None:
     if pet_name in user_data["pets"]:
