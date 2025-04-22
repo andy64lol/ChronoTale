@@ -1,4 +1,4 @@
-# TextRP
+# **TextRP**
 
 This is a simple text RPG project in python.
 ---
@@ -10,6 +10,14 @@ This is a simple text RPG project in python.
 * Last human:Exodus
 
 ---
+
+## Usage
+
+Clone it using git clone
+
+and then use cd ~/Textrp/
+
+Lastly use python3 for the games
 
 ---
 
