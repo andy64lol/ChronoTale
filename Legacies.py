@@ -12,6 +12,31 @@ INITIAL_HEALTH = 100
 EXP_TO_LEVEL = 100
 CRITICAL_CHANCE = 0.15
 DODGE_CHANCE = 0.1
+TICKS_PER_DAY = 50
+# Only action commands take time (ticks)
+TICK_COMMANDS = {
+    '/gather': (3, 5),
+    '/farm': (2, 4),
+    '/fight': (4, 8), 
+    '/craft': (3, 6),
+    '/dungeon': (8, 15),
+    '/travel': (5, 10),
+    '/search': (2, 4)
+}
+
+# Commands that don't take time
+NO_TICK_COMMANDS = {'/help', '/stats', '/h', '/s_t', '/inventory', '/i', '/materials', 
+                   '/m', '/quests', '/q', '/save', '/load', '/prefix', '/settings',
+                   '/bestiary', '/weapon_info', '/location', '/location_check',
+                   '/professions', '/dungeon_list', '/mobs', '/tip', '/codes',
+                   '/support', '/exit', '/x'}
+
+# Game time tracking
+game_state = {
+    "current_tick": 0,
+    "current_day": 0,
+    "last_command_tick": 0
+}
 
 # NPCs and their dialogues
 NPCS = {
@@ -660,19 +685,22 @@ MATERIALS = {
     "Red Herb": {"areas": ["Forest", "Plains"], "tool_required": None},
     "Water Flask": {"areas": ["River", "Lake"], "tool_required": "Flask"},
     "Leather": {"areas": ["Plains"], "tool_required": "Hunting Knife"},
-    "Steel Ingot": {"areas": ["Blacksmith"], "tool_required": "Furnace"},
+    "Steel Ingot": {"areas": ["Mines","Mountains"], "tool_required": "Furnace"},
     "Gold Ore": {"areas": ["Mountain", "Deep Cave"], "tool_required": "Pickaxe"},
     "Magic Crystal": {"areas": ["Crystal Cave", "Ancient Ruins"], "tool_required": "Magic Chisel"},
     "Fish": {"areas": ["River", "Lake", "Coast"], "tool_required": "Fishing Rod"},
     "Silk Thread": {"areas": ["Forest", "Spider Nest"], "tool_required": "Silk Spinner"},
     "Clay": {"areas": ["Riverbank", "Swamp"], "tool_required": "Shovel"},
-    "Coal": {"areas": ["Mine", "Mountain"], "tool_required": "Pickaxe"},
-    "Ancient Relic": {"areas": ["Ruins", "Temple"], "tool_required": "Archaeology Kit"},
+    "Coal": {"areas": ["Mines", "Mountain"], "tool_required": "Pickaxe"},
+    "Ancient Relic": {"areas": ["Ancient Ruins", "Temple"], "tool_required": "Archaeology Kit"},
     "Salt": {"areas": ["Cave", "Desert Spring"], "tool_required": "Pickaxe"},
     "Venom Sac": {"areas": ["Swamp", "Spider Nest"], "tool_required": "Hunting Knife"},
-    "Feathers": {"areas": ["Plains", "Cliffside"], "tool_required": None}
-
-
+    "Feathers": {"areas": ["Plains", "Cliffside"], "tool_required": None},
+    "Magma Stone": {"areas": ["Volcano", "Lava River"], "tool_required": "Pickaxe"},
+    "Dragon Scale": {"areas": ["Dragon's Peak", "Dragon's Reach"], "tool_required": None},
+    "Wheat seeds": {"areas": ["Plains", "Abundant Field"], "tool_required": None},
+    "Rice seeds": {"areas": ["Plains", "Abundant Field"], "tool_required": None},
+    "Lotus Seeds": {"areas": ["Lotus Pond", "Swamp"], "tool_required": None},
 }
 
 # Story quests are marked with story=True
@@ -1168,6 +1196,7 @@ PROFESSIONS = {
 
 # Initialize user data with proper typing
 user_data = {
+    "name": None,
     "class": None,
     "profession": None,
     "has_chosen_profession": False,
@@ -1233,6 +1262,85 @@ def ensure_user_data_keys(data: Dict) -> None:
                     if subkey not in data[key]:
                         data[key][subkey] = subdefault
 
+
+# Market prices for items and materials
+MARKET_PRICES = {
+    # Basic Materials
+    "Wood": 5,
+    "Iron Ore": 8,
+    "Gold Ore": 15,
+    "Red Herb": 3,
+    "Water Flask": 2,
+    "Leather": 4,
+    "Steel Ingot": 12,
+    "Magic Crystal": 20,
+    
+    # Crops and Seeds
+    "Wheat": 8,
+    "Corn": 12,
+    "Tomato": 15,
+    "Potato": 18,
+    "Rice": 20,
+    "Carrot": 12,
+    "Lettuce": 8,
+    "Strawberry": 18,
+    
+    # Monster Drops
+    "Dragon Scale": 100,
+    "Phoenix Feather": 200,
+    "Wolf Pelt": 15,
+    "Spider Silk": 10,
+    "Spirit Essence": 25,
+    "Soul Gem": 50,
+    "Demon's Heart": 500,
+    "Leviathan Scale": 400,
+    
+    # Common Equipment
+    "Wooden Sword": 15,
+    "Iron Sword": 40,
+    "Steel Sword": 75,
+    "Bone Armor": 20,
+    "Iron Armor": 50,
+    "Steel Armor": 90,
+    
+    # Rare Equipment
+    "Flame Sword": 150,
+    "Ice Sword": 150,
+    "Shadow Blade": 475,
+    "Dragon Armor": 425,
+    "Samurai Armor": 650,
+    "Cursed Katana": 750,
+    
+    # Legendary Equipment
+    "Elder Wand": 400,
+    "Vorpal Blade": 250,
+    "Phoenix Plate": 300,
+    "Mjolnir": 500,
+    "Dragon Scale Armor": 425,
+    "Iron Caliph's Crown": 1000,
+}
+
+def sell_item(item_name: str) -> None:
+    if not item_name:
+        print("Please specify an item to sell.")
+        return
+        
+    # Case-insensitive search in inventory
+    item = next((i for i in user_data["inventory"] if i.lower() == item_name.lower()), None)
+    if not item:
+        print(f"You don't have {item_name} in your inventory.")
+        return
+        
+    # Check if item has a market price
+    if item not in MARKET_PRICES:
+        print(f"This item cannot be sold.")
+        return
+        
+    # Remove from inventory and add gold
+    user_data["inventory"].remove(item)
+    price = MARKET_PRICES[item]
+    user_data["gold"] += price
+    print(f"Sold {item} for {price} gold.")
 
 # Shop items
 shop_items = [
@@ -1439,6 +1547,30 @@ monsters = [
     {"name": "Crimson Abyss Sorcerer", "level": 13, "health": 500, "attack": 80, "drops": ["Sorcerer's Staff", "Gold Coin"]},
     {"name": "Crimson Abyss Guardian", "level": 12, "health": 450, "attack": 75, "drops": ["Guardian's Shield", "Gold Coin"]},
     {"name": "Abyssal Leviathan", "level": 16, "health": 700, "attack": 120, "drops": ["Leviathan Scale", "Gold Coin"], "boss": True},
+
+    # The Dark Legion (Level 17-20)
+    {"name": "Dark Legion Elite", "level": 17, "health": 800, "attack": 130, "drops": ["Dark Legion Armor", "Gold Coin"]},
+    {"name": "Dark Legion Warlock", "level": 18, "health": 750, "attack": 140, "drops": ["Warlock Staff", "Gold Coin"]},
+    {"name": "Dark Legion Commander", "level": 19, "health": 900, "attack": 150, "drops": ["Commander's Blade", "Gold Coin"]},
+    {"name": "Dark Legion's Shadow Assassin", "level": 17, "health": 700, "attack": 160, "drops": ["Shadow Dagger", "Gold Coin"]},
+    {"name": "Dark Legion Archpriest", "level": 18, "health": 850, "attack": 145, "drops": ["Dark Tome", "Gold Coin"]},
+    {"name": "Dark Legionary Supreme Lord:Noctis, the Obsidian Fallen Eternal", 
+ "level": 20, 
+ "health": 2000, 
+ "attack": 250, 
+ "drops": ["Eternal Crown", "Obsidian Blade", "Dark Legion's Heart", "Gold Coin", "Noctis's Soul"], 
+ "boss": True,
+ "special_abilities": {
+     "Dark Oblivion": {"damage": 400, "effect": "health_drain"},
+     "Shadow Legion": {"effect": "summon_minions", "minions": ["Dark Legion Elite", "Dark Legion Warlock"]},
+     "Eternal Darkness": {"effect": "damage_reduction", "duration": 3},
+     "Obsidian Shield": {"effect": "reflect_damage", "duration": 2}
+ },
+ "phases": 3,
+ "phase_triggers": [0.7, 0.3],  # Triggers at 70% and 30% health
+ "unique_mechanics": True,
+ "description": "The supreme ruler of the Dark Legion, wielding powers of eternal darkness and commanding legions of the fallen. Each phase unleashes new devastating abilities."
+},
 ]
 
 
@@ -1575,6 +1707,12 @@ dungeons = [
     {"name": "Crimson Abyss Sorcerer's Tower", "monsters": ["Crimson Abyss Sorcerer"], "loot": ["Sorcerer's Staff", "Gold Coin"]},
     {"name": "Crimson Abyss Guardian's Keep", "monsters": ["Crimson Abyss Guardian"], "loot": ["Guardian's Shield", "Gold Coin"]},
     {"name": "Abyssal Leviathan's Sunken Palace", "monsters": ["Abyssal Leviathan"], "loot": ["Leviathan Scale", "Gold Coin"]},
+
+    # The Dark Legion Dungeons
+    {"name": "Dark Legion Citadel", "monsters": ["Dark Legion Elite", "Dark Legion Commander"], "loot": ["Dark Legion Armor", "Commander's Blade", "Gold Coin"]},
+    {"name": "Warlock's Dark Spire", "monsters": ["Dark Legion Warlock", "Dark Legion Archpriest"], "loot": ["Warlock Staff", "Dark Tome", "Gold Coin"]},
+    {"name": "Shadow Assassin's Den", "monsters": ["Dark Legion's Shadow Assassin"], "loot": ["Shadow Dagger", "Gold Coin"]},
+    {"name": "The Eternal Throne", "monsters": ["Dark Legionary Supreme Lord:Noctis, the Obsidian Fallen Eternal"], "loot": ["Eternal Crown", "Obsidian Blade", "Dark Legion's Heart", "Gold Coin"]},
 ]
 
 
@@ -1711,6 +1849,20 @@ def show_location() -> None:
 
 def handle_command(cmd: str) -> None:
     allowed_commands_without_character = {"/new", "/load", "/help", "/exit", "/prefix", "/save"}
+    
+    # Increment ticks based on command if it's not a no-tick command
+    base_command = cmd.split()[0].lower()
+    if base_command not in NO_TICK_COMMANDS:
+        if base_command in TICK_COMMANDS:
+            ticks = random.randint(*TICK_COMMANDS[base_command])
+            game_state["current_tick"] += ticks
+            game_state["current_day"] = game_state["current_tick"] // TICKS_PER_DAY
+            
+            # Update plant growth based on elapsed ticks
+            if "farming" in user_data:
+                for plot in user_data["farming"]["growth"]:
+                    growth_ticks = ticks
+                    user_data["farming"]["growth"][plot] += growth_ticks
 
     if cmd.startswith("/talk"):
         npc_name = cmd.split(" ", 1)[1] if len(cmd.split(" ", 1)) > 1 else None
@@ -1725,6 +1877,7 @@ def handle_command(cmd: str) -> None:
         return
 
     commands = {
+        "/sell": lambda: sell_item(cmd.split(" ", 1)[1] if len(cmd.split(" ", 1)) > 1 else ""),
         "/start": start_guide,
         "/help": show_help,
         "/h": show_help,
@@ -1733,9 +1886,9 @@ def handle_command(cmd: str) -> None:
         "/location": show_location,
         "/location_check": check_location,
         "/professions": show_professions,
-        "/prof_system": professions_system,  # Changed duplicate to a new name
+        "/prof_system": professions_system,  
         "/stats": show_stats,
-        "/s": show_stats,
+        "/s_t": show_stats,
         "/shop": visit_shop,
         "/inventory": show_inventory,
         "/i": show_inventory,
@@ -2051,7 +2204,7 @@ def fight(monster: Dict) -> None:
         else:
             # Check for level up
             check_level_up()
-        
+
         # Handle loot
         loot(monster)
     else:
@@ -2564,6 +2717,7 @@ villages = [
     {"name": "Jade Lotus", "population": 110, "special_items": ["Lotus Blossom", "Jade Pendant"]},
     {"name": "Shogunate of Shirui", "population": 130, "special_items": ["Samurai Armor", "Katana"]},
     {"name": "Long Shui Zhen", "population": 140, "special_items": ["Dragon Scale", "Water Orb"]},
+    {"name": "Dragon's Reach", "population": 95, "special_items": ["Dragon Claw", "Dragon Fang"]},
 ]
 
 biomes = [
@@ -2584,8 +2738,12 @@ biomes = [
    "description":"A cold mountainous region with snow-covered terrain."
 },
 {
-   "name":"Volcanic Region",
-   "description":"A hot area with lava flows and volcanic activity."
+    "name": "Lava River",
+    "description": "A river of molten lava flowing through a rocky landscape."
+},
+{
+    "name": "Plains",
+    "description": "A flat, open area with grasslands and few trees."
 },
 {
    "name":"Swamp",
@@ -2602,6 +2760,22 @@ biomes = [
 {
    "name":"Crystal Caverns",
    "description":"A cave filled with sparkling crystals and rare minerals."
+},
+{
+    "name": "Mines",
+    "description": "A network of tunnels and shafts, rich in minerals and ores."
+},
+{
+    "name": "Temple",
+    "description": "An ancient structure filled with traps and treasures."
+},
+{
+    "name": "Desert Spring",
+    "description": "A hidden refreshing big spring filled with water and strange creatures in depths of the hot desert."
+},
+{
+    "name":"Ancient Ruins",
+    "description":"Remnants of a long-lost civilization, filled with secrets and treasures."
 },
 {
    "name":"Jungle",
@@ -2714,7 +2888,35 @@ biomes = [
 {
    "name":"Skyward Cavern",
    "description":"A network of caves suspended in the sky, connected by floating platforms and filled with rare ores and aerial creatures."
-}
+},
+{
+    "name":"Volcano",
+    "description":"A towering mountain with a fiery core, spewing lava and ash, home to fire elementals and rare minerals."
+},
+{
+    "name":"Coast",
+    "description":"A sandy beach area with gentle waves, palm trees, and hidden treasures along the shore."
+},
+{
+    "name": "Cliffside",
+    "description": "A steep rocky area overlooking the ocean, with hidden caves and dangerous cliffs."
+},
+{
+    "name": "Deep Cave",
+    "description": "A dark cave filled with hidden treasures and dangerous creatures."
+},
+{
+    "name": "Dragon's Reach",
+    "description": "A mountainous area rumored to once be home to the oldest original dragons,now left only with hidden caves and treasures."
+},
+{
+    "name": "Dragon's peak",
+    "description": "A high mountain peak where The great war of human rebellion occurred,where humans killed the last dragon king Frosthymir. Now said to be cursed from all the renmants of the diseased and hatred souls of the dragons who died in that war."
+},
+{
+    "name": "Lotus Pond",
+    "description": "A serene pond filled with beautiful lotus flowers, home to rare aquatic creatures and the Koi along with their empress."
+},
 ]
 
 # Dismantle items function stub
@@ -2802,9 +3004,215 @@ def duel_info() -> None:
     print("Duel feature is coming soon! Challenge your friends.")
 
 # Farming guide function stub
+# Farming data structures
+CROPS = {
+    # Basic Crops
+    "Wheat": {"growth_time": 2, "yield": "Wheat", "seed_cost": 10, "sell_price": 25, "biome": ["Plains", "Abundant Field"]},
+    "Corn": {"growth_time": 3, "yield": "Corn", "seed_cost": 15, "sell_price": 35, "biome": ["Plains", "Abundant Field"]},
+    "Tomato": {"growth_time": 4, "yield": "Tomato", "seed_cost": 20, "sell_price": 45, "biome": ["Plains", "Garden"]},
+    "Potato": {"growth_time": 5, "yield": "Potato", "seed_cost": 25, "sell_price": 55, "biome": ["Plains", "Abundant Field"]},
+    "Rice": {"growth_time": 6, "yield": "Rice", "seed_cost": 30, "sell_price": 65, "biome": ["Swamp", "Plains"]},
+    "Carrot": {"growth_time": 3, "yield": "Carrot", "seed_cost": 15, "sell_price": 35, "biome": ["Plains", "Garden"]},
+    "Lettuce": {"growth_time": 2, "yield": "Lettuce", "seed_cost": 10, "sell_price": 25, "biome": ["Plains", "Garden"]},
+    "Strawberry": {"growth_time": 4, "yield": "Strawberry", "seed_cost": 25, "sell_price": 55, "biome": ["Plains", "Garden"]},
+    
+    # Special Crops
+    "Golden Wheat": {"growth_time": 8, "yield": "Golden Wheat", "seed_cost": 100, "sell_price": 250, "biome": ["Plains", "Mystic Forest"]},
+    "Magic Beans": {"growth_time": 10, "yield": "Magic Beans", "seed_cost": 150, "sell_price": 300, "biome": ["Mystic Forest"]},
+    "Dragon Fruit": {"growth_time": 12, "yield": "Dragon Fruit", "seed_cost": 200, "sell_price": 450, "biome": ["Dragon's Peak"]},
+    "Moonflower": {"growth_time": 6, "yield": "Moonflower", "seed_cost": 80, "sell_price": 200, "biome": ["Moonveil Harbor"]},
+    "Frost Berries": {"growth_time": 5, "yield": "Frost Berries", "seed_cost": 90, "sell_price": 220, "biome": ["Frostvale"]},
+    "Fire Peppers": {"growth_time": 7, "yield": "Fire Peppers", "seed_cost": 120, "sell_price": 280, "biome": ["Ember Hollow"]},
+    "Shadow Root": {"growth_time": 9, "yield": "Shadow Root", "seed_cost": 130, "sell_price": 290, "biome": ["Shadowmere"]},
+    "Crystal Bloom": {"growth_time": 11, "yield": "Crystal Bloom", "seed_cost": 180, "sell_price": 400, "biome": ["Crystal Cave"]},
+    
+    # Rare Crops
+    "Phoenix Flower": {"growth_time": 15, "yield": "Phoenix Flower", "seed_cost": 500, "sell_price": 1200, "biome": ["Silent Ashes"]},
+    "Dragon's Breath Plant": {"growth_time": 20, "yield": "Dragon's Breath", "seed_cost": 800, "sell_price": 2000, "biome": ["Dragon's Peak"]},
+    "Celestial Herb": {"growth_time": 18, "yield": "Celestial Herb", "seed_cost": 600, "sell_price": 1500, "biome": ["Celestial Peaks"]},
+    "Void Lotus": {"growth_time": 25, "yield": "Void Lotus", "seed_cost": 1000, "sell_price": 2500, "biome": ["Crimson Abyss"]}
+}
+
 def farming_guide() -> None:
-    print_header("Farming Guide")
-    print("Farming feature is coming soon! Grow your own crops.")
+    print_header("Farming")
+    
+    # Initialize farming data if not present
+    if "farming" not in user_data:
+        user_data["farming"] = {
+            "plots": {},  # Store planted crops
+            "growth": {},  # Store growth progress
+            "unlocked_plots": 3  # Start with 3 plots
+        }
+    
+    while True:
+        # Show farm status
+        print_colored("\n=== Your Farm ===", GREEN)
+        print(f"Gold: {user_data['gold']}")
+        print(f"Plots available: {user_data['farming']['unlocked_plots']} (Used: {len(user_data['farming']['plots'])})")
+        
+        print("\nActions:")
+        print("1. View crop prices and info")
+        print("2. Buy seeds")
+        print("3. Plant crops")
+        print("4. View farm")
+        print("5. Harvest crops")
+        print("6. Sell crops")
+        print("7. Upgrade farm")
+        print("8. Exit farming")
+        
+        choice = input("\nChoose action (1-8): ")
+        
+        if choice == "1":
+            print_colored("\n=== Crop Information ===", CYAN)
+            for crop, info in CROPS.items():
+                print(f"\n{crop}:")
+                print(f"  Growth Time: {info['growth_time']} cycles")
+                print(f"  Seed Cost: {info['seed_cost']} gold")
+                print(f"  Market Price: {info['sell_price']} gold")
+                print(f"  Profit per crop: {info['sell_price'] - info['seed_cost']} gold")
+                
+        elif choice == "2":
+            print_colored("\n=== Seed Shop ===", YELLOW)
+            print("Available seeds:")
+            for crop, info in CROPS.items():
+                print(f"{crop} seeds: {info['seed_cost']} gold")
+                
+            seed = input("\nWhich seeds would you like to buy? (or Enter to cancel): ").capitalize()
+            if seed in CROPS:
+                amount = input("How many? ")
+                try:
+                    amount = int(amount)
+                    total_cost = CROPS[seed]["seed_cost"] * amount
+                    if total_cost <= user_data["gold"]:
+                        user_data["gold"] -= total_cost
+                        seed_name = f"{seed} seeds"
+                        if seed_name not in user_data["materials"]:
+                            user_data["materials"][seed_name] = 0
+                        user_data["materials"][seed_name] += amount
+                        print_colored(f"Bought {amount} {seed} seeds for {total_cost} gold!", GREEN)
+                    else:
+                        print_colored("Not enough gold!", RED)
+                except ValueError:
+                    print_colored("Please enter a valid number.", RED)
+                    
+        elif choice == "3":
+            print_colored("\n=== Plant Crops ===", GREEN)
+            seeds = [mat for mat in user_data["materials"] if mat.endswith(" seeds")]
+            
+            if not seeds:
+                print_colored("You don't have any seeds!", RED)
+                continue
+                
+            print("\nYour seeds:")
+            for seed in seeds:
+                print(f"{seed}: {user_data['materials'][seed]}")
+                
+            if len(user_data["farming"]["plots"]) >= user_data["farming"]["unlocked_plots"]:
+                print_colored("All plots are occupied! Harvest some crops or upgrade your farm.", RED)
+                continue
+                
+            seed = input("\nWhich seeds would you like to plant? (or Enter to cancel): ")
+            if seed in seeds:
+                available_plots = user_data["farming"]["unlocked_plots"] - len(user_data["farming"]["plots"])
+                amount = input(f"How many? (max {min(user_data['materials'][seed], available_plots)}): ")
+                
+                try:
+                    amount = int(amount)
+                    if amount > 0 and amount <= user_data["materials"][seed] and amount <= available_plots:
+                        crop_name = seed.replace(" seeds", "")
+                        for _ in range(amount):
+                            plot_id = str(len(user_data["farming"]["plots"]))
+                            user_data["farming"]["plots"][plot_id] = crop_name
+                            user_data["farming"]["growth"][plot_id] = 0
+                        user_data["materials"][seed] -= amount
+                        if user_data["materials"][seed] <= 0:
+                            del user_data["materials"][seed]
+                        print_colored(f"Planted {amount} {crop_name}!", GREEN)
+                    else:
+                        print_colored("Invalid amount!", RED)
+                except ValueError:
+                    print_colored("Please enter a valid number.", RED)
+                    
+        elif choice == "4":
+            print_colored("\n=== Farm Status ===", CYAN)
+            if not user_data["farming"]["plots"]:
+                print("No crops planted!")
+                continue
+                
+            for plot, crop in user_data["farming"]["plots"].items():
+                growth = user_data["farming"]["growth"][plot]
+                max_growth = CROPS[crop]["growth_time"] * TICKS_PER_DAY // 10  # Scale growth time to ticks
+                status = "🌱" if growth < max_growth/3 else "🌿" if growth < max_growth*2/3 else "🌾" if growth < max_growth else "✨"
+                print(f"Plot {plot}: {status} {crop} ({growth}/{max_growth} ticks) - Day {game_state['current_day']}")
+                
+        elif choice == "5":
+            print_colored("\n=== Harvest Crops ===", YELLOW)
+            harvested = False
+            for plot, crop in list(user_data["farming"]["plots"].items()):
+                if user_data["farming"]["growth"][plot] >= CROPS[crop]["growth_time"]:
+                    harvested = True
+                    yield_amount = random.randint(1, 3)
+                    if crop not in user_data["materials"]:
+                        user_data["materials"][crop] = 0
+                    user_data["materials"][crop] += yield_amount
+                    
+                    # Remove harvested crop
+                    del user_data["farming"]["plots"][plot]
+                    del user_data["farming"]["growth"][plot]
+                    
+                    print_colored(f"Harvested {yield_amount}x {crop} from plot {plot}!", GREEN)
+                    
+            if not harvested:
+                print_colored("No crops ready to harvest!", RED)
+                
+        elif choice == "6":
+            print_colored("\n=== Sell Crops ===", YELLOW)
+            crops_to_sell = [crop for crop in user_data["materials"] if crop in CROPS]
+            
+            if not crops_to_sell:
+                print_colored("You have no crops to sell!", RED)
+                continue
+                
+            print("\nYour crops:")
+            for crop in crops_to_sell:
+                print(f"{crop}: {user_data['materials'][crop]} (Worth: {CROPS[crop]['sell_price']} gold each)")
+                
+            crop = input("\nWhat would you like to sell? (or Enter to cancel): ")
+            if crop in crops_to_sell:
+                amount = input(f"How many? (max {user_data['materials'][crop]}): ")
+                try:
+                    amount = int(amount)
+                    if 0 < amount <= user_data["materials"][crop]:
+                        total_price = CROPS[crop]["sell_price"] * amount
+                        user_data["materials"][crop] -= amount
+                        if user_data["materials"][crop] <= 0:
+                            del user_data["materials"][crop]
+                        user_data["gold"] += total_price
+                        print_colored(f"Sold {amount}x {crop} for {total_price} gold!", GREEN)
+                    else:
+                        print_colored("Invalid amount!", RED)
+                except ValueError:
+                    print_colored("Please enter a valid number.", RED)
+                    
+        elif choice == "7":
+            print_colored("\n=== Farm Upgrades ===", MAGENTA)
+            upgrade_cost = 1000 * (user_data["farming"]["unlocked_plots"] - 2)
+            print(f"Upgrade cost for new plot: {upgrade_cost} gold")
+            
+            if input("Would you like to upgrade? (y/n): ").lower() == 'y':
+                if user_data["gold"] >= upgrade_cost:
+                    user_data["gold"] -= upgrade_cost
+                    user_data["farming"]["unlocked_plots"] += 1
+                    print_colored(f"Farm upgraded! You now have {user_data['farming']['unlocked_plots']} plots!", GREEN)
+                else:
+                    print_colored("Not enough gold!", RED)
+                    
+        elif choice == "8":
+            break
+            
+        # Progress growth for all planted crops
+        for plot in user_data["farming"]["growth"]:
+            user_data["farming"]["growth"][plot] += 1
 
 # Horse festival function (added for completeness)
 # Horse festival function removed as it was not useful
