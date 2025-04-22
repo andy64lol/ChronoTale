@@ -1,7 +1,15 @@
 # TextRP
 
 This is a simple text RPG project in python.
-We will add more games soon!
+---
+
+**Our games:**
+
+* Legacies of our Legends
+* Z_Survival
+* Last human:Exodus
+
+---
 
 ---
 
