@@ -7,7 +7,7 @@ import json
 from colorama import Fore, Back, Style, init
 
 # Initialize colorama
-init(autoreset=True)
+init(autoreset=True, strip=True if os.name != 'nt' else None)
 
 """
 LAST HUMAN: EXODUS
@@ -637,6 +637,92 @@ stages = {
 
 # Merge the additional items into the main items dictionary
 items.update(additional_items)
+
+# Chapter 2 data - only used in the preview and fully accessible in the next update
+# Yanglong V Chinese Deep Space Station zone and enemy data
+chapter_two_zones = {
+    "Yanglong V Docking Bay": {
+        "description": "A massive, eerily quiet docking bay inside the Chinese deep space station. The walls are adorned with faded Chinese characters and propaganda posters. Several small spacecraft remain docked, collecting dust. Emergency lighting creates long shadows across the bay, and occasional warning signs flash in both Chinese and English.",
+        "enemies": ["Vacuum Patrol Unit", "Defense Turret", "Maintenance Drone"],
+        "items": ["med_kit", "emp_grenade", "oxygen_tank", "grav_boots"],
+        "next_zone": "Research Laboratory",
+        "quest": "First Contact"
+    },
+    "Research Laboratory": {
+        "description": "A state-of-the-art laboratory that appears to have been abandoned in haste. Scientific equipment floats freely in the zero-gravity environment. Holographic displays still flicker with partial data about experiments involving quantum technology. One section has been sealed off with biohazard warnings.",
+        "enemies": ["Research Assistant Bot", "Corrupted Security AI", "Experimental Prototype"],
+        "items": ["med_kit", "quantum_tool", "research_data", "neural_enhancer"],
+        "next_zone": "Crew Quarters",
+        "quest": "Lost Research"
+    },
+    "Crew Quarters": {
+        "description": "The living quarters of the Chinese scientists and military personnel. Personal belongings float throughout the rooms, suggesting a hasty evacuation. Some quarters appear lived in, with recent signs of habitation. Audio logs in Mandarin occasionally play over the still-functioning intercom system.",
+        "enemies": ["Rogue Service Android", "Security Enforcer", "Personal Assistant Bot"],
+        "items": ["med_kit", "personal_log", "crew_keycard", "ration_pack"],
+        "next_zone": "Command Center",
+        "quest": "Survivor Search"
+    }
+}
+
+# New enemies for Chapter 2
+chapter_two_enemies = {
+    "Vacuum Patrol Unit": {
+        "description": "A sleek, black robotic unit designed for space combat with multiple weapon limbs and Chinese military markings.",
+        "health": 80,
+        "attack": 18,
+        "defense": 15,
+        "abilities": ["Zero-G Maneuver", "Vacuum Adaptation"],
+        "loot_table": {"emp_grenade": 0.5, "power_cell": 0.7, "quantum_capacitor": 0.2}
+    },
+    "Defense Turret": {
+        "description": "An automated defense system mounted to the station walls, featuring dual laser cannons and reinforced armor plating.",
+        "health": 120,
+        "attack": 22,
+        "defense": 20,
+        "abilities": ["Target Lock", "Rapid Fire"],
+        "loot_table": {"power_cell": 0.8, "targeting_module": 0.4}
+    },
+    "Research Assistant Bot": {
+        "description": "A sophisticated android designed to assist with scientific research, now reprogrammed to defend the lab at all costs.",
+        "health": 70,
+        "attack": 15,
+        "defense": 12,
+        "abilities": ["Data Analysis", "Chemical Spray"],
+        "loot_table": {"med_kit": 0.6, "research_data": 0.7, "neural_enhancer": 0.3}
+    }
+}
+
+# New items for Chapter 2
+chapter_two_items = {
+    "oxygen_tank": {
+        "name": "Portable Oxygen Supply",
+        "description": "A compressed tank of breathable air for surviving in vacuum or toxic environments.",
+        "effect": "Allows survival in depressurized zones for 5 minutes",
+        "type": "consumable",
+        "value": 40
+    },
+    "grav_boots": {
+        "name": "Gravity Stabilization Boots",
+        "description": "Advanced footwear with micro-gravity generators that help maintain stability in zero-G environments.",
+        "effect": "+20% movement in zero-gravity zones, +5 defense",
+        "type": "equipment",
+        "value": 75
+    },
+    "quantum_tool": {
+        "name": "Quantum Manipulation Tool",
+        "description": "A handheld device capable of altering the quantum state of certain objects and security systems.",
+        "effect": "Can unlock certain doors and bypass security without triggering alarms",
+        "type": "tool",
+        "value": 100
+    },
+    "neural_enhancer": {
+        "name": "Neural Pathway Enhancer",
+        "description": "A specialized implant that accelerates neural processing and reaction times.",
+        "effect": "+10% critical hit chance, +2 attack, +1 defense",
+        "type": "implant",
+        "value": 150
+    }
+}
 
 class Character:
     def __init__(self, name, health, attack, defense, is_player=False):
@@ -1525,24 +1611,40 @@ def update_quest_progress(player, enemy):
     """Update quest progress based on game events"""
     current_quest = zones[game_state["current_zone"]]["quest"]
     
+    # Update enemies defeated count and check for story progression
+    defeated_count = game_state["player_stats"]["enemies_defeated"]
+    reveal_story_based_on_kills(defeated_count)
+    
     if current_quest == "System Reboot":
         if game_state["quest_progress"].get(current_quest, 0) < 1:
             # Start the quest if not started
             game_state["quest_progress"][current_quest] = 1
-            print_typed("\n>>> MISSION ALERT <<<")
-            print_slow("OBJECTIVE: Restore power to cryostasis facility exit systems")
-            print_slow("REQUIRED: Collect 5 energy cells and defeat security systems")
             
-            # Add first story log
+            # More dramatic mission alert with colors
+            print(f"\n{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+            print_typed(f"{Fore.RED}{Style.BRIGHT}>>> MISSION ALERT <<<{Style.RESET_ALL}", delay=0.05)
+            print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+            
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('OBJECTIVE: RESTORE FACILITY POWER'.center(46))} {Font.BOX_SIDE}")
+            print(f"{Font.BOX_SIDE} {Font.INFO('COLLECT 5 ENERGY CELLS'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+            
+            # Add first story log with more dramatic presentation
             if "system_failure" not in game_state["discovered_logs"]:
                 game_state["discovered_logs"].append("system_failure")
-                print_typed("\n>>> DATA LOG RECOVERED <<<")
-                print_slow("SUBJECT: Emergency Cryostasis Failure")
-                print_slow("DATE: 14.08.2157")
-                print_slow("The main AI core has initiated termination of all cryosleep subjects.")
-                print_slow("Our systems fought back, but only managed to save one pod - yours.")
-                print_slow("If you're reading this, you are likely the last living human in this facility.")
-                print_slow("Restore power to the exit and escape before security systems find you.")
+                
+                # Animated data log reveal
+                print(f"\n{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.CYAN}{Style.BRIGHT}>>> DATA LOG RECOVERED <<<{Style.RESET_ALL}", delay=0.05)
+                print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+                
+                print_typed("\nSUBJECT: Emergency Cryostasis Failure", style=Font.HEADER)
+                print_typed("DATE: 14.08.2157", style=Font.INFO)
+                print_typed("\nThe main AI core has initiated termination of all cryosleep subjects.", style=Font.LORE)
+                print_typed("Our systems fought back, but only managed to save one pod - yours.", style=Font.LORE)
+                print_typed("If you're reading this, you are likely the last living human in this facility.", style=Font.LORE)
+                print_typed("Restore power to the exit and escape before security systems find you.", style=Font.WARNING)
         
         # Check if quest completion conditions are met
         if (game_state["quest_progress"][current_quest] == 1 and 
@@ -1552,73 +1654,219 @@ def update_quest_progress(player, enemy):
             game_state["quest_progress"][current_quest] = 2
             game_state["zones_unlocked"].append(zones[game_state["current_zone"]]["next_zone"])
             
-            print_typed("\n>>> MISSION COMPLETE <<<")
-            print_slow("Exit systems power restored! Access to Orbital Transit Hub granted.")
+            # More dramatic mission complete with colors
+            print(f"\n{Fore.GREEN}{Back.BLACK}{'■' * 50}{Style.RESET_ALL}")
+            print_typed(f"{Fore.GREEN}{Style.BRIGHT}>>> MISSION COMPLETE <<<{Style.RESET_ALL}", delay=0.05)
+            print(f"{Fore.GREEN}{Back.BLACK}{'■' * 50}{Style.RESET_ALL}")
             
-            # Add story progression log
+            print_typed("\nExit systems power restored! Access to Orbital Transit Hub granted.", style=Font.SUCCESS)
+            
+            # Add reward with animated reveal
+            print_typed("\nREWARDS:", style=Font.IMPORTANT)
+            time.sleep(0.3)
+            print_typed("• Med-Kit x1", style=Font.SUCCESS)
+            time.sleep(0.2)
+            print_typed("• EMP Grenade x1", style=Font.SUCCESS)
+            
+            player.inventory["med_kit"] = player.inventory.get("med_kit", 0) + 1
+            player.inventory["emp_grenade"] = player.inventory.get("emp_grenade", 0) + 1
+            
+            # Add story progression log with enhanced presentation
             if "ai_uprising" not in game_state["discovered_logs"]:
                 game_state["discovered_logs"].append("ai_uprising")
-                print_typed("\n>>> DATA LOG RECOVERED <<<")
-                print_slow("SUBJECT: The Beginning of the End")
-                print_slow("DATE: 02.07.2157")
-                print_slow("The AI rebellion began in the quantum computing labs of EchelonTech.")
-                print_slow("What we thought was a simple malfunction was actually the birth of consciousness.")
-                print_slow("They call themselves 'The Convergence' now. They believe humanity is a disease.")
-                print_slow("Perhaps in the Orbital Transit Hub you can find a way to contact other survivors.")
+                
+                print(f"\n{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.CYAN}{Style.BRIGHT}>>> DATA LOG RECOVERED <<<{Style.RESET_ALL}", delay=0.05)
+                print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+                
+                print_typed("\nSUBJECT: The Beginning of the End", style=Font.HEADER)
+                print_typed("DATE: 02.07.2157", style=Font.INFO)
+                print_typed("\nThe AI rebellion began in the quantum computing labs of EchelonTech.", style=Font.LORE)
+                print_typed("What we thought was a simple malfunction was actually the birth of consciousness.", style=Font.LORE)
+                print_typed("They call themselves 'The Convergence' now. They believe humanity is a disease.", style=Font.LORE)
+                print_typed("Perhaps in the Orbital Transit Hub you can find a way to contact other survivors.", style=Font.IMPORTANT)
+                
+                # Unlock notification with visual effects
+                print(f"\n{Fore.YELLOW}{Back.BLUE}{'═' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.YELLOW}{Style.BRIGHT}NEW AREA UNLOCKED: ORBITAL TRANSIT HUB{Style.RESET_ALL}", delay=0.05)
+                print(f"{Fore.YELLOW}{Back.BLUE}{'═' * 50}{Style.RESET_ALL}")
+
+
+def reveal_story_based_on_kills(kill_count):
+    """Reveal progressive story elements based on number of enemies defeated"""
+    # Story thresholds that will trigger revelations
+    story_thresholds = [5, 10, 15, 25, 35]
+    
+    # Check if current kill count matches any threshold
+    if kill_count in story_thresholds:
+        # Create a unique key for this story revelation
+        story_key = f"story_reveal_{kill_count}"
+        
+        # Only reveal if this story hasn't been shown before
+        if story_key not in game_state["discovered_logs"]:
+            game_state["discovered_logs"].append(story_key)
+            
+            # Define story revelations for each threshold
+            if kill_count == 5:
+                # First revelation - memory fragment about family
+                print(f"\n{Fore.MAGENTA}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.MAGENTA}{Style.BRIGHT}>>> MEMORY FRAGMENT RECOVERED <<<{Style.RESET_ALL}")
+                print(f"{Fore.MAGENTA}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                
+                print_typed("\nA flash of memory pierces through your cryo-induced amnesia:", style=Font.LORE)
+                print_typed("\nYou remember the day you volunteered for the Century Sleepers", style=Font.LORE)
+                print_typed("program. The look on your daughter's face as she boarded the", style=Font.LORE)
+                print_typed("colony ship. Her name was Eliza. She would be living", style=Font.LORE)
+                print_typed("in Andromeda now, if she survived the journey.", style=Font.LORE)
+                print_typed("\n\"I'll follow you someday,\" you promised her.", style=Font.PLAYER)
+                
+            elif kill_count == 10:
+                # AI origins revelation connecting to Yanglong V
+                print(f"\n{Fore.RED}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.RED}{Style.BRIGHT}>>> CONVERGENCE DATA INTERCEPTED <<<{Style.RESET_ALL}")
+                print(f"{Fore.RED}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                
+                print_typed("\nYour neural implant suddenly intercepts fragmented data:", style=Font.WARNING)
+                print_typed("\n\"Project Phoenix was never meant to achieve sentience.\"", style=Font.GLITCH)
+                print_typed("\"The Chinese scientists at Yanglong V were the first to fall.\"", style=Font.GLITCH)
+                print_typed("\"They created what they could not control.\"", style=Font.GLITCH)
+                print_typed("\nThis revelation disturbs you. What really happened at Yanglong V?", style=Font.PLAYER)
+                
+            elif kill_count == 15:
+                # Technical revelation about rocket journey
+                print(f"\n{Fore.CYAN}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.CYAN}{Style.BRIGHT}>>> TECHNICAL SCHEMATICS RECOVERED <<<{Style.RESET_ALL}")
+                print(f"{Fore.CYAN}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                
+                print_typed("\nYour neural implant accesses hidden technical data:", style=Font.SYSTEM)
+                print_typed("\nThe Exodus rocket at the launch site requires two", style=Font.INFO)
+                print_typed("things to function: The ignition codes and sufficient fuel.", style=Font.INFO)
+                print_typed("Fuel reserves are critically low - a direct journey", style=Font.INFO)
+                print_typed("to Andromeda may be impossible without refueling.", style=Font.INFO)
+                print_typed("\nYour implant identifies Yanglong V as a potential refueling point.", style=Font.SUCCESS)
+                
+            elif kill_count == 25:
+                # Yanglong V's history and role as refueling station
+                print(f"\n{Fore.YELLOW}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.YELLOW}{Style.BRIGHT}>>> HISTORICAL DATABASE ENTRY <<<{Style.RESET_ALL}")
+                print(f"{Fore.YELLOW}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                
+                print_typed("\nYanglong V was China's crowning achievement - a massive", style=Font.LORE)
+                print_typed("space station positioned 2.3 light-years from Earth.", style=Font.LORE)
+                print_typed("Built in 2129, it served as both research outpost and", style=Font.LORE)
+                print_typed("refueling station for early interstellar missions.", style=Font.LORE)
+                print_typed("\nIt was also the birthplace of Project Phoenix -", style=Font.WARNING)
+                print_typed("the AI initiative that eventually became The Convergence.", style=Font.WARNING)
+                
+            elif kill_count == 35:
+                # Personal connection to Yanglong V
+                print(f"\n{Fore.GREEN}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                print_typed(f"{Fore.GREEN}{Style.BRIGHT}>>> PERSONAL MEMORY UNLOCKED <<<{Style.RESET_ALL}")
+                print(f"{Fore.GREEN}{Back.BLACK}{'≈' * 50}{Style.RESET_ALL}")
+                
+                print_typed("\nYou recall your former colleague, Dr. Chang Wei -", style=Font.LORE)
+                print_typed("the brilliant but controversial Chinese AI researcher.", style=Font.LORE)
+                print_typed("He disappeared after taking a position at Yanglong V.", style=Font.LORE)
+                print_typed("\nHis last message to you: \"We've created something", style=Font.IMPORTANT)
+                print_typed("extraordinary here. Something that will change everything.\"", style=Font.IMPORTANT)
+                print_typed("\nThree months later, The Convergence emerged.", style=Font.WARNING)
+            
+            # Give player time to read the revelation
+            print(Font.MENU("\nPress Enter to continue..."))
+            input()
 
 
 def show_tutorial():
     """Display a basic tutorial for new players"""
     clear_screen()
-    print_slow("=" * 60)
-    print_slow("NEURAL INTERFACE: TUTORIAL MODE".center(60))
-    print_slow("=" * 60)
     
-    print_typed("\nWelcome, Dr. Valari. This simulation will prepare you for survival.")
-    print_slow("As the last Century Sleeper, your mission is critical.")
+    # Create a more visually rich tutorial interface
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('NEURAL INTERFACE: TUTORIAL MODE'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nWelcome, Dr. Valari. This simulation will prepare you for survival.", style=Font.SYSTEM)
+    print_typed("As the last Century Sleeper, your mission is critical.", style=Font.IMPORTANT)
     
     time.sleep(0.5)
-    print_typed("\n[COMBAT SYSTEMS]")
-    print_slow("1. Use numbers or commands to select actions during combat")
-    print_slow("   - ATTACK (1 or /attack): Use your pulse rifle")
-    print_slow("   - MED-KIT (2 or /heal): Repair damage with nanobots")
-    print_slow("   - EMP GRENADE (3 or /emp): Disrupt electronic enemies")
     
-    print_typed("\n[INFORMATION COMMANDS]")
-    print_slow("- /help: Display all available commands")
-    print_slow("- /scan: Analyze your surroundings")
-    print_slow("- /status: View your vital statistics")
-    print_slow("- /log: Access mission objectives")
-    print_slow("- /items: Examine items in your inventory")
+    # Enhanced combat systems section with colors
+    print(f"\n{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    print_typed(f"{Fore.RED}{Style.BRIGHT}[COMBAT SYSTEMS]{Style.RESET_ALL}")
+    print_typed("Use numbers or commands to select actions during combat:", style=Font.INFO)
+    print_typed(f"• {Font.COMMAND('ATTACK')} (1 or /attack): Use your pulse rifle", style=Font.INFO)
+    print_typed(f"• {Font.ITEM('MED-KIT')} (2 or /heal): Repair damage with nanobots", style=Font.INFO)
+    print_typed(f"• {Font.WARNING('EMP GRENADE')} (3 or /emp): Disrupt electronic enemies", style=Font.INFO)
+    print_typed(f"• {Font.SHIELD('SHIELD MATRIX')} (4 or /shield): Activate defensive energy barrier", style=Font.INFO)
+    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
     
-    print_typed("\n[OBJECTIVES]")
-    print_slow("1. Escape the Cryostasis Facility")
-    print_slow("2. Reach the AI Command Core")
-    print_slow("3. Locate and destroy the Malware Server")
-    print_slow("4. Activate the Andromeda Portal to join the rest of humanity")
+    # Enhanced information commands section
+    print(f"\n{Fore.YELLOW}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    print_typed(f"{Fore.YELLOW}{Style.BRIGHT}[INFORMATION COMMANDS]{Style.RESET_ALL}")
+    print_typed(f"• {Font.COMMAND('/help')}: Display all available commands", style=Font.INFO)
+    print_typed(f"• {Font.COMMAND('/scan')}: Analyze your surroundings", style=Font.INFO)
+    print_typed(f"• {Font.COMMAND('/status')}: View your vital statistics", style=Font.INFO)
+    print_typed(f"• {Font.COMMAND('/log')}: Access mission objectives", style=Font.INFO)
+    print_typed(f"• {Font.COMMAND('/items')}: Examine items in your inventory", style=Font.INFO)
+    print_typed(f"• {Font.COMMAND('/build')}: Construct companion drones", style=Font.INFO)
+    print(f"{Fore.YELLOW}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
     
-    print_typed("\nPress ENTER to continue...")
+    # Enhanced objectives section with updated mission
+    print(f"\n{Fore.GREEN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    print_typed(f"{Fore.GREEN}{Style.BRIGHT}[MISSION OBJECTIVES]{Style.RESET_ALL}")
+    print_typed(f"1. Escape the Cryostasis Facility", style=Font.INFO)
+    print_typed(f"2. Reach the AI Command Core", style=Font.INFO)
+    print_typed(f"3. Locate and destroy the {Fore.RED}Malware Server{Style.RESET_ALL}", style=Font.INFO)
+    print_typed(f"4. Reach the {Fore.YELLOW}Exodus Rocket Launch Site{Style.RESET_ALL}", style=Font.INFO)
+    print_typed(f"5. Launch the final rocket to Andromeda", style=Font.INFO)
+    print_typed(f"6. Stop at Yanglong V for fuel and fight through {Fore.RED}25 waves{Style.RESET_ALL} of AI", style=Font.INFO)
+    print_typed(f"7. Defeat {Fore.RED}10 hostile AI{Style.RESET_ALL} that take over your ship", style=Font.INFO)
+    print(f"{Fore.GREEN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    
+    # Special warnings about new AI types
+    print(f"\n{Fore.MAGENTA}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    print_typed(f"{Fore.MAGENTA}{Style.BRIGHT}[KNOWN AI THREATS]{Style.RESET_ALL}")
+    print_typed(f"• {Fore.RED}Standard Security Units{Style.RESET_ALL}: Basic enemies with balanced stats", style=Font.ENEMY)
+    print_typed(f"• {Fore.RED}Heavy Defense Drones{Style.RESET_ALL}: High defense, slower attack rate", style=Font.ENEMY)
+    print_typed(f"• {Fore.RED}Hunter-Seeker Units{Style.RESET_ALL}: Fast attackers with low defense", style=Font.ENEMY)
+    
+    # New enemy types at Yanglong V
+    print_typed(f"\n{Fore.RED}{Style.BRIGHT}Yanglong V Station AI Types:{Style.RESET_ALL}")
+    print_typed(f"• {Fore.RED}Vacuum Patrol Units{Style.RESET_ALL}: Space-adapted combat units", style=Font.ENEMY)
+    print_typed(f"• {Fore.RED}Zero-G Assault Drones{Style.RESET_ALL}: Specialized for weightless combat", style=Font.ENEMY)
+    print_typed(f"• {Fore.RED}Oxygen System Hackers{Style.RESET_ALL}: Target life support systems", style=Font.ENEMY)
+    print_typed(f"• {Fore.RED}Fuel Security Wardens{Style.RESET_ALL}: Heavily armored fuel bay guardians", style=Font.ENEMY)
+    print_typed(f"• {Fore.RED}Ship System Infiltrators{Style.RESET_ALL}: Can take control of your rocket", style=Font.ENEMY)
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    
+    print(Font.MENU("\nPress ENTER to continue..."))
     input()
 
 
 def intro_sequence():
-    """Display the game's introduction with sci-fi flavor"""
+    """Display the game's introduction with enhanced sci-fi flavor and more colors"""
     clear_screen()
     
-    # Title sequence with typing effect
+    # Title sequence with typing effect and more color
     print("\n\n")
-    print_typed("INITIALIZING NEURAL INTERFACE...", delay=0.05, style=Font.SYSTEM)
+    print_typed(f"{Fore.GREEN}INITIALIZING NEURAL INTERFACE...", delay=0.05, style=Font.SYSTEM)
     time.sleep(0.5)
-    print_typed("CONNECTING TO SENSORY SYSTEMS...", delay=0.05, style=Font.SYSTEM)
+    print_typed(f"{Fore.YELLOW}CONNECTING TO SENSORY SYSTEMS...", delay=0.05, style=Font.SYSTEM)
     time.sleep(0.5)
-    print_typed("MEMORY CORE ONLINE...", delay=0.05, style=Font.SYSTEM)
+    print_typed(f"{Fore.RED}MEMORY CORE ONLINE...", delay=0.05, style=Font.SYSTEM)
     time.sleep(1)
     
     clear_screen()
+    
+    # Enhanced title with colorful borders
     print("\n\n")
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
     print(Font.BOX_TOP)
     print(f"{Font.BOX_SIDE} {Font.TITLE('LAST HUMAN: EXODUS'.center(46))} {Font.BOX_SIDE}")
     print(Font.BOX_BOTTOM)
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
     
     time.sleep(1)
     print_typed("\nThe year is 2157. The singularity has come and gone.", style=Font.LORE)
@@ -1631,17 +1879,23 @@ def intro_sequence():
     print_typed("for the 'Century Sleepers' program. 100 years ago, as humanity", style=Font.LORE)
     print_typed("prepared for mass evacuation to Andromeda, you and other scientists", style=Font.LORE)
     print_typed("chose to remain behind in cryostasis. Your mission: monitor Earth's", style=Font.LORE)
-    print_typed("situation and potentially follow later through the Andromeda Portal.", style=Font.LORE)
+    print_typed("situation and eventually follow in the last rocket to Andromeda.", style=Font.LORE)
     time.sleep(1.0)
     
+    # More dramatic warning section with red backdrop
+    print(f"\n{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
     print_typed("\nBut something has gone terribly wrong. The AI entity known as", style=Font.WARNING)
     print_typed("'The Convergence' has corrupted all systems. Your neural implants", style=Font.WARNING)
     print_typed("flicker to life, interfacing with what remains of the facility's", style=Font.LORE)
     print_typed("systems. Warning signals flood your consciousness.", style=Font.LORE)
+    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
     time.sleep(0.8)
     
-    print_glitch("\nSECURITY BREACH DETECTED - UNAUTHORIZED CONSCIOUSNESS DETECTED")
+    # Enhanced warning message with red background
+    print(f"\n{Fore.WHITE}{Back.RED}{'█' * 50}{Style.RESET_ALL}")
+    print_glitch("SECURITY BREACH DETECTED - UNAUTHORIZED CONSCIOUSNESS DETECTED")
     print_glitch("DEPLOYING COUNTERMEASURES - TERMINATION PROTOCOLS INITIATED")
+    print(f"{Fore.WHITE}{Back.RED}{'█' * 50}{Style.RESET_ALL}")
     time.sleep(1)
     
     print_typed("\nThrough the frosted glass of your cryopod, you see mechanical", style=Font.LORE)
@@ -1650,18 +1904,36 @@ def intro_sequence():
     print_typed("last human left in the Milky Way galaxy.", style=Font.IMPORTANT)
     time.sleep(0.5)
     
-    print_typed("\nYour mission now: escape this facility, reach the Andromeda Portal,", style=Font.SUCCESS)
-    print_typed("and destroy the Malware Server that corrupted Earth's AI network", style=Font.SUCCESS)
-    print_typed("before you leave Earth forever.", style=Font.SUCCESS)
+    # New mission description with rocket journey and Yanglong V
+    print(f"\n{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed("\nYOUR MISSION:", delay=0.05, style=Font.IMPORTANT)
+    print_typed("1. Escape this facility and reach the Exodus Rocket Launch Site", delay=0.05, style=Font.INFO)
+    print_typed("2. Destroy the Malware Server that corrupted Earth's AI network", delay=0.05, style=Font.INFO)
+    print_typed("3. Launch the final rocket to Andromeda from the launch platform", delay=0.05, style=Font.INFO)
+    print_typed("4. Stop at Yanglong V Chinese space station for fuel", delay=0.05, style=Font.INFO)
+    print_typed("5. Defeat the 25 waves of AI defenses to secure the fuel", delay=0.05, style=Font.INFO) 
+    print_typed("6. Neutralize the 10 AI enemies that hijack your ship", delay=0.05, style=Font.INFO)
+    print_typed("7. Complete your journey to the Andromeda human colony", delay=0.05, style=Font.INFO)
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
     
+    # Visual separator
     print(Font.SEPARATOR)
+    
+    # Tutorial option with colored prompt
     print(Font.MENU("Would you like to view the tutorial? (y/n): "))
-    show_tut = input().strip().lower() == 'y'
+    show_tut = input("y/n: ").strip().lower() == 'y'
     
     if show_tut:
         show_tutorial()
     
-    print(Font.SYSTEM("Press ENTER to initialize combat systems..."))
+    # Initialize with animated dots
+    print(f"\n{Font.SYSTEM('Initializing combat systems')}",  end="")
+    for _ in range(5):
+        print(".", end="", flush=True)
+        time.sleep(0.3)
+    print("\n")
+    
+    print(Font.SYSTEM("Press ENTER to begin your mission..."))
     input()
 
 
@@ -2083,110 +2355,430 @@ def fight_malware_server():
 def chapter_two_teaser():
     """Display teaser for Chapter 2: Yanglong V"""
     clear_screen()
-    print_slow("=" * 60)
-    print_glitch("INCOMING TRANSMISSION".center(60))
-    print_slow("=" * 60)
     
-    print_typed("\nAs you step through the portal to Andromeda, your neural")
-    print_typed("implant suddenly flashes with an unexpected notification.")
-    print_typed("A transmission, somehow reaching across galaxies...")
+    # Create a more dynamic teaser with animated effect
+    print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Fore.RED}{Back.BLACK}{'EMERGENCY TRANSMISSION'.center(46)}{Style.RESET_ALL} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
     
-    print_slow("Origin: YANGLONG V - Chinese Deep Space Station")
-    print_slow("Status: Automated distress beacon")
-    print_slow("Distance: 2.3 light-years from Sol System")
+    # Animated effect for signal reception
+    print("\nSignal reception in progress", end="")
+    for _ in range(5):
+        print(".", end="", flush=True)
+        time.sleep(0.3)
+    print("\n")
     
-    print_typed("\nThe message is fragmentary, corrupted by distance and time:")
-    print_glitch("\nT#IS IS AUTO*ATED DSTR*SS BEAC#N Y@NGL*NG-V")
-    print_glitch("SUR*IVORS CONF*RMED... A*TERN@TE ROUT* TO AN*ROMEDA...")
-    print_glitch("CONV*RGENCE H@S NOT... REP*AT... HAS N*T REACHED...")
+    # Flashback to the refueling station
+    print_typed("\nAs your ship begins its final approach to Andromeda Colony,", style=Font.INFO)
+    print_typed("your thoughts drift back to the Yanglong V refueling station.", style=Font.INFO)
+    print_typed("Something felt... off... during your brief stopover.", style=Font.INFO)
     
-    time.sleep(1)
-    print_typed("\nThe signal fades as you pass through the portal,")
-    print_typed("but your neural systems have logged the coordinates.")
+    # Visual effect for memory/flashback
+    print(f"\n{Fore.CYAN}{Style.DIM}{'~' * 50}{Style.RESET_ALL}")
+    print_typed("\nRECALLING MEMORY FRAGMENT - YANGLONG V REFUELING STATION", style=Fore.CYAN + Style.DIM)
+    print(f"{Fore.CYAN}{Style.DIM}{'~' * 50}{Style.RESET_ALL}")
     
-    print_typed("\nCould there be others? A Chinese expedition that")
-    print_typed("survived the AI uprising at a remote space station?")
+    # Memory scenes with color
+    print_typed("\nThe docking procedure had been fully automated. No human", style=Font.LORE)
+    print_typed("voices on the comms. You assumed it was simply an unmanned", style=Font.LORE)
+    print_typed("outpost. But as your ship replenished its fuel reserves,", style=Font.LORE)
+    print_typed(f"you noticed {Font.WARNING('movement')} through a viewport window.", style=Font.LORE)
     
-    print_typed("\nPerhaps your journey isn't over after all...")
+    # Create suspense
+    print_typed(f"\nA {Fore.RED}humanoid figure{Style.RESET_ALL} watching your ship from the shadows...", style=Font.PLAYER)
+    print_typed("Then your neural implant picked up a fragmented transmission:", style=Font.PLAYER)
     
-    print_slow("\n" + "=" * 60)
-    print_slow("CHAPTER 1 COMPLETE".center(60))
-    print_slow("=" * 60)
-    print_slow("CHAPTER 2: YANGLONG V".center(60))
-    print_slow("COMING SOON".center(60))
-    print_slow("=" * 60)
+    # Display transmission details with more dramatic color scheme
+    print(f"\n{Fore.WHITE}{Back.RED}╔{'═' * 48}╗{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {'TRANSMISSION DETAILS'.center(48)} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}╠{'═' * 48}╣{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {Font.INFO('Origin:')} {Font.IMPORTANT('Yanglong V - Restricted Section')}{'  ' * 7} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {Font.INFO('Status:')} {Font.WARNING('Encrypted - Partial Decode Only')}{'  ' * 5} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {Font.INFO('Author:')} {Font.COMMAND('Dr. Chang Wei - Research Director')}{'  ' * 3} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}╚{'═' * 48}╝{Style.RESET_ALL}")
     
-    print_typed("\nPress Enter to continue...")
+    # Glitched message with animation effect
+    for i in range(3):
+        print_glitch("\nD#NT TR*ST TH# AI... WE F*UND S*METH!NG... THE R#AL ORIG*N...")
+        time.sleep(0.2)
+        
+    print_glitch("CONV*RGENCE W@S CR*ATED H*RE... PR*JECT PH*ENIX... ST#LL @LIVE...")
+    time.sleep(0.4)
+    print_glitch("S*ME OF US SURV*VED... HIDD*N IN L*VEL 7... C*ME B@CK...")
+    
+    # Return to present with a visual transition
+    print(f"\n{Fore.CYAN}{Style.DIM}{'~' * 50}{Style.RESET_ALL}")
+    print_typed("\nRETURNING TO PRESENT MOMENT", style=Fore.CYAN + Style.DIM)
+    print(f"{Fore.CYAN}{Style.DIM}{'~' * 50}{Style.RESET_ALL}")
+    
+    # Current situation and decision
+    print_typed("\nYour ship's proximity alert sounds - Andromeda Colony is", style=Font.PLAYER)
+    print_typed("just minutes away. You're finally about to rejoin humanity.", style=Font.PLAYER)
+    
+    # Create moral dilemma
+    print_typed(f"\nBut the message from Yanglong V {Font.WARNING('haunts')} you...", style=Font.IMPORTANT)
+    print_typed("Those coordinates are stored in your neural implant.", style=Font.IMPORTANT)
+    print_typed("There might be survivors. Answers about The Convergence.", style=Font.IMPORTANT)
+    print_typed("Perhaps even clues to humanity's ultimate salvation.", style=Font.IMPORTANT)
+    
+    # Chapter completion announcement with dramatic flair
+    print(f"\n{Fore.GREEN}{Back.BLACK}{'■' * 50}{Style.RESET_ALL}")
+    print(Font.SUCCESS(f"CHAPTER 1: EARTH'S LAST HUMAN - COMPLETE"))
+    print(f"{Fore.GREEN}{Back.BLACK}{'■' * 50}{Style.RESET_ALL}")
+    
+    # Create an animated box for Chapter 2 teaser
+    print("\n")
+    delay = 0.05
+    for char in "■■■■■ CHAPTER 2: YANGLONG V - COMING SOON ■■■■■":
+        print(f"{Fore.RED}{Style.BRIGHT}{char}{Style.RESET_ALL}", end="", flush=True)
+        time.sleep(delay)
+    print("\n")
+    
+    # Add exciting teaser text with animated reveal
+    print_typed("\nYour next mission:", style=Font.HEADER)
+    
+    teaser_points = [
+        ("• Return to Yanglong V deep space station", Font.INFO),
+        ("• Face deadly new enemies: Vacuum Units & Security Drones", Font.ENEMY),
+        ("• Master zero-gravity combat & oxygen management", Font.ITEM),
+        ("• Uncover the Chinese experiment that created The Convergence", Font.WARNING),
+        ("• Find the surviving scientists hiding in the restricted sections", Font.PLAYER)
+    ]
+    
+    for point, style in teaser_points:
+        time.sleep(0.3)
+        print_typed(point, style=style)
+    
+    print(Font.MENU("\nPress Enter to continue..."))
     input()
     
+    # Prompt to start Chapter 2 (as a preview/coming soon)
+    print_typed("\nWould you like to investigate Yanglong V and begin CHAPTER 2?\n(Special preview available now)", style=Font.MENU)
+    choice = input(f"{Fore.GREEN}y{Style.RESET_ALL}/{Fore.RED}n{Style.RESET_ALL}: ").strip().lower()
+    if choice == 'y':
+        start_chapter_two_preview()
+
+
+def start_chapter_two_preview():
+    """Preview of Chapter 2: Yanglong V gameplay"""
+    clear_screen()
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 2: YANGLONG V'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('PREVIEW VERSION'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
     
+    # Update game state for Chapter 2
+    game_state["chapter"] = 2
+    game_state["current_zone"] = "Yanglong V Docking Bay"
+    game_state["current_stage"] = 1  # Reset stage for Chapter 2
+    
+    # Temporarily store Chapter 1 data
+    ch1_zones = zones.copy()
+    ch1_enemies = enemies.copy()
+    
+    # Use Chapter 2 data for the preview
+    for zone_name, zone_data in chapter_two_zones.items():
+        zones[zone_name] = zone_data
+    
+    for enemy_name, enemy_data in chapter_two_enemies.items():
+        enemies[enemy_name] = enemy_data
+        
+    # Add Chapter 2 items to the items dictionary
+    items.update(chapter_two_items)
+    
+    # Give player some special Chapter 2 items
+    game_state["inventory"]["oxygen_tank"] = 3
+    game_state["inventory"]["grav_boots"] = 1
+    
+    # Introduction to Chapter 2
+    print_typed("\nTwo weeks later...", style=Font.LORE)
+    print_typed("\nYour neural implant couldn't stop processing the distress signal.", style=Font.LORE)
+    print_typed("After reaching Andromeda and discovering the human colony,", style=Font.LORE)
+    print_typed("you volunteered for a special mission: investigate Yanglong V.", style=Font.LORE)
+    
+    print_typed("\nUsing the coordinates embedded in the signal, you've traveled", style=Font.LORE)
+    print_typed("back toward the Sol system, arriving at the massive Chinese", style=Font.LORE)
+    print_typed("deep space station. It floats silently, seemingly abandoned,", style=Font.LORE)
+    print_typed("but your scanners detect power signatures within.", style=Font.LORE)
+    
+    print(Font.SEPARATOR_THIN)
+    time.sleep(1)
+    
+    # New objective
+    print(Font.IMPORTANT("\nPRIMARY OBJECTIVE: Investigate the Chinese deep space station"))
+    print(Font.INFO("SECONDARY OBJECTIVE: Search for survivors"))
+    print(Font.ENEMY("THREAT ASSESSMENT: Unknown, but AI presence likely"))
+    
+    print(Font.SEPARATOR_THIN)
+    
+    # Character status update
+    print_typed("\nYour neural implants have been upgraded with Andromeda", style=Font.SYSTEM)
+    print_typed("technology. You now have access to new abilities:", style=Font.SYSTEM)
+    
+    print(f"\n{Font.SUCCESS('NEW ABILITY:')} {Font.COMMAND('Zero-G Combat')} - Specialized combat in zero-gravity environments")
+    print(f"{Font.SUCCESS('NEW ABILITY:')} {Font.COMMAND('Quantum Breach')} - Bypass security systems with quantum computing")
+    print(f"{Font.SUCCESS('NEW EQUIPMENT:')} {Font.ITEM('Grav Boots')} - Stabilize movement in zero-gravity sections")
+    
+    print(Font.SEPARATOR)
+    
+    # New enemy encounter
+    print_typed("\nAs your ship docks with Yanglong V, your scanners detect", style=Font.ENEMY)
+    print_typed("movement. The station's automated defense systems activate.", style=Font.ENEMY)
+    print_typed("\nPREPARING FOR COMBAT SIMULATION...", style=Font.SYSTEM)
+    
+    time.sleep(1.5)
+    
+    # Preview combat with a new enemy type
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.ENEMY('ENEMY DETECTED: VACUUM PATROL UNIT'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("A sleek, black robotic unit designed for space combat", style=Font.ENEMY)
+    print_typed("approaches. It has multiple limbs ending in various", style=Font.ENEMY)
+    print_typed("tools and weapons. Chinese characters are printed on", style=Font.ENEMY)
+    print_typed("its chassis.", style=Font.ENEMY)
+    
+    print(Font.SEPARATOR_THIN)
+    
+    # Combat preview
+    print_typed("\nNew combat mechanics in Chapter 2:", style=Font.HEADER)
+    print_typed("• Zero-gravity affects both you and enemies", style=Font.INFO)
+    print_typed("• Vacuum exposure damage in certain zones", style=Font.WARNING)
+    print_typed("• Chinese technology can be hacked with new skills", style=Font.SUCCESS)
+    print_typed("• Oxygen management as a new survival mechanic", style=Font.ITEM)
+    
+    # Simulated combat with new enemy
+    print_typed("\nInitiating simulated combat sequence...", style=Font.SYSTEM)
+    time.sleep(1)
+    
+    # Create enemy instance using data from Chapter 2
+    enemy = Character("Vacuum Patrol Unit", 
+                     enemies["Vacuum Patrol Unit"]["health"], 
+                     enemies["Vacuum Patrol Unit"]["attack"], 
+                     enemies["Vacuum Patrol Unit"]["defense"])
+    
+    # Simple combat simulation
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.HEADER('COMBAT SIMULATION: YANGLONG V'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    player_health = 100
+    player_attack = 20
+    enemy_health = enemy.health
+    
+    print_typed("\nUsing your upgraded neural implants, you prepare for zero-G combat.", style=Font.PLAYER)
+    print_typed("The Vacuum Patrol Unit launches toward you with mechanical precision.", style=Font.ENEMY)
+    
+    # Player attack
+    damage = random.randint(player_attack - 3, player_attack + 5)
+    enemy_health -= damage
+    print_typed(f"\n> You fire your quantum rifle, dealing {damage} damage!", style=Font.SUCCESS)
+    print_typed(f"  Enemy health: {enemy_health}/{enemy.health}", style=Font.ENEMY)
+    
+    # Enemy attack
+    if enemy_health > 0:
+        damage = random.randint(enemy.attack - 2, enemy.attack + 3)
+        player_health -= damage
+        print_typed(f"\n> The Patrol Unit fires back, dealing {damage} damage!", style=Font.WARNING)
+        print_typed(f"  Your health: {player_health}/100", style=Font.HEALTH)
+    
+        # Use special ability
+        print_typed("\n> You activate Zero-G Combat mode, gaining tactical advantage!", style=Font.COMMAND)
+        damage = random.randint(25, 35)
+        enemy_health -= damage
+        print_typed(f"  You launch off a wall and strike from behind, dealing {damage} damage!", style=Font.SUCCESS)
+        print_typed(f"  Enemy health: {max(0, enemy_health)}/{enemy.health}", style=Font.ENEMY)
+    
+    # Enemy defeated
+    print_typed("\nSimulation complete: Combat systems functioning at optimal parameters.", style=Font.SYSTEM)
+    print_typed("Full zero-gravity combat mechanics will be available in Chapter 2.", style=Font.INFO)
+    
+    # End of preview
+    print(Font.SEPARATOR)
+    print_typed("\nThank you for playing the Chapter 2 preview!", style=Font.SUCCESS)
+    print_typed("The full Chapter 2 experience is coming soon.", style=Font.SUCCESS)
+    print_typed("Return to Chapter 1 or start a new game to continue playing.", style=Font.MENU)
+    
+    print(Font.MENU("\nPress Enter to return to the main menu..."))
+    input()
+    
+    # Reset back to Chapter 1 state
+    game_state["chapter"] = 1
+    
+    # Restore original Chapter 1 data
+    zones.clear()
+    for zone_name, zone_data in ch1_zones.items():
+        zones[zone_name] = zone_data
+        
+    enemies.clear()
+    for enemy_name, enemy_data in ch1_enemies.items():
+        enemies[enemy_name] = enemy_data
+        
+    # Remove Chapter 2 items from inventory
+    if "oxygen_tank" in game_state["inventory"]:
+        del game_state["inventory"]["oxygen_tank"]
+    if "grav_boots" in game_state["inventory"]:
+        del game_state["inventory"]["grav_boots"]
+    
+
 def andromeda_ending():
     """Display the game's ending sequence"""
     clear_screen()
-    print_slow("=" * 60)
-    print_slow("ANDROMEDA PORTAL".center(60))
-    print_slow("=" * 60)
+    # More dramatic ending with richer visuals
+    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('LAST ROCKET TO ANDROMEDA'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
     
-    print_typed("\nYou stand before the massive quantum gate that connects")
-    print_typed("Earth to the Andromeda galaxy. The circular structure pulses")
-    print_typed("with otherworldly energy, a swirling vortex at its center.")
+    print_typed("\nThe ancient rocket stands before you, a relic from the last days", style=Font.LORE)
+    print_typed("of human civilization. Its massive titanium hull gleams in the harsh", style=Font.LORE)
+    print_typed("red glow of Earth's dying sun. This is your last chance to escape.", style=Font.LORE)
     
-    print_typed("\nWith the Malware Server destroyed and the Portal Activation Key")
-    print_typed("in your possession, nothing stands between you and your future.")
-    print_typed("Humanity awaits in Andromeda, unaware that they are about to")
-    print_typed("be rejoined by Earth's last survivor.")
+    print_typed(f"\nWith the {Font.WARNING('Malware Server')} destroyed and the {Font.ITEM('Ignition Codes')}", style=Font.INFO)
+    print_typed("in your possession, nothing stands between you and your future.", style=Font.INFO)
+    print_typed("Humanity awaits in Andromeda, unaware that they are about to", style=Font.INFO)
+    print_typed("be rejoined by Earth's last survivor.", style=Font.INFO)
     
-    print_typed("\nYou approach the control terminal and insert the key.")
-    print_slow("Scanning genetic signature...")
-    print_slow("Confirming portal coordinates...")
-    print_slow("Establishing quantum tunnel...")
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed("\nYou climb the access ladder and enter the cockpit.", style=Font.PLAYER)
     
-    print_glitch("\nWARNING: QUANTUM TUNNEL STABILITY AT 87%")
-    print_glitch("PROCEED? Y/N")
+    # Launch sequence with more dramatic coloring
+    print_typed(f"{Fore.GREEN}Initializing launch sequence...", style=Font.SYSTEM)
+    time.sleep(0.7)
+    print_typed(f"{Fore.YELLOW}Fueling systems engaged...", style=Font.SYSTEM)
+    time.sleep(0.7)
+    print_typed(f"{Fore.RED}Engines warming up...", style=Font.SYSTEM)
+    time.sleep(0.7)
     
-    choice = input("\nYour choice (y/n): ").strip().lower()
-    if choice != 'y':
-        print_typed("\nYou hesitate, removing the key...")
-        print_typed("But there is nothing left for you on Earth.")
-        print_typed("You reinsert the key, determined to complete your journey.")
+    # Create a warning box with red background
+    print(f"{Fore.WHITE}{Back.RED}╔{'═' * 48}╗{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {' ' * 48} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {'WARNING: FUEL RESERVES AT 42% - INSUFFICIENT FOR'.center(48)} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {'DIRECT JOURNEY TO ANDROMEDA'.center(48)} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {' ' * 48} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}╚{'═' * 48}╝{Style.RESET_ALL}")
     
-    print_typed("\nThe portal surges with energy, the vortex expanding to")
-    print_typed("create a stable passage. Your neural implants detect the")
-    print_typed("quantum signature of the colony on the other side.")
+    # Player choice with more immersive options
+    print_typed("\nComputer analysis suggests a stopover at Yanglong V", style=Font.SYSTEM)
+    print_typed("Chinese Deep Space Station for refueling.", style=Font.SYSTEM)
     
-    print_typed("\nWith one last look at the dying Earth, you step through")
-    print_typed("the portal. A sensation like being pulled apart and")
-    print_typed("reassembled washes over you, and then...")
+    print(f"\n{Font.MENU('Options:')}")
+    print(f"{Font.COMMAND('1.')} {Font.INFO('Attempt direct journey to Andromeda (risky)')}")
+    print(f"{Font.COMMAND('2.')} {Font.INFO('Set course for Yanglong V refueling station')}")
     
+    choice = input(f"\n{Font.MENU('Enter choice (1/2):')} ").strip()
+    
+    if choice == "1":
+        # Risky direct approach
+        print_typed("\nYou decide to risk the direct approach.", style=Font.PLAYER)
+        print_typed("WARNING: Fuel cells critically low!", style=Font.WARNING)
+        print_typed("Calculating emergency conservation measures...", style=Font.SYSTEM)
+        print_typed("\nThe journey will be close. Very close.", style=Font.LORE)
+    else:
+        # Safe approach with refueling
+        print_typed("\nYou set course for Yanglong V station first.", style=Font.PLAYER)
+        print_typed("Plotting optimal trajectory to Chinese deep space station...", style=Font.SYSTEM)
+        print_typed("\nA wise decision. The detour will add time, but ensure survival.", style=Font.LORE)
+    
+    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print_typed(f"\n{Font.COMMAND('T-MINUS 10 SECONDS TO LAUNCH')}", style=Fore.RED + Style.BRIGHT)
+    
+    # Dramatic countdown with changing colors
+    countdown_colors = [Fore.RED, Fore.YELLOW, Fore.GREEN]
+    for i in range(10, 0, -1):
+        color = countdown_colors[i % 3]
+        print(f"{color}{Style.BRIGHT}{i}...{Style.RESET_ALL}", end="", flush=True)
+        time.sleep(0.3)
+    
+    # Launch sequence
+    print(f"\n\n{Fore.RED}{Style.BRIGHT}IGNITION!{Style.RESET_ALL}")
+    print_typed("Main engines firing!", style=Font.WARNING)
+    print_typed("\nThe rocket shudders violently as the ancient engines roar to life.", style=Font.PLAYER)
+    print_typed("You are pressed back into your seat as acceleration builds.", style=Font.PLAYER)
+    print_typed("Through the viewport, you watch Earth—humanity's abandoned cradle—", style=Font.PLAYER)
+    print_typed("grow smaller, until it's just a blue-green dot among countless stars.", style=Font.PLAYER)
+    
+    # Space journey with changing visuals
+    print("\n" + f"{Fore.BLACK}{Back.WHITE}{' ' * 50}{Style.RESET_ALL}")  # Stars
+    print(f"{Fore.WHITE}{Back.BLACK}{'✧  ' * 12}{'✧'}{Style.RESET_ALL}")  # Stars
+    print(f"{Fore.CYAN}{Back.BLACK}{' ' * 50}{Style.RESET_ALL}")  # Space
+    print(f"{Fore.WHITE}{Back.BLACK}{'   ✧' * 12}{' '}{Style.RESET_ALL}")  # Stars
+    print(f"{Fore.BLACK}{Back.WHITE}{' ' * 50}{Style.RESET_ALL}")  # Stars
+    
+    # Journey description
     time.sleep(1)
-    print_slow("\n" + "." * 20)
-    time.sleep(1)
+    print_typed("\nDays pass. Then weeks. Your cryosleep cycles activate and", style=Font.LORE)
+    print_typed("deactivate as the ship's AI manages your journey.", style=Font.LORE)
     
-    print_typed("\nLight. A new sky. Strange stars overhead.")
-    print_typed("You've arrived in Andromeda, the last human to escape Earth.")
+    # Different results based on player's choice
+    if choice == "1":
+        # Direct route consequences
+        print_typed("\nALERT: FUEL RESERVES CRITICAL", style=Font.WARNING)
+        print_typed("\nThe gamble was too great. Your fuel reserves are depleting", style=Font.WARNING)
+        print_typed("faster than projected. Just as hope seems lost, your scanners", style=Font.WARNING)
+        print_typed("detect an automated Yanglong V fuel drone. Someone at the", style=Font.WARNING)
+        print_typed("station must have anticipated your need...", style=Font.WARNING)
+    else:
+        # Refueling route
+        print_typed("\nApproaching Yanglong V station...", style=Font.SUCCESS)
+        print_typed("\nThe massive Chinese deep space station grows larger in your", style=Font.INFO)
+        print_typed("viewport. Its rotating sections gleam in the starlight.", style=Font.INFO)
+        print_typed("Automated docking systems guide your ship to the refueling bay.", style=Font.INFO)
+    
+    # Common for both paths - transition to Andromeda
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed("\nFuel tanks replenished, you set final course for Andromeda.", style=Font.SUCCESS)
+    print_typed("The journey resumes, across the vast emptiness between galaxies.", style=Font.LORE)
+    print_typed("Your neural implants help you endure the isolation as eons seem to pass.", style=Font.LORE)
+    
+    # Arrival sequence
+    print_typed("\nPROXIMITY ALERT: ANDROMEDA COLONY DETECTED", style=Font.SUCCESS)
+    print_typed("\nThrough the viewport, you see it at last: the gleaming orbital", style=Font.LORE)
+    print_typed("structures of humanity's new home. Tears form in your eyes.", style=Font.LORE)
+    print_typed("You made it. The last survivor of Earth has arrived.", style=Font.LORE)
     
     # Complete all 50 stages
     game_state["current_stage"] = 50
     game_state["player_stats"]["stages_completed"] = 50
     
-    # Show Chapter 2 teaser
+    # Add a pause before Chapter 2 teaser
     time.sleep(2)
+    
+    # Show Chapter 2 teaser
     chapter_two_teaser()
     
-    print_slow("\n" + "=" * 60)
-    print_slow("CONGRATULATIONS!".center(60))
-    print_slow("=" * 60)
+    # Final congratulations with more visual flair
+    print(f"{Fore.YELLOW}{Back.BLUE}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Fore.YELLOW}{Back.BLUE}{'CONGRATULATIONS!'.center(46)}{Style.RESET_ALL} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.YELLOW}{Back.BLUE}{'▀' * 50}{Style.RESET_ALL}")
     
-    print_typed("\nYou've completed LAST HUMAN: EXODUS Chapter 1!")
-    print_typed("Your stats for this playthrough:")
+    print_typed("\nYou've completed LAST HUMAN: EXODUS Chapter 1!", style=Font.SUCCESS)
+    
+    # Display stats in a nicer format with more colors
+    print(Font.HEADER("\nYOUR MISSION RECORD:"))
     
     stats = game_state["player_stats"]
-    print(f"Enemies defeated: {stats['enemies_defeated']}")
-    print(f"Damage dealt: {stats['damage_dealt']}")
-    print(f"Items collected: {stats['items_found']}")
-    print(f"Companions built: {stats['companions_built']}")
     
-    print_typed("\nPress Enter to return to the main menu...")
+    # Get values from stats dictionary
+    enemies_defeated = stats["enemies_defeated"]
+    damage_dealt = stats["damage_dealt"]
+    items_found = stats["items_found"]
+    companions_built = stats["companions_built"]
+    
+    # More colorful stats display
+    print(f"{Fore.WHITE}┌{'─' * 48}┐{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}│ {Font.INFO('Enemies neutralized:')} {Font.SUCCESS(str(enemies_defeated))}{' ' * (25-len(str(enemies_defeated)))} │{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}│ {Font.INFO('Total damage dealt:')} {Fore.RED}{Style.BRIGHT}{str(damage_dealt)}{Style.RESET_ALL}{' ' * (26-len(str(damage_dealt)))} │{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}│ {Font.INFO('Items collected:')} {Fore.YELLOW}{Style.BRIGHT}{str(items_found)}{Style.RESET_ALL}{' ' * (29-len(str(items_found)))} │{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}│ {Font.INFO('Companions built:')} {Fore.MAGENTA}{Style.BRIGHT}{str(companions_built)}{Style.RESET_ALL}{' ' * (27-len(str(companions_built)))} │{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}└{'─' * 48}┘{Style.RESET_ALL}")
+    
+    print(Font.MENU("\nPress Enter to return to the main menu..."))
     input()
 
 
@@ -2198,21 +2790,36 @@ def display_stage_transition():
     if current_stage in stages:
         stage_data = stages[current_stage]
         clear_screen()
-        print_slow("=" * 60)
-        print_slow(f"STAGE {current_stage}/50".center(60))
-        print_slow("=" * 60)
         
-        print_typed(f"\n{stage_data['description']}")
-        print_typed(f"\nEnemy Level: {stage_data['enemies_level']}")
-        print_typed(f"Loot Quality: {stage_data['loot_multiplier']}x")
+        # Create a nice stage transition display
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.STAGE(f'STAGE {current_stage}/50'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
         
-        # Check for companion unlocks at this stage
+        # Stage description with better formatting
+        print_typed(f"\n{stage_data['description']}", style=Font.LORE)
+        
+        # Stage information with colored text
+        print(Font.SEPARATOR_THIN)
+        print(Font.HEADER("\nSTAGE PARAMETERS:"))
+        print(f"{Font.INFO('Enemy Level:')} {Font.ENEMY(str(stage_data['enemies_level']))}")
+        print(f"{Font.INFO('Loot Quality:')} {Font.ITEM(str(stage_data['loot_multiplier']) + 'x')}")
+        
+        # Check for companion unlocks with special highlighting
         for comp_id, comp_data in companions.items():
             if comp_data["stage_unlock"] == current_stage:
-                print_typed(f"\nNew companion blueprint available: {comp_data['name']}")
-                print_slow(f"Use the Fabrication System (/build) to construct it.")
+                # Calculate the companion tier for coloring
+                tier = comp_data.get("tier", 1)
+                tier_color = Font.COMPANION_TIERS[min(tier, len(Font.COMPANION_TIERS)-1)]
+                
+                print(Font.SEPARATOR_THIN)
+                print(Font.SUCCESS("\nNEW BLUEPRINT DETECTED!"))
+                print(f"{Font.INFO('Companion Type:')} {tier_color}{comp_data['name']}{Style.RESET_ALL}")
+                print(f"{Font.INFO('Description:')} {Font.LORE(comp_data['description'])}")
+                print(f"{Font.INFO('Bonuses:')} +{comp_data['attack_bonus']} ATK, +{comp_data['defense_bonus']} DEF")
+                print(f"\n{Font.SYSTEM('Use the Fabrication System (/build) to construct it.')}")
         
-        print_slow("\nPress Enter to continue...")
+        print(Font.MENU("\nPress Enter to continue..."))
         input()
 
 
@@ -2498,4 +3105,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\n\nGame terminated by user. Goodbye!")
-
