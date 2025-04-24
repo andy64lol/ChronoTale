@@ -1601,15 +1601,19 @@ monsters = [
     {"name": "Dark Legion's Shadow Guardian", "level": 17, "health": 750, "attack": 150, "drops": ["Shadow Guardian's Shield", "Gold Coin"]},
 
     # Post-game dungeon monsters
-    {"name": "Void Reaper", "level": 25, "health": 2500, "attack": 300, "drops": ["Void Scythe", "Void Crystal", "Gold Coin"]},
-    {"name": "Ancient Dragon God", "level": 30, "health": 3000, "attack": 400, "drops": ["Divine Dragon Scale", "Dragon God's Crown", "Gold Coin"]},
-    {"name": "Eternal Phoenix", "level": 28, "health": 2800, "attack": 350, "drops": ["Eternal Flame", "Phoenix Crown", "Gold Coin"]},
-    {"name": "Chaos Incarnate", "level": 35, "health": 3500, "attack": 450, "drops": ["Chaos Blade", "Chaos Crystal", "Gold Coin"]},
-    {"name": "Abyssal Overlord", "level": 40, "health": 4000, "attack": 500, "drops": ["Abyssal Crown", "Infinity Stone", "Gold Coin"]},
+    {"name": "Void Reaper", "level": 25, "health": 2500, "attack": 300, "drops": ["Void Scythe", "Void Crystal", "Gold Coin"], "boss": True},
+    {"name": "Ancient Dragon God", "level": 30, "health": 3000, "attack": 400, "drops": ["Divine Dragon Scale", "Dragon God's Crown", "Gold Coin"], "boss": True},
+    {"name": "Eternal Phoenix", "level": 28, "health": 2800, "attack": 350, "drops": ["Eternal Flame", "Phoenix Crown", "Gold Coin"], "boss": True},
+    {"name": "Chaos Incarnate", "level": 35, "health": 3500, "attack": 450, "drops": ["Chaos Blade", "Chaos Crystal", "Gold Coin"], "boss": True},
+    {"name": "Abyssal Overlord", "level": 40, "health": 4000, "attack": 500, "drops": ["Abyssal Crown", "Infinity Stone", "Gold Coin"], "boss": True},
     {"name": "Dragon Elite Guard", "level": 32, "health": 3200, "attack": 420, "drops": ["Elite Dragon Scale", "Dragon Guard Armor", "Gold Coin"]},
     {"name": "Phoenix Guardian", "level": 30, "health": 3000, "attack": 380, "drops": ["Phoenix Feather", "Guardian's Flame", "Gold Coin"]},
     {"name": "Chaos Spawn", "level": 33, "health": 3300, "attack": 430, "drops": ["Chaos Shard", "Spawn Crystal", "Gold Coin"]},
-    {"name": "Abyss Dweller", "level": 38, "health": 3800, "attack": 480, "drops": ["Dweller's Heart", "Abyssal Fragment", "Gold Coin"]}
+    {"name": "Abyss Dweller", "level": 38, "health": 3800, "attack": 480, "drops": ["Dweller's Heart", "Abyssal Fragment", "Gold Coin"]},
+    {"name": "Void Dragon", "level": 45, "health": 5000, "attack": 600, "drops": ["Void Dragon Scale", "Void Crown", "Gold Coin"], "boss": True},
+    {"name": "Time Keeper", "level": 42, "health": 4500, "attack": 550, "drops": ["Chronos Crystal", "Time Keeper's Staff", "Gold Coin"], "boss": True},
+    {"name": "Celestial Titan", "level": 48, "health": 5500, "attack": 650, "drops": ["Celestial Heart", "Titan's Crown", "Gold Coin"], "boss": True},
+    {"name": "Dimensional Horror", "level": 50, "health": 6000, "attack": 700, "drops": ["Horror Essence", "Dimensional Shard", "Gold Coin"], "boss": True}
 ]
 
 # Post-game dungeons will be added to the dungeons list after its definition
@@ -1647,7 +1651,7 @@ def check_achievements():
                 "rare_items_found": 0
             }
         }
-    
+
     stats = user_data["achievements"]["stats"]
     completed = user_data["achievements"]["completed"]
 
@@ -1737,42 +1741,6 @@ CRAFTING_RECIPES.update({
 })
 
 dungeons = [
-    # Post-game Dungeons
-    {
-        "name": "The Void Citadel",
-        "monsters": ["Void Reaper", "Dark Legion Elite"],
-        "loot": ["Void Scythe", "Void Crystal", "Void Armor"],
-        "required_level": 25,
-        "description": "A fortress suspended in the void between dimensions."
-    },
-    {
-        "name": "Dragon God's Sanctuary",
-        "monsters": ["Ancient Dragon God", "Dragon Elite Guard"],
-        "loot": ["Divine Dragon Scale", "Dragon God's Crown", "Divine Armor"],
-        "required_level": 30,
-        "description": "The sacred realm where the first dragons originated."
-    },
-    {
-        "name": "Eternal Phoenix Spire",
-        "monsters": ["Eternal Phoenix", "Phoenix Guardian"],
-        "loot": ["Eternal Flame", "Phoenix Crown", "Phoenix Wings"],
-        "required_level": 28,
-        "description": "A towering spire of eternal flame where the first phoenix was born."
-    },
-    {
-        "name": "Chaos Nexus",
-        "monsters": ["Chaos Incarnate", "Chaos Spawn"],
-        "loot": ["Chaos Blade", "Chaos Crystal", "Chaos Armor"],
-        "required_level": 35,
-        "description": "The epicenter of all chaos in the universe."
-    },
-    {
-        "name": "The Infinite Abyss",
-        "monsters": ["Abyssal Overlord", "Abyss Dweller"],
-        "loot": ["Abyssal Crown", "Infinity Stone", "Abyssal Armor"],
-        "required_level": 40,
-        "description": "An endless void where reality itself begins to break down."
-    },
     # Greenwood Village Dungeons
     {"name": "Goblin's Hideout", "monsters": ["Goblin", "Wolf"], "loot": ["Wooden Sword", "Wolf Pelt", "Gold Coin"]},
     {"name": "Bandit Camp", "monsters": ["Bandit"], "loot": ["Leather Armor", "Gold Coin"]},
@@ -1912,6 +1880,38 @@ dungeons = [
     {"name": "Warlock's Dark Spire", "monsters": ["Dark Legion Warlock", "Dark Legion Archpriest"], "loot": ["Warlock Staff", "Dark Tome", "Gold Coin"]},
     {"name": "Shadow Assassin's Den", "monsters": ["Dark Legion's Shadow Assassin"], "loot": ["Shadow Dagger", "Gold Coin"]},
     {"name": "The Eternal Throne", "monsters": ["Dark Legionary Supreme Lord:Noctis, the Obsidian Fallen Eternal"], "loot": ["Eternal Crown", "Obsidian Blade", "Dark Legion's Heart", "Gold Coin"]},
+
+    # Post-game Dungeons
+{
+    "name": "The Void Citadel",
+    "monsters": ["Void Reaper", "Dark Legion Elite"],
+    "loot": ["Void Scythe", "Void Crystal", "Void Armor"],
+    "description": "A fortress suspended in the void between dimensions."
+},
+    {
+        "name": "Dragon God's Sanctuary",
+        "monsters": ["Ancient Dragon God", "Dragon Elite Guard"],
+        "loot": ["Divine Dragon Scale", "Dragon God's Crown", "Divine Armor"],
+        "description": "The sacred realm where the first dragons originated."
+    },
+    {
+        "name": "Eternal Phoenix Spire",
+        "monsters": ["Eternal Phoenix", "Phoenix Guardian"],
+        "loot": ["Eternal Flame", "Phoenix Crown", "Phoenix Wings"],
+        "description": "A towering spire of eternal flame where the first phoenix was born."
+    },
+    {
+        "name": "Chaos Nexus",
+        "monsters": ["Chaos Incarnate", "Chaos Spawn"],
+        "loot": ["Chaos Blade", "Chaos Crystal", "Chaos Armor"],
+        "description": "The epicenter of all chaos in the universe."
+    },
+    {
+        "name": "The Infinite Abyss",
+        "monsters": ["Abyssal Overlord", "Abyss Dweller"],
+        "loot": ["Abyssal Crown", "Infinity Stone", "Abyssal Armor"],
+        "description": "An endless void where reality itself begins to break down."
+    },
 ]
 
 
@@ -2046,8 +2046,92 @@ def show_location() -> None:
     if current in LOCATIONS:
         print_animated(f"Description: {LOCATIONS[current]['description']}")
 
+# Developer settings and commands
+DEV_COMMANDS = {
+    "/complete_dungeon": "Complete a dungeon",
+    "/incomplete_dungeon": "Mark dungeon as incomplete", 
+    "/give_item": "Give yourself an item",
+    "/give_level": "Give yourself levels",
+    "/give_exp": "Give yourself experience",
+    "/set_hp": "Set your HP",
+    "/give_gold": "Give yourself gold",
+    "/unlock_all": "Unlock all areas",
+    "/god_mode": "Toggle invincibility"
+}
+
+def dev_command_handler(cmd: str) -> None:
+    global user_data
+    parts = cmd.split()
+    base_cmd = parts[0].lower()
+
+    if base_cmd == "/complete_dungeon" and len(parts) > 1:
+        dungeon_name = " ".join(parts[1:])
+        if dungeon_name not in user_data["dungeons_completed"]:
+            user_data["dungeons_completed"].append(dungeon_name)
+            print(f"Completed dungeon: {dungeon_name}")
+    elif base_cmd == "/incomplete_dungeon" and len(parts) > 1:
+        dungeon_name = " ".join(parts[1:])
+        if dungeon_name in user_data["dungeons_completed"]:
+            user_data["dungeons_completed"].remove(dungeon_name)
+            print(f"Marked dungeon as incomplete: {dungeon_name}")
+    elif base_cmd == "/give_item" and len(parts) > 1:
+        item_name = " ".join(parts[1:])
+        user_data["inventory"].append(item_name)
+        print(f"Added {item_name} to inventory")
+    elif base_cmd == "/give_level" and len(parts) > 1:
+        levels = int(parts[1])
+        user_data["level"] += levels
+        print(f"Added {levels} levels")
+    elif base_cmd == "/give_exp" and len(parts) > 1:
+        exp = int(parts[1])
+        user_data["exp"] += exp
+        print(f"Added {exp} experience")
+    elif base_cmd == "/set_hp" and len(parts) > 1:
+        hp = int(parts[1])
+        user_data["health"] = hp
+        user_data["max_health"] = hp
+        print(f"Set HP to {hp}")
+    elif base_cmd == "/give_gold" and len(parts) > 1:
+        gold = int(parts[1])
+        user_data["gold"] += gold
+        print(f"Added {gold} gold")
+    elif base_cmd == "/unlock_all":
+        for location in LOCATIONS:
+            if location not in user_data.get("unlocked_areas", []):
+                user_data.setdefault("unlocked_areas", []).append(location)
+        print("Unlocked all areas")
+    elif base_cmd == "/god_mode":
+        user_data["god_mode"] = not user_data.get("god_mode", False)
+        print(f"God mode: {'enabled' if user_data.get('god_mode', False) else 'disabled'}")
+
 def handle_command(cmd: str) -> None:
     allowed_commands_without_character = {"/new", "/load", "/help", "/exit", "/prefix", "/save"}
+    
+    parts = cmd.lower().split()
+    base_cmd = parts[0] if parts else ""
+    
+    # Special handling for /dev command
+    if base_cmd == "/dev":
+        if len(parts) > 1 and " ".join(parts[1:]) == "activatedevmode":
+            user_data["dev_mode"] = True
+            print("Developer mode activated! Use /help_dev to see available commands.")
+            return
+        else:
+            print("Incorrect developer command. Use '/dev ACTIVATEDEVMODE' to enable developer mode.")
+            return
+    elif cmd.lower() == "/help_dev" and user_data.get("dev_mode", False):
+        print_header("Developer Commands")
+        for command, desc in DEV_COMMANDS.items():
+            print(f"{command}: {desc}")
+        return
+    
+    # Handle developer commands if dev mode is active
+    if cmd.split()[0].lower() in DEV_COMMANDS and user_data.get("dev_mode", False):
+        dev_command_handler(cmd)
+        return
+    elif cmd.split()[0].lower() in DEV_COMMANDS and not user_data.get("dev_mode", False):
+        print("Developer mode not activated! Use /dev with correct password.")
+        return
 
     # Increment ticks based on command if it's not a no-tick command
     base_command = cmd.split()[0].lower()
@@ -2259,15 +2343,15 @@ def adopt_pet(pet_name: str) -> None:
     def show_mobs(area: str = None) -> None:
         print_header("Monsters")
         target_area = area if area else user_data["current_area"]
-    
+
     target_area = user_data.get("current_area", None)
     if target_area not in LOCATIONS:
         print(f"Invalid area: {target_area}")
         return
-        
+
     area_monster_names = LOCATIONS[target_area].get("monsters", [])
     area_monsters = [m for m in monsters if m["name"] in area_monster_names]
-    
+
     if area_monsters:
         print(f"Monsters in {target_area}:")
         for monster in area_monsters:
@@ -2277,14 +2361,14 @@ def adopt_pet(pet_name: str) -> None:
                 print(f"  {RED}⚠ BOSS MONSTER ⚠{ENDC}")
     else:
         print(f"No monsters found in {target_area}")
-    
+
     if target_area not in LOCATIONS:
         print(f"Invalid area: {target_area}")
         return
-        
+
     area_monster_names = LOCATIONS[target_area].get("monsters", [])
     area_monsters = [m for m in monsters if m["name"] in area_monster_names]
-    
+
     if area_monsters:
         print(f"Monsters in {target_area}:")
         for monster in area_monsters:
@@ -3584,6 +3668,12 @@ def fight_monster(monster_name: str) -> None:
             print(f"Monster '{monster_name}' not found!")
             return
 
+        # Check player level against monster level
+        if user_data["level"] < monster["level"]:
+            print(f"{FAIL}Warning: This monster is too strong for your level! (Required: Level {monster['level']}){ENDC}")
+            if input("Do you still want to fight? (y/n): ").lower() != 'y':
+                return
+
         if user_data["health"] <= 0:
             print("You can't fight while defeated! Use a healing potion or rest.")
             return
@@ -3929,7 +4019,7 @@ def talk_to_npc(npc_name: str = None) -> None:
         while True:
             print(f"\n{BOLD}Options:{ENDC}")
             options = []
-            
+
             if "quests" in npc:
                 options.append("1. Ask about quests")
             if "story" in npc["dialogues"]:
@@ -3950,7 +4040,7 @@ def talk_to_npc(npc_name: str = None) -> None:
                 available_quests = [q for q in QUESTS if q["name"] in npc["quests"] 
                                   and q["id"] not in user_data["completed_quests"]
                                   and q not in user_data["active_quests"]]
-                
+
                 if available_quests:
                     for quest in available_quests:
                         print(f"\n{CYAN}Quest: {quest['name']}{ENDC}")
@@ -3981,7 +4071,7 @@ def talk_to_npc(npc_name: str = None) -> None:
                     item = input(f"\n{YELLOW}What would you like to buy? (or press Enter to cancel): {ENDC}").strip()
                     if not item:
                         break
-                        
+
                     if item in npc["shop"]:
                         price = WEAPONS[item]["price"] if item in WEAPONS else MARKET_PRICES.get(item, 0)
                         if user_data["gold"] >= price:
