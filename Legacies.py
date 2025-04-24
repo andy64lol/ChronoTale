@@ -2048,15 +2048,11 @@ def show_location() -> None:
 
 # Developer settings and commands
 DEV_COMMANDS = {
-    "/complete_dungeon": "Complete a dungeon",
-    "/incomplete_dungeon": "Mark dungeon as incomplete", 
-    "/give_item": "Give yourself an item",
-    "/give_level": "Give yourself levels",
-    "/give_exp": "Give yourself experience",
-    "/set_hp": "Set your HP",
-    "/give_gold": "Give yourself gold",
-    "/unlock_all": "Unlock all areas",
-    "/god_mode": "Toggle invincibility"
+    "/dev_complete": "Complete a dungeon, story, or quest",
+    "/dev_give": "Give items, gold, exp, or levels", 
+    "/dev_set": "Set health, location, or other stats",
+    "/dev_unlock": "Unlock areas, skills, or features",
+    "/dev_mode": "Toggle god mode, debug mode, etc"
 }
 
 def dev_command_handler(cmd: str) -> None:
@@ -2064,52 +2060,116 @@ def dev_command_handler(cmd: str) -> None:
     parts = cmd.split()
     base_cmd = parts[0].lower()
 
-    if base_cmd == "/complete_dungeon" and len(parts) > 1:
-        dungeon_name = " ".join(parts[1:])
-        if dungeon_name not in user_data["dungeons_completed"]:
-            user_data["dungeons_completed"].append(dungeon_name)
-            print(f"Completed dungeon: {dungeon_name}")
-    elif base_cmd == "/incomplete_dungeon" and len(parts) > 1:
-        dungeon_name = " ".join(parts[1:])
-        if dungeon_name in user_data["dungeons_completed"]:
-            user_data["dungeons_completed"].remove(dungeon_name)
-            print(f"Marked dungeon as incomplete: {dungeon_name}")
-    elif base_cmd == "/give_item" and len(parts) > 1:
-        item_name = " ".join(parts[1:])
-        user_data["inventory"].append(item_name)
-        print(f"Added {item_name} to inventory")
-    elif base_cmd == "/give_level" and len(parts) > 1:
-        levels = int(parts[1])
-        user_data["level"] += levels
-        print(f"Added {levels} levels")
-    elif base_cmd == "/give_exp" and len(parts) > 1:
-        exp = int(parts[1])
-        user_data["exp"] += exp
-        print(f"Added {exp} experience")
-    elif base_cmd == "/set_hp" and len(parts) > 1:
-        hp = int(parts[1])
-        user_data["health"] = hp
-        user_data["max_health"] = hp
-        print(f"Set HP to {hp}")
-    elif base_cmd == "/give_gold" and len(parts) > 1:
-        gold = int(parts[1])
-        user_data["gold"] += gold
-        print(f"Added {gold} gold")
-    elif base_cmd == "/unlock_all":
-        for location in LOCATIONS:
-            if location not in user_data.get("unlocked_areas", []):
-                user_data.setdefault("unlocked_areas", []).append(location)
-        print("Unlocked all areas")
-    elif base_cmd == "/god_mode":
-        user_data["god_mode"] = not user_data.get("god_mode", False)
-        print(f"God mode: {'enabled' if user_data.get('god_mode', False) else 'disabled'}")
+    if not parts:
+        print("Invalid command format")
+        return
+
+    try:
+        if base_cmd == "/dev_complete":
+            if len(parts) < 3:
+                print("Usage: /dev_complete [dungeon/story/quest] [name]")
+                return
+            
+            complete_type = parts[1]
+            name = " ".join(parts[2:])
+            
+            if complete_type == "dungeon":
+                if name not in user_data["dungeons_completed"]:
+                    user_data["dungeons_completed"].append(name)
+                    print(f"Completed dungeon: {name}")
+            elif complete_type == "quest":
+                quest = next((q for q in QUESTS if q["name"].lower() == name.lower()), None)
+                if quest:
+                    user_data["completed_quests"].append(quest["id"])
+                    print(f"Completed quest: {name}")
+                    
+        elif base_cmd == "/dev_give":
+            if len(parts) < 3:
+                print("Usage: /dev_give [item/gold/exp/level] [amount/name]")
+                return
+                
+            give_type = parts[1]
+            value = " ".join(parts[2:])
+            
+            if give_type == "item":
+                user_data["inventory"].append(value)
+                print(f"Added {value} to inventory")
+            elif give_type in ["gold", "exp", "level"]:
+                amount = int(value)
+                if give_type == "gold":
+                    user_data["gold"] += amount
+                elif give_type == "exp":
+                    user_data["exp"] += amount
+                elif give_type == "level":
+                    user_data["level"] += amount
+                print(f"Added {amount} {give_type}")
+                
+        elif base_cmd == "/dev_set":
+            if len(parts) < 3:
+                print("Usage: /dev_set [health/location/class] [value]")
+                return
+                
+            set_type = parts[1]
+            value = " ".join(parts[2:])
+            
+            if set_type == "health":
+                hp = int(value)
+                user_data["health"] = hp
+                user_data["max_health"] = hp
+                print(f"Set health to {hp}")
+            elif set_type == "location":
+                if value in LOCATIONS:
+                    user_data["current_area"] = value
+                    print(f"Moved to {value}")
+            elif set_type == "class":
+                if value in CHARACTER_CLASSES:
+                    user_data["class"] = value
+                    print(f"Changed class to {value}")
+                    
+        elif base_cmd == "/dev_unlock":
+            if len(parts) < 2:
+                print("Usage: /dev_unlock [all/areas/skills]")
+                return
+                
+            unlock_type = parts[1]
+            
+            if unlock_type == "all":
+                for location in LOCATIONS:
+                    user_data.setdefault("unlocked_areas", []).append(location)
+                print("Unlocked everything")
+            elif unlock_type == "areas":
+                for location in LOCATIONS:
+                    user_data.setdefault("unlocked_areas", []).append(location)
+                print("Unlocked all areas")
+            elif unlock_type == "skills":
+                if user_data["class"]:
+                    user_data["skills"] = SKILLS[user_data["class"]]
+                    print("Unlocked all class skills")
+                    
+        elif base_cmd == "/dev_mode":
+            if len(parts) < 2:
+                print("Usage: /dev_mode [god/debug]")
+                return
+                
+            mode_type = parts[1]
+            
+            if mode_type == "god":
+                user_data["god_mode"] = not user_data.get("god_mode", False)
+                print(f"God mode: {'enabled' if user_data['god_mode'] else 'disabled'}")
+            elif mode_type == "debug":
+                user_data["debug_mode"] = not user_data.get("debug_mode", False)
+                print(f"Debug mode: {'enabled' if user_data['debug_mode'] else 'disabled'}")
+                
+    except Exception as e:
+        print(f"Error in dev command: {e}")
+        print("Use /help_dev to see command usage")
 
 def handle_command(cmd: str) -> None:
     allowed_commands_without_character = {"/new", "/load", "/help", "/exit", "/prefix", "/save"}
-    
+
     parts = cmd.lower().split()
     base_cmd = parts[0] if parts else ""
-    
+
     # Special handling for /dev command
     if base_cmd == "/dev":
         if len(parts) > 1 and " ".join(parts[1:]) == "activatedevmode":
@@ -2124,7 +2184,7 @@ def handle_command(cmd: str) -> None:
         for command, desc in DEV_COMMANDS.items():
             print(f"{command}: {desc}")
         return
-    
+
     # Handle developer commands if dev mode is active
     if cmd.split()[0].lower() in DEV_COMMANDS and user_data.get("dev_mode", False):
         dev_command_handler(cmd)
@@ -3779,10 +3839,12 @@ def fight_monster(monster_name: str) -> None:
         if monster_health <= 0:
             if monster['name'] == "Dark Legionary Supreme Lord:Noctis, the Obsidian Fallen Eternal":
                 print(f"\n{FAIL}If the sky betrays me...I will make sure it will fall...even if you defeat me...{ENDC}")
+                user_data["progress"] = "endgame"
             print(f"\nYou defeated the {monster['name']}!")
             exp_gain = monster["level"] * 20
             user_data["exp"] += exp_gain
             print(f"Gained {exp_gain} experience!")
+            check_achievements()
 
             # Increment monsters killed count
             user_data["monsters_killed"] += 1
@@ -4046,6 +4108,8 @@ def talk_to_npc(npc_name: str = None) -> None:
                         print(f"\n{CYAN}Quest: {quest['name']}{ENDC}")
                         print(f"Description: {quest['description']}")
                         print(f"Reward: {quest['reward']['gold']} gold, {quest['reward']['exp']} exp")
+                        if quest.get('story', False):
+                            print(f"{MAGENTA}[Story Quest]{ENDC}")
                         if input(f"{YELLOW}Accept quest? (y/n): {ENDC}").lower() == 'y':
                             user_data["active_quests"].append(quest)
                             print(f"{OKGREEN}Quest accepted!{ENDC}")
