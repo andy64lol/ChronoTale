@@ -602,6 +602,11 @@ LOCATIONS= {
         "monsters": ["Crystal Golem", "Glimmering Sprite"],
         "description": "A cave filled with shimmering crystals and magical creatures."
     },
+    "Dark Legion's Fortress": {
+        "type": "dungeon",
+        "monsters": ["Dark Legionary Supreme Lord:Noctis"],
+        "description": "The stronghold of the Dark Legion, filled with powerful foes and dark magic."
+    },
 }
 
 # Character classes
@@ -800,7 +805,6 @@ QUESTS = [
         "chapter": 3,
         "travel_locations": ["Shadowmere", "Sunken Depths"]
     },
-    # New story quests for extended chapters
     {
         "id": 401,
         "name": "Shogun's Challenge",
@@ -900,6 +904,26 @@ QUESTS = [
         "story": True,
         "chapter": 7,
         "travel_locations": ["Crimson Abyss"]
+    },
+    {
+        "id": 704,
+        "name": "The Final Shadow",
+        "description": "Confront the Shadow Master in the depths of the Crimson Abyss.",
+        "target": {"monster": "Shadow Master", "count": 1},
+        "reward": {"gold": 4000, "exp": 4500, "item": "Shadow Master's Cloak"},
+        "story": True,
+        "chapter": 7,
+        "travel_locations": ["Crimson Abyss"]
+    },
+    {
+        "id": 801,
+        "name": "The Final War to end the Shadow order",
+        "description": "Confront the Fallen Eternal,Noctis",
+        "target": {"monster": "Dark Legionary Supreme Lord:Noctis", "count": 1},
+        "reward": {"gold": 5000, "exp": 5500, "item": "Noctis's Shadow Crystal"},
+        "story": True,
+        "chapter": 8,
+        "travel_locations": ["Dark Legion's Fortress"]
     },
     {
         "id": 1,
@@ -1177,7 +1201,7 @@ QUESTS = [
         "reward": {"gold": 1000, "exp": 1200, "item": "Knowledge-based Items"},
         "story": False,
         "chapter": 3,
-        "travel_locations": ["Long Shui Zhen"]
+        "travel_locations": ["Long Shui Zhen's well"]
     }
 ]
 
@@ -1274,7 +1298,7 @@ MARKET_PRICES = {
     "Leather": 4,
     "Steel Ingot": 12,
     "Magic Crystal": 20,
-    
+
     # Crops and Seeds
     "Wheat": 8,
     "Corn": 12,
@@ -1284,7 +1308,7 @@ MARKET_PRICES = {
     "Carrot": 12,
     "Lettuce": 8,
     "Strawberry": 18,
-    
+
     # Monster Drops
     "Dragon Scale": 100,
     "Phoenix Feather": 200,
@@ -1294,7 +1318,7 @@ MARKET_PRICES = {
     "Soul Gem": 50,
     "Demon's Heart": 500,
     "Leviathan Scale": 400,
-    
+
     # Common Equipment
     "Wooden Sword": 15,
     "Iron Sword": 40,
@@ -1302,7 +1326,7 @@ MARKET_PRICES = {
     "Bone Armor": 20,
     "Iron Armor": 50,
     "Steel Armor": 90,
-    
+
     # Rare Equipment
     "Flame Sword": 150,
     "Ice Sword": 150,
@@ -1310,7 +1334,7 @@ MARKET_PRICES = {
     "Dragon Armor": 425,
     "Samurai Armor": 650,
     "Cursed Katana": 750,
-    
+
     # Legendary Equipment
     "Elder Wand": 400,
     "Vorpal Blade": 250,
@@ -1324,18 +1348,18 @@ def sell_item(item_name: str) -> None:
     if not item_name:
         print("Please specify an item to sell.")
         return
-        
+
     # Case-insensitive search in inventory
     item = next((i for i in user_data["inventory"] if i.lower() == item_name.lower()), None)
     if not item:
         print(f"You don't have {item_name} in your inventory.")
         return
-        
+
     # Check if item has a market price
     if item not in MARKET_PRICES:
         print(f"This item cannot be sold.")
         return
-        
+
     # Remove from inventory and add gold
     user_data["inventory"].remove(item)
     price = MARKET_PRICES[item]
@@ -1480,6 +1504,7 @@ monsters = [
     {"name": "Jade soldier", "level": 4, "health": 120, "attack": 22, "drops": ["Jade Shield", "Gold Coin"]},
     {"name": "Jade Emperor's Guard", "level": 6, "health": 160, "attack": 32, "drops": ["Jade Shield", "Gold Coin"]},
     {"name": "Jade Emperor", "level": 8, "health": 390, "attack": 65, "drops": ["Jade Crown", "Gold Coin"]},
+    {"name": "Legendary Dragon", "level": 8, "health": 400, "attack": 70, "drops": ["Dragon Scale", "Gold Coin"]},
 
     # Jade Lotus Village Monsters (Level 2-3)
     {"name": "Lotus Spirit", "level": 3, "health": 85, "attack": 18, "drops": ["Lotus Petal", "Gold Coin"]},
@@ -1571,11 +1596,183 @@ monsters = [
  "unique_mechanics": True,
  "description": "The supreme ruler of the Dark Legion, wielding powers of eternal darkness and commanding legions of the fallen. Each phase unleashes new devastating abilities."
 },
+    {"name": "Dark Legion's Shadow Knight", "level": 19, "health": 950, "attack": 170, "drops": ["Shadow Knight's Blade", "Gold Coin"]},
+    {"name": "Dark Legion's Shadow Sorcerer", "level": 18, "health": 800, "attack": 160, "drops": ["Shadow Sorcerer's Staff", "Gold Coin"]},
+    {"name": "Dark Legion's Shadow Guardian", "level": 17, "health": 750, "attack": 150, "drops": ["Shadow Guardian's Shield", "Gold Coin"]},
+
+    # Post-game dungeon monsters
+    {"name": "Void Reaper", "level": 25, "health": 2500, "attack": 300, "drops": ["Void Scythe", "Void Crystal", "Gold Coin"]},
+    {"name": "Ancient Dragon God", "level": 30, "health": 3000, "attack": 400, "drops": ["Divine Dragon Scale", "Dragon God's Crown", "Gold Coin"]},
+    {"name": "Eternal Phoenix", "level": 28, "health": 2800, "attack": 350, "drops": ["Eternal Flame", "Phoenix Crown", "Gold Coin"]},
+    {"name": "Chaos Incarnate", "level": 35, "health": 3500, "attack": 450, "drops": ["Chaos Blade", "Chaos Crystal", "Gold Coin"]},
+    {"name": "Abyssal Overlord", "level": 40, "health": 4000, "attack": 500, "drops": ["Abyssal Crown", "Infinity Stone", "Gold Coin"]},
+    {"name": "Dragon Elite Guard", "level": 32, "health": 3200, "attack": 420, "drops": ["Elite Dragon Scale", "Dragon Guard Armor", "Gold Coin"]},
+    {"name": "Phoenix Guardian", "level": 30, "health": 3000, "attack": 380, "drops": ["Phoenix Feather", "Guardian's Flame", "Gold Coin"]},
+    {"name": "Chaos Spawn", "level": 33, "health": 3300, "attack": 430, "drops": ["Chaos Shard", "Spawn Crystal", "Gold Coin"]},
+    {"name": "Abyss Dweller", "level": 38, "health": 3800, "attack": 480, "drops": ["Dweller's Heart", "Abyssal Fragment", "Gold Coin"]}
 ]
 
+# Post-game dungeons will be added to the dungeons list after its definition
 
+
+
+ACHIEVEMENTS = {
+    "First Steps": {"desc": "Create your character", "reward": {"gold": 100}},
+    "Monster Hunter": {"desc": "Kill 100 monsters", "reward": {"gold": 500}},
+    "Dragon Slayer": {"desc": "Kill any dragon", "reward": {"exp": 1000}},
+    "Master Crafter": {"desc": "Craft 50 items", "reward": {"gold": 1000}},
+    "Dungeon Master": {"desc": "Complete all dungeons", "reward": {"gold": 5000}},
+    "Legendary Hero": {"desc": "Reach level 50", "reward": {"gold": 10000}},
+    "Material Master": {"desc": "Collect all materials", "reward": {"gold": 2000}},
+    "Rich Merchant": {"desc": "Accumulate 100000 gold", "reward": {"exp": 5000}},
+    "Pet Collector": {"desc": "Adopt 5 pets", "reward": {"gold": 1500}},
+    "Master Farmer": {"desc": "Harvest 1000 crops", "reward": {"gold": 3000}}
+}
+
+# Track achievement progress
+def check_achievements():
+    if "achievements" not in user_data:
+        user_data["achievements"] = {
+            "completed": set(),
+            "stats": {
+                "monsters_killed": 0,
+                "items_crafted": 0,
+                "dungeons_completed": 0,
+                "crops_harvested": 0,
+                "bosses_defeated": 0,
+                "quests_completed": 0,
+                "areas_visited": set(),
+                "max_damage_dealt": 0,
+                "total_gold_earned": 0,
+                "rare_items_found": 0
+            }
+        }
+    
+    stats = user_data["achievements"]["stats"]
+    completed = user_data["achievements"]["completed"]
+
+    # Dynamic achievement checks
+    achievements_conditions = {
+        "First Steps": lambda: user_data["class"] is not None,
+        "Monster Hunter": lambda: stats["monsters_killed"] >= 100,
+        "Master Crafter": lambda: stats["items_crafted"] >= 50,
+        "Dungeon Master": lambda: len(user_data.get("dungeons_completed", [])) >= 10,
+        "Boss Slayer": lambda: stats["bosses_defeated"] >= 5,
+        "Quest Champion": lambda: stats["quests_completed"] >= 20,
+        "World Explorer": lambda: len(stats["areas_visited"]) >= 10,
+        "Legendary Warrior": lambda: stats["max_damage_dealt"] >= 1000,
+        "Rich Merchant": lambda: stats["total_gold_earned"] >= 10000,
+        "Rare Collector": lambda: stats["rare_items_found"] >= 5,
+        "Dragon Tamer": lambda: any("Dragon" in pet for pet in user_data["pets"]),
+        "Master Farmer": lambda: stats["crops_harvested"] >= 100,
+        "Ultimate Hero": lambda: user_data["level"] >= 50,
+        "Dark Legion Nemesis": lambda: any(q["id"] == 703 and q["id"] in user_data["completed_quests"] for q in QUESTS)
+    }
+
+    # Check each achievement
+    for achievement, condition in achievements_conditions.items():
+        if achievement not in completed and condition():
+            grant_achievement(achievement)
+
+    # Update stats after each relevant action
+    stats["areas_visited"].add(user_data["current_area"])
+
+def grant_achievement(name):
+    if name not in user_data["achievements"]["completed"]:
+        user_data["achievements"]["completed"].add(name)
+        reward = ACHIEVEMENTS[name]["reward"]
+        for type, amount in reward.items():
+            if type == "gold":
+                user_data["gold"] += amount
+            elif type == "exp":
+                user_data["exp"] += amount
+        print(f"\n🏆 Achievement Unlocked: {name}!")
+        print(f"Description: {ACHIEVEMENTS[name]['desc']}")
+        print(f"Reward: {reward}")
+
+# Enhanced crafting recipes
+CRAFTING_RECIPES.update({
+    "Void Blade": {
+        "materials": {"Void Crystal": 3, "Dark Legion's Heart": 1, "Magic Crystal": 5},
+        "level_required": 25,
+        "type": "weapon",
+        "effect": 60
+    },
+    "Dragon God Armor": {
+        "materials": {"Divine Dragon Scale": 5, "Dragon God's Crown": 1, "Gold Ore": 10},
+        "level_required": 30,
+        "type": "armor",
+        "effect": 50
+    },
+    "Phoenix Wings": {
+        "materials": {"Eternal Flame": 3, "Phoenix Crown": 1, "Magic Crystal": 8},
+        "level_required": 28,
+        "type": "armor",
+        "effect": 45
+    },
+    "Chaos Armor": {
+        "materials": {"Chaos Crystal": 5, "Chaos Blade": 1, "Gold Ore": 15},
+        "level_required": 35,
+        "type": "armor",
+        "effect": 55
+    },
+    "Legendary Sword": {
+        "materials": {"Dragon Scale": 5, "Magic Crystal": 3, "Gold Ore": 2},
+        "level_required": 20,
+        "type": "weapon",
+        "effect": 50
+    },
+    "Phoenix Armor": {
+        "materials": {"Phoenix Feather": 3, "Magic Crystal": 2, "Gold Ore": 3},
+        "level_required": 25,
+        "type": "armor",
+        "effect": 40
+    },
+    "Dragon Slayer Bow": {
+        "materials": {"Dragon Scale": 3, "Magic Crystal": 2, "Wood": 4},
+        "level_required": 22,
+        "type": "weapon",
+        "effect": 45
+    }
+})
 
 dungeons = [
+    # Post-game Dungeons
+    {
+        "name": "The Void Citadel",
+        "monsters": ["Void Reaper", "Dark Legion Elite"],
+        "loot": ["Void Scythe", "Void Crystal", "Void Armor"],
+        "required_level": 25,
+        "description": "A fortress suspended in the void between dimensions."
+    },
+    {
+        "name": "Dragon God's Sanctuary",
+        "monsters": ["Ancient Dragon God", "Dragon Elite Guard"],
+        "loot": ["Divine Dragon Scale", "Dragon God's Crown", "Divine Armor"],
+        "required_level": 30,
+        "description": "The sacred realm where the first dragons originated."
+    },
+    {
+        "name": "Eternal Phoenix Spire",
+        "monsters": ["Eternal Phoenix", "Phoenix Guardian"],
+        "loot": ["Eternal Flame", "Phoenix Crown", "Phoenix Wings"],
+        "required_level": 28,
+        "description": "A towering spire of eternal flame where the first phoenix was born."
+    },
+    {
+        "name": "Chaos Nexus",
+        "monsters": ["Chaos Incarnate", "Chaos Spawn"],
+        "loot": ["Chaos Blade", "Chaos Crystal", "Chaos Armor"],
+        "required_level": 35,
+        "description": "The epicenter of all chaos in the universe."
+    },
+    {
+        "name": "The Infinite Abyss",
+        "monsters": ["Abyssal Overlord", "Abyss Dweller"],
+        "loot": ["Abyssal Crown", "Infinity Stone", "Abyssal Armor"],
+        "required_level": 40,
+        "description": "An endless void where reality itself begins to break down."
+    },
     # Greenwood Village Dungeons
     {"name": "Goblin's Hideout", "monsters": ["Goblin", "Wolf"], "loot": ["Wooden Sword", "Wolf Pelt", "Gold Coin"]},
     {"name": "Bandit Camp", "monsters": ["Bandit"], "loot": ["Leather Armor", "Gold Coin"]},
@@ -1651,6 +1848,7 @@ dungeons = [
     {"name": "Dragon Temple", "monsters": ["Dragon Spirit"], "loot": ["Spirit Pearl", "Gold Coin"]},
     {"name": "Jade General's Fortress", "monsters": ["Jade General","Jade Soldier"], "loot": ["Jade Armor", "Gold Coin"]},
     {"name": "Jade Emperor's Chamber", "monsters": ["Jade Emperor", "Jade Emperor's Guard"], "loot": ["Jade Crown", "Gold Coin"]},
+    {"name": "Long Shui Zhen's well", "monsters": ["Legendary Dragon"], "loot": ["Dragon Scale", "Legendary Sword"]},
 
     # Jade Lotus Village Dungeons
     {"name": "Lotus Sanctuary", "monsters": ["Lotus Spirit", "Pond Serpent"], "loot": ["Lotus Petal", "Serpent Scale", "Gold Coin"]},
@@ -1709,6 +1907,7 @@ dungeons = [
     {"name": "Abyssal Leviathan's Sunken Palace", "monsters": ["Abyssal Leviathan"], "loot": ["Leviathan Scale", "Gold Coin"]},
 
     # The Dark Legion Dungeons
+    {"name": "Dark Legion Fortress", "monsters": ["Dark Legion Elite", "Dark Legion Warlock"], "loot": ["Dark Legion Armor", "Warlock Staff", "Gold Coin"]},
     {"name": "Dark Legion Citadel", "monsters": ["Dark Legion Elite", "Dark Legion Commander"], "loot": ["Dark Legion Armor", "Commander's Blade", "Gold Coin"]},
     {"name": "Warlock's Dark Spire", "monsters": ["Dark Legion Warlock", "Dark Legion Archpriest"], "loot": ["Warlock Staff", "Dark Tome", "Gold Coin"]},
     {"name": "Shadow Assassin's Den", "monsters": ["Dark Legion's Shadow Assassin"], "loot": ["Shadow Dagger", "Gold Coin"]},
@@ -1849,7 +2048,7 @@ def show_location() -> None:
 
 def handle_command(cmd: str) -> None:
     allowed_commands_without_character = {"/new", "/load", "/help", "/exit", "/prefix", "/save"}
-    
+
     # Increment ticks based on command if it's not a no-tick command
     base_command = cmd.split()[0].lower()
     if base_command not in NO_TICK_COMMANDS:
@@ -1857,16 +2056,20 @@ def handle_command(cmd: str) -> None:
             ticks = random.randint(*TICK_COMMANDS[base_command])
             game_state["current_tick"] += ticks
             game_state["current_day"] = game_state["current_tick"] // TICKS_PER_DAY
-            
+
             # Update plant growth based on elapsed ticks
             if "farming" in user_data:
                 for plot in user_data["farming"]["growth"]:
                     growth_ticks = ticks
                     user_data["farming"]["growth"][plot] += growth_ticks
 
-    if cmd.startswith("/talk"):
-        npc_name = cmd.split(" ", 1)[1] if len(cmd.split(" ", 1)) > 1 else None
-        talk_to_npc(npc_name)
+    elif cmd.startswith("/talk"):
+        try:
+            parts = cmd.split(" ", 1)
+            npc_name = parts[1] if len(parts) > 1 else None
+            talk_to_npc(npc_name)
+        except Exception as e:
+            print(f"{FAIL}Error talking to NPC: {e}{ENDC}")
     elif cmd == "/npcs":
         list_npcs()
     elif cmd == "/story":
@@ -2053,25 +2256,44 @@ def adopt_pet(pet_name: str) -> None:
     print_header("Adopt Pet")
     print(f"Adopted a new pet named {pet_name}!")
 
-def show_mobs(area: str = None) -> None:
-    print_header("Monsters")
-    if area:
-        area_monsters = [m for m in monsters if m["name"] in LOCATIONS.get(area, {}).get("monsters", [])]
-        if area_monsters:
-            print(f"Monsters in {area}:")
-            for monster in area_monsters:
-                print(f"- {monster['name']} (Level {monster['level']})")
-        else:
-            print(f"No monsters found in {area}")
+    def show_mobs(area: str = None) -> None:
+        print_header("Monsters")
+        target_area = area if area else user_data["current_area"]
+    
+    target_area = user_data.get("current_area", None)
+    if target_area not in LOCATIONS:
+        print(f"Invalid area: {target_area}")
+        return
+        
+    area_monster_names = LOCATIONS[target_area].get("monsters", [])
+    area_monsters = [m for m in monsters if m["name"] in area_monster_names]
+    
+    if area_monsters:
+        print(f"Monsters in {target_area}:")
+        for monster in area_monsters:
+            print(f"- {monster['name']} (Level {monster['level']})")
+            print(f"  Health: {monster['health']}, Attack: {monster['attack']}")
+            if monster.get("boss", False):
+                print(f"  {RED}⚠ BOSS MONSTER ⚠{ENDC}")
     else:
-        current_area = user_data["current_area"]
-        area_monsters = [m for m in monsters if m["name"] in LOCATIONS.get(current_area, {}).get("monsters", [])]
-        if area_monsters:
-            print(f"Monsters in {current_area}:")
-            for monster in area_monsters:
-                print(f"- {monster['name']} (Level {monster['level']})")
-        else:
-            print("No monsters in current area")
+        print(f"No monsters found in {target_area}")
+    
+    if target_area not in LOCATIONS:
+        print(f"Invalid area: {target_area}")
+        return
+        
+    area_monster_names = LOCATIONS[target_area].get("monsters", [])
+    area_monsters = [m for m in monsters if m["name"] in area_monster_names]
+    
+    if area_monsters:
+        print(f"Monsters in {target_area}:")
+        for monster in area_monsters:
+            print(f"- {monster['name']} (Level {monster['level']})")
+            print(f"  Health: {monster['health']}, Attack: {monster['attack']}")
+            if monster.get("boss", False):
+                print(f"  {RED}⚠ BOSS MONSTER ⚠{ENDC}")
+    else:
+        print(f"No monsters found in {target_area}")
 
 # Function to handle a fight with a monster (used in dungeons)
 def fight(monster: Dict) -> None:
@@ -2527,21 +2749,37 @@ def show_stats() -> None:
 # New functions for additional commands
 def list_dungeons() -> None:
     print_header("Dungeon List")
-    listed_dungeons = set()
+    # Group dungeons by area
+    dungeons_by_area = {}
     for dungeon in dungeons:
-        if dungeon['name'] not in listed_dungeons:
-            if dungeon['name'] in user_data.get("dungeons_completed", []):
-                print(f"\033[92m- {dungeon['name']} (Completed!)\033[0m")
+        area = dungeon.get('area', 'Unknown Area')
+        if area not in dungeons_by_area:
+            dungeons_by_area[area] = []
+        dungeons_by_area[area].append(dungeon)
+
+    # Display dungeons by area with completion status
+    for area, area_dungeons in sorted(dungeons_by_area.items()):
+        print(f"\n{BOLD}{CYAN}{area}:{ENDC}")
+        for dungeon in sorted(area_dungeons, key=lambda x: x['name']):
+            name = dungeon['name']
+            completed = name in user_data.get("dungeons_completed", [])
+            if completed:
+                print(f"{OKGREEN}✓ {name}{ENDC}")
+                # Show rewards if completed
+                if "loot" in dungeon:
+                    print(f"  Rewards collected: {', '.join(dungeon['loot'])}")
             else:
-                print(f"- {dungeon['name']}")
-            listed_dungeons.add(dungeon['name'])
-    # Check for any dungeons referenced in monsters but not listed
-    monster_dungeon_names = set()
-    for dungeon in dungeons:
-        monster_dungeon_names.add(dungeon['name'])
-    unlisted_dungeons = monster_dungeon_names - listed_dungeons
-    for dungeon_name in unlisted_dungeons:
-        print(f"- {dungeon_name}: (Dungeon referenced by monsters but not listed)")
+                # Show requirements if not completed
+                reqs = []
+                if "level_required" in dungeon:
+                    reqs.append(f"Level {dungeon['level_required']}")
+                if reqs:
+                    print(f"{FAIL}✗ {name} (Required: {', '.join(reqs)}){ENDC}")
+                else:
+                    print(f"{FAIL}✗ {name}{ENDC}")
+            # Show monsters
+            if "monsters" in dungeon:
+                print(f"  Monsters: {', '.join(dungeon['monsters'])}")
 
 def show_bestiary() -> None:
     print_header("Bestiary")
@@ -2917,6 +3155,14 @@ biomes = [
     "name": "Lotus Pond",
     "description": "A serene pond filled with beautiful lotus flowers, home to rare aquatic creatures and the Koi along with their empress."
 },
+{
+    "name": "Abyssal Ravine",
+    "description": "A deep underwater cavern filled with ancient ruins from people that used to inhabit here,with rare conditions met this place can create rare minerals"
+},
+{
+    "name": "Ancient Forest Of Gradanvanka",
+    "description": "A dense forest created by the Eternal Gradanvanka when the Eternals, a demigod that lives now in the sky, still walked among mortals in this world."
+},
 ]
 
 # Dismantle items function stub
@@ -2996,7 +3242,7 @@ def redeem_codes() -> None:
 # Gambling guide function stub
 def gambling_guide() -> None:
     print_header("Gambling Guide")
-    print("Gambling feature is coming soon! Play responsibly.")
+    print("Gambling feature is coming soon! Play responsibly ;].")
 
 # Duel info function stub
 def duel_info() -> None:
@@ -3015,7 +3261,7 @@ CROPS = {
     "Carrot": {"growth_time": 3, "yield": "Carrot", "seed_cost": 15, "sell_price": 35, "biome": ["Plains", "Garden"]},
     "Lettuce": {"growth_time": 2, "yield": "Lettuce", "seed_cost": 10, "sell_price": 25, "biome": ["Plains", "Garden"]},
     "Strawberry": {"growth_time": 4, "yield": "Strawberry", "seed_cost": 25, "sell_price": 55, "biome": ["Plains", "Garden"]},
-    
+
     # Special Crops
     "Golden Wheat": {"growth_time": 8, "yield": "Golden Wheat", "seed_cost": 100, "sell_price": 250, "biome": ["Plains", "Mystic Forest"]},
     "Magic Beans": {"growth_time": 10, "yield": "Magic Beans", "seed_cost": 150, "sell_price": 300, "biome": ["Mystic Forest"]},
@@ -3025,7 +3271,7 @@ CROPS = {
     "Fire Peppers": {"growth_time": 7, "yield": "Fire Peppers", "seed_cost": 120, "sell_price": 280, "biome": ["Ember Hollow"]},
     "Shadow Root": {"growth_time": 9, "yield": "Shadow Root", "seed_cost": 130, "sell_price": 290, "biome": ["Shadowmere"]},
     "Crystal Bloom": {"growth_time": 11, "yield": "Crystal Bloom", "seed_cost": 180, "sell_price": 400, "biome": ["Crystal Cave"]},
-    
+
     # Rare Crops
     "Phoenix Flower": {"growth_time": 15, "yield": "Phoenix Flower", "seed_cost": 500, "sell_price": 1200, "biome": ["Silent Ashes"]},
     "Dragon's Breath Plant": {"growth_time": 20, "yield": "Dragon's Breath", "seed_cost": 800, "sell_price": 2000, "biome": ["Dragon's Peak"]},
@@ -3035,7 +3281,7 @@ CROPS = {
 
 def farming_guide() -> None:
     print_header("Farming")
-    
+
     # Initialize farming data if not present
     if "farming" not in user_data:
         user_data["farming"] = {
@@ -3043,13 +3289,13 @@ def farming_guide() -> None:
             "growth": {},  # Store growth progress
             "unlocked_plots": 3  # Start with 3 plots
         }
-    
+
     while True:
         # Show farm status
         print_colored("\n=== Your Farm ===", GREEN)
         print(f"Gold: {user_data['gold']}")
         print(f"Plots available: {user_data['farming']['unlocked_plots']} (Used: {len(user_data['farming']['plots'])})")
-        
+
         print("\nActions:")
         print("1. View crop prices and info")
         print("2. Buy seeds")
@@ -3059,9 +3305,9 @@ def farming_guide() -> None:
         print("6. Sell crops")
         print("7. Upgrade farm")
         print("8. Exit farming")
-        
+
         choice = input("\nChoose action (1-8): ")
-        
+
         if choice == "1":
             print_colored("\n=== Crop Information ===", CYAN)
             for crop, info in CROPS.items():
@@ -3070,13 +3316,13 @@ def farming_guide() -> None:
                 print(f"  Seed Cost: {info['seed_cost']} gold")
                 print(f"  Market Price: {info['sell_price']} gold")
                 print(f"  Profit per crop: {info['sell_price'] - info['seed_cost']} gold")
-                
+
         elif choice == "2":
             print_colored("\n=== Seed Shop ===", YELLOW)
             print("Available seeds:")
             for crop, info in CROPS.items():
                 print(f"{crop} seeds: {info['seed_cost']} gold")
-                
+
             seed = input("\nWhich seeds would you like to buy? (or Enter to cancel): ").capitalize()
             if seed in CROPS:
                 amount = input("How many? ")
@@ -3094,28 +3340,28 @@ def farming_guide() -> None:
                         print_colored("Not enough gold!", RED)
                 except ValueError:
                     print_colored("Please enter a valid number.", RED)
-                    
+
         elif choice == "3":
             print_colored("\n=== Plant Crops ===", GREEN)
             seeds = [mat for mat in user_data["materials"] if mat.endswith(" seeds")]
-            
+
             if not seeds:
                 print_colored("You don't have any seeds!", RED)
                 continue
-                
+
             print("\nYour seeds:")
             for seed in seeds:
                 print(f"{seed}: {user_data['materials'][seed]}")
-                
+
             if len(user_data["farming"]["plots"]) >= user_data["farming"]["unlocked_plots"]:
                 print_colored("All plots are occupied! Harvest some crops or upgrade your farm.", RED)
                 continue
-                
+
             seed = input("\nWhich seeds would you like to plant? (or Enter to cancel): ")
             if seed in seeds:
                 available_plots = user_data["farming"]["unlocked_plots"] - len(user_data["farming"]["plots"])
                 amount = input(f"How many? (max {min(user_data['materials'][seed], available_plots)}): ")
-                
+
                 try:
                     amount = int(amount)
                     if amount > 0 and amount <= user_data["materials"][seed] and amount <= available_plots:
@@ -3132,19 +3378,19 @@ def farming_guide() -> None:
                         print_colored("Invalid amount!", RED)
                 except ValueError:
                     print_colored("Please enter a valid number.", RED)
-                    
+
         elif choice == "4":
             print_colored("\n=== Farm Status ===", CYAN)
             if not user_data["farming"]["plots"]:
                 print("No crops planted!")
                 continue
-                
+
             for plot, crop in user_data["farming"]["plots"].items():
                 growth = user_data["farming"]["growth"][plot]
                 max_growth = CROPS[crop]["growth_time"] * TICKS_PER_DAY // 10  # Scale growth time to ticks
                 status = "🌱" if growth < max_growth/3 else "🌿" if growth < max_growth*2/3 else "🌾" if growth < max_growth else "✨"
                 print(f"Plot {plot}: {status} {crop} ({growth}/{max_growth} ticks) - Day {game_state['current_day']}")
-                
+
         elif choice == "5":
             print_colored("\n=== Harvest Crops ===", YELLOW)
             harvested = False
@@ -3155,28 +3401,28 @@ def farming_guide() -> None:
                     if crop not in user_data["materials"]:
                         user_data["materials"][crop] = 0
                     user_data["materials"][crop] += yield_amount
-                    
+
                     # Remove harvested crop
                     del user_data["farming"]["plots"][plot]
                     del user_data["farming"]["growth"][plot]
-                    
+
                     print_colored(f"Harvested {yield_amount}x {crop} from plot {plot}!", GREEN)
-                    
+
             if not harvested:
                 print_colored("No crops ready to harvest!", RED)
-                
+
         elif choice == "6":
             print_colored("\n=== Sell Crops ===", YELLOW)
             crops_to_sell = [crop for crop in user_data["materials"] if crop in CROPS]
-            
+
             if not crops_to_sell:
                 print_colored("You have no crops to sell!", RED)
                 continue
-                
+
             print("\nYour crops:")
             for crop in crops_to_sell:
                 print(f"{crop}: {user_data['materials'][crop]} (Worth: {CROPS[crop]['sell_price']} gold each)")
-                
+
             crop = input("\nWhat would you like to sell? (or Enter to cancel): ")
             if crop in crops_to_sell:
                 amount = input(f"How many? (max {user_data['materials'][crop]}): ")
@@ -3193,12 +3439,12 @@ def farming_guide() -> None:
                         print_colored("Invalid amount!", RED)
                 except ValueError:
                     print_colored("Please enter a valid number.", RED)
-                    
+
         elif choice == "7":
             print_colored("\n=== Farm Upgrades ===", MAGENTA)
             upgrade_cost = 1000 * (user_data["farming"]["unlocked_plots"] - 2)
             print(f"Upgrade cost for new plot: {upgrade_cost} gold")
-            
+
             if input("Would you like to upgrade? (y/n): ").lower() == 'y':
                 if user_data["gold"] >= upgrade_cost:
                     user_data["gold"] -= upgrade_cost
@@ -3206,10 +3452,10 @@ def farming_guide() -> None:
                     print_colored(f"Farm upgraded! You now have {user_data['farming']['unlocked_plots']} plots!", GREEN)
                 else:
                     print_colored("Not enough gold!", RED)
-                    
+
         elif choice == "8":
             break
-            
+
         # Progress growth for all planted crops
         for plot in user_data["farming"]["growth"]:
             user_data["farming"]["growth"][plot] += 1
@@ -3441,6 +3687,8 @@ def fight_monster(monster_name: str) -> None:
                 continue
 
         if monster_health <= 0:
+            if monster['name'] == "Dark Legionary Supreme Lord:Noctis, the Obsidian Fallen Eternal":
+                print(f"\n{FAIL}If the sky betrays me...I will make sure it will fall...even if you defeat me...{ENDC}")
             print(f"\nYou defeated the {monster['name']}!")
             exp_gain = monster["level"] * 20
             user_data["exp"] += exp_gain
@@ -3529,6 +3777,13 @@ PETS = {
     "Mystic Owl": {"price": 125, "boost": {"intelligence": 3}, "description": "An intelligent owl that boosts intelligence"},
     "Shadow Panther": {"price": 175, "boost": {"stealth": 5}, "description": "A stealthy panther that boosts stealth"},
     "Thunder Eagle": {"price": 200, "boost": {"speed": 5}, "description": "A fast eagle that boosts speed"},
+    "Abyssal Kraken Hatchling": {"price": 300, "boost": {"attack": 10, "defense": 5}, "description": "A baby kraken that boosts attack and defense"},
+    "Small Copper Golem": {"price": 250, "boost": {"defense": 10}, "description": "A small golem made from copper that boosts defense"},
+    "Small Silver Golem": {"price": 300, "boost": {"defense": 15}, "description": "A small golem made from silver that boosts defense"},
+    "Small Titanium Golem": {"price": 350, "boost": {"defense": 25}, "description": "A small golem made from titanium that boosts defense"},
+    "Hellstone Golem": {"price": 600, "boost": {"defense": 90}, "description": "A powerful golem made from hellstone that boosts defense"},
+    "Abyssal Obsidian Golem": {"price": 1000, "boost": {"defense": 150}, "description": "A powerful golem made from obsidian extracted from the abyss where water and lava create contact"},
+    "Abyssal Diamond Golem": {"price": 1500, "boost": {"defense": 200}, "description": "A powerful golem made from diamond extracted from the abyssal caves"}
 }
 
 
@@ -3648,70 +3903,109 @@ def delete_save_prompt() -> None:
 
 def talk_to_npc(npc_name: str = None) -> None:
     if not npc_name:
-        print("Which NPC would you like to talk to?")
-        return
-
-    npc = next((npc for name, npc in NPCS.items() if name.lower() == npc_name.lower()), None)
-    if not npc:
-        print(f"No NPC named '{npc_name}' found.")
-        return
-
-    if npc["location"] != user_data["current_area"]:
-        print(f"This NPC is in {npc['location']}. You need to travel there first!")
-        return
-
-    print_header(f"Talking to {npc_name}")
-    print_animated(npc["dialogues"]["greeting"], CYAN)
-
-    while True:
-        print("\nOptions:")
-        print("1. Ask about quests")
-        print("2. Listen to story")
-        print("3. Trade/Shop")
-        print("4. End conversation")
-
-        choice = input("\nWhat would you like to do? ")
-
-        if choice == "1" and "quests" in npc:
-            print_animated(npc["dialogues"].get("quest", "No quests available."), YELLOW)
-            for quest_name in npc["quests"]:
-                quest = next((q for q in QUESTS if q["name"] == quest_name), None)
-                if quest and quest["id"] not in user_data["completed_quests"]:
-                    print(f"\nQuest: {quest['name']}")
-                    print(f"Description: {quest['description']}")
-                    if input("Accept quest? (y/n): ").lower() == 'y':
-                        user_data["active_quests"].append(quest)
-                        print("Quest accepted!")
-
-        elif choice == "2":
-            if "story" in npc["dialogues"]:
-                for part, text in npc["dialogues"]["story"].items():
-                    print_animated(f"\n{part.capitalize()}:", MAGENTA)
-                    print_animated(text, CYAN)
-                    input("\nPress Enter to continue...")
-            else:
-                print("This NPC has no story to tell.")
-
-        elif choice == "3" and "shop" in npc:
-            print("\nAvailable items:")
-            for item in npc["shop"]:
-                if item in WEAPONS:
-                    print(f"{item}: {WEAPONS[item]['price']} gold")
-
-            item = input("\nWhat would you like to buy? (or press Enter to cancel): ")
-            if item in npc["shop"]:
-                if item in WEAPONS and user_data["gold"] >= WEAPONS[item]["price"]:
-                    user_data["gold"] -= WEAPONS[item]["price"]
-                    user_data["inventory"].append(item)
-                    print(f"Bought {item}!")
-                else:
-                    print("Not enough gold!")
-
-        elif choice == "4":
-            break
-
+        print_header("Available NPCs")
+        npcs_here = [name for name, npc in NPCS.items() if npc["location"] == user_data["current_area"]]
+        if npcs_here:
+            print(f"NPCs in {user_data['current_area']}:")
+            for name in npcs_here:
+                print(f"- {name}")
         else:
-            print("Invalid choice.")
+            print(f"No NPCs found in {user_data['current_area']}")
+        return
+
+    try:
+        npc = next((npc for name, npc in NPCS.items() if name.lower() == npc_name.lower()), None)
+        if not npc:
+            print(f"{FAIL}No NPC named '{npc_name}' found.{ENDC}")
+            return
+
+        if npc["location"] != user_data["current_area"]:
+            print(f"{WARNING}This NPC is in {npc['location']}. You need to travel there first!{ENDC}")
+            return
+
+        print_header(f"Talking to {npc_name}")
+        print_animated(npc["dialogues"]["greeting"], CYAN)
+
+        while True:
+            print(f"\n{BOLD}Options:{ENDC}")
+            options = []
+            
+            if "quests" in npc:
+                options.append("1. Ask about quests")
+            if "story" in npc["dialogues"]:
+                options.append("2. Listen to story")
+            if "shop" in npc:
+                options.append("3. Trade/Shop")
+            if "additional" in npc["dialogues"]:
+                options.append("4. Ask for advice")
+            options.append("5. End conversation")
+
+            for option in options:
+                print(option)
+
+            choice = input(f"\n{YELLOW}What would you like to do? {ENDC}")
+
+            if choice == "1" and "quests" in npc:
+                print_animated(npc["dialogues"].get("quest", "No quests available."), YELLOW)
+                available_quests = [q for q in QUESTS if q["name"] in npc["quests"] 
+                                  and q["id"] not in user_data["completed_quests"]
+                                  and q not in user_data["active_quests"]]
+                
+                if available_quests:
+                    for quest in available_quests:
+                        print(f"\n{CYAN}Quest: {quest['name']}{ENDC}")
+                        print(f"Description: {quest['description']}")
+                        print(f"Reward: {quest['reward']['gold']} gold, {quest['reward']['exp']} exp")
+                        if input(f"{YELLOW}Accept quest? (y/n): {ENDC}").lower() == 'y':
+                            user_data["active_quests"].append(quest)
+                            print(f"{OKGREEN}Quest accepted!{ENDC}")
+                else:
+                    print(f"{YELLOW}No available quests at the moment.{ENDC}")
+
+            elif choice == "2" and "story" in npc["dialogues"]:
+                if isinstance(npc["dialogues"]["story"], dict):
+                    for part, text in npc["dialogues"]["story"].items():
+                        print_animated(f"\n{MAGENTA}{part.capitalize()}:{ENDC}", delay=0.02)
+                        print_animated(text, CYAN, delay=0.03)
+                        input(f"\n{YELLOW}Press Enter to continue...{ENDC}")
+                else:
+                    print_animated(npc["dialogues"]["story"], CYAN)
+
+            elif choice == "3" and "shop" in npc:
+                print(f"\n{BOLD}Available items:{ENDC}")
+                for item in npc["shop"]:
+                    price = WEAPONS[item]["price"] if item in WEAPONS else MARKET_PRICES.get(item, 0)
+                    print(f"{item}: {price} gold")
+
+                while True:
+                    item = input(f"\n{YELLOW}What would you like to buy? (or press Enter to cancel): {ENDC}").strip()
+                    if not item:
+                        break
+                        
+                    if item in npc["shop"]:
+                        price = WEAPONS[item]["price"] if item in WEAPONS else MARKET_PRICES.get(item, 0)
+                        if user_data["gold"] >= price:
+                            user_data["gold"] -= price
+                            user_data["inventory"].append(item)
+                            print(f"{OKGREEN}Bought {item}!{ENDC}")
+                        else:
+                            print(f"{FAIL}Not enough gold!{ENDC}")
+                    else:
+                        print(f"{FAIL}Item not available.{ENDC}")
+
+            elif choice == "4" and "additional" in npc["dialogues"]:
+                advice = random.choice(npc["dialogues"]["additional"])
+                print_animated(advice, CYAN)
+
+            elif choice == "5" or choice.lower() == "exit":
+                print_animated("Farewell!", CYAN)
+                break
+
+            else:
+                print(f"{FAIL}Invalid choice.{ENDC}")
+
+    except Exception as e:
+        print(f"{FAIL}Error in conversation: {e}{ENDC}")
 
 def list_npcs() -> None:
     print_header("NPCs in Current Area")
@@ -3798,6 +4092,3 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"{FAIL}Error: {e}{ENDC}")
             print_animated("Type '/help' for available commands.", YELLOW)
-
-
-
