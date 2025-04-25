@@ -482,7 +482,8 @@ WEAPONS = {
     "Jade Sword": {"damage": 24, "speed": 1.1, "price": 850},
     "Shogun's Blade": {"damage": 38, "speed": 1.0, "price": 1400},
     "Crimson Cutlass": {"damage": 28, "speed": 1.0, "price": 750, "effect": "bleed"},
-    "Thunder Staff": {"damage": 30, "speed": 1.0, "price": 1000, "effect": "thunder_damage"}
+    "Thunder Staff": {"damage": 30, "speed": 1.0, "price": 1000, "effect": "thunder_damage"},
+    "Obsidian Blade": {"damage": 100, "speed": 0.5, "price": 1000000}
 }
 
 # Towns and locations
