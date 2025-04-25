@@ -1,9 +1,9 @@
 
 """
 Z_survival...
-This game takes part in 2057,a new zombie virus,denominated as Necroa_A,has been spreading on Earth...
-Governemnts did all,but they failed...
-Now the world is in edge of extintion...
+This game takes part in 2057, a new zombie virus, denominated as Necroa_A, has been spreading on Earth...
+Governments did all, but they failed...
+Now the world is on the edge of extinction...
 You are one of the few remaining survivors...
 ...
 Use /help to see available commands.
@@ -16,6 +16,14 @@ import json
 import math
 import sys
 from datetime import datetime
+
+# Setup save folder
+SAVES_FOLDER = "saves"
+MAX_SAVE_SLOTS = 5
+
+# Ensure the saves folder exists
+if not os.path.exists(SAVES_FOLDER):
+    os.makedirs(SAVES_FOLDER)
 
 class Colors:
     HEADER = '\033[95m'
@@ -119,7 +127,7 @@ MAX_HUNGER = 80
 MAX_THIRST = 80
 MAX_INVENTORY_SLOTS = 10  # Limited inventory for hardcore mode
 TIME_FACTOR = 0.4  # Faster time passing in hardcore mode
-HARDCORE_MODE = True  # Enable hardcore features
+HARDCORE_MODE = False  # Enable hardcore features
 PERMADEATH = True  # No save loading after death
 INFECTION_CHANCE = 0.15  # Chance to get infected after zombie hit
 BLEED_DAMAGE = 2  # Damage per hour when bleeding
@@ -224,7 +232,7 @@ WEATHER_TYPES = {
 SCAVENGE_AREAS = {
     "urban": {
         "name": "Urban Center",
-        "description": "Tall buildings and formerly busy streets, now abandoned and dangerous.",
+        "description": "The towering skyscrapers of downtown Millfield cast long shadows over streets littered with abandoned luxury cars and shattered glass. The financial district's marble-floored buildings offer hiding places for both valuable items and the walking dead. Every sound echoes between the concrete canyons, potentially drawing unwanted attention. The risk is extreme, but the rewards could be life-changing—if you survive long enough to use them.",
         "risk_level": 4,
         "zombie_chance": 0.65,
         "resource_types": {
@@ -233,12 +241,12 @@ SCAVENGE_AREAS = {
             "weapon": 0.15,
             "medical": 0.2,
         },
-        "special_items": ["pistol", "metal_scrap", "fuel"],
+        "special_items": ["pistol", "metal_scrap", "fuel", "tactical_flashlight", "office_supplies"],
         "special_item_chance": 0.15,
     },
     "residential": {
         "name": "Residential Area",
-        "description": "Suburban homes and apartments where families once lived.",
+        "description": "The suburbs tell the most human stories of the apocalypse. Family photos still hang on walls, kitchen tables remain set for meals never eaten, and children's toys lie scattered across overgrown lawns. Each home is a time capsule of interrupted lives, preserving both mundane household items and the occasional well-hidden valuables. Infected former residents often remain in their homes, wandering from room to room in a grotesque parody of their previous routines. The familiar layout of these houses makes navigation easier, but complacency can be deadly.",
         "risk_level": 3,
         "zombie_chance": 0.45,
         "resource_types": {
@@ -247,12 +255,12 @@ SCAVENGE_AREAS = {
             "weapon": 0.1,
             "medical": 0.25,
         },
-        "special_items": ["kitchen_knife", "cloth", "baseball_bat"],
+        "special_items": ["kitchen_knife", "cloth", "baseball_bat", "canned_food", "family_photo"],
         "special_item_chance": 0.2,
     },
     "commercial": {
         "name": "Commercial District",
-        "description": "Shopping areas and small businesses with various goods.",
+        "description": "The once-bustling heart of consumer culture now stands as a monument to humanity's former excess. Small boutiques and family-owned businesses line the cracked sidewalks, their broken windows like gaping mouths frozen in eternal screams. Cash registers sit open and empty—money being worthless now—but the stockrooms and shelves still contain overlooked treasures. Fast food restaurants and convenience stores offer the possibility of preserved food, while hardware stores might yield tools and materials. The buildings' close proximity to each other allows for quick movement between potential scavenging sites, but also limits escape routes when danger appears.",
         "risk_level": 3,
         "zombie_chance": 0.5,
         "resource_types": {
@@ -261,12 +269,12 @@ SCAVENGE_AREAS = {
             "weapon": 0.15,
             "medical": 0.2,
         },
-        "special_items": ["energy_bar", "soda", "metal_scrap"],
+        "special_items": ["energy_bar", "soda", "metal_scrap", "cash_register", "store_supplies"],
         "special_item_chance": 0.25,
     },
     "medical": {
         "name": "Medical Facility",
-        "description": "Hospitals and clinics with valuable medical supplies.",
+        "description": "The antiseptic smell has long since been replaced by the unmistakable odor of decay, but hospitals and clinics remain treasure troves of life-saving supplies. Overturned gurneys block hallways, and dried bloodstains map the desperate final moments of patients and staff alike. Pharmacies may still contain medicine cabinets with untouched prescription drugs, while supply closets might hold bandages and surgical tools. These facilities saw the highest concentration of infected as the outbreak spread, meaning the halls are often crowded with medical staff and patients who succumbed to the virus. The bright fluorescent lighting that still flickers in some sections creates disorienting strobe effects that can mask approaching danger.",
         "risk_level": 4,
         "zombie_chance": 0.7,
         "resource_types": {
@@ -275,12 +283,12 @@ SCAVENGE_AREAS = {
             "weapon": 0.05,
             "medical": 0.7,
         },
-        "special_items": ["first_aid_kit", "bandage", "pain_killers"],
+        "special_items": ["first_aid_kit", "bandage", "pain_killers", "surgical_tools", "antibiotics"],
         "special_item_chance": 0.4,
     },
     "woods": {
         "name": "Wooded Area",
-        "description": "Natural environment with fewer zombies but limited supplies.",
+        "description": "The dense forest stands as nature's sanctuary, largely unclaimed by the chaos that consumed civilization. Sunlight filters through the leafy canopy, creating dappled patterns on the undergrowth below. Wild berries and edible mushrooms grow in abundance for those who know what to look for, while fallen branches provide ready materials for tools and fire. The infected here are often solitary wanderers who stumbled in from nearby areas, their decomposing forms now moving sluggishly through the underbrush. Their limited numbers are offset by the difficulty in spotting them among the trees and shadows. The sound of birds and small animals provides a constant audio gauge—when the forest falls silent, danger is near.",
         "risk_level": 2,
         "zombie_chance": 0.3,
         "resource_types": {
@@ -289,12 +297,12 @@ SCAVENGE_AREAS = {
             "weapon": 0.05,
             "medical": 0.05,
         },
-        "special_items": ["wood", "fresh_fruit"],
+        "special_items": ["wood", "fresh_fruit", "medicinal_herbs", "hunting_knife", "wild_game"],
         "special_item_chance": 0.3,
     },
     "highway": {
         "name": "Highway",
-        "description": "Abandoned vehicles and roadways connecting different areas.",
+        "description": "The six-lane expanse of asphalt stretches to the horizon, a graveyard of vehicles caught in the ultimate traffic jam. Cars and trucks sit in eternal gridlock, many still containing the personal effects—and sometimes remains—of those who thought escape was possible. Suitcases full of now-worthless possessions litter the roadway, occasionally yielding useful items among the discarded keepsakes. Some vehicles still contain fuel in their tanks, a precious resource in the new world. The exposed nature of the highway offers good visibility but little cover when threats appear. The infected here often roam in groups that followed the sounds and lights of the last evacuation attempts.",
         "risk_level": 3,
         "zombie_chance": 0.4,
         "resource_types": {
@@ -303,52 +311,317 @@ SCAVENGE_AREAS = {
             "weapon": 0.2,
             "medical": 0.2,
         },
-        "special_items": ["fuel", "metal_scrap", "pistol_ammo"],
+        "special_items": ["fuel", "metal_scrap", "pistol_ammo", "car_battery", "roadside_flare"],
         "special_item_chance": 0.2,
     },
+    "warehouse": {
+        "name": "Industrial Warehouse",
+        "description": "Massive steel structures housing the engines of commerce that once kept society functioning. Towering shelves filled with pallets of goods create a maze-like interior where sight lines are limited and danger can lurk around any corner. The loading docks' mechanized doors hang partially open, allowing entry for both scavengers and the infected. Forklifts and pallet jacks sit abandoned mid-task, while inventory manifests blown by the wind create ghostly paper trails across concrete floors. The most valuable resources often remain locked in shipping containers or secured storage areas, requiring both time and tools to access.",
+        "risk_level": 3,
+        "zombie_chance": 0.5,
+        "resource_types": {
+            "food": 0.2,
+            "material": 0.5,
+            "weapon": 0.15,
+            "medical": 0.15,
+        },
+        "special_items": ["tools", "metal_scrap", "industrial_parts", "protective_gear", "preserved_food"],
+        "special_item_chance": 0.25,
+    },
+    "school": {
+        "name": "Educational Facility",
+        "description": "The hallways that once echoed with children's voices now resonate with haunting silence, punctuated only by the occasional distant moan. Classrooms contain educational supplies that can be repurposed, while cafeterias might hold overlooked food stores. Science labs potentially contain valuable chemicals and equipment, while administrative offices might have first aid supplies and communication devices. The infected here include former students and faculty, creating a particularly disturbing atmosphere as you navigate past colorful bulletin boards and school spirit banners that celebrate achievements that will never occur.",
+        "risk_level": 3,
+        "zombie_chance": 0.45,
+        "resource_types": {
+            "food": 0.25,
+            "material": 0.3,
+            "weapon": 0.1,
+            "medical": 0.35,
+        },
+        "special_items": ["textbooks", "science_equipment", "cafeteria_food", "first_aid_supplies", "sports_equipment"],
+        "special_item_chance": 0.35,
+    },
+    "farm": {
+        "name": "Agricultural Area",
+        "description": "Rolling fields that once produced food for thousands now grow wild and untended. Farmhouses and barns stand as isolated islands in seas of overgrown crops, their isolation providing both safety and vulnerability. Silos might contain preserved grain, while equipment sheds hold tools and fuel for machinery. The infected here are often former farmhands and rural families, their weathered forms moving slowly across the open terrain. The wide sight lines allow you to spot danger from a distance, but also mean you can be spotted just as easily. Seasonal weather patterns dramatically affect both the available resources and the difficulty of traversing these open spaces.",
+        "risk_level": 2,
+        "zombie_chance": 0.3,
+        "resource_types": {
+            "food": 0.6,
+            "material": 0.25,
+            "weapon": 0.05,
+            "medical": 0.1,
+        },
+        "special_items": ["seeds", "fertilizer", "farming_tools", "fresh_produce", "preserved_meats"],
+        "special_item_chance": 0.4,
+    },
+    "underground": {
+        "name": "Sewer System",
+        "description": "The labyrinthine network beneath the city streets offers a dangerous but potentially rewarding exploration opportunity. Dripping water echoes through concrete tunnels, while the dim emergency lighting creates disorienting shadows that play tricks on the eyes. The complex system of maintenance tunnels, treatment facilities, and drainage pipes provides numerous hiding places for both valuable caches and deadly threats. The infected here move slowly in the darkness, often only revealing themselves when it's too late to retreat. The limited access points mean safety is distant, but the underground network also connects many parts of the city without the need to traverse zombie-infested streets above.",
+        "risk_level": 4,
+        "zombie_chance": 0.6,
+        "resource_types": {
+            "food": 0.1,
+            "material": 0.5,
+            "weapon": 0.2,
+            "medical": 0.2,
+        },
+        "special_items": ["water_purifier", "industrial_chemicals", "maintenance_tools", "emergency_supplies", "worker_equipment"],
+        "special_item_chance": 0.2,
+    },
+    "prison": {
+        "name": "Maximum Security Cell Blocks",
+        "description": "The claustrophobic corridors and cell blocks of Irongate Prison form a maze of barred doors and narrow chokepoints. Infected inmates in tattered orange jumpsuits and guards in uniform fragments roam the facility, some still chained or cuffed. The prison's isolation and security measures have kept many areas untouched since the fall, but navigating the heavily infested corridors comes with extreme risk. Armories, infirmaries, and storage areas offer unique supplies not found elsewhere.",
+        "risk_level": 5,
+        "zombie_chance": 0.75,
+        "resource_types": {
+            "food": 0.1,
+            "material": 0.2,
+            "weapon": 0.4,
+            "medical": 0.2,
+            "ammo": 0.1
+        },
+        "special_items": ["riot_shield", "prison_shank", "guard_baton", "pepper_spray", "handcuffs", "taser", "prison_jumpsuit", "antibiotics"],
+        "special_item_chance": 0.35,
+    }
 }
+# Define the camp upgrade system
+CAMP_UPGRADES = {
+    "shelter": {
+        "name": "Survivor Shelter",
+        "level": 1,
+        "max_level": 5,
+        "description": "Your home within the apocalypse, built from scavenged materials and desperate innovation. Each upgrade reinforces walls, improves insulation, and creates more secure sleeping areas. At higher levels, dedicated medical and cooking spaces enhance daily life quality.",
+        "benefits": "Improves sleep quality (faster health/stamina recovery), reduces illness chance, and provides better protection from weather effects.",
+        "upgrade_materials": {
+            2: {"wood": 15, "metal_scrap": 5, "cloth": 10},
+            3: {"wood": 25, "metal_scrap": 15, "cloth": 15, "tools": 1},
+            4: {"wood": 40, "metal_scrap": 30, "cloth": 20, "tools": 2},
+            5: {"wood": 60, "metal_scrap": 45, "cloth": 30, "industrial_parts": 5, "tools": 3}
+        }
+    },
+    "barricades": {
+        "name": "Defensive Barricades",
+        "level": 1,
+        "max_level": 5,
+        "description": "The primary line of defense between you and the infected hordes. Starting as simple timber walls reinforced with scrap metal, they evolve into sophisticated defensive structures with observation points and alarm systems. Higher levels incorporate concrete elements and metal spikes that damage zombies attempting to breach the perimeter.",
+        "benefits": "Increases camp security, reduces zombie attack frequency, adds damage to attacking zombies, and improves overall sleep safety.",
+        "hp": 100,  # Current HP of barricades
+        "max_hp": 100,  # Max HP at current level
+        "upgrade_materials": {
+            2: {"wood": 20, "metal_scrap": 10},
+            3: {"wood": 30, "metal_scrap": 25, "tools": 1},
+            4: {"wood": 40, "metal_scrap": 40, "concrete": 10, "tools": 2},
+            5: {"wood": 50, "metal_scrap": 60, "concrete": 25, "industrial_parts": 3, "tools": 3}
+        }
+    },
+    "camp_entrance": {
+        "name": "Fortified Gateway",
+        "level": 1,
+        "max_level": 3,
+        "description": "The carefully controlled access point to your sanctuary. Level 1 features a reinforced door with simple locking mechanisms. Higher levels add a security checkpoint with double-gate system creating a decontamination zone, observation platforms, and quick-deploy emergency barriers for crisis situations.",
+        "benefits": "Provides faster safe entry/exit, reduces chance of zombies slipping in during your return, adds emergency lockdown options.",
+        "upgrade_materials": {
+            2: {"wood": 15, "metal_scrap": 20, "tools": 1},
+            3: {"metal_scrap": 35, "industrial_parts": 5, "tools": 2, "electronics": 3}
+        }
+    },
+    "machine_guns": {
+        "name": "Automated Defense Turrets",
+        "level": 0,
+        "max_level": 3,
+        "description": "Salvaged firearms mounted on swivel platforms, connected to primitive motion sensors and triggering mechanisms. At Level 1, they're manually armed systems that require regular maintenance. By Level 3, they become sophisticated automated sentries with targeting AI and adjustable sensitivity to preserve ammunition.",
+        "benefits": "Automatically damages zombies during attacks, reduces barricade damage, creates safe zones around the camp perimeter.",
+        "upgrade_materials": {
+            1: {"metal_scrap": 15, "weapons": 2, "tools": 2, "electronics": 2},
+            2: {"metal_scrap": 25, "weapons": 3, "tools": 3, "electronics": 5, "industrial_parts": 2},
+            3: {"metal_scrap": 40, "weapons": 5, "tools": 4, "electronics": 10, "industrial_parts": 5}
+        }
+    },
+    "trenches": {
+        "name": "Defensive Earthworks",
+        "level": 0,
+        "max_level": 3,
+        "description": "Strategic excavations surrounding the camp that impede zombie movement. Beginning as simple ditches, they evolve into sophisticated defensive systems with sharpened stakes, covered fighting positions, and channeling barriers that force the infected into killzones. Higher levels incorporate concrete reinforcements and primitive but effective alarm triggers.",
+        "benefits": "Slows zombie approach, creates defensive positions for fighting, channels zombies away from vulnerable areas, provides early warning of attacks.",
+        "upgrade_materials": {
+            1: {"wood": 10, "tools": 1},
+            2: {"wood": 25, "metal_scrap": 10, "tools": 2},
+            3: {"wood": 40, "metal_scrap": 20, "concrete": 10, "tools": 3}
+        }
+    },
+    "garden": {
+        "name": "Sustainable Food Production",
+        "level": 1,
+        "max_level": 4,
+        "description": "Your attempt at food independence in the apocalypse. Starting with simple vegetable plots in reclaimed soil, the system evolves to include rainwater collection, composting systems, and even primitive greenhouses for year-round growing. Higher levels incorporate aquaponics systems that combine fish farming with plant cultivation, maximizing food output from minimal resources.",
+        "benefits": "Provides regular food supplies, reduces hunger decay rate, occasional surplus for crafting medical items.",
+        "upgrade_materials": {
+            2: {"wood": 10, "seeds": 3, "tools": 1, "fertilizer": 2},
+            3: {"wood": 20, "metal_scrap": 10, "seeds": 8, "tools": 2, "fertilizer": 5, "water_purifier": 1},
+            4: {"wood": 30, "metal_scrap": 25, "seeds": 15, "tools": 3, "fertilizer": 10, "water_purifier": 2, "electronics": 3}
+        }
+    },
+    "tunnel": {
+        "name": "Emergency Escape Network",
+        "level": 0,
+        "max_level": 2,
+        "description": "A concealed underground passage that provides a last-resort escape option when the camp is overrun. Level 1 consists of a rough tunnel leading to a concealed exit beyond the barricades. Level 2 expands this into a small network with multiple exit points and emergency supply caches, potentially allowing you to circle behind attackers or reach different areas of the city without surface travel.",
+        "benefits": "Provides emergency escape route, enables safer travel between certain locations, may reveal new scavenging areas.",
+        "upgrade_materials": {
+            1: {"wood": 15, "metal_scrap": 10, "tools": 3},
+            2: {"wood": 30, "metal_scrap": 25, "concrete": 5, "tools": 5, "industrial_parts": 3}
+        }
+    },
+    "radio": {
+        "name": "Communications Center",
+        "level": 0,
+        "max_level": 3,
+        "description": "A collection of salvaged communication equipment that keeps you informed about the outside world. Starting with a basic receiver capable of picking up emergency broadcasts, it evolves into a sophisticated setup capable of monitoring zombie movements, tracking weather patterns, and potentially communicating with other survivor enclaves. The highest level can detect military transmissions and scan for signs of organized evacuation or rescue efforts.",
+        "benefits": "Provides advance warning of zombie hordes, reveals resource-rich locations, occasionally discovers special missions or survivor stories.",
+        "upgrade_materials": {
+            1: {"metal_scrap": 5, "electronics": 3, "batteries": 2},
+            2: {"metal_scrap": 15, "electronics": 8, "batteries": 5, "tools": 2},
+            3: {"metal_scrap": 25, "electronics": 15, "batteries": 10, "tools": 3, "industrial_parts": 2}
+        }
+    },
+    "drones": {
+        "name": "Aerial Reconnaissance",
+        "level": 0,
+        "max_level": 2,
+        "description": "Salvaged or handcrafted unmanned aerial vehicles equipped with cameras and sensors. Level 1 consists of a basic model with limited range and battery life, capable of scouting the immediate surroundings. Level 2 features improved models with longer range, better cameras, and the ability to operate at night, providing crucial intelligence on zombie movements and potential resources without risking human scouts.",
+        "benefits": "Scouts new locations without risk, identifies resource-rich areas, provides advance warning of threats, occasionally finds rare resources or survivors.",
+        "upgrade_materials": {
+            1: {"metal_scrap": 8, "electronics": 5, "batteries": 3, "tools": 2},
+            2: {"metal_scrap": 20, "electronics": 15, "batteries": 8, "tools": 4, "industrial_parts": 3}
+        }
+    },
+    "workshop": {
+        "name": "Engineering Bay",
+        "level": 1,
+        "max_level": 5,
+        "description": "The creative heart of your survival efforts, where raw materials become life-saving tools and weapons. Beginning as a simple collection of salvaged tools, it grows into a comprehensive fabrication space with specialized stations for metalworking, electronics repair, and even ammunition reloading. The highest levels incorporate power tools, precision instruments, and testing areas that allow for the creation of sophisticated weapons, traps, and survival gear previously only available through scavenging.",
+        "benefits": "Enables more complex crafting recipes, improves crafted item quality, allows weapon modifications and repairs.",
+        "upgrade_materials": {
+            2: {"wood": 10, "metal_scrap": 15, "tools": 2},
+            3: {"wood": 20, "metal_scrap": 30, "tools": 4, "industrial_parts": 3},
+            4: {"wood": 30, "metal_scrap": 45, "tools": 6, "industrial_parts": 8, "electronics": 5},
+            5: {"wood": 40, "metal_scrap": 60, "tools": 10, "industrial_parts": 15, "electronics": 10}
+        }
+    },
+    "medical_bay": {
+        "name": "Infirmary",
+        "level": 0,
+        "max_level": 3,
+        "description": "A dedicated space for treating injuries and illness, crucial for long-term survival. Level 1 provides basic first aid capabilities with clean surfaces and organized supplies. Higher levels incorporate specialized equipment like IV stands, sterilization tools, and a growing pharmacy of salvaged medications. The highest level allows for minor surgical procedures, proper quarantine protocols, and the cultivation of medicinal plants to supplement dwindling pharmaceutical supplies.",
+        "benefits": "Improves effectiveness of medical items, reduces illness duration, allows crafting of advanced medical supplies.",
+        "upgrade_materials": {
+            1: {"wood": 10, "cloth": 15, "medical": 5},
+            2: {"wood": 20, "metal_scrap": 10, "cloth": 25, "medical": 10, "tools": 2},
+            3: {"wood": 30, "metal_scrap": 25, "cloth": 40, "medical": 20, "tools": 4, "electronics": 5}
+        }
+    },
+    "watchtower": {
+        "name": "Observation Post",
+        "level": 0,
+        "max_level": 3,
+        "description": "Elevated structures providing visibility over the surrounding area. Level 1 is a simple platform with basic optics for daytime observation. Higher levels add multiple towers with overlapping fields of view, nightvision capabilities, and sophisticated alarm systems that can distinguish between zombie threats and potential human allies or wildlife. The highest level incorporates weather protection, comfortable observation positions for extended watches, and communication links to the main compound.",
+        "benefits": "Provides advance warning of zombie approach, reduces surprise attacks, helps identify distant resources.",
+        "upgrade_materials": {
+            1: {"wood": 20, "metal_scrap": 5, "tools": 1},
+            2: {"wood": 35, "metal_scrap": 15, "tools": 2, "electronics": 2},
+            3: {"wood": 50, "metal_scrap": 30, "tools": 3, "electronics": 5, "industrial_parts": 2}
+        }
+    }
+}
+
 LOCATIONS = {
     "camp": {
         "name": "Survivor Camp",
-        "description": "A small camp protected by barricades. Relatively safe from zombies.",
+        "description": "Your fortified sanctuary surrounded by reinforced barricades and watchtowers. The only place where you can truly rest without fear of the undead. The faint glow of campfires creates an illusion of normalcy amidst the apocalypse.",
         "danger_level": 0,
-        "resource_types": ["food", "medical"]
+        "resource_types": ["food", "medical"],
+        "sleep_safety": 1.0,  # 100% safe if barricades intact
+        "barricades_intact": True  # If False, safety drops to 40%
     },
     "town": {
         "name": "Abandoned Town",
-        "description": "Once a bustling town, now empty and dangerous. Good for supplies.",
+        "description": "Once a bustling community filled with life and laughter, Millfield now lies in eerie silence. Abandoned vehicles rust on cracked streets, while empty homes contain the forgotten possessions of those who fled—or worse, didn't escape in time. The wind carries whispers of what once was, along with the distant moans of the infected.",
         "danger_level": 2,
-        "resource_types": ["food", "weapons", "medical", "materials"]
+        "resource_types": ["food", "weapons", "medical", "materials"],
+        "sleep_safety": 0.6  # 60% safe for sleeping
     },
     "hospital": {
         "name": "St. Mary's Hospital",
-        "description": "Filled with medical supplies, but also many infected.",
+        "description": "The faded red cross still hangs above the entrance to this once-sacred place of healing, now a labyrinth of dark corridors and blood-stained examination rooms. Medical supplies are abundant, but so are the infected medical staff and patients who never made it out. The emergency generators occasionally flicker to life, creating moments of surreal illumination in this temple of death.",
         "danger_level": 3,
-        "resource_types": ["medical", "food"]
+        "resource_types": ["medical", "food"],
+        "sleep_safety": 0.4  # 40% safe for sleeping
     },
     "mall": {
-        "name": "Shopping Mall",
-        "description": "Large mall with various stores. Many zombies roam the halls.",
+        "name": "Northridge Shopping Mall",
+        "description": "This massive commercial complex once housed over 200 stores across three sprawling floors. Shattered display windows frame mannequins that stand in silent vigil over the chaos that claimed their shoppers. The central plaza's decorative fountain has long dried up, its basin now filled with the remnants of desperate last stands. The food court still reeks of decay, while the endless echoing halls amplify every sound—including the shuffling of undead feet searching for their next meal.",
         "danger_level": 4,
-        "resource_types": ["food", "weapons", "materials", "medical"]
+        "resource_types": ["food", "weapons", "materials", "medical"],
+        "sleep_safety": 0.3  # 30% safe for sleeping
     },
     "military": {
-        "name": "Military Outpost",
-        "description": "Abandoned military base. High risk, but valuable supplies.",
+        "name": "Fort Hyperion Military Base",
+        "description": "The fallen bastion of what was supposed to be humanity's last defense. Heavy-duty fences topped with razor wire failed to contain the outbreak that started within. Armored vehicles sit abandoned in perfect formation, their occupants having joined the ranks of the undead. The weapons depot and medical facility remain largely intact—if you can navigate the hordes of military-grade zombies still wearing the tattered remains of their uniforms. High risk, but potentially the most valuable supplies in the region.",
         "danger_level": 5,
-        "resource_types": ["weapons", "materials", "medical", "food"]
+        "resource_types": ["weapons", "materials", "medical", "food"],
+        "sleep_safety": 0.2  # 20% safe for sleeping
     },
     "forest": {
-        "name": "Dense Forest",
-        "description": "A thick woodland area with hidden dangers but natural resources.",
+        "name": "Whispering Pines Forest",
+        "description": "Ancient evergreens tower overhead, creating a dense canopy that filters the sunlight into ghostly beams. The undergrowth conceals both natural resources and feral infected that hunt by sound. Mushrooms and edible plants grow in abundance here, free from human interference. The gentle rustling of leaves provides a false sense of security, only to be shattered by the occasional distant howl or snap of branches underfoot. Nature reclaims what was once hers, caring little for humanity's plight.",
         "danger_level": 3,
-        "resource_types": ["food", "materials"]
+        "resource_types": ["food", "materials", "herbs"],
+        "sleep_safety": 0.5  # 50% safe for sleeping
     },
     "gas_station": {
-        "name": "Abandoned Gas Station",
-        "description": "Once a busy refueling stop, now a quiet place for scavenging.",
+        "name": "Last Stop Service Station",
+        "description": "The neon sign hanging above this roadside establishment flickers periodically as the solar backup batteries struggle to maintain power. Rusted pumps stand like monuments to a lost civilization that once worshipped speed and convenience. The attached mini-mart has been picked over, but thorough searching might reveal overlooked treasures. Abandoned vehicles in various states of disrepair litter the cracked concrete lot, some still containing the personal effects—and occasionally remains—of their former owners.",
         "danger_level": 2,
-        "resource_types": ["food", "materials", "fuel"]
+        "resource_types": ["food", "materials", "fuel"],
+        "sleep_safety": 0.6  # 60% safe for sleeping
+    },
+    "farm": {
+        "name": "Clearwater Farm",
+        "description": "This once-productive family farm lies on the outskirts of town, its fields now untended and overgrown. The weathered farmhouse and massive red barn still stand as testament to sturdy pre-apocalypse construction. Some crops continue to grow wild in the fields, offering a renewable food source if you can harvest them safely. Farm equipment sits rusting but might be salvageable for parts. Occasional infected farmhands wander aimlessly, perpetually performing their old duties in a macabre parody of life.",
+        "danger_level": 2,
+        "resource_types": ["food", "materials", "seeds", "tools"],
+        "sleep_safety": 0.65  # 65% safe for sleeping
+    },
+    "school": {
+        "name": "Westridge High School",
+        "description": "Colorful banners announcing the spring dance still hang in the main hallway, frozen in time like everything else. Classrooms contain school supplies that can be repurposed, while the cafeteria might hold overlooked food. The gymnasium offers a large, defensible space with few entrances, making it a potential temporary shelter. Many of the infected here are teenagers, faster than most but less durable. Haunting messages scrawled on lockers and walls tell the story of the panic that ensued when the infection reached these halls of learning.",
+        "danger_level": 3,
+        "resource_types": ["food", "materials", "medical", "books"],
+        "sleep_safety": 0.45  # 45% safe for sleeping
+    },
+    "police_station": {
+        "name": "Millfield Police Department",
+        "description": "The local law enforcement headquarters stands as a fortified island amidst the chaos. Heavy security doors and barred windows made it one of the last places to fall. The armory may still contain weapons and ammunition if it hasn't been completely looted. Cells in the holding area create natural choke points for defense, while the dispatch center might hold valuable information about evacuation efforts. Many officers turned within these walls, still wearing their tactical gear, making them some of the most dangerous infected you'll encounter.",
+        "danger_level": 4,
+        "resource_types": ["weapons", "ammo", "materials", "medical"],
+        "sleep_safety": 0.35  # 35% safe for sleeping
+    },
+    "power_plant": {
+        "name": "Riverside Power Plant",
+        "description": "This massive industrial complex once supplied electricity to the entire region. Enormous turbines sit silent, and control rooms filled with blinking panels stand abandoned. The plant's remote location meant fewer people were present when the outbreak hit, but those who were have become particularly dangerous infected that lurk in the shadows of massive machinery. The facility's maintenance areas contain valuable tools and materials, while the employee break rooms might hold overlooked food supplies. The plant's backup generators could potentially be salvaged to power your camp.",
+        "danger_level": 4,
+        "resource_types": ["materials", "tools", "fuel", "electronics"],
+        "sleep_safety": 0.3  # 30% safe for sleeping
+    },
+    "prison": {
+        "name": "Irongate Correctional Facility",
+        "description": "This maximum-security prison once housed the region's most dangerous criminals, now it contains something far worse. Three-story cell blocks with barred doors form a labyrinth filled with infected inmates and guards still wearing tattered uniforms. The facility's isolated location and reinforced structures make it both a treasure trove of untouched supplies and one of the most dangerous locations in the region. The armory, if accessible, would contain riot gear and weapons, while the infirmary might still have valuable medical supplies. Prisoner common areas and guard quarters could yield other resources, but the density of infected makes any exploration extremely hazardous.",
+        "danger_level": 5,
+        "resource_types": ["weapons", "medical", "food", "materials", "ammo"],
+        "sleep_safety": 0.25,  # 25% safe for sleeping
+        "scavenge_area": "prison"
     }
 }
 
@@ -359,46 +632,102 @@ ITEMS = {
         "type": "weapon",
         "damage": 15,
         "durability": 50,
-        "description": "A sturdy wooden bat. Good for keeping zombies at a distance."
+        "description": "A Louisville Slugger with 'Wildcats' painted on the barrel, likely taken from a sporting goods store or someone's garage. The grip is wrapped in duct tape for better handling, and dried bloodstains tell the story of its new purpose in the apocalypse. Excellent for delivering powerful blows while maintaining distance from the infected."
     },
     "kitchen_knife": {
         "name": "Kitchen Knife",
         "type": "weapon",
         "damage": 10,
         "durability": 30,
-        "description": "Sharp but fragile. Requires close combat."
+        "description": "A once-ordinary 8-inch chef's knife from someone's kitchen drawer, now repurposed as a last line of defense. The handle is wrapped with cloth to improve grip when slick with sweat or blood. Requires dangerous close-quarters combat, but its silent efficiency makes it ideal for stealth situations. The blade dulls quickly when used against bone."
+    },
+    "kitchen_fork": {
+        "name": "Kitchen Fork",
+        "type": "weapon",
+        "damage": 6,
+        "durability": 25,
+        "description": "A large two-pronged fork from a kitchen set, its tines sharpened to wicked points. While not designed as a weapon, its length provides slight reach advantage in desperate situations. The metal prongs can pierce zombie flesh effectively but are prone to bending when striking bone or harder surfaces. A last-resort weapon that's better than bare hands."
     },
     "pistol": {
-        "name": "Pistol",
+        "name": "9mm Handgun",
         "type": "weapon",
         "damage": 30,
         "durability": 100,
         "ammo": 0,
         "max_ammo": 10,
-        "description": "Powerful but noisy. Requires ammunition."
+        "description": "A standard semi-automatic pistol, likely scavenged from a police officer or civilian gun owner. The slide shows scratch marks from desperate handling, and the grip is worn smooth from use. Provides substantial stopping power but the noise attracts every infected within hearing distance—use only when absolutely necessary or when escape is guaranteed."
     },
     "shotgun": {
-        "name": "Shotgun",
+        "name": "Pump-Action Shotgun",
         "type": "weapon",
         "damage": 50,
         "durability": 80,
         "ammo": 0,
         "max_ammo": 6,
-        "description": "Very powerful but extremely noisy. Requires ammunition."
+        "description": "A devastating close-range weapon that can stop multiple infected with a single blast. The synthetic stock has been reinforced with metal plating, and a shoulder strap made of seat belts has been added for ease of carrying. The thunderous report will alert every zombie for hundreds of yards—but sometimes making a statement is exactly what you need."
     },
     "axe": {
         "name": "Fire Axe",
         "type": "weapon",
         "damage": 25,
         "durability": 40,
-        "description": "Heavy but effective. Good for breaking doors too."
+        "description": "Salvaged from a fire station or emergency box, this axe features a bright red fiberglass handle and a weathered steel head. The edge has been sharpened beyond safety regulations, transforming a rescue tool into an efficient zombie dispatcher. Its weight requires strength to wield effectively but delivers devastating results. Equally useful for breaking through doors and barricades when escape becomes necessary."
     },
     "machete": {
         "name": "Machete",
         "type": "weapon",
         "damage": 20,
         "durability": 60,
-        "description": "Sharp blade that can cut through multiple zombies."
+        "description": "A 24-inch agricultural tool with a single-edged blade, now serving a grimmer purpose. The black handle has been wrapped with paracord for improved grip, and a wrist loop added to prevent disarming. Its sweeping blade can strike multiple targets in a single arc, making it ideal for crowd control. The relatively thin blade retains its edge well with minimal maintenance."
+    },
+    "police_baton": {
+        "name": "Police Tactical Baton",
+        "type": "weapon",
+        "damage": 18,
+        "durability": 70,
+        "dismantle_yield": {
+            "metal_bar": 1,
+            "cloth": 1
+        },
+        "description": "A collapsible steel baton once carried by law enforcement officers. The weighted steel tip delivers focused impact, and the rubber grip provides excellent control during strikes. Its telescoping design allows for easy concealment and rapid deployment with a flick of the wrist. While not lethal against the living, it's highly effective for temporarily stunning zombies or creating space in tight situations."
+    },
+    "taser": {
+        "name": "Police Taser",
+        "type": "weapon",
+        "damage": 12,
+        "durability": 15,
+        "dismantle_yield": {
+            "electronics": 1,
+            "metal_scrap": 1,
+            "small_iron_piece": 1
+        },
+        "description": "A law enforcement-grade electroshock weapon with limited remaining charges. The bright yellow body design contrasts with its serious purpose - to deliver temporarily paralyzing electrical current. While no longer capable of completely incapacitating the dead, it can still cause muscle spasms that momentarily interrupt a zombie's attacks. The limited battery life makes this a resource to use strategically rather than as a primary weapon."
+    },
+    "riot_shield": {
+        "name": "Tactical Riot Shield",
+        "type": "weapon",
+        "damage": 8,
+        "durability": 120,
+        "block_chance": 40,
+        "dismantle_yield": {
+            "metal_scrap": 3,
+            "cloth": 1
+        },
+        "description": "A transparent polycarbonate shield with 'POLICE' emblazoned across the front, designed to control crowds in the old world. Now it serves as mobile protection against the grasping hands and snapping teeth of the infected. The shield's curved surface can deflect attacks and create space to maneuver. While primarily defensive, the reinforced edge can be used as a blunt weapon in emergencies."
+    },
+    "prison_shank": {
+        "name": "Improvised Prison Shank",
+        "type": "weapon",
+        "damage": 15,
+        "durability": 20,
+        "craft_recipe": {
+            "metal_scrap": 1,
+            "cloth": 1
+        },
+        "dismantle_yield": {
+            "metal_scrap": 1
+        },
+        "description": "A crude but lethally effective weapon crafted by inmates long before the apocalypse. A toothbrush or similar handle has been melted and embedded with a sharpened piece of metal—possibly from a food tray, door hinge, or maintenance tool. The blade is wrapped with cloth and tape to form a crude grip. While fragile compared to manufactured weapons, its penetrating design makes it deadly in close quarters."
     },
 
     # Ammunition
@@ -419,109 +748,210 @@ ITEMS = {
 
     # Food
     "canned_food": {
-        "name": "Canned Food",
+        "name": "Canned Food Assortment",
         "type": "food",
         "health": 5,
         "hunger": 40,
-        "description": "Preserved food. Restores hunger and some health."
+        "description": "A random selection of dented cans with faded labels—could be beans, soup, fruit, or something else entirely. The expiration dates are long past, but the contents remain safe, if unappetizing. Metal cans have become precious artifacts of the old world, providing essential calories in any survival situation. The distinctive 'pop' of opening one has become both a comfort and a danger, as the sound can carry in the quiet of the apocalypse."
     },
     "energy_bar": {
-        "name": "Energy Bar",
+        "name": "Protein Energy Bar",
         "type": "food",
         "stamina": 20,
         "hunger": 15,
-        "description": "Quick snack. Restores stamina and some hunger."
+        "description": "A foil-wrapped rectangle of compressed nutrients, salvaged from a gym bag or abandoned convenience store. The chocolate coating has developed a white film, and the texture is more like clay than food, but these concentrated calories provide a quick energy boost when you need it most. The wrapper crinkles loudly—a luxury sound from a forgotten world."
     },
     "water_bottle": {
-        "name": "Water Bottle",
+        "name": "Plastic Water Bottle",
         "type": "food",
         "health": 5,
         "thirst": 40,
-        "description": "Clean water. Restores thirst and some health."
+        "description": "A half-liter bottle, slightly cloudy with age but containing the most precious resource in the apocalypse—clean water. The label has worn away, leaving only the vague outline of a mountain spring that no longer exists. The cap's seal remains unbroken, promising safe hydration amidst a world of contamination. Best consumed slowly to avoid waste."
     },
     "fresh_fruit": {
-        "name": "Fresh Fruit",
+        "name": "Wild Fruit Harvest",
         "type": "food",
         "health": 10,
         "hunger": 20,
         "thirst": 15,
-        "description": "Rare fresh produce. Restores health, hunger and some thirst."
+        "description": "A handful of nature's bounty—wild berries, small apples, or whatever happens to be in season. The vibrant colors seem almost obscene compared to the muted tones of the apocalyptic landscape. The tart, sweet flavors explode on your tongue, providing vitamins long absent from your diet of preserved foods. Each bite carries the taste of a world that continues despite humanity's fall."
     },
     "jerky": {
-        "name": "Beef Jerky",
+        "name": "Homemade Jerky Strips",
         "type": "food",
         "hunger": 30,
         "stamina": 10,
-        "description": "Dried meat. High in protein, restores hunger and some stamina."
+        "description": "Tough strips of dark, dried meat made by survivors who knew the old ways. Could be beef, venison, or something less identifiable—questions are luxury in the apocalypse. The heavy salt preservation and smoky flavor mask any gaminess, while providing essential protein for rebuilding muscles after exertion. The act of chewing itself requires effort, a reminder that nothing comes easy anymore."
     },
     "soda": {
-        "name": "Soda Can",
+        "name": "Warm Soda Can",
         "type": "food",
         "thirst": 25,
         "stamina": 15,
-        "description": "Carbonated drink. Restores thirst and gives a temporary energy boost."
+        "description": "An aluminum can of sugary carbonated beverage, warm and possibly decades old. The once-bright label has faded to ghostly pastels, but the contents remain mysteriously preserved. The sugar and caffeine provide a momentary energy surge, while the excessive sweetness briefly transports you to times long past. The carbonation has weakened but still provides a comforting fizz against your tongue."
     },
     "clean_water_jug": {
-        "name": "Clean Water Jug",
+        "name": "Purified Water Container",
         "type": "food",
         "thirst": 80,
         "health": 5,
-        "description": "Large container of purified water. Significantly restores thirst."
+        "description": "A repurposed one-gallon plastic container filled with clear water that's been carefully boiled or filtered. Condensation beads on the inside, promising blessed relief from constant thirst. In the new economy, this would trade for valuable supplies or even weapons. The slight aftertaste of purification tablets is a small price to pay for avoiding the waterborne illnesses that have claimed so many since the fall."
     },
     "mre": {
-        "name": "MRE (Meal, Ready-to-Eat)",
+        "name": "Military MRE Package",
         "type": "food",
         "hunger": 70,
         "health": 10,
         "stamina": 15,
-        "description": "Military ration. Comprehensive meal that restores hunger, health and stamina."
+        "description": "A vacuum-sealed miracle of pre-apocalypse engineering, designed to sustain soldiers in combat conditions. The brown plastic package contains a complete meal, heating element, utensils, and even a dessert. The contents are nearly indestructible, with a shelf-life measured in decades. The included flameless ration heater provides the luxury of a hot meal without fire—a technological marvel from a civilization that no longer exists."
     },
 
     # Medical
     "bandage": {
-        "name": "Bandage",
+        "name": "Sterile Bandage",
         "type": "medical",
         "health": 25,
-        "description": "Basic first aid. Restores some health."
+        "description": "A vacuum-sealed package containing a white cotton compress and adhesive wrap, likely scavenged from a first aid kit or pharmacy. The packaging has yellowed slightly with age, but the contents remain sterile—a critical consideration in a world where infection often means death. The familiar image of a red cross on the wrapper serves as a bittersweet reminder of organized healthcare that no longer exists."
     },
     "first_aid_kit": {
-        "name": "First Aid Kit",
+        "name": "Emergency Medical Kit",
         "type": "medical",
         "health": 60,
-        "description": "Comprehensive medical kit. Significantly restores health."
+        "description": "A red plastic case containing a curated selection of life-saving supplies: antiseptic wipes, butterfly closures, gauze pads, medical tape, tweezers, and basic medications. The compartmentalized interior speaks to a world that once had the luxury of organization and preparation. The latches have been reinforced with duct tape, preserving the precious contents through countless relocations. In the apocalypse, this represents the difference between life and death."
     },
     "pain_killers": {
-        "name": "Pain Killers",
+        "name": "Expired Analgesics",
         "type": "medical",
         "health": 20,
         "stamina": 10,
-        "description": "Reduces pain. Restores health and some stamina."
+        "description": "A blister pack or bottle of pharmaceutical pain relievers, the label faded and the expiration date long past. The white tablets have developed a slight discoloration but retain most of their efficacy. In a world without comfort, these pills offer temporary reprieve from the constant aches of survival. The recommended dosage printed on the packaging seems quaint now—luxury instructions from a time when moderation mattered."
+    },
+    "antibiotics": {
+        "name": "Salvaged Antibiotics",
+        "type": "medical",
+        "health": 40,
+        "infection_cure": True,
+        "description": "A partial course of broad-spectrum antibiotics in a childproof bottle with a pharmacy label too faded to read. These miracle pills represent one of the most valuable finds in the apocalypse—the power to fight bacterial infections that would otherwise be fatal. The remaining count is never enough for a full course, requiring careful rationing and calculated risk. Their existence is a reminder of medical science that can no longer be reproduced."
+    },
+    "prison_meds": {
+        "name": "Prison Infirmary Supplies",
+        "type": "medical",
+        "health": 35,
+        "stamina": 10,
+        "description": "A small cache of institutional medical supplies from the prison infirmary - basic antiseptics, cotton swabs, adhesive bandages, and a few tablets of unknown medication. The generic packaging bears correctional facility stamps and inventory codes. Despite being basic, these items were heavily controlled in the prison environment and represent life-saving resources in the apocalypse."
     },
 
     # Materials
     "wood": {
-        "name": "Wood",
+        "name": "Reclaimed Lumber",
         "type": "material",
         "count": 1,
-        "description": "Basic building material."
+        "description": "An assortment of wooden pieces salvaged from abandoned structures—fence posts, furniture fragments, broken pallets, and splintered decorative moldings. Some pieces still bear traces of their previous purpose: faded paint, mounting holes, or decorative carvings. Each represent countless hours of pre-apocalypse craftsmanship, now reduced to raw material. The dry pieces make good kindling, while the sturdier sections can reinforce barricades."
     },
     "metal_scrap": {
-        "name": "Metal Scrap",
+        "name": "Salvaged Metal Fragments",
         "type": "material",
         "count": 1,
-        "description": "Useful for crafting and repairs."
+        "description": "A collection of rust-spotted metal pieces harvested from the skeleton of civilization—car panels, signposts, kitchen appliances, and structural components. Each piece bears witness to its origin: bent nail holes, manufacturer stamps, or oxidation patterns unique to its exposure. Sharp edges make handling dangerous without gloves, but the versatility of metal makes these scraps invaluable for reinforcement, tool-making, and weaponry."
+    },
+    "metal_bar": {
+        "name": "Metal Bar",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.3,
+        "description": "A solid bar of metal, roughly foot-long and relatively free of corrosion. Unlike the more common scraps, these intact pieces retain their structural integrity, making them invaluable for crafting items that require strength and precision. Originally part of building frameworks, vehicle chassis, or industrial equipment, these standardized components represent the exact specifications of the old world—dimensions that are increasingly difficult to reproduce without factory machinery."
     },
     "cloth": {
-        "name": "Cloth",
+        "name": "Fabric Remnants",
         "type": "material",
         "count": 1,
-        "description": "Used for crafting and medical items."
+        "description": "Assorted textile pieces recovered from abandoned homes and businesses—curtains, clothing, bedding, and upholstery. Some retain patterns or logos that spark memories of the world before. The varied textures range from soft cotton to durable canvas, each with different applications in survival. Beyond practical uses for bandages and repairs, these familiar materials provide rare moments of comfort and color in a world defined by harshness."
+    },
+    "metal_pipe": {
+        "name": "Metal Pipe",
+        "type": "material",
+        "count": 1,
+        "description": "A length of hollow metal tubing salvaged from plumbing systems, fence posts, or industrial structures. The sturdy cylinder shows minor rust spots but retains its structural integrity. With its excellent reach and solid weight, a metal pipe serves as both a valuable crafting component and a potential improvised weapon. Its versatility in construction makes it a prized find for any survivor looking to build or reinforce their shelter."
+    },
+    "glass_bottle": {
+        "name": "Glass Bottle",
+        "type": "material",
+        "count": 1,
+        "description": "An intact glass container salvaged from abandoned stores, homes, or restaurants. The transparent vessel might have once contained soda, alcohol, or condiments, but its original contents are long gone. In the new world, these fragile objects serve multiple purposes - from storing purified water to crafting incendiary weapons. The hard, breakable material can also be crushed to create sharp improvised tools in desperate situations."
     },
     "fuel": {
-        "name": "Fuel",
+        "name": "Hydrocarbon Fuel",
         "type": "material",
         "count": 1,
-        "description": "Necessary for generators and transportation."
+        "description": "A container of precious liquid energy—gasoline, diesel, or kerosene—siphoned from abandoned vehicles or storage tanks. The volatile liquid sloshes in its container, emitting the once-common but now exotic aroma of refined petroleum. The amber fluid represents concentrated power in the apocalypse: the ability to run generators, power tools, create explosives, or fuel the rare working vehicle. Its flammability makes it both valuable and dangerous."
+    },
+    "tools": {
+        "name": "Mechanical Tools",
+        "type": "material",
+        "count": 1,
+        "description": "A collection of hand tools representing human ingenuity—hammers, screwdrivers, pliers, wrenches, or saws. Some bear the worn grips and scratched surfaces of frequent use before the fall. These implements, once commonplace, are now precious aids that multiply human capability. Beyond their practical applications for building and repair, they represent the pinnacle of pre-collapse technology: simple machines that require no power source besides human effort."
+    },
+    "electronics": {
+        "name": "Electronic Components",
+        "type": "material",
+        "count": 1,
+        "description": "A collection of circuit boards, wiring, batteries, switches, and other electronic parts salvaged from consumer devices. These fragments of advanced technology represent humanity's peak achievement before the fall. The intricate patterns of copper traces and silicon chips contain knowledge that is already being lost to time. While many survivors see only scrap value, those with the right skills can transform these components into communications equipment, sensors, or other devices that bridge the old world and new."
+    },
+    "gunpowder": {
+        "name": "Recovered Gunpowder",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.1,
+        "description": "A small container of the dark, granular mixture that transforms firearms from metal tubes to lethal weapons. Harvested from disassembled ammunition or carefully salvaged from abandoned reloading workshops, each grain is a precious resource in the post-apocalyptic economy. The volatile black powder requires careful handling and dry storage, as moisture renders it useless. With proper knowledge, it can be crafted into new ammunition—a skill that grows more valuable as manufactured rounds become increasingly rare."
+    },
+    "primer": {
+        "name": "Bullet Primers",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.05,
+        "description": "Tiny metal cups containing the pressure-sensitive compound that initiates the firing sequence in ammunition. These small, seemingly insignificant components are among the most difficult pieces to scavenge or reproduce in the post-apocalyptic world. Each primer represents the complex industrial chemistry of the old world—precise mixtures of compounds that remain stable until struck, then create the spark that ignites gunpowder. Their rarity makes functional ammunition an increasingly precious commodity."
+    },
+    "copper": {
+        "name": "Copper Components",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.2,
+        "description": "Various forms of the distinctive reddish-brown metal, harvested from electrical wiring, plumbing fixtures, or decorative items. Softer than steel but more malleable, copper's unique properties make it essential for certain specialized applications. In ammunition manufacturing, it's used for bullet jackets and casings due to its ductility and corrosion resistance. The metal's excellent electrical conductivity also makes it valuable for maintaining or repairing remaining technological systems."
+    },
+    "trigger_assembly": {
+        "name": "Firearm Trigger Assembly",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.07,
+        "description": "A complex arrangement of springs, sears, and levers that form the firing mechanism of a firearm. These precision-engineered components require manufacturing capabilities that no longer exist in the post-apocalyptic world. Salvaged from broken or disassembled weapons, each mechanism represents irreplaceable pre-fall technology. The compact assembly translates the simple pull of a finger into the precisely timed sequence that releases the firing pin—the mechanical heart of any functioning firearm."
+    },
+    "small_iron_piece": {
+        "name": "Precision Iron Component",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.15,
+        "description": "A small but precisely formed iron part, likely salvaged from machinery, tools, or firearms. Unlike crude scrap metal, these components retain the exact dimensions and specifications needed for complex assemblies. The material shows evidence of machine tooling—perfect edges, drilled holes, or threaded sections that would be nearly impossible to reproduce without industrial equipment. These standardized pieces bridge the gap between raw materials and functioning technology."
+    },
+    "machine_gun_parts": {
+        "name": "Automatic Weapon Components",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.03,
+        "description": "Specialized mechanisms designed specifically for automatic or semi-automatic firearms—gas blocks, bolt carriers, recoil springs, and feed mechanisms. These components represent the pinnacle of pre-fall weapons engineering, embodying solutions to the complex problems of rapid, reliable fire. Each part shows signs of precision manufacturing with tolerances measured in thousandths of an inch. In the new world, these irreplaceable components are worth more than gold to those who understand their value."
+    },
+    "broken_firearm": {
+        "name": "Damaged Firearm",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.08,
+        "description": "The remains of what was once a functional weapon, now compromised by rust, impact damage, or missing components. The barrel might be bent, the chamber cracked, or the action seized by corrosion. While no longer capable of firing safely, these ruined weapons contain valuable parts that can be salvaged—springs, pins, metal stock, and occasionally intact mechanisms. To the knowledgeable survivor, these are not useless relics but treasure troves of components for repairs or crafting."
+    },
+    "rifle_barrel": {
+        "name": "Rifle Barrel",
+        "type": "material",
+        "count": 1,
+        "rarity": 0.06,
+        "description": "A long, cylindrical tube of precision-machined steel, designed to contain explosive pressure while accurately guiding a projectile. The spiraled rifling grooves inside the bore represent manufacturing capabilities that no longer exist in the post-apocalyptic world. The metal shows varying degrees of wear—some with pristine bores that will deliver accuracy for thousands more rounds, others with visible corrosion that compromises performance. A critical component for crafting functional firearms."
     },
 
     # Craftable items
@@ -531,7 +961,16 @@ ITEMS = {
         "damage": 35,
         "durability": 1,
         "aoe": True,
-        "description": "One-time use weapon that damages multiple zombies in an area."
+        "craft_recipe": {
+            "glass_bottle": 1,
+            "fuel": 1,
+            "cloth": 1
+        },
+        "dismantle_yield": {
+            "glass_bottle": 1,
+            "fuel": 0.5
+        },
+        "description": "A glass bottle filled with scavenged fuel and topped with a fuel-soaked rag wick. This improvised incendiary weapon creates a pool of burning liquid when it shatters on impact, effective against groups of zombies or for creating temporary barriers of fire. The volatile nature of this weapon makes safe carrying a challenge, and the limited throwing range means you must get uncomfortably close to your targets. The distinctive whoosh of flames and screech of burning infected often draws more danger."
     },
     "spear": {
         "name": "Makeshift Spear",
@@ -539,14 +978,208 @@ ITEMS = {
         "damage": 22,
         "durability": 45,
         "reach": 2,
-        "description": "A simple weapon that allows you to attack zombies from a safer distance."
+        "craft_recipe": {
+            "wood": 1,
+            "metal_pipe": 1,
+            "kitchen_knife": 1,
+            "cloth": 2
+        },
+        "dismantle_yield": {
+            "wood": 1,
+            "metal_pipe": 1,
+            "metal_scrap": 1,
+            "cloth": 1
+        },
+        "description": "A length of metal pipe or wooden shaft with a sharpened blade—often a kitchen knife, machete fragment, or sharpened metal—securely lashed to one end. This improvised weapon provides crucial distance when engaging the infected, allowing strikes without entering their grasp. The extended reach comes at the cost of reduced power and slow recovery between thrusts. Despite its relatively simple construction, a well-crafted spear is often a survivor's first true zombie-specific weapon."
     },
     "reinforced_bat": {
         "name": "Reinforced Baseball Bat",
         "type": "weapon",
         "damage": 30,
         "durability": 70,
-        "description": "A baseball bat reinforced with metal for increased damage and durability."
+        "craft_recipe": {
+            "baseball_bat": 1,
+            "nails": 15,
+            "metal_scrap": 3,
+            "cloth": 2
+        },
+        "dismantle_yield": {
+            "baseball_bat": 1,
+            "nails": 8,
+            "metal_scrap": 2
+        },
+        "description": "A standard baseball bat that has been methodically upgraded with metal reinforcements—nails, screws, metal plates, and wrapped wire. These modifications transform a sporting good into a dedicated skull-crusher, adding both weight and durability. The additional mass requires more strength to wield effectively but delivers devastating impacts. The metal additions occasionally catch on bone or clothing, requiring a forceful tug to free the weapon after a solid hit."
+    },
+    
+    # Craftable Firearms and Ammunition
+    "makeshift_revolver": {
+        "name": "Improvised Revolver",
+        "type": "weapon",
+        "damage": 25,
+        "durability": 20,
+        "ammo": 0,
+        "max_ammo": 6,
+        "ammo_type": "revolver_round",
+        "craft_recipe": {
+            "trigger_assembly": 1,
+            "metal_bar": 3,
+            "small_iron_piece": 1,
+            "tools": 1
+        },
+        "dismantle_yield": {
+            "trigger_assembly": 1,
+            "metal_bar": 2,
+            "small_iron_piece": 1,
+            "metal_scrap": 2
+        },
+        "description": "A crude but functional single-action revolver laboriously handcrafted from scavenged parts. The cylinder alignment is imprecise, the rifling minimal, and the trigger pull inconsistent—but it fires when needed, usually. The heavy, unwieldy frame lacks the refinement of manufactured firearms, and occasional misfires are expected. Despite these flaws, the ability to deliver lethal force at range makes this weapon invaluable. Handle with extreme caution, as catastrophic failures are possible."
+    },
+    "pipe_shotgun": {
+        "name": "Pipe Shotgun",
+        "type": "weapon",
+        "damage": 40,
+        "durability": 15,
+        "ammo": 0,
+        "max_ammo": 1,
+        "ammo_type": "shotgun_shell",
+        "craft_recipe": {
+            "metal_bar": 2,
+            "metal_scrap": 5,
+            "small_iron_piece": 2,
+            "wood": 2,
+            "tools": 1
+        },
+        "dismantle_yield": {
+            "metal_bar": 1,
+            "metal_scrap": 4,
+            "small_iron_piece": 1,
+            "wood": 1
+        },
+        "description": "A primitive but devastatingly effective single-shot firearm crafted from thick metal pipe fittings. This improvised shotgun must be manually reloaded after each shot, but delivers massive stopping power at close range. The simple break-action design minimizes mechanical failures, though the crude construction makes each shot a gamble. The concussive blast affects everything in a narrow cone, ideal for tight confines when surrounded. The perfect weapon for when you'll only get one shot."
+    },
+    "makeshift_smg": {
+        "name": "Improvised SMG",
+        "type": "weapon",
+        "damage": 15,
+        "durability": 25,
+        "ammo": 0,
+        "max_ammo": 20,
+        "ammo_type": "pistol_round",
+        "fire_rate": 3,
+        "craft_recipe": {
+            "trigger_assembly": 1,
+            "metal_bar": 5,
+            "small_iron_piece": 2,
+            "machine_gun_parts": 1,
+            "rifle_barrel": 1,
+            "tools": 2,
+            "metal_scrap": 6
+        },
+        "dismantle_yield": {
+            "trigger_assembly": 1,
+            "metal_bar": 3,
+            "small_iron_piece": 1,
+            "machine_gun_parts": 1,
+            "metal_scrap": 4
+        },
+        "description": "A cobbled-together automatic weapon resembling pre-fall submachine guns, created by someone with exceptional metalworking skills. The stamped metal frame houses recovered firing mechanisms and a modified barrel—evidence of both ingenuity and desperation. It delivers a rapid, somewhat inaccurate hail of pistol ammunition, effective at clearing groups of infected at close range. The high rate of fire means ammunition depletes quickly, and the crude action jams frequently. Cooling issues limit sustained fire."
+    },
+    "scrap_rifle": {
+        "name": "Scrap Rifle",
+        "type": "weapon",
+        "damage": 35,
+        "durability": 30,
+        "ammo": 0,
+        "max_ammo": 5,
+        "ammo_type": "rifle_round",
+        "craft_recipe": {
+            "trigger_assembly": 1,
+            "metal_bar": 4,
+            "rifle_barrel": 1,
+            "wood": 3,
+            "metal_scrap": 4,
+            "small_iron_piece": 2,
+            "tools": 2
+        },
+        "dismantle_yield": {
+            "trigger_assembly": 1,
+            "metal_bar": 3,
+            "rifle_barrel": 1,
+            "wood": 2,
+            "metal_scrap": 3,
+            "small_iron_piece": 1
+        },
+        "description": "A long-barreled firearm assembled from a salvaged rifle receiver, repurposed metal, and hand-carved wooden furniture. The bolt action requires manual cycling between shots but offers good reliability with proper maintenance. While lacking the precision of pre-fall manufacturing, a skilled craftsman has ensured reasonable accuracy at medium range. The weapon's considerable length makes it awkward in confined spaces but provides superior reach for keeping infected at a safer distance."
+    },
+    "revolver_round": {
+        "name": "Handcrafted Revolver Ammunition",
+        "type": "ammo",
+        "weapon": "makeshift_revolver",
+        "count": 10,
+        "craft_recipe": {
+            "gunpowder": 5,
+            "copper": 5,
+            "metal_scrap": 4,
+            "primer": 2,
+            "tools": 1
+        },
+        "description": "Hand-loaded revolver cartridges crafted from scavenged materials—recovered brass casings, lead scraps melted into crude bullets, and carefully measured gunpowder. Each round varies slightly in powder load and bullet seating, making performance inconsistent. The ammunition lacks the uniform pressure control of factory rounds, occasionally leading to squibs or excessive recoil. Despite these flaws, these handmade rounds transform a revolver from an expensive club into a functional firearm."
+    },
+    "pistol_round": {
+        "name": "Handcrafted Pistol Ammunition",
+        "type": "ammo",
+        "weapon": ["pistol", "makeshift_smg"],
+        "count": 15,
+        "craft_recipe": {
+            "gunpowder": 6,
+            "copper": 7,
+            "metal_scrap": 3,
+            "primer": 3,
+            "tools": 1
+        },
+        "description": "Semi-automatic pistol ammunition meticulously assembled using salvaged components. The lighter bullets and measured powder charges are designed for the higher cycling rate of semi-auto actions. Slight variations in quality are visible—some casings show tarnish, while others have minor dents. The projectiles may tumble in flight rather than maintaining perfect stability, reducing long-range accuracy but often creating more devastating wound channels at moderate distances."
+    },
+    "rifle_round": {
+        "name": "Handcrafted Rifle Ammunition",
+        "type": "ammo",
+        "weapon": "scrap_rifle",
+        "count": 8,
+        "craft_recipe": {
+            "gunpowder": 8,
+            "copper": 6,
+            "metal_scrap": 5,
+            "primer": 2,
+            "tools": 1
+        },
+        "description": "Long cartridges containing larger powder charges behind aerodynamic bullets, hand-loaded for use in rifles. The heavier projectiles and increased propellant deliver superior range, accuracy, and penetration compared to pistol ammunition. Creating these rounds requires significant expertise—powder must be carefully measured, bullets precisely seated, and casings inspected for stress fractures. The quality varies, but well-crafted examples rival pre-fall factory ammunition in performance."
+    },
+    "shotgun_shell": {
+        "name": "Refilled Shotgun Shell",
+        "type": "ammo",
+        "weapon": ["shotgun", "pipe_shotgun"],
+        "count": 6,
+        "craft_recipe": {
+            "gunpowder": 6,
+            "metal_scrap": 8,
+            "primer": 1,
+            "tools": 1
+        },
+        "description": "Shotgun cartridges reloaded with scavenged materials—recovered plastic hulls filled with measured powder charges and improvised projectiles. Instead of uniform lead shot, these shells might contain metal scraps, ball bearings, cut nails, or whatever small, dense objects were available. The stopgap wads might be cloth, paper, or plastic. This ammunition delivers devastating close-range effectiveness despite its inconsistent pattern and occasional failure to cycle in semi-automatic shotguns."
+    },
+    "machine_gun_ammo": {
+        "name": "Linked Machine Gun Ammunition",
+        "type": "ammo",
+        "weapon": "machine_gun",
+        "count": 30,
+        "craft_recipe": {
+            "gunpowder": 15,
+            "copper": 12,
+            "metal_scrap": 10,
+            "primer": 6,
+            "tools": 2,
+            "metal_bar": 1
+        },
+        "description": "A belt of linked cartridges designed for high-volume automatic fire in machine guns. Creating these rounds represents the pinnacle of post-apocalyptic ammunition crafting—each cartridge must meet exact specifications to avoid jamming the delicate feeding mechanisms. The metal links connecting each round are often salvaged from pre-fall belts and carefully cleaned and inspected. The substantial resources required to produce this ammunition make it among the most valuable currencies in survivor enclaves."
     }
 }
 
@@ -767,6 +1400,8 @@ class GameState:
             "max_hunger": MAX_HUNGER,
             "thirst": MAX_THIRST,
             "max_thirst": MAX_THIRST,
+            "sleep": 100,
+            "max_sleep": 100,
             "level": 1,
             "xp": 0,
             "xp_to_next_level": 100,
@@ -815,7 +1450,9 @@ class GameState:
             "/flee": {"func": self.cmd_flee, "help": "Try to escape from combat"},
             "/craft": {"func": self.cmd_craft, "help": "Craft items from materials. Usage: /craft"},
             "/drop": {"func": self.cmd_drop, "help": "Drop an item from inventory. Usage: /drop [item_id]"},
-            "/scavenge_area": {"func": self.cmd_scavenge_area, "help": "Scavenge a specific area for resources. Usage: /scavenge_area [urban/residential/commercial/medical/woods/highway]"},
+            "/scavenge": {"func": self.cmd_scavenge_area, "help": "Scavenge your current location for resources. Usage: /scavenge"},
+            "/sleep": {"func": self.cmd_sleep, "help": "Sleep to recover energy until dawn (default) or for specific hours. Usage: /sleep [hours|dawn]"},
+            "/eat": {"func": self.cmd_eat, "help": "Eat food to reduce hunger. Usage: /eat [item_id]"},
             "/missions": {"func": self.cmd_missions, "help": "Show active and available missions"},
             "/map": {"func": self.cmd_map, "help": "Display a map of available locations"},
             "/stats": {"func": self.cmd_stats, "help": "Show detailed player statistics"},
@@ -823,8 +1460,12 @@ class GameState:
             "/boss": {"func": self.cmd_boss, "help": "Information about boss zombies you've encountered"},
             "/weather": {"func": self.cmd_weather, "help": "Check the current weather conditions"},
             "/deathlog": {"func": self.cmd_deathlog, "help": "View the death log (hardcore mode)"},
-            "/save": {"func": self.cmd_save, "help": "Save your game progress"},
-            "/load": {"func": self.cmd_load, "help": "Load a saved game"},
+            "/upgrade_camp": {"func": self.cmd_upgrade_camp, "help": "View or upgrade camp facilities"},
+            "/repair_barricades": {"func": self.cmd_repair_barricades, "help": "Repair damaged camp barricades"},
+            "/dismantle": {"func": self.cmd_dismantle, "help": "Break down an item into its components. Usage: /dismantle [item_id]"},
+            "/save": {"func": self.cmd_save, "help": "Save your game progress to a slot (1-5). Usage: /save [slot]"},
+            "/load": {"func": self.cmd_load, "help": "Load a saved game from a slot (1-5). Usage: /load [slot]"},
+            "/saves_list": {"func": self.cmd_saves_list, "help": "Show all available save slots"},
             "/quit": {"func": self.cmd_quit, "help": "Quit the game"}
         }
 
@@ -890,17 +1531,85 @@ class GameState:
 
         print(Colors.colorize("\nType commands prefixed with / to play (e.g., /help, /status).\n", Colors.CYAN))
 
-        load_option = input(Colors.colorize("Do you want to load a saved game? (y/n): ", Colors.GREEN))
-        if load_option.lower() == 'y':
-            # Show loading animation
-            Animations.loading_bar(length=15, message="Loading save data")
-            self.cmd_load()
+        # Always show save slots at startup
+        save_slots = self.get_save_slots()
+        
+        # Display stylish save slots header
+        divider = "=" * 50
+        print(Colors.colorize(f"\n{divider}", Colors.RED))
+        print(Colors.colorize("LOAD GAME".center(50), Colors.BOLD + Colors.YELLOW))
+        print(Colors.colorize(f"{divider}", Colors.RED))
+        
+        print(Colors.colorize(f"\n{divider}", Colors.CYAN))
+        print(Colors.colorize("SAVE SLOTS".center(50), Colors.BOLD + Colors.CYAN))
+        print(Colors.colorize(f"{divider}", Colors.CYAN))
+        
+        # Display save slots in a more stylish format
+        if save_slots:
+            print()  # Add space before slots
+            for save in save_slots:
+                slot_header = f"Slot {save['slot']}:"
+                print(Colors.colorize(slot_header, Colors.BOLD + Colors.GREEN))
+                
+                # Display character info with colors
+                character_info = f"Survivor: {Colors.colorize(save['name'], Colors.YELLOW)}, "
+                character_info += f"Level {Colors.colorize(str(save['level']), Colors.YELLOW)} "
+                character_info += f"({Colors.colorize(str(save['days_survived']), Colors.RED)} days survived)"
+                print(character_info)
+                
+                # Display location with cyan color
+                location_info = f"Location: {Colors.colorize(LOCATIONS[save['location']]['name'], Colors.CYAN)}"
+                print(location_info)
+                
+                # Display save date with purple color
+                date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M:%S')
+                print(f"Saved: {Colors.colorize(date_str, Colors.MAGENTA)}")
+                print()  # Add space after each slot
         else:
-            # Character creation
-            while not self.player["name"]:
-                name = input(Colors.colorize("\nEnter your survivor's name: ", Colors.GREEN))
-                if name:
-                    self.player["name"] = name
+            print(Colors.colorize("\nNo saved games found.", Colors.YELLOW))
+            print(Colors.colorize("Start a new game and use /save [slot] to create your first save.", Colors.CYAN))
+        
+        # Calculate empty slots
+        used_slots = [save['slot'] for save in save_slots]
+        empty_slots = [i for i in range(1, MAX_SAVE_SLOTS + 1) if i not in used_slots]
+        
+        # Show empty slots in a more attractive format
+        if empty_slots:
+            print(Colors.colorize("\nEmpty slots:", Colors.BOLD))
+            empty_slots_str = ", ".join([str(slot) for slot in empty_slots])
+            print(Colors.colorize(f"[{empty_slots_str}]", Colors.BLUE))
+            
+        # Always ask to load a save file at the start
+        print(Colors.colorize(f"\n{divider}", Colors.RED))
+        # This is the key prompt that needs to appear for every player at startup
+        load_option = input(Colors.colorize("Load a saving file? (y/n): ", Colors.BOLD + Colors.GREEN))
+        
+        if load_option.lower() == 'y' and save_slots:
+            # Prompt for slot
+            while True:
+                try:
+                    slot_prompt = Colors.colorize("\nEnter save slot number to load: ", Colors.YELLOW)
+                    slot = int(input(slot_prompt))
+                    if slot == 0:
+                        break
+                    if any(save['slot'] == slot for save in save_slots):
+                        # Show loading animation with custom message
+                        Animations.loading_bar(length=20, message=f"Loading save from slot {slot}")
+                        self.load_game(slot)
+                        return  # Return after loading to avoid character creation
+                    else:
+                        print(Colors.colorize(f"Save slot {slot} does not exist. Please choose from the available slots.", Colors.RED))
+                except ValueError:
+                    print(Colors.colorize("Please enter a valid number.", Colors.RED))
+        elif load_option.lower() == 'y' and not save_slots:
+            print(Colors.colorize("\nNo save files found. Starting a new game.", Colors.YELLOW))
+            time.sleep(1.5)
+        
+        # Character creation for new game
+        while not self.player["name"]:
+            name = input(Colors.colorize("\nEnter your survivor's name: ", Colors.GREEN))
+            if name:
+                self.player["name"] = name
 
             # Hardcore mode selection
             hardcore_warning = "\n" + Colors.colorize("=== HARDCORE MODE ===", Colors.BOLD + Colors.RED)
@@ -985,7 +1694,7 @@ class GameState:
             except Exception as e:
                 print(Colors.colorize(f"Error executing command: {e}", Colors.RED))
 
-    def advance_time(self, command_type):
+    def advance_time(self, command_type, hours=None):
         """
         Advance game time based on the type of command executed.
         Returns the number of hours that passed.
@@ -995,11 +1704,19 @@ class GameState:
         - "light_action" - Simple actions like equip, inventory, craft (0.5-1.5 hours)
         - "medium_action" - Medium actions like standard exploration, scavenging (1-3 hours)
         - "heavy_action" - Heavy actions like combat, long travel (2-5 hours)
-        - "rest" - Rest or sleep (special case, handled separately)
+        - "rest" - Rest or sleep (special case, handled separately with hours parameter)
         - "zero" - Commands that don't consume time (help, save, stats, etc.)
+        
+        Parameters:
+        - command_type: The type of action being performed
+        - hours: Optional specific number of hours to pass (used for rest/sleep)
         """
         if command_type == "zero":
             return 0
+            
+        if command_type == "rest" and hours is not None:
+            # Use the specific hours provided for rest/sleep
+            hours_passed = hours
 
         # Random time advancement based on command type
         if command_type == "look":
@@ -1151,7 +1868,7 @@ class GameState:
     def update_game_time(self):
         """Update and display the in-game date and time."""
         days = self.player["days_survived"]
-        hours = self.player["hours_passed"] % 24
+        hours = int(self.player["hours_passed"] % 24)  # Convert to integer to ensure formatting works
 
         # Calculate date based on days survived (starting from today)
         from datetime import timedelta
@@ -1184,23 +1901,140 @@ class GameState:
         """Clear the terminal screen."""
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def save_game(self):
-        """Save game state to file."""
+    def get_save_slots(self):
+        """Get a list of available save slots."""
+        save_slots = []
+        for i in range(1, MAX_SAVE_SLOTS + 1):
+            slot_file = os.path.join(SAVES_FOLDER, f"save_slot_{i}.json")
+            if os.path.exists(slot_file):
+                try:
+                    with open(slot_file, 'r') as f:
+                        save_data = json.load(f)
+                        save_slots.append({
+                            'slot': i,
+                            'name': save_data.get('name', 'Unknown'),
+                            'level': save_data.get('level', 1),
+                            'days_survived': save_data.get('days_survived', 0),
+                            'location': save_data.get('location', 'Unknown'),
+                            'saved_date': os.path.getmtime(slot_file)
+                        })
+                except:
+                    # If there's an error reading the save file, just skip it
+                    pass
+        return save_slots
+
+    def save_game(self, slot=None):
+        """Save game state to file.
+        
+        Args:
+            slot: Optional save slot number (1-5). If None, prompt for slot.
+        """
+        # Get existing save slots
+        save_slots = self.get_save_slots()
+        
+        # Display save slots if no slot is provided
+        if slot is None:
+            self.clear_screen()
+            print(Colors.colorize("\n=== SAVE GAME ===", Colors.BOLD + Colors.CYAN))
+            
+            # Show existing save slots
+            if save_slots:
+                print("\nExisting save slots:")
+                for save in save_slots:
+                    date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M')
+                    print(f"  {save['slot']}. {save['name']} (Level {save['level']}, {save['days_survived']} days, {save['location']}) - {date_str}")
+            
+            # Calculate available slots
+            used_slots = [save['slot'] for save in save_slots]
+            available_slots = [i for i in range(1, MAX_SAVE_SLOTS + 1) if i not in used_slots]
+            
+            # Show available empty slots
+            if available_slots:
+                print("\nEmpty save slots:", end=" ")
+                for slot_num in available_slots:
+                    print(f"{slot_num}", end=" ")
+                print()
+            
+            # Prompt for slot
+            while True:
+                try:
+                    slot = int(input("\nEnter save slot (1-5) or 0 to cancel: "))
+                    if slot == 0:
+                        print("Save cancelled.")
+                        return False
+                    if 1 <= slot <= MAX_SAVE_SLOTS:
+                        break
+                    else:
+                        print(f"Please enter a number between 1 and {MAX_SAVE_SLOTS}.")
+                except ValueError:
+                    print("Please enter a valid number.")
+        
+        # Confirm overwrite if slot is occupied
+        slot_file = os.path.join(SAVES_FOLDER, f"save_slot_{slot}.json")
+        if os.path.exists(slot_file):
+            confirmation = input(f"Save slot {slot} already exists. Overwrite? (y/n): ").lower()
+            if confirmation != 'y':
+                print("Save cancelled.")
+                return False
+        
+        # Save the game
         try:
-            with open(SAVE_FILE, 'w') as f:
+            with open(slot_file, 'w') as f:
                 json.dump(self.player, f)
+            print(f"Game saved successfully to slot {slot}.")
             return True
         except Exception as e:
             print(f"Error saving game: {e}")
             return False
 
-    def load_game(self):
-        """Load game state from file."""
+    def load_game(self, slot=None):
+        """Load game state from file.
+        
+        Args:
+            slot: Optional save slot number (1-5). If None, prompt for slot.
+        """
+        # Get available save slots
+        save_slots = self.get_save_slots()
+        
+        # Check if there are any save slots
+        if not save_slots:
+            print("No saved games found.")
+            return False
+        
+        # Display save slots if no slot is provided
+        if slot is None:
+            self.clear_screen()
+            print(Colors.colorize("\n=== LOAD GAME ===", Colors.BOLD + Colors.CYAN))
+            
+            # Show existing save slots
+            print("\nAvailable save slots:")
+            for save in save_slots:
+                date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M')
+                print(f"  {save['slot']}. {save['name']} (Level {save['level']}, {save['days_survived']} days, {save['location']}) - {date_str}")
+            
+            # Prompt for slot
+            while True:
+                try:
+                    slot = int(input("\nEnter save slot to load (1-5) or 0 to cancel: "))
+                    if slot == 0:
+                        print("Load cancelled.")
+                        return False
+                    if any(save['slot'] == slot for save in save_slots):
+                        break
+                    else:
+                        print(f"Save slot {slot} does not exist. Please choose from the available slots.")
+                except ValueError:
+                    print("Please enter a valid number.")
+        
+        # Load the game
+        slot_file = os.path.join(SAVES_FOLDER, f"save_slot_{slot}.json")
         try:
-            if os.path.exists(SAVE_FILE):
-                with open(SAVE_FILE, 'r') as f:
+            if os.path.exists(slot_file):
+                with open(slot_file, 'r') as f:
                     self.player = json.load(f)
+                print(f"Game loaded successfully from slot {slot}.")
                 return True
+            print(f"Save slot {slot} does not exist.")
             return False
         except Exception as e:
             print(f"Error loading game: {e}")
@@ -1647,6 +2481,19 @@ class GameState:
         hunger_status = "Well Fed" if hunger_percent > 70 else "Hungry" if hunger_percent > 30 else "Starving"
         hunger_display = f"Hunger: {p['hunger']}/{p['max_hunger']} ({hunger_status})"
         print(Colors.colorize(hunger_display, hunger_color))
+        
+        # Sleep status
+        if "sleep" not in p:
+            p["sleep"] = 100
+        
+        if "max_sleep" not in p:
+            p["max_sleep"] = 100
+            
+        sleep_percent = p['sleep'] / p['max_sleep'] * 100
+        sleep_color = Colors.health_color(p['sleep'], p['max_sleep'])
+        sleep_status = "Well Rested" if sleep_percent > 70 else "Tired" if sleep_percent > 30 else "Exhausted"
+        sleep_display = f"Sleep: {p['sleep']}/{p['max_sleep']} ({sleep_status})"
+        print(Colors.colorize(sleep_display, sleep_color))
 
         # Thirst status
         thirst_percent = p['thirst'] / p['max_thirst'] * 100
@@ -1905,7 +2752,7 @@ class GameState:
         self.advance_time("look")
 
     def update_survival_stats(self, hours=1):
-        """Update hunger, thirst and other stats as time passes."""
+        """Update hunger, thirst, sleep and other stats as time passes."""
         # Convert hours to int if it's a float
         hours = int(hours) if isinstance(hours, float) else hours
         # Convert hours to float if it's not already (for handling decimal hours)
@@ -1920,6 +2767,11 @@ class GameState:
         hunger_modifier = weather_info.get("hunger_modifier", 1.0)
         thirst_modifier = weather_info.get("thirst_modifier", 1.0)
         stamina_modifier = weather_info.get("stamina_modifier", 1.0)
+        
+        # Ensure sleep stat exists
+        if "sleep" not in self.player:
+            self.player["sleep"] = 100
+            self.player["max_sleep"] = 100
 
         # Weather-specific descriptions
         if hunger_modifier > 1.0 or thirst_modifier > 1.0:
@@ -1931,6 +2783,16 @@ class GameState:
         # Decrease hunger and thirst based on time and weather (faster in hardcore mode)
         hunger_loss = int(hours * 5 * TIME_FACTOR * hunger_modifier)
         thirst_loss = int(hours * 8 * TIME_FACTOR * thirst_modifier)
+        
+        # Decrease sleep (only when not in a sleeping command)
+        sleeping = getattr(self, '_sleeping', False)
+        if not sleeping:
+            sleep_loss = int(hours * 3 * TIME_FACTOR)
+            # Adjust sleep loss based on hardcore mode
+            if hardcore_mode:
+                sleep_loss = int(sleep_loss * 1.25)
+        else:
+            sleep_loss = 0
 
         # In hardcore mode, stats decrease faster
         if hardcore_mode:
@@ -1939,9 +2801,11 @@ class GameState:
 
         old_hunger = self.player["hunger"]
         old_thirst = self.player["thirst"]
+        old_sleep = self.player.get("sleep", 100)
 
         self.player["hunger"] = max(0, self.player["hunger"] - hunger_loss)
         self.player["thirst"] = max(0, self.player["thirst"] - thirst_loss)
+        self.player["sleep"] = max(0, self.player.get("sleep", 100) - sleep_loss)
 
         # Show warning messages if stats get low
         if old_hunger > 30 and self.player["hunger"] <= 30:
@@ -2120,6 +2984,176 @@ class GameState:
             print(Colors.colorize(death_message, Colors.BOLD + Colors.RED))
             self.game_running = False
 
+    def cmd_sleep(self, *args):
+        """Sleep to recover energy and reduce fatigue, with location-based risk."""
+        if self.in_combat:
+            print(Colors.colorize("You can't sleep while in combat!", Colors.RED))
+            return
+            
+        # Get current hour of day
+        current_hour = self.player.get("hours_passed", 0) % 24
+        
+        # Calculate hours until dawn (6 AM)
+        if current_hour < 6:
+            hours_until_dawn = 6 - current_hour
+        else:
+            hours_until_dawn = (24 - current_hour) + 6
+            
+        # Get sleep duration - default to sleeping until dawn
+        sleep_until_dawn = True
+        hours = hours_until_dawn
+        
+        if args:
+            try:
+                specified_hours = max(1, min(24, int(args[0])))
+                hours = specified_hours
+                sleep_until_dawn = False
+            except ValueError:
+                if args[0].lower() == "dawn" or args[0].lower() == "day":
+                    # Explicitly sleeping until dawn
+                    hours = hours_until_dawn
+                    sleep_until_dawn = True
+                else:
+                    print("Please specify a valid number of hours between 1 and 24 or 'dawn'.")
+                    return
+
+        # Get current location and its safety level
+        current_location = self.player["location"]
+        location_info = LOCATIONS[current_location]
+        
+        # Check if at camp with damaged barricades
+        if current_location == "camp" and location_info.get("barricades_intact") is False:
+            sleep_safety = 0.4  # 40% safe if barricades are broken
+            print(Colors.colorize("Warning: The camp barricades are damaged, making sleep riskier.", Colors.YELLOW))
+        else:
+            sleep_safety = location_info.get("sleep_safety", 0.5)  # Default 50% if not specified
+        
+        # Get current weather and its effects
+        current_weather = self.player.get("current_weather", "clear")
+        weather_info = WEATHER_TYPES.get(current_weather, WEATHER_TYPES["clear"])
+        
+        # Weather affects sleep quality and zombie activity
+        weather_effect = ""
+        rest_quality_modifier = 1.0
+        danger_modifier = 1.0
+        
+        if current_weather == "stormy":
+            rest_quality_modifier = 0.7  # 30% less effective rest
+            danger_modifier = 1.3  # 30% more dangerous
+            weather_effect = "The thunderstorm makes it difficult to sleep soundly."
+        elif current_weather == "rainy":
+            rest_quality_modifier = 0.8  # 20% less effective rest
+            danger_modifier = 1.2  # 20% more dangerous
+            weather_effect = "The rain patters on the roof as you try to sleep."
+        elif current_weather == "windy":
+            rest_quality_modifier = 0.9  # 10% less effective rest
+            danger_modifier = 1.1  # 10% more dangerous
+            weather_effect = "The howling wind makes it harder to sleep soundly."
+        elif current_weather == "clear":
+            rest_quality_modifier = 1.2  # 20% more effective rest
+            danger_modifier = 0.9  # 10% less dangerous
+            weather_effect = "The clear night provides restful conditions."
+        
+        if weather_effect:
+            print(Colors.colorize(f"\n{weather_effect}", Colors.YELLOW))
+        
+        # Calculate death risk based on location safety and weather
+        death_risk = (1.0 - sleep_safety) * danger_modifier
+        
+        print(f"Sleeping for {hours} hours...")
+        Animations.loading_bar(length=10, delay=0.05, message="Sleeping")
+        
+        # Roll for death risk
+        if random.random() < death_risk:
+            death_message = "You were killed in your sleep by zombies!"
+            print(Colors.colorize(f"\n☠️ {death_message}", Colors.BOLD + Colors.RED))
+            if self.player.get("hardcore_mode", False):
+                self.record_death(death_message)
+            self.game_running = False
+            return
+            
+        # Successful sleep - recover stats
+        stamina_recovery = min(hours * 10 * rest_quality_modifier, self.player["max_stamina"] - self.player["stamina"])
+        self.player["stamina"] += stamina_recovery
+        
+        # Hunger and thirst still deplete while sleeping, but at a slower rate
+        self.player["hunger"] = max(0, self.player["hunger"] - (hours * 2))
+        self.player["thirst"] = max(0, self.player["thirst"] - (hours * 3))
+        
+        # Set sleeping flag so sleep doesn't decrease during sleep
+        self._sleeping = True
+        
+        # Ensure sleep stat exists
+        if "sleep" not in self.player:
+            self.player["sleep"] = 100
+            self.player["max_sleep"] = 100
+            
+        # Calculate how long you actually sleep based on sleep bar
+        actual_hours = hours
+        
+        # Higher sleep means you're less tired and more likely to wake up early
+        current_sleep_percent = (self.player["sleep"] / self.player["max_sleep"]) * 100
+        
+        # Calculate probability of sleeping the full duration vs waking up early
+        # At 0% sleep, you'll sleep the full time because you're exhausted
+        # At 100% sleep, you have a 70% chance of waking up early
+        wake_early_chance = (current_sleep_percent * 0.7) / 100
+        
+        # If sleeping until dawn and sleep meter is somewhat high, might wake up early
+        if sleep_until_dawn and random.random() < wake_early_chance:
+            # Wake up 1-3 hours before dawn
+            early_wake = random.randint(1, min(3, hours-1))
+            if early_wake < hours:
+                actual_hours = hours - early_wake
+                print(Colors.colorize(f"\nYou wake up naturally {early_wake} hour(s) before dawn.", Colors.CYAN))
+                
+        # Advance game time by actual sleep duration
+        self.advance_time("rest", hours=actual_hours)
+            
+        # Sleep recovery based on time, conditions, and sleep quality
+        sleep_recovery = min(
+            hours * 8 * rest_quality_modifier,  # Base recovery
+            self.player["max_sleep"] - self.player["sleep"]  # Cap at max_sleep
+        )
+        
+        # Apply sleep recovery
+        old_sleep = self.player["sleep"]
+        self.player["sleep"] = min(self.player["max_sleep"], old_sleep + sleep_recovery)
+        
+        # Reset sleeping flag
+        self._sleeping = False
+        
+        # Display results
+        print(Colors.colorize(f"\nYou slept for {actual_hours} hours and recovered {stamina_recovery:.0f} stamina.", Colors.GREEN))
+        
+        # Display sleep recovery if significant
+        if sleep_recovery > 0:
+            sleep_gain = self.player["sleep"] - old_sleep
+            print(Colors.colorize(f"Your sleep meter improved by {sleep_gain:.0f} points.", Colors.GREEN))
+        
+        # Check for health recovery if in camp or with improved shelter
+        if current_location == "camp" and CAMP_UPGRADES["shelter"]["level"] > 1:
+            health_recovery = min(hours * CAMP_UPGRADES["shelter"]["level"], self.player["max_health"] - self.player["health"])
+            self.player["health"] += health_recovery
+            print(Colors.colorize(f"Your comfortable shelter helped you heal. Recovered {health_recovery:.0f} health.", Colors.GREEN))
+        
+        # Show warning if hunger or thirst are low after sleeping
+        if self.player["hunger"] < 20:
+            print(Colors.colorize("You wake up feeling very hungry.", Colors.YELLOW))
+        if self.player["thirst"] < 20:
+            print(Colors.colorize("Your mouth is dry from thirst.", Colors.YELLOW))
+            
+        # "Insane" effect if sleep is too low
+        if self.player.get("sleep", 0) < 30:
+            if not self.player.get("insane", False):
+                self.player["insane"] = True
+                print(Colors.colorize("You haven't been sleeping enough. You're starting to hallucinate...", Colors.RED))
+                print(Colors.colorize("50% chance of action failure until you get proper rest.", Colors.RED))
+        elif self.player.get("sleep", 0) > 70:
+            if self.player.get("insane", False):
+                self.player["insane"] = False
+                print(Colors.colorize("You feel clear-headed and alert again after a good rest.", Colors.GREEN))
+                
     def cmd_rest(self, *args):
         """Rest to recover stamina at the cost of hunger and thirst."""
         if self.in_combat:
@@ -3260,19 +4294,111 @@ class GameState:
                 print(f"- {mission['name']}")
 
     def cmd_save(self, *args):
-        """Save the current game state."""
-        if self.save_game():
-            print("Game saved successfully.")
-        else:
-            print("Failed to save game.")
+        """Save the current game state using the slot system."""
+        # Check if a slot number was provided as an argument
+        slot = None
+        if args and len(args) > 0:
+            try:
+                slot_arg = int(args[0])
+                if 1 <= slot_arg <= MAX_SAVE_SLOTS:
+                    slot = slot_arg
+                else:
+                    print(f"Invalid save slot. Please use a number between 1 and {MAX_SAVE_SLOTS}.")
+                    return
+            except ValueError:
+                print("Invalid save slot. Please use a number.")
+                return
+        
+        # Save the game
+        self.save_game(slot)
 
-    def cmd_load(self, *args):
-        """Load a saved game."""
-        if self.load_game():
-            print("Game loaded successfully.")
-            self.cmd_status()
+    def cmd_saves_list(self, *args):
+        """Display a list of all available save slots."""
+        save_slots = self.get_save_slots()
+        
+        # Display stylish save slots header
+        divider = "=" * 50
+        print(Colors.colorize(f"\n{divider}", Colors.RED))
+        print(Colors.colorize("SAVE SLOT MANAGEMENT".center(50), Colors.BOLD + Colors.YELLOW))
+        print(Colors.colorize(f"{divider}", Colors.RED))
+        
+        print(Colors.colorize(f"\n{divider}", Colors.CYAN))
+        print(Colors.colorize("AVAILABLE SAVE SLOTS".center(50), Colors.BOLD + Colors.CYAN))
+        print(Colors.colorize(f"{divider}", Colors.CYAN))
+        
+        # Display save slots in a more stylish format
+        if save_slots:
+            print()  # Add space before slots
+            for save in save_slots:
+                slot_header = f"Slot {save['slot']}:"
+                print(Colors.colorize(slot_header, Colors.BOLD + Colors.GREEN))
+                
+                # Display character info with colors
+                character_info = f"Survivor: {Colors.colorize(save['name'], Colors.YELLOW)}, "
+                character_info += f"Level {Colors.colorize(str(save['level']), Colors.YELLOW)} "
+                character_info += f"({Colors.colorize(str(save['days_survived']), Colors.RED)} days survived)"
+                print(character_info)
+                
+                # Display location with cyan color
+                location_info = f"Location: {Colors.colorize(LOCATIONS[save['location']]['name'], Colors.CYAN)}"
+                print(location_info)
+                
+                # Display zombie kills and resources gathered
+                stats = f"Zombies Killed: {Colors.colorize(str(save.get('zombies_killed', 0)), Colors.RED)}, "
+                stats += f"Resources: {Colors.colorize(str(save.get('resources_gathered', 0)), Colors.GREEN)}"
+                print(stats)
+                
+                # Display save date with purple color
+                date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M:%S')
+                print(f"Saved: {Colors.colorize(date_str, Colors.MAGENTA)}")
+                print()  # Add space after each slot
         else:
-            print("No saved game found or error loading game.")
+            print(Colors.colorize("\nNo saved games found.", Colors.YELLOW))
+            print(Colors.colorize("Start a new game and use /save [slot] to create your first save.", Colors.CYAN))
+        
+        # Calculate empty slots
+        used_slots = [save['slot'] for save in save_slots]
+        empty_slots = [i for i in range(1, MAX_SAVE_SLOTS + 1) if i not in used_slots]
+        
+        # Show empty slots in a more attractive format
+        if empty_slots:
+            print(Colors.colorize("Empty slots:", Colors.BOLD))
+            empty_slots_str = ", ".join([str(slot) for slot in empty_slots])
+            print(Colors.colorize(f"[{empty_slots_str}]", Colors.BLUE))
+        
+        # Usage tips with styled box
+        print(Colors.colorize(f"\n{divider}", Colors.GREEN))
+        print(Colors.colorize("SAVE COMMANDS".center(50), Colors.BOLD + Colors.GREEN))
+        print(Colors.colorize(f"{divider}", Colors.GREEN))
+        
+        print(f"\n  {Colors.colorize('/save [slot]', Colors.YELLOW)} - Save to a slot (1-5)")
+        print(f"  {Colors.colorize('/load [slot]', Colors.YELLOW)} - Load from a slot (1-5)")
+        print(f"  {Colors.colorize('/saves_list', Colors.YELLOW)} - Show this list of save slots")
+        
+        # Some flavor text
+        print(Colors.colorize(f"\n{divider}", Colors.RED))
+        print(Colors.colorize("Every save is a story waiting to be continued...".center(50), Colors.MAGENTA))
+    
+    def cmd_load(self, *args):
+        """Load a saved game using the slot system."""
+        # Check if a slot number was provided as an argument
+        slot = None
+        if args and len(args) > 0:
+            try:
+                slot_arg = int(args[0])
+                if 1 <= slot_arg <= MAX_SAVE_SLOTS:
+                    slot = slot_arg
+                else:
+                    print(f"Invalid save slot. Please use a number between 1 and {MAX_SAVE_SLOTS}.")
+                    return
+            except ValueError:
+                print("Invalid save slot. Please use a number.")
+                return
+        
+        # Load the game
+        if self.load_game(slot):
+            self.cmd_status()
+        # Note: Error messages are handled within the load_game method
 
     def cmd_map(self, *args):
         """Display a map of available locations."""
@@ -3528,19 +4654,567 @@ class GameState:
             forecast_time = Colors.colorize(f"In {(i+1)*6} hours ({time_str}) {time_period}: ", time_color)
             forecast_weather = Colors.colorize(f"{weather_symbol} {weather_name}", weather_color)
             print(f"{forecast_time}{forecast_weather}")
+            
+    def cmd_upgrade_camp(self, *args):
+        """View or upgrade camp facilities."""
+        if self.player["location"] != "camp":
+            print(Colors.colorize("You must be at the camp to upgrade facilities!", Colors.RED))
+            return
+            
+        if args and args[0].lower() in CAMP_UPGRADES:
+            # Upgrade a specific facility
+            upgrade_id = args[0].lower()
+            self.upgrade_facility(upgrade_id)
+            return
+        
+        # Display available upgrades
+        print(Colors.colorize("\n=== CAMP FACILITIES ===", Colors.BOLD + Colors.CYAN))
+        print(Colors.colorize("Your camp can be upgraded to improve safety and survival odds.", Colors.YELLOW))
+        print(Colors.colorize("Materials are required for each upgrade.", Colors.YELLOW))
+        
+        # List all current upgrades and their levels
+        print(Colors.colorize("\nCURRENT FACILITIES:", Colors.BOLD + Colors.GREEN))
+        
+        for upgrade_id, upgrade in CAMP_UPGRADES.items():
+            level = upgrade["level"]
+            max_level = upgrade["max_level"]
+            
+            if level == 0:
+                status = Colors.colorize("Not Built", Colors.RED)
+            else:
+                if level == max_level:
+                    status = Colors.colorize(f"Level {level} (MAX)", Colors.GREEN)
+                else:
+                    status = Colors.colorize(f"Level {level}/{max_level}", Colors.YELLOW)
+            
+            # Draw a progress bar for visual representation
+            bar_length = 10
+            filled = int((level / max_level) * bar_length)
+            bar = "[" + "=" * filled + " " * (bar_length - filled) + "]"
+            
+            print(f"{Colors.colorize(upgrade['name'], Colors.BOLD + Colors.CYAN)}: {status} {bar}")
+            print(f"  {Colors.colorize(upgrade['description'], Colors.BLUE)}")
+            print(f"  {Colors.colorize('Benefit:', Colors.GREEN)} {upgrade['benefits']}")
+            
+            # Show barricade HP if this is the barricades
+            if upgrade_id == "barricades" and level > 0:
+                current_hp = upgrade.get("hp", 0)
+                max_hp = upgrade.get("max_hp", 100)
+                hp_percent = (current_hp / max_hp) * 100
+                hp_color = Colors.health_color(current_hp, max_hp)
+                
+                print(f"  {Colors.colorize('Barricade HP:', Colors.YELLOW)} {Colors.colorize(f'{current_hp}/{max_hp} ({hp_percent:.1f}%)', hp_color)}")
+                
+                if current_hp < max_hp * 0.25:
+                    print(f"  {Colors.colorize('⚠️ CRITICAL DAMAGE! Barricades need immediate repairs!', Colors.RED)}")
+                elif current_hp < max_hp * 0.5:
+                    print(f"  {Colors.colorize('⚠️ WARNING: Barricades are significantly damaged!', Colors.YELLOW)}")
+            
+            print("")
+        
+        # Show upgrade instructions
+        print(Colors.colorize("\nHOW TO UPGRADE:", Colors.BOLD + Colors.CYAN))
+        print(f"Use {Colors.colorize('/upgrade_camp [facility_name]', Colors.GREEN)} to upgrade a specific facility.")
+        print(f"Example: {Colors.colorize('/upgrade_camp shelter', Colors.GREEN)} to upgrade your shelter.")
+        print(f"Repair barricades with {Colors.colorize('/repair_barricades', Colors.GREEN)}.")
+        
+        # Explain how facility levels affect gameplay
+        print(Colors.colorize("\nFACILITY BENEFITS:", Colors.BOLD + Colors.CYAN))
+        print("- Shelter: Improves sleep safety and recovery")
+        print("- Barricades: Protects camp from zombie attacks")
+        print("- Workshop: Enables more advanced crafting")
+        print("- Garden: Provides food over time")
+        print("- Radio: Gives information about nearby resources")
+        
+        # Advancing time for checking camp facilities
+        self.advance_time("light_action")
+    
+    def upgrade_facility(self, facility_id):
+        """Upgrade a specific camp facility."""
+        if facility_id not in CAMP_UPGRADES:
+            print(Colors.colorize(f"Unknown facility: {facility_id}", Colors.RED))
+            return
+            
+        facility = CAMP_UPGRADES[facility_id]
+        current_level = facility["level"]
+        max_level = facility["max_level"]
+        
+        if current_level >= max_level:
+            print(Colors.colorize(f"Your {facility['name']} is already at maximum level!", Colors.YELLOW))
+            return
+            
+        # Calculate materials needed for upgrade
+        materials_needed = {
+            "wood": (current_level + 1) * 2,
+            "metal_scrap": current_level + 1,
+            "cloth": current_level
+        }
+        
+        # Special requirements for advanced facilities
+        if facility_id in ["machine_guns", "radio", "drones"]:
+            materials_needed["metal_scrap"] *= 2
+            materials_needed["cloth"] *= 2
+            
+        if facility_id == "workshop" and current_level >= 2:
+            materials_needed["metal_scrap"] *= 2
+            
+        # Check if player has enough materials
+        can_upgrade = True
+        missing_materials = {}
+        
+        for material, amount in materials_needed.items():
+            available = 0
+            for idx, item in enumerate(self.player["inventory"]):
+                if item.get("id") == material:
+                    available += item.get("count", 1)
+            
+            if available < amount:
+                can_upgrade = False
+                missing_materials[material] = amount - available
+        
+        # Display upgrade information
+        print(Colors.colorize(f"\n=== UPGRADE {facility['name'].upper()} ===", Colors.BOLD + Colors.CYAN))
+        print(f"Current level: {Colors.colorize(str(current_level), Colors.YELLOW)}/{Colors.colorize(str(max_level), Colors.GREEN)}")
+        print(f"Benefits: {Colors.colorize(facility['benefits'], Colors.BLUE)}")
+        
+        # Display materials required
+        print(Colors.colorize("\nMaterials required:", Colors.BOLD))
+        for material, amount in materials_needed.items():
+            material_name = ITEMS.get(material, {}).get("name", material)
+            
+            if material in missing_materials:
+                status = Colors.colorize(f"MISSING {missing_materials[material]}", Colors.RED)
+            else:
+                status = Colors.colorize("Available", Colors.GREEN)
+                
+            print(f"- {material_name}: {amount} ({status})")
+        
+        # Perform upgrade if possible
+        if can_upgrade:
+            confirm = input(Colors.colorize("\nConfirm upgrade? (y/n): ", Colors.GREEN))
+            if confirm.lower() != "y":
+                print("Upgrade cancelled.")
+                return
+                
+            # Remove materials from inventory
+            for material, amount in materials_needed.items():
+                remaining = amount
+                for idx, item in enumerate(self.player["inventory"]):
+                    if item.get("id") == material:
+                        to_use = min(remaining, item.get("count", 1))
+                        remaining -= to_use
+                        
+                        if item.get("count", 1) <= to_use:
+                            # Remove item completely
+                            self.player["inventory"].pop(idx)
+                        else:
+                            # Reduce count
+                            self.player["inventory"][idx]["count"] -= to_use
+                        
+                        if remaining <= 0:
+                            break
+                
+            # Apply upgrade
+            facility["level"] += 1
+            
+            # Update effects based on facility
+            if facility_id == "barricades":
+                # Barricades get more HP with level
+                facility["max_hp"] = 100 * facility["level"]
+                facility["hp"] = facility["max_hp"]  # Fully repaired after upgrade
+                LOCATIONS["camp"]["barricades_intact"] = True
+                
+            elif facility_id == "shelter":
+                # Better shelter improves sleep quality
+                pass  # Already checked in sleep command
+                
+            print(Colors.colorize(f"\nUpgrade successful! {facility['name']} is now level {facility['level']}!", Colors.BOLD + Colors.GREEN))
+            
+            # Show specific benefits from upgrade
+            if facility_id == "workshop":
+                print(Colors.colorize(f"You can now craft more advanced items!", Colors.YELLOW))
+            elif facility_id == "barricades":
+                print(Colors.colorize(f"Your camp is now better protected against zombie attacks!", Colors.YELLOW))
+            elif facility_id == "garden":
+                print(Colors.colorize(f"Your garden will now produce more food over time!", Colors.YELLOW))
+            
+            # Upgrading takes time
+            self.advance_time("medium_action")
+        else:
+            print(Colors.colorize("\nYou don't have enough materials for this upgrade.", Colors.RED))
+            print("Go scavenging to find more resources.")
+    
+    def cmd_eat(self, *args):
+        """Eat food to reduce hunger and possibly gain health."""
+        if self.in_combat:
+            print(Colors.colorize("You can't eat during combat!", Colors.RED))
+            return
+            
+        if not args:
+            print(Colors.colorize("You need to specify what to eat. Usage: /eat [item_id]", Colors.YELLOW))
+            print("Use /inventory to see what food items you have.")
+            return
+            
+        item_id = args[0].lower()
+        
+        # Check if the player has this item
+        item_index = None
+        for idx, item in enumerate(self.player["inventory"]):
+            if item["id"] == item_id:
+                item_index = idx
+                break
+                
+        if item_index is None:
+            print(Colors.colorize(f"You don't have {item_id} in your inventory.", Colors.RED))
+            return
+            
+        # Check if the item is food
+        item_data = ITEMS.get(item_id, {})
+        if not item_data or item_data.get("type") != "food":
+            print(Colors.colorize(f"{item_data.get('name', item_id)} is not edible!", Colors.RED))
+            return
+            
+        # Process eating the food
+        food_name = item_data.get("name", item_id)
+        hunger_value = item_data.get("hunger_value", 10)
+        health_value = item_data.get("health_value", 0)
+        
+        # Calculate safety probability (percentage chance of food being safe)
+        safety_prob = item_data.get("safety", 79)  # Default 79% safe like an apple
+        
+        # Pills can increase safety probability if the player has them
+        has_pills = False
+        for inv_item in self.player["inventory"]:
+            if inv_item.get("id") == "antibiotics" or inv_item.get("id") == "med_pills":
+                has_pills = True
+                break
+                
+        if has_pills:
+            safety_prob += 15  # Pills increase safety by 15%
+            safety_prob = min(safety_prob, 99)  # Cap at 99% safety (never 100% safe)
+            print(Colors.colorize("You take some medicine before eating to prevent illness.", Colors.CYAN))
+            
+        # Check for thirst reduction from the food (some foods like fruits help with thirst)
+        thirst_value = item_data.get("thirst_value", 0)
+        
+        # Apply effects
+        print(Colors.colorize(f"\nYou eat the {food_name}.", Colors.CYAN))
+        
+        # Hunger reduction
+        old_hunger = self.player["hunger"]
+        self.player["hunger"] = min(self.player["max_hunger"], old_hunger + hunger_value)
+        hunger_gain = self.player["hunger"] - old_hunger
+        
+        hunger_message = f"Hunger: {old_hunger} → {self.player['hunger']} (+{hunger_gain})"
+        print(Colors.colorize(hunger_message, Colors.GREEN))
+        
+        # Health restoration if applicable
+        if health_value > 0:
+            old_health = self.player["health"]
+            self.player["health"] = min(self.player["max_health"], old_health + health_value)
+            health_gain = self.player["health"] - old_health
+            
+            health_message = f"Health: {old_health} → {self.player['health']} (+{health_gain})"
+            print(Colors.colorize(health_message, Colors.GREEN))
+            
+        # Thirst effect if applicable
+        if thirst_value > 0:
+            old_thirst = self.player["thirst"]
+            self.player["thirst"] = min(self.player["max_thirst"], old_thirst + thirst_value)
+            thirst_gain = self.player["thirst"] - old_thirst
+            
+            thirst_message = f"Thirst: {old_thirst} → {self.player['thirst']} (+{thirst_gain})"
+            print(Colors.colorize(thirst_message, Colors.GREEN))
+            
+        # Check for food illness based on safety probability
+        if random.randint(1, 100) > safety_prob:
+            print(Colors.colorize("\nYou don't feel so good after eating that...", Colors.RED))
+            Animations.loading_bar(length=10, message="Feeling ill")
+            
+            # Determine severity of illness
+            recovery_chance = item_data.get("recovery_chance", 80)  # 80% chance of recovery by default
+            
+            if has_pills:
+                recovery_chance += 15  # Pills increase recovery chance
+                recovery_chance = min(recovery_chance, 99)  # Cap at 99%
+                
+            # Check if player recovers or gets severely ill
+            if random.randint(1, 100) <= recovery_chance:
+                # Mild illness
+                health_loss = random.randint(5, 15)
+                self.player["health"] = max(1, self.player["health"] - health_loss)
+                
+                print(Colors.colorize(f"You feel sick for a while, losing {health_loss} health.", Colors.YELLOW))
+                print(Colors.colorize("Fortunately, you recover after a few hours of discomfort.", Colors.GREEN))
+                
+                # Add sickness effect for hardcore mode
+                if self.player.get("hardcore_mode", False):
+                    self.player["stamina"] = max(0, self.player["stamina"] - 20)
+                    print(Colors.colorize("The illness has left you fatigued.", Colors.YELLOW))
+            else:
+                # Severe illness - potentially fatal
+                print(Colors.colorize("\n⚠️ You've contracted SEVERE FOOD POISONING!", Colors.BOLD + Colors.RED))
+                health_loss = random.randint(40, 60)
+                self.player["health"] = max(0, self.player["health"] - health_loss)
+                
+                print(Colors.colorize(f"You lose {health_loss} health from the poisoning!", Colors.RED))
+                
+                # Check if player died
+                if self.player["health"] <= 0:
+                    death_message = "You died from severe food poisoning."
+                    print(Colors.colorize(f"\n☠️ {death_message}", Colors.BOLD + Colors.RED))
+                    if self.player.get("hardcore_mode", False):
+                        self.record_death(death_message)
+                    self.game_running = False
+                    return
+                else:
+                    # Survived but severely weakened
+                    print(Colors.colorize("You barely survive the ordeal, but are severely weakened.", Colors.YELLOW))
+                    
+                    # Add illness effects for hardcore mode
+                    if self.player.get("hardcore_mode", False):
+                        self.player["infected"] = True
+                        self.player["stamina"] = max(0, self.player["stamina"] - 50)
+                        print(Colors.colorize("You've developed an infection that will continue to weaken you.", Colors.RED))
+                    
+        # Remove the item from inventory after eating
+        item = self.player["inventory"][item_index]
+        if item.get("count", 1) > 1:
+            item["count"] -= 1
+        else:
+            self.player["inventory"].pop(item_index)
+            
+        # Eating takes a small amount of time
+        self.advance_time("light_action")
+        
+    def cmd_dismantle(self, *args):
+        """Break down an item into its components."""
+        if self.in_combat:
+            print(Colors.colorize("You can't dismantle items during combat!", Colors.RED))
+            return
+            
+        if not args:
+            print(Colors.colorize("\nUsage: /dismantle [item_id]", Colors.YELLOW))
+            print(Colors.colorize("This command breaks down weapons and items into their component parts.\n", Colors.CYAN))
+            
+            # Display items that can be dismantled
+            dismantlable_items = []
+            for idx, item in enumerate(self.player["inventory"]):
+                item_id = item["id"]
+                item_data = ITEMS.get(item_id, {})
+                
+                # Check if item has craft_recipe or dismantle_yield
+                if "craft_recipe" in item_data or "dismantle_yield" in item_data:
+                    dismantlable_items.append((idx, item))
+            
+            if dismantlable_items:
+                print(Colors.colorize("Items you can dismantle:", Colors.GREEN))
+                for idx, item in dismantlable_items:
+                    print(f"{idx}. {Colors.colorize(ITEMS[item['id']]['name'], Colors.YELLOW)} " +
+                          f"(x{item['count']})")
+            else:
+                print(Colors.colorize("You don't have any items that can be dismantled.", Colors.RED))
+            return
+            
+        try:
+            item_idx = int(args[0])
+            if item_idx < 0 or item_idx >= len(self.player["inventory"]):
+                print(Colors.colorize("Invalid item index!", Colors.RED))
+                return
+                
+            item = self.player["inventory"][item_idx]
+            item_id = item["id"]
+            item_data = ITEMS.get(item_id, {})
+            
+            # Check if item is currently equipped
+            if self.player.get("equipped") == item_id:
+                print(Colors.colorize("You can't dismantle your equipped weapon!", Colors.RED))
+                return
+                
+            # Determine what components the item breaks down into
+            components = {}
+            if "dismantle_yield" in item_data:
+                # Use defined dismantle yield if available
+                components = item_data["dismantle_yield"]
+            elif "craft_recipe" in item_data:
+                # Otherwise use 60-90% of craft recipe (randomized per component)
+                for component, amount in item_data["craft_recipe"].items():
+                    # Return 60-90% of each component, minimum 1
+                    recovery_rate = random.uniform(0.6, 0.9)
+                    recovered_amount = max(1, int(amount * recovery_rate))
+                    components[component] = recovered_amount
+            else:
+                print(Colors.colorize(f"The {ITEMS[item_id]['name']} cannot be dismantled.", Colors.RED))
+                return
+                
+            # Now perform the dismantling
+            print(Colors.colorize(f"\nDismantling {ITEMS[item_id]['name']}...", Colors.CYAN))
+            Animations.loading_bar(length=10, message="Breaking down components")
+            
+            # Remove the item from inventory
+            self.remove_from_inventory(item_idx)
+            
+            # Add the components to inventory
+            print(Colors.colorize("\nYou recovered:", Colors.GREEN))
+            for component, amount in components.items():
+                self.add_to_inventory(component, amount)
+                if component in ITEMS:
+                    component_name = ITEMS[component]['name']
+                else:
+                    component_name = component.replace('_', ' ').title()
+                print(f"- {Colors.colorize(component_name, Colors.YELLOW)} x{amount}")
+                
+            # Time advancement for dismantling (light action)
+            hours_passed = self.advance_time("light_action")
+            
+            # Check for skill improvement chance (crafting-related)
+            if random.random() < 0.1:  # 10% chance
+                self.player["crafting_skill"] = min(10, self.player.get("crafting_skill", 0) + 1)
+                print(Colors.colorize("\nYou've gained insight into how things are assembled. Crafting skill improved!", Colors.MAGENTA))
+                
+        except ValueError:
+            print(Colors.colorize("Please specify a valid item number.", Colors.RED))
+        except Exception as e:
+            print(Colors.colorize(f"Error dismantling item: {e}", Colors.RED))
+    
+    def cmd_repair_barricades(self, *args):
+        """Repair damaged camp barricades."""
+        if self.player["location"] != "camp":
+            print(Colors.colorize("You must be at the camp to repair barricades!", Colors.RED))
+            return
+            
+        # Check if barricades exist
+        if CAMP_UPGRADES["barricades"]["level"] == 0:
+            print(Colors.colorize("You haven't built any barricades yet!", Colors.RED))
+            print(f"Use {Colors.colorize('/upgrade_camp barricades', Colors.GREEN)} to build them first.")
+            return
+            
+        # Check if barricades are already at max HP
+        barricades = CAMP_UPGRADES["barricades"]
+        if barricades["hp"] >= barricades["max_hp"]:
+            print(Colors.colorize("The barricades are already in perfect condition!", Colors.GREEN))
+            return
+            
+        # Calculate repair needs
+        max_hp = barricades["max_hp"]
+        current_hp = barricades["hp"]
+        missing_hp = max_hp - current_hp
+        repair_percentage = (missing_hp / max_hp) * 100
+        
+        # Materials needed based on damage
+        materials_needed = {
+            "wood": math.ceil(missing_hp / 50),  # 1 wood per 50 HP
+            "metal_scrap": math.ceil(missing_hp / 100)  # 1 metal per 100 HP
+        }
+        
+        # Check if player has enough materials
+        can_repair = True
+        missing_materials = {}
+        
+        for material, amount in materials_needed.items():
+            available = 0
+            for item in self.player["inventory"]:
+                if item.get("id") == material:
+                    available += item.get("count", 1)
+            
+            if available < amount:
+                can_repair = False
+                missing_materials[material] = amount - available
+        
+        # Display repair information
+        print(Colors.colorize("\n=== REPAIR BARRICADES ===", Colors.BOLD + Colors.CYAN))
+        
+        # Show current HP status
+        hp_color = Colors.health_color(current_hp, max_hp)
+        hp_percentage = (current_hp / max_hp) * 100
+        print(f"Current status: {Colors.colorize(f'{current_hp}/{max_hp} HP ({hp_percentage:.1f}%)', hp_color)}")
+        
+        # Visual representation
+        bar_length = 20
+        filled = int((current_hp / max_hp) * bar_length)
+        bar = "[" + "=" * filled + " " * (bar_length - filled) + "]"
+        print(f"Integrity: {Colors.colorize(bar, hp_color)}")
+        
+        # Repair assessment
+        if repair_percentage < 25:
+            assessment = "Minor repairs needed"
+        elif repair_percentage < 50:
+            assessment = "Moderate repairs needed"
+        else:
+            assessment = "Major repairs needed"
+            
+        print(Colors.colorize(f"\n{assessment}", Colors.YELLOW))
+        
+        # Materials required
+        print(Colors.colorize("\nMaterials required:", Colors.BOLD))
+        for material, amount in materials_needed.items():
+            material_name = ITEMS.get(material, {}).get("name", material)
+            
+            if material in missing_materials:
+                status = Colors.colorize(f"MISSING {missing_materials[material]}", Colors.RED)
+            else:
+                status = Colors.colorize("Available", Colors.GREEN)
+                
+            print(f"- {material_name}: {amount} ({status})")
+        
+        # Perform repair if possible
+        if can_repair:
+            confirm = input(Colors.colorize("\nConfirm repair? (y/n): ", Colors.GREEN))
+            if confirm.lower() != "y":
+                print("Repair cancelled.")
+                return
+                
+            # Remove materials from inventory
+            for material, amount in materials_needed.items():
+                remaining = amount
+                inventory_copy = self.player["inventory"].copy()
+                for idx, item in enumerate(inventory_copy):
+                    if item.get("id") == material:
+                        to_use = min(remaining, item.get("count", 1))
+                        remaining -= to_use
+                        
+                        if item.get("count", 1) <= to_use:
+                            # Remove item completely
+                            self.player["inventory"].remove(item)
+                        else:
+                            # Reduce count
+                            item["count"] -= to_use
+                        
+                        if remaining <= 0:
+                            break
+            
+            # Apply repair
+            barricades["hp"] = max_hp
+            LOCATIONS["camp"]["barricades_intact"] = True
+            
+            print(Colors.colorize("\nRepairs successful! The barricades are now fully restored!", Colors.BOLD + Colors.GREEN))
+            print(Colors.colorize("Your camp is secure once again.", Colors.YELLOW))
+            
+            # Repairing takes time
+            self.advance_time("medium_action")
+        else:
+            print(Colors.colorize("\nYou don't have enough materials for repairs.", Colors.RED))
+            print("Go scavenging to find more resources.")
 
     def cmd_scavenge_area(self, *args):
-        """Scavenge a specific area for resources with escalating risk/reward."""
+        """Scavenge your current location for resources."""
         if self.in_combat:
             print(Colors.colorize("You can't scavenge while in combat!", Colors.RED))
             return
-
-        if not args:
-            print(Colors.colorize("You need to specify an area to scavenge.", Colors.YELLOW))
-            print("Available areas: " + ", ".join(SCAVENGE_AREAS.keys()))
-            return
-
-        area_id = args[0].lower()
+            
+        # Get current location type
+        current_location = self.player["location"]
+        location_info = LOCATIONS[current_location]
+        location_type = location_info.get("type", "urban")  # Default to urban if not specified
+        
+        # Determine scavenge area based on location type
+        area_id = location_type
+        
+        # If the location has a specific scavenge area defined, use that instead
+        if "scavenge_area" in location_info:
+            area_id = location_info["scavenge_area"]
+            
+        # Check if this is a valid scavenge area
         if area_id not in SCAVENGE_AREAS:
             print(Colors.colorize(f"Unknown area: {area_id}", Colors.RED))
             print("Available areas: " + ", ".join(SCAVENGE_AREAS.keys()))
