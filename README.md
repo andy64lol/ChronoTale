@@ -21,7 +21,17 @@ and then use cd ~/ChronoTale/
 
 after that just install necesary dependencies using pip install
 
+*currently you only need to install colorama:*
+```bash
+pip install colorama
+```
+
 Lastly use python3 for the games
+*usage example (using Legacies.py):*
+
+```bash
+python3 Legacies.py
+```
 
 ---
 
