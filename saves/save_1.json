@@ -1,0 +1,957 @@
+{
+  "user_data": {
+    "name": "Andy",
+    "class": "Warrior",
+    "profession": null,
+    "has_chosen_profession": false,
+    "level": 1,
+    "inventory": [],
+    "equipped": {
+      "weapon": null,
+      "armor": null
+    },
+    "gold": 100,
+    "coolness": 0,
+    "guild": null,
+    "pets": [],
+    "progress": "starter",
+    "exp": 0,
+    "health": 120,
+    "max_health": 120,
+    "attack": 20,
+    "defense": 15,
+    "speed": 5,
+    "skills": [
+      "Slam",
+      "Shield Block",
+      "Berserk"
+    ],
+    "active_quests": [
+      {
+        "id": 101,
+        "name": "The Beginning",
+        "description": "Meet the Old Sage in Greenwood Village",
+        "target": {
+          "npc": "Old Sage",
+          "count": 1
+        },
+        "reward": {
+          "gold": 100,
+          "exp": 200
+        },
+        "story": true,
+        "chapter": 1,
+        "travel_locations": [
+          "Greenwood Village",
+          "Stormhaven",
+          "Crystal Cave"
+        ]
+      },
+      {
+        "id": 102,
+        "name": "First Steps",
+        "description": "Defeat 10 monsters across Greenwood Village and Stormhaven",
+        "target": {
+          "monster": "any",
+          "count": 10
+        },
+        "reward": {
+          "gold": 150,
+          "exp": 250
+        },
+        "story": true,
+        "chapter": 1,
+        "travel_locations": [
+          "Greenwood Village",
+          "Stormhaven"
+        ]
+      },
+      {
+        "id": 103,
+        "name": "The Dark Warning",
+        "description": "Investigate the disturbance in Crystal Cave and Shadowmere",
+        "target": {
+          "location": "Crystal Cave",
+          "count": 1
+        },
+        "reward": {
+          "gold": 200,
+          "exp": 300
+        },
+        "story": true,
+        "chapter": 1,
+        "travel_locations": [
+          "Crystal Cave",
+          "Shadowmere"
+        ]
+      },
+      {
+        "id": 201,
+        "name": "Dragon's Peak Journey",
+        "description": "Travel to Dragon's Peak, Stormhaven, and Greenwood Village to meet the Dragon Tamer",
+        "target": {
+          "npc": "Dragon Tamer",
+          "count": 1
+        },
+        "reward": {
+          "gold": 300,
+          "exp": 400
+        },
+        "story": true,
+        "chapter": 2,
+        "travel_locations": [
+          "Dragon's Peak",
+          "Stormhaven",
+          "Greenwood Village"
+        ]
+      },
+      {
+        "id": 202,
+        "name": "Dragon Trials",
+        "description": "Complete the three trials of the Dragon Tamer across Dragon's Peak",
+        "target": {
+          "trials": "Dragon Trials",
+          "count": 3
+        },
+        "reward": {
+          "gold": 400,
+          "exp": 500
+        },
+        "story": true,
+        "chapter": 2,
+        "travel_locations": [
+          "Dragon's Peak"
+        ]
+      },
+      {
+        "id": 203,
+        "name": "The First Flight",
+        "description": "Tame your first dragon after traveling through Dragon's Peak and Crystal Cave",
+        "target": {
+          "monster": "Dragon Whelp",
+          "count": 1
+        },
+        "reward": {
+          "gold": 500,
+          "exp": 600,
+          "item": "Dragon Whistle"
+        },
+        "story": true,
+        "chapter": 2,
+        "travel_locations": [
+          "Dragon's Peak",
+          "Crystal Cave"
+        ]
+      },
+      {
+        "id": 301,
+        "name": "The Shadow's Call",
+        "description": "Investigate the mysterious events in Shadowmere and Frostvale",
+        "target": {
+          "location": "Shadowmere",
+          "count": 1
+        },
+        "reward": {
+          "gold": 600,
+          "exp": 700
+        },
+        "story": true,
+        "chapter": 3,
+        "travel_locations": [
+          "Shadowmere",
+          "Frostvale"
+        ]
+      },
+      {
+        "id": 302,
+        "name": "Ancient Secrets",
+        "description": "Recover the lost artifacts from the Silent Ashes and Crystal Cave",
+        "target": {
+          "item": "Ancient Artifact",
+          "count": 3
+        },
+        "reward": {
+          "gold": 700,
+          "exp": 800
+        },
+        "story": true,
+        "chapter": 3,
+        "travel_locations": [
+          "Silent Ashes",
+          "Crystal Cave"
+        ]
+      },
+      {
+        "id": 303,
+        "name": "The Shadow's Return",
+        "description": "Confront the Shadow Master in his lair after traveling through Shadowmere and the Sunken Depths",
+        "target": {
+          "monster": "Shadow Master",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1000,
+          "exp": 1200,
+          "item": "Shadow Master's Cloak"
+        },
+        "story": true,
+        "chapter": 3,
+        "travel_locations": [
+          "Shadowmere",
+          "Sunken Depths"
+        ]
+      },
+      {
+        "id": 401,
+        "name": "Shogun's Challenge",
+        "description": "Face the Shogun's elite guards and prove your strength.",
+        "target": {
+          "monster": "Shogun's Guard",
+          "count": 3
+        },
+        "reward": {
+          "gold": 1200,
+          "exp": 1600,
+          "item": "Shogun's Blade"
+        },
+        "story": true,
+        "chapter": 4,
+        "travel_locations": [
+          "Shogunate Of Shirui"
+        ]
+      },
+      {
+        "id": 402,
+        "name": "Kitsune's Secret",
+        "description": "Uncover the mysterious secrets of the Kitsune Warrior.",
+        "target": {
+          "monster": "Kitsune Warrior",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1300,
+          "exp": 1700,
+          "item": "Kitsune Mask"
+        },
+        "story": true,
+        "chapter": 4,
+        "travel_locations": [
+          "Shogunate Of Shirui"
+        ]
+      },
+      {
+        "id": 501,
+        "name": "Caliph's Wrath",
+        "description": "Defend against the wrath of the Iron Caliphate's forces.",
+        "target": {
+          "monster": "Al-Hadidiyah Knight",
+          "count": 5
+        },
+        "reward": {
+          "gold": 1800,
+          "exp": 2200,
+          "item": "Knight's Shield"
+        },
+        "story": true,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 502,
+        "name": "Guardian's Siege",
+        "description": "Break the siege laid by the Iron Caliphate's guardians.",
+        "target": {
+          "monster": "Al-Hadidiyah Guardian",
+          "count": 3
+        },
+        "reward": {
+          "gold": 1900,
+          "exp": 2300,
+          "item": "Guardian's Blade"
+        },
+        "story": true,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 601,
+        "name": "Emperor's Decree",
+        "description": "Carry out the Emperor's decree and face the Order of the Black Sun.",
+        "target": {
+          "monster": "Secret Police from The Order of the Black Sun (Yohualli T\u014dnatiuh)",
+          "count": 4
+        },
+        "reward": {
+          "gold": 2200,
+          "exp": 2700,
+          "item": "Black Sun Dagger"
+        },
+        "story": true,
+        "chapter": 6,
+        "travel_locations": [
+          "Tl\u0101cahc\u0101y\u014dtl Tletl Tecpan\u0113catl/Empire of the Sacred Fire and Chains"
+        ]
+      },
+      {
+        "id": 602,
+        "name": "Order of the Black Sun",
+        "description": "Infiltrate the Order and uncover their dark plans.",
+        "target": {
+          "monster": "Tl\u0101cahc\u0101y\u014dtl Tletl Tecpan\u0113catl Sorcerer",
+          "count": 2
+        },
+        "reward": {
+          "gold": 2300,
+          "exp": 2800,
+          "item": "Sorcerer's Tome"
+        },
+        "story": true,
+        "chapter": 6,
+        "travel_locations": [
+          "Tl\u0101cahc\u0101y\u014dtl Tletl Tecpan\u0113catl/Empire of the Sacred Fire and Chains"
+        ]
+      },
+      {
+        "id": 603,
+        "name": "Sacred Fire",
+        "description": "Ignite the sacred fire to rally the people against the empire.",
+        "target": {
+          "location": "Tl\u0101cahc\u0101y\u014dtl Tletl Tecpan\u0113catl Palace",
+          "count": 1
+        },
+        "reward": {
+          "gold": 2400,
+          "exp": 2900,
+          "item": "Sacred Flame"
+        },
+        "story": true,
+        "chapter": 6,
+        "travel_locations": [
+          "Tl\u0101cahc\u0101y\u014dtl Tletl Tecpan\u0113catl/Empire of the Sacred Fire and Chains"
+        ]
+      },
+      {
+        "id": 701,
+        "name": "Crimson Abyss Awakening",
+        "description": "Investigate the awakening of dark forces in the Crimson Abyss.",
+        "target": {
+          "monster": "Crimson Abyss Demon",
+          "count": 1
+        },
+        "reward": {
+          "gold": 3000,
+          "exp": 3500,
+          "item": "Demon's Heart"
+        },
+        "story": true,
+        "chapter": 7,
+        "travel_locations": [
+          "Crimson Abyss"
+        ]
+      },
+      {
+        "id": 702,
+        "name": "Demon's Heart",
+        "description": "Retrieve the Demon's Heart from the depths of the Crimson Abyss.",
+        "target": {
+          "monster": "Crimson Abyss Demon",
+          "count": 1
+        },
+        "reward": {
+          "gold": 3200,
+          "exp": 3700,
+          "item": "Demon's Heart"
+        },
+        "story": true,
+        "chapter": 7,
+        "travel_locations": [
+          "Crimson Abyss"
+        ]
+      },
+      {
+        "id": 703,
+        "name": "Abyssal Leviathan",
+        "description": "Defeat the Abyssal Leviathan terrorizing the Crimson Abyss.",
+        "target": {
+          "monster": "Abyssal Leviathan",
+          "count": 1
+        },
+        "reward": {
+          "gold": 3500,
+          "exp": 4000,
+          "item": "Leviathan Scale"
+        },
+        "story": true,
+        "chapter": 7,
+        "travel_locations": [
+          "Crimson Abyss"
+        ]
+      },
+      {
+        "id": 704,
+        "name": "The Final Shadow",
+        "description": "Confront the Shadow Master in the depths of the Crimson Abyss.",
+        "target": {
+          "monster": "Shadow Master",
+          "count": 1
+        },
+        "reward": {
+          "gold": 4000,
+          "exp": 4500,
+          "item": "Shadow Master's Cloak"
+        },
+        "story": true,
+        "chapter": 7,
+        "travel_locations": [
+          "Crimson Abyss"
+        ]
+      },
+      {
+        "id": 801,
+        "name": "The Final War to end the Shadow order",
+        "description": "Confront the Fallen Eternal,Noctis",
+        "target": {
+          "monster": "Dark Legionary Supreme Lord:Noctis",
+          "count": 1
+        },
+        "reward": {
+          "gold": 5000,
+          "exp": 5500,
+          "item": "Noctis's Shadow Crystal"
+        },
+        "story": true,
+        "chapter": 8,
+        "travel_locations": [
+          "Dark Legion's Fortress"
+        ]
+      },
+      {
+        "id": 1,
+        "name": "Goblin Slayer",
+        "description": "Kill 3 goblins",
+        "target": {
+          "monster": "Goblin",
+          "count": 3
+        },
+        "reward": {
+          "gold": 50,
+          "exp": 100
+        }
+      },
+      {
+        "id": 2,
+        "name": "Dragon Hunter",
+        "description": "Defeat any dragon",
+        "target": {
+          "monster": "Dragon",
+          "count": 1
+        },
+        "reward": {
+          "gold": 200,
+          "exp": 300
+        }
+      },
+      {
+        "id": 3,
+        "name": "Howling Threat",
+        "description": "Hunt down 5 wolves in the forest",
+        "target": {
+          "monster": "Wolf",
+          "count": 5
+        },
+        "reward": {
+          "gold": 40,
+          "exp": 90
+        }
+      },
+      {
+        "id": 4,
+        "name": "Skeleton Cleanup",
+        "description": "Destroy 4 skeletons near the cemetery",
+        "target": {
+          "monster": "Skeleton",
+          "count": 4
+        },
+        "reward": {
+          "gold": 60,
+          "exp": 110
+        }
+      },
+      {
+        "id": 5,
+        "name": "Ghostly Presence",
+        "description": "Banish 3 ghosts from Stormhaven",
+        "target": {
+          "monster": "Ghost",
+          "count": 3
+        },
+        "reward": {
+          "gold": 70,
+          "exp": 150
+        }
+      },
+      {
+        "id": 6,
+        "name": "Troll Trouble",
+        "description": "Defeat 2 Cave Trolls",
+        "target": {
+          "monster": "Cave Troll",
+          "count": 2
+        },
+        "reward": {
+          "gold": 90,
+          "exp": 180
+        }
+      },
+      {
+        "id": 7,
+        "name": "Dark Knight Duel",
+        "description": "Take down 1 Dark Knight in Shadowmere",
+        "target": {
+          "monster": "Dark Knight",
+          "count": 1
+        },
+        "reward": {
+          "gold": 120,
+          "exp": 250
+        }
+      },
+      {
+        "id": 8,
+        "name": "Fire Dragon Challenge",
+        "description": "Defeat the Fire Dragon atop Dragon's Peak",
+        "target": {
+          "monster": "Fire Dragon",
+          "count": 1
+        },
+        "reward": {
+          "gold": 250,
+          "exp": 400
+        }
+      },
+      {
+        "id": 9,
+        "name": "Crystal Golem Rampage",
+        "description": "Stop 2 Crystal Golems in Crystal Cave",
+        "target": {
+          "monster": "Crystal Golem",
+          "count": 2
+        },
+        "reward": {
+          "gold": 100,
+          "exp": 200
+        }
+      },
+      {
+        "id": 10,
+        "name": "Ice Troll Hunt",
+        "description": "Eliminate 3 Ice Trolls in Frostvale",
+        "target": {
+          "monster": "Ice Troll",
+          "count": 3
+        },
+        "reward": {
+          "gold": 80,
+          "exp": 170
+        }
+      },
+      {
+        "id": 11,
+        "name": "Phoenix Feather",
+        "description": "Collect 1 Phoenix Feather from the Silent Ashes",
+        "target": {
+          "monster": "Phoenix",
+          "count": 1
+        },
+        "reward": {
+          "gold": 300,
+          "exp": 500
+        }
+      },
+      {
+        "id": 12,
+        "name": "Water Elemental",
+        "description": "Defeat 2 Water Elementals in Long Shui Zhen",
+        "target": {
+          "monster": "Water Elemental",
+          "count": 2
+        },
+        "reward": {
+          "gold": 110,
+          "exp": 220
+        }
+      },
+      {
+        "id": 13,
+        "name": "Sunken Depths",
+        "description": "Explore the Sunken Depths and gather 3 Coral Golem parts",
+        "target": {
+          "monster": "Coral Golem",
+          "count": 3
+        },
+        "reward": {
+          "gold": 130,
+          "exp": 250
+        }
+      },
+      {
+        "id": 14,
+        "name": "Free the people",
+        "description": "Free the Shogunate from the Shogun's Tyrany",
+        "target": {
+          "monster": "The Shogun",
+          "count": 1
+        },
+        "reward": {
+          "gold": 500,
+          "exp": 1000
+        }
+      },
+      {
+        "id": 15,
+        "name": "Dragon's Reach",
+        "description": "Defeat the Dragon Knight in Dragon's Reach",
+        "target": {
+          "monster": "Dragon Knight",
+          "count": 1
+        },
+        "reward": {
+          "gold": 400,
+          "exp": 600
+        }
+      },
+      {
+        "id": 16,
+        "name": "Blightmoor Cleanup",
+        "description": "Eliminate 5 Blight Beasts in Blightmoor",
+        "target": {
+          "monster": "Blight Beast",
+          "count": 5
+        },
+        "reward": {
+          "gold": 150,
+          "exp": 300
+        }
+      },
+      {
+        "id": 503,
+        "name": "Sabotage Supply Lines",
+        "description": "Disrupt the Iron Caliphate's supply routes to weaken their forces.",
+        "target": {
+          "location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah",
+          "count": 1
+        },
+        "reward": {
+          "gold": 2000,
+          "exp": 2500,
+          "item": "Blueprints for Resistance Gear"
+        },
+        "story": false,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 504,
+        "name": "Rescue Imprisoned Dissidents",
+        "description": "Free the dissidents imprisoned by the Iron Caliphate.",
+        "target": {
+          "npc": "Imprisoned Dissidents",
+          "count": 1
+        },
+        "reward": {
+          "gold": 2100,
+          "exp": 2600,
+          "item": "Resistance Gear"
+        },
+        "story": false,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 505,
+        "name": "Infiltrate the Palace",
+        "description": "Sneak into the Iron Caliphate's palace to gather intelligence.",
+        "target": {
+          "location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah Palace",
+          "count": 1
+        },
+        "reward": {
+          "gold": 2200,
+          "exp": 2700,
+          "item": "Special Weapons"
+        },
+        "story": false,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 506,
+        "name": "Recover Stolen Artifacts",
+        "description": "Retrieve artifacts stolen by the Iron Caliphate's forces.",
+        "target": {
+          "item": "Stolen Artifact",
+          "count": 3
+        },
+        "reward": {
+          "gold": 2300,
+          "exp": 2800,
+          "item": "Access to Guarded Areas"
+        },
+        "story": false,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 507,
+        "name": "Distract the Patrols",
+        "description": "Create diversions to help resistance members move freely.",
+        "target": {
+          "location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1900,
+          "exp": 2300
+        },
+        "story": false,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 508,
+        "name": "Smuggle Supplies",
+        "description": "Help smuggle food and medical supplies to the resistance.",
+        "target": {
+          "location": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah",
+          "count": 1
+        },
+        "reward": {
+          "gold": 2000,
+          "exp": 2400
+        },
+        "story": false,
+        "chapter": 5,
+        "travel_locations": [
+          "The Iron Caliphate of Al-Khilafah Al-Hadidiyah"
+        ]
+      },
+      {
+        "id": 403,
+        "name": "Assassinate a Corrupt Official",
+        "description": "Eliminate a corrupt official threatening the Shogunate's peace.",
+        "target": {
+          "npc": "Corrupt Official",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1400,
+          "exp": 1800,
+          "item": "Unique Samurai Weapons"
+        },
+        "story": false,
+        "chapter": 4,
+        "travel_locations": [
+          "Shogunate of Shirui"
+        ]
+      },
+      {
+        "id": 404,
+        "name": "Protect a Whistleblower",
+        "description": "Escort a whistleblower safely out of the Shogunate.",
+        "target": {
+          "npc": "Whistleblower",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1500,
+          "exp": 1900,
+          "item": "Ronin Armor"
+        },
+        "story": false,
+        "chapter": 4,
+        "travel_locations": [
+          "Shogunate of Shirui"
+        ]
+      },
+      {
+        "id": 304,
+        "name": "Retrieve Stolen Secrets",
+        "description": "Recover secrets stolen by rival factions in Shadowmere.",
+        "target": {
+          "item": "Stolen Secrets",
+          "count": 3
+        },
+        "reward": {
+          "gold": 1100,
+          "exp": 1300,
+          "item": "Rare Magic Items"
+        },
+        "story": false,
+        "chapter": 3,
+        "travel_locations": [
+          "Shadowmere"
+        ]
+      },
+      {
+        "id": 305,
+        "name": "Eliminate a Rival",
+        "description": "Take out a rival threatening the Shadow Broker's operations.",
+        "target": {
+          "npc": "Rival",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1200,
+          "exp": 1400,
+          "item": "Forbidden Scrolls"
+        },
+        "story": false,
+        "chapter": 3,
+        "travel_locations": [
+          "Shadowmere"
+        ]
+      },
+      {
+        "id": 306,
+        "name": "Contain the Ice Wraith",
+        "description": "Stop the Ice Wraith from terrorizing Frostvale.",
+        "target": {
+          "monster": "Ice Wraith",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1300,
+          "exp": 1500,
+          "item": "Ice-elemental Weapons"
+        },
+        "story": false,
+        "chapter": 3,
+        "travel_locations": [
+          "Frostvale"
+        ]
+      },
+      {
+        "id": 307,
+        "name": "Retrieve Magical Research",
+        "description": "Find lost magical research in Frostvale.",
+        "target": {
+          "item": "Magical Research",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1400,
+          "exp": 1600,
+          "item": "Frost-resistant Gear"
+        },
+        "story": false,
+        "chapter": 3,
+        "travel_locations": [
+          "Frostvale"
+        ]
+      },
+      {
+        "id": 204,
+        "name": "Retrieve a Specific Egg",
+        "description": "Find and retrieve a rare dragon egg.",
+        "target": {
+          "item": "Dragon Egg",
+          "count": 1
+        },
+        "reward": {
+          "gold": 600,
+          "exp": 700,
+          "item": "Dragon Egg Fragments"
+        },
+        "story": false,
+        "chapter": 2,
+        "travel_locations": [
+          "Dragon's Peak"
+        ]
+      },
+      {
+        "id": 205,
+        "name": "Protect a Nest",
+        "description": "Defend a dragon's nest from poachers.",
+        "target": {
+          "location": "Dragon's Peak",
+          "count": 1
+        },
+        "reward": {
+          "gold": 650,
+          "exp": 750,
+          "item": "Rare Mounts"
+        },
+        "story": false,
+        "chapter": 2,
+        "travel_locations": [
+          "Dragon's Peak"
+        ]
+      },
+      {
+        "id": 308,
+        "name": "Decode Ancient Dragon Texts",
+        "description": "Translate ancient texts about dragons.",
+        "target": {
+          "item": "Ancient Dragon Texts",
+          "count": 1
+        },
+        "reward": {
+          "gold": 900,
+          "exp": 1100,
+          "item": "Dragon Lore Books"
+        },
+        "story": false,
+        "chapter": 3,
+        "travel_locations": [
+          "Long Shui Zhen"
+        ]
+      },
+      {
+        "id": 309,
+        "name": "Find a Legendary Dragon",
+        "description": "Locate a legendary dragon hidden in the mountains.",
+        "target": {
+          "monster": "Legendary Dragon",
+          "count": 1
+        },
+        "reward": {
+          "gold": 1000,
+          "exp": 1200,
+          "item": "Knowledge-based Items"
+        },
+        "story": false,
+        "chapter": 3,
+        "travel_locations": [
+          "Long Shui Zhen's well"
+        ]
+      }
+    ],
+    "completed_quests": [],
+    "materials": {},
+    "tools": [
+      "Axe",
+      "Pickaxe",
+      "Flask",
+      "Hunting Knife"
+    ],
+    "current_area": "Greenwood Village",
+    "monsters_killed": 0,
+    "dungeons_completed": []
+  },
+  "timestamp": "2025-04-25 20:35:24",
+  "version": "1.0"
+}

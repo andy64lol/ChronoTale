@@ -1856,7 +1856,7 @@ dungeons = [
     {"name": "Mercenary Camp", "monsters": ["Mercenary of the caliphate"], "loot": ["Mercenary's Dagger", "Gold Coin"]},
     {"name": "Loyalist's mosque", "monsters": ["Loyalist of the caliphate", "High Priest of the caliphate"], "loot": ["Loyalist's Blade", "High Priest's Staff", "Gold Coin"]},
     {"name": "Sorcerer's Tower", "monsters": ["Al-Hadidiyah Sorcerer"], "loot": ["Sorcerer's Tome", "Gold Coin"]},
-    {"name": "factory of golems", "monsters": ["Steel Golem"], "loot": ["Steel Core", "Gold Coin"]},
+    {"name": "Factory of golems", "monsters": ["Steel Golem"], "loot": ["Steel Core", "Gold Coin"]},
     {"name": "Janissary Barracks", "monsters": ["Royal Janissary"], "loot": ["Janissary's Blade", "Gold Coin"]},
     {"name": "General's Fortress", "monsters": ["Iron Caliphate General", "Al-Hadidiyah Knight","Mercenary of the caliphate"], "loot": ["General's Armor", "Gold Coin"]},
 
