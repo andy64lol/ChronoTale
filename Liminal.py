@@ -444,31 +444,53 @@ class Game:
                     {'name': 'Shadowy Doctor', 'speed': 0.5, 'friendly': False, 'theme': 'hospital'},
                     {'name': 'Ghostly Patient', 'speed': 0.3, 'friendly': True, 'theme': 'hospital'},
                     {'name': 'Blood Seeker', 'speed': 0.6, 'friendly': False, 'theme': 'hospital'},
-                    {'name': 'Orderly', 'speed': 0.4, 'friendly': False, 'theme': 'hospital'}
+                    {'name': 'Orderly', 'speed': 0.4, 'friendly': False, 'theme': 'hospital'},
+                    {'name': 'Nurse', 'speed': 0.5, 'friendly': False, 'theme': 'hospital'},
+                    {'name': 'The surgeon', 'speed': 0.4, 'friendly': False, 'theme': 'hospital'},
+                    {'name': 'The girl of that toilet stall', 'speed': 0.3, 'friendly': False, 'theme': 'hospital'}
                 ],
                 'school': [
                     {'name': 'Phantom Teacher', 'speed': 0.4, 'friendly': False, 'theme': 'school'},
                     {'name': 'Lost Student', 'speed': 0.3, 'friendly': True, 'theme': 'school'},
+                    {'name': 'The bully', 'speed': 0.5, 'friendly': False, 'theme': 'school'},
+                    {'name': 'Teacher\'s Assistant', 'speed': 0.5, 'friendly': False, 'theme': 'school'},
                     {'name': 'Hall Monitor', 'speed': 0.5, 'friendly': False, 'theme': 'school'},
+                    {'name': 'Cafeteria Ghost', 'speed': 0.4, 'friendly': False, 'theme': 'school'},
+                    {'name': 'The Librarian', 'speed': 0.3, 'friendly': True, 'theme': 'school'},
                     {'name': 'Detention Spirit', 'speed': 0.6, 'friendly': False, 'theme': 'school'}
                 ],
                 'home': [
                     {'name': 'Shadow Mother', 'speed': 0.4, 'friendly': False, 'theme': 'home'},
                     {'name': 'Child Spirit', 'speed': 0.3, 'friendly': True, 'theme': 'home'},
                     {'name': 'Basement Dweller', 'speed': 0.5, 'friendly': False, 'theme': 'home'},
-                    {'name': 'Attic Crawler', 'speed': 0.6, 'friendly': False, 'theme': 'home'}
+                    {'name': 'Attic Crawler', 'speed': 0.6, 'friendly': False, 'theme': 'home'},
+                    {'name': 'Sister', 'speed': 0.4, 'friendly': False, 'theme': 'home'},
+                    {'name': 'Brother', 'speed': 0.3, 'friendly': False, 'theme': 'home'},
+                    {'name': 'Father', 'speed': 0.5, 'friendly': False, 'theme': 'home'},
+                    {'name': 'Mother', 'speed': 0.6, 'friendly': False, 'theme': 'home'},
+                    {'name': 'Grandmother', 'speed': 0.2, 'friendly': True, 'theme': 'home'},
+                    {'name': 'Grandfather', 'speed': 0.2, 'friendly': True, 'theme': 'home'},
+                    {'name': 'The good dog', 'speed': 0.4, 'friendly': False, 'theme': 'home'},
+                    {'name': 'The stray cat', 'speed': 0.3, 'friendly': True, 'theme': 'home'},
                 ],
                 'limbo': [
                     {'name': 'Shadow Walker', 'speed': 0.4, 'friendly': False, 'theme': 'limbo'},
                     {'name': 'Mind Eater', 'speed': 0.6, 'friendly': False, 'theme': 'limbo'},
                     {'name': 'Lost Soul', 'speed': 0.3, 'friendly': True, 'theme': 'limbo'},
-                    {'name': 'Void Stalker', 'speed': 0.5, 'friendly': False, 'theme': 'limbo'}
+                    {'name': 'Void Stalker', 'speed': 0.5, 'friendly': False, 'theme': 'limbo'},
+                    {'name': 'The angel', 'speed': 0.4, 'friendly': False, 'theme': 'limbo'},
+                    {'name': 'The demon', 'speed': 0.5, 'friendly': False, 'theme': 'limbo'},
+                    {'name': 'The shadow', 'speed': 0.3, 'friendly': False, 'theme': 'limbo'},
+                    {'name': 'The watcher', 'speed': 0.6, 'friendly': False, 'theme': 'limbo'},
+                    {'name': 'Your friend', 'speed': 0.4, 'friendly': True, 'theme': 'limbo'},
                 ],
                 'mall': [
                     {'name': 'Mannequin', 'speed': 0.4, 'friendly': False, 'theme': 'mall'},
-                    {'name': 'Lost Shopper', 'speed': 0.3, 'friendly': True, 'theme': 'mall'},
+                    {'name': 'Distorted shopping machine', 'speed': 0.5, 'friendly': False, 'theme': 'mall'},
+                    {'name': 'Lost Weird Shopper', 'speed': 0.3, 'friendly': False, 'theme': 'mall'},
                     {'name': 'Security Patrol', 'speed': 0.5, 'friendly': False, 'theme': 'mall'},
-                    {'name': 'Faceless Clerk', 'speed': 0.6, 'friendly': False, 'theme': 'mall'}
+                    {'name': 'Faceless Clerk', 'speed': 0.6, 'friendly': False, 'theme': 'mall'},
+                    {'name': 'Faceless Security Guard', 'speed': 0.4, 'friendly': False, 'theme': 'mall'}
                 ]
             }
             
@@ -665,6 +687,10 @@ class Game:
         time.sleep(1)
         self.animate_text(Fore.CYAN + "\n\"Welcome back,\" she says.")
         time.sleep(1)
+        self.animate_text(Fore.YELLOW + "\nYou see all your family members around your bed.")
+        time.sleep(1)
+        self.animate_text(Fore.WHITE + "\nYou start tearing along your family's faces.")
+        time.sleep(1)
         self.animate_text(Fore.GREEN + "\nYOU WOKE UP - THE REAL ENDING" + Style.RESET_ALL)
         self.running = False
         return True
@@ -672,6 +698,8 @@ class Game:
     def heaven_ending(self):
         self.clear_screen()
         self.animate_text(Fore.CYAN + "\nYou step through the door into blinding light...")
+        time.sleep(1)
+        self.animate_text(Fore.YELLOW + "\nYou realise your body is no longer heavy.")
         time.sleep(1)
         self.animate_text(Fore.YELLOW + "\nA sense of peace washes over you.")
         time.sleep(1)
@@ -716,6 +744,10 @@ class Game:
         self.animate_text(Fore.WHITE + "\nWhen you open them, you're back in your room.")
         time.sleep(1)
         self.animate_text(Fore.MAGENTA + "\nIt was all a dream, but the memories remain.")
+        time.sleep(1)
+        self.animate_text(Fore.CYAN + "\nYou can always return to this place.")
+        time.sleep(1)
+        self.animate_text(Fore.RED + "\nYou know you can ALWAYS return...")
         time.sleep(1)
         self.animate_text(Fore.CYAN + "\nAnd you know you can go back whenever you want.")
         time.sleep(1)
