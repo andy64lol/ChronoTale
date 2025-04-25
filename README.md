@@ -9,6 +9,7 @@
 * Legacies of our Legends
 * Z_Survival
 * Last human:Exodus
+* Liminal
 
 ---
 
@@ -17,6 +18,8 @@
 Clone it using git clone
 
 and then use cd ~/ChronoTale/
+
+after that just install necesary dependencies using pip install
 
 Lastly use python3 for the games
 
