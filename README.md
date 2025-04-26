@@ -45,6 +45,8 @@ Get into our website where the .zip file is
 
 [Click here](https://andy64lol.github.io/ChronoTale/)
 
+Unzip it and use it.
+
 ---
 
 > **Made by andy64lol and buddies!**
