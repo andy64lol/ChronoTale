@@ -31,11 +31,10 @@ after that just install necesary dependencies using pip install
 pip install colorama && pip install platform
 ```
 
-Lastly use python3 for the games
-*usage example (using Legacies.py):*
+Lastly just launch it
 
 ```bash
-python3 Legacies.py
+python3 launch.py
 ```
 
 
