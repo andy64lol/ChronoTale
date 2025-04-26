@@ -44,7 +44,7 @@ python3 Legacies.py
 
 Get into our website where the .zip file is
 
-<#7289da>[Click here](https://andy64lol.github.io/ChronoTale/)
+[Click here](https://andy64lol.github.io/ChronoTale/)
 
 ---
 
