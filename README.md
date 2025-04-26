@@ -15,6 +15,8 @@
 
 ## Installation and Usage
 
+**The methods :**
+
 ## Method 1
 ---
 
