@@ -1917,6 +1917,8 @@ dungeons = [
 
 
 # ANSI color codes for output
+
+# Text color (foreground)
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
 OKGREEN = '\033[92m'
@@ -1931,6 +1933,42 @@ YELLOW = '\033[33m'
 RED = '\033[31m'
 GREEN = '\033[32m'
 BLUE = '\033[34m'
+WHITE = '\033[37m'
+BLACK = '\033[30m'
+GREY = '\033[90m'
+LIGHTRED = '\033[91m'
+LIGHTGREEN = '\033[92m'
+LIGHTYELLOW = '\033[93m'
+LIGHTBLUE = '\033[94m'
+LIGHTMAGENTA = '\033[95m'
+LIGHTCYAN = '\033[96m'
+
+# Background colors
+BG_BLACK = '\033[40m'
+BG_RED = '\033[41m'
+BG_GREEN = '\033[42m'
+BG_YELLOW = '\033[43m'
+BG_BLUE = '\033[44m'
+BG_MAGENTA = '\033[45m'
+BG_CYAN = '\033[46m'
+BG_WHITE = '\033[47m'
+BG_GREY = '\033[100m'
+BG_LIGHTRED = '\033[101m'
+BG_LIGHTGREEN = '\033[102m'
+BG_LIGHTYELLOW = '\033[103m'
+BG_LIGHTBLUE = '\033[104m'
+BG_LIGHTMAGENTA = '\033[105m'
+BG_LIGHTCYAN = '\033[106m'
+BG_BRIGHTWHITE = '\033[107m'
+
+# Text effects
+RESET = '\033[0m'
+DIM = '\033[2m'
+ITALIC = '\033[3m'
+BLINK = '\033[5m'
+REVERSE = '\033[7m'
+HIDDEN = '\033[8m'
+STRIKETHROUGH = '\033[9m'
 
 import sys
 import time
@@ -2070,10 +2108,10 @@ def dev_command_handler(cmd: str) -> None:
             if len(parts) < 3:
                 print("Usage: /dev_complete [dungeon/story/quest] [name]")
                 return
-            
+
             complete_type = parts[1]
             name = " ".join(parts[2:])
-            
+
             if complete_type == "dungeon":
                 if name not in user_data["dungeons_completed"]:
                     user_data["dungeons_completed"].append(name)
@@ -2083,15 +2121,15 @@ def dev_command_handler(cmd: str) -> None:
                 if quest:
                     user_data["completed_quests"].append(quest["id"])
                     print(f"Completed quest: {name}")
-                    
+
         elif base_cmd == "/dev_give":
             if len(parts) < 3:
                 print("Usage: /dev_give [item/gold/exp/level] [amount/name]")
                 return
-                
+
             give_type = parts[1]
             value = " ".join(parts[2:])
-            
+
             if give_type == "item":
                 user_data["inventory"].append(value)
                 print(f"Added {value} to inventory")
@@ -2104,15 +2142,15 @@ def dev_command_handler(cmd: str) -> None:
                 elif give_type == "level":
                     user_data["level"] += amount
                 print(f"Added {amount} {give_type}")
-                
+
         elif base_cmd == "/dev_set":
             if len(parts) < 3:
                 print("Usage: /dev_set [health/location/class] [value]")
                 return
-                
+
             set_type = parts[1]
             value = " ".join(parts[2:])
-            
+
             if set_type == "health":
                 hp = int(value)
                 user_data["health"] = hp
@@ -2126,14 +2164,14 @@ def dev_command_handler(cmd: str) -> None:
                 if value in CHARACTER_CLASSES:
                     user_data["class"] = value
                     print(f"Changed class to {value}")
-                    
+
         elif base_cmd == "/dev_unlock":
             if len(parts) < 2:
                 print("Usage: /dev_unlock [all/areas/skills]")
                 return
-                
+
             unlock_type = parts[1]
-            
+
             if unlock_type == "all":
                 for location in LOCATIONS:
                     user_data.setdefault("unlocked_areas", []).append(location)
@@ -2146,21 +2184,21 @@ def dev_command_handler(cmd: str) -> None:
                 if user_data["class"]:
                     user_data["skills"] = SKILLS[user_data["class"]]
                     print("Unlocked all class skills")
-                    
+
         elif base_cmd == "/dev_mode":
             if len(parts) < 2:
                 print("Usage: /dev_mode [god/debug]")
                 return
-                
+
             mode_type = parts[1]
-            
+
             if mode_type == "god":
                 user_data["god_mode"] = not user_data.get("god_mode", False)
                 print(f"God mode: {'enabled' if user_data['god_mode'] else 'disabled'}")
             elif mode_type == "debug":
                 user_data["debug_mode"] = not user_data.get("debug_mode", False)
                 print(f"Debug mode: {'enabled' if user_data['debug_mode'] else 'disabled'}")
-                
+
     except Exception as e:
         print(f"Error in dev command: {e}")
         print("Use /help_dev to see command usage")
@@ -2909,19 +2947,19 @@ def list_dungeons() -> None:
             name = dungeon['name']
             completed = name in user_data.get("dungeons_completed", [])
             if completed:
-                print(f"{OKGREEN}✓ {name}{ENDC}")
+                print(f"{OKGREEN}[✓] {name}{ENDC}")
                 # Show rewards if completed
                 if "loot" in dungeon:
                     print(f"  Rewards collected: {', '.join(dungeon['loot'])}")
             else:
-                # Show requirements if not completed
+                # Show requirements if not completed  
                 reqs = []
                 if "level_required" in dungeon:
                     reqs.append(f"Level {dungeon['level_required']}")
                 if reqs:
-                    print(f"{FAIL}✗ {name} (Required: {', '.join(reqs)}){ENDC}")
+                    print(f"{FAIL}[!] {name} (Required: {', '.join(reqs)}){ENDC}")
                 else:
-                    print(f"{FAIL}✗ {name}{ENDC}")
+                    print(f"{FAIL}[x] {name}{ENDC}")
             # Show monsters
             if "monsters" in dungeon:
                 print(f"  Monsters: {', '.join(dungeon['monsters'])}")
