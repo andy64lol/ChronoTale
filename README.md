@@ -15,7 +15,7 @@
 
 ## Installation and Usage
 
-Method 1
+## Method 1
 ---
 
 Clone it using git clone
@@ -37,7 +37,7 @@ python3 Legacies.py
 ```
 
 
-Method 2
+## Method 2
 ---
 
 Get into our website where the .zip file is
