@@ -13,7 +13,10 @@
 
 ---
 
-## Usage
+## Installation and Usage
+
+Method 1
+---
 
 Clone it using git clone
 
@@ -32,6 +35,14 @@ Lastly use python3 for the games
 ```bash
 python3 Legacies.py
 ```
+
+
+Method 2
+---
+
+Get into our website where the .zip file is
+
+<#7289da>[Click here](https://andy64lol.github.io/ChronoTale/)
 
 ---
 
