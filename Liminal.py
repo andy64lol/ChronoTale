@@ -89,6 +89,25 @@ class Room:
                 (Fore.MAGENTA + "A toy store where the toys observe you carefully." + Style.RESET_ALL, ['door2', 'door3']),
                 (Fore.WHITE + "An electronics store with screens showing your past." + Style.RESET_ALL, ['door1', 'door4']),
                 (Fore.LIGHTBLACK_EX + "A cinema playing movies of your life you don't remember." + Style.RESET_ALL, ['door1', 'door2'])
+            ],
+            'Train_station': [
+                (Fore.BLUE + "A train station with trains that never arrive." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.GREEN + "A platform where the echoes of footsteps linger." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A waiting room with chairs that shift positions." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.LIGHTRED_EX + "A ticket booth that dispenses tickets to nowhere." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.CYAN + "An empty train car that feels like a memory." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.MAGENTA + "A control room with screens showing distorted images." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.WHITE + "A maintenance area filled with tools that hum softly." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.LIGHTBLACK_EX + "An underground tunnel that seems to stretch forever." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.RED + "A undergroud railway where blood is spilled everywhere and the faces of the corpses distorts" + Style.RESET_ALL, ['door1', 'door2'])
+            ],
+            'Abandoned_amusement_park': [
+                (Fore.BLUE + "An abandoned roller coaster with a broken track." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.GREEN + "A funhouse with mirrors that show distorted reflections." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A carnival game booth with prizes that seem to watch you." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.LIGHTRED_EX + "A Ferris wheel that creaks ominously with doors in the middle of the sky leading to nowhere." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
+                (Fore.CYAN + "A clown's tent filled with laughter that echoes eerily." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.MAGENTA + "A food stand with food made up of human parts that seems to move on its own..." + Style.RESET_ALL, ['door2', 'door4'])
             ]
         }
 
@@ -133,6 +152,26 @@ class Room:
                 "No directory signs indicate other levels.",
                 "A decorative spiral staircase leads to a mezzanine.",
                 "The mall map shows stairs that aren't there."
+            ],
+            'Train_station': [
+                "There's a staircase leading to the platform above.",
+                "A dark stairwell leads to the underground tracks.",
+                "Both main and emergency staircases are visible.",
+                "No fire exit signs can be seen.",
+                "A spiral staircase leads to the observation deck.",
+                "Blocked stairs with 'Do Not Enter' tape lead nowhere.",
+                "A staircase in the middle of the railways",
+                "A station with weird paintings of people you knew,but their faces seem very distorted..."
+            ],
+            'Abandoned_amusement_park': [
+                "A staircase leading to the top of the fun house",
+                "A dark stairwell leading to nowhere.",
+                "Both main and emergency staircases are visible and they collide into one,bending at impossible angles you've never seen...",
+                "No fire exit signs can be seen near an emergency door of the park,which leads to a wall...",
+                "A spiral staircase leads to the pirate ship.",
+                "Blocked stairs with 'Only authorised personel' tape that lead nowhere but a wall.",
+                "A staircase in the middle of the seats of the circus that doesn't make sense...",
+                "A mirror maze with refelections of people you knew,but their faces seem very distorted..."
             ]
         }
 
@@ -175,8 +214,32 @@ class Room:
                 "Only the main concourse and entrance are clear.",
                 "Left leads to the department store, right to boutiques.",
                 "A single walkway continues forward.",
+                "A hallway that bends into impossible angles",
                 "A narrow service corridor twists to the left.",
-                "A wide shopping promenade stretches ahead."
+                "A wide shopping promenade stretches ahead.",
+                "A restaurant area with large restaurants that you feel like you've eaten here before.",
+                "A food court with a strange smell that makes you feel sick.",
+                "A mall with a strange clock that seems to be broken and counting randomly."
+            ],
+            'Train_station': [
+                "Train platforms extend in all directions.",
+                "Only the main platform and entrance are clear.",
+                "Left leads to the ticket booth, right to the waiting area.",
+                "A single walkway continues forward.",
+                "A narrow service corridor twists to the left.",
+                "A wide platform stretches ahead.",
+                "A train floting while colisioning against the wall.",
+                "A hallway that seems like a the insides of a train car.",
+                "A train station with a weird clock that seems to be broken and counting randomly."
+            ],
+            'Abandoned_amusement_park':[
+                "A deserted fun ride that seems infinite",
+                "A circus with a fake clown that seems to be real",
+                "A roller coaster that seems to be broken",
+                "A hallway from a fun house",
+                "Platforms of the park that seem to be floating forming a path",
+                "Distorted bathroom hallway that seems to have infinite stalls",
+                "A food court with a familiar yet decilious smell of fast food brands that never existed"
             ]
         }
 
@@ -188,6 +251,7 @@ class Room:
                 ("A wheelchair sits empty in the corner.", "It slowly begins to move on its own..."),
                 ("A bottle of medication sits on the counter.", "The prescription is made out to you..."),
                 ("An IV drip stands beside an empty bed.", "The fluid in the bag turns red as you watch..."),
+                ("A surgical mask lies discarded on the floor.", "It smells of antiseptic and something else..."),
                 ("A set of X-rays are clipped to a lightboard.", "They show a skull with something inside it..."),
                 None
             ],
@@ -197,6 +261,10 @@ class Room:
                 ("A school trophy cabinet.", "Your name appears and disappears on the plaques..."),
                 ("A student's backpack left behind.", "It contains homework with your handwriting..."),
                 ("A test paper on the teacher's desk.", "Every answer is written in blood..."),
+                ("A detention slip with your name on it.", "It details a crime you don't remember committing..."),
+                ("A row of lockers.", "One has your name on it with scratches around the lock..."),
+                ("A note pinned to the wall.", "It reads 'You will never escape from us,nerd'..."),
+                ("A broken clock on the wall.", "It ticks make you remember of something urgent you needed to do..."),
                 ("A row of student lockers.", "One has your name on it with scratches around the lock..."),
                 None
             ],
@@ -207,6 +275,7 @@ class Room:
                 ("A home movie plays on a projector.", "You're in the film but don't remember it being taken..."),
                 ("A child's drawing is pinned to the refrigerator.", "It depicts a dark figure standing behind a family..."),
                 ("A landline phone that begins to ring.", "When you answer, you hear your own voice..."),
+                ("A broken clock on the wall.", "It ticks makes you remember of █████████████,and ████████████████..."),
                 None
             ],
             'limbo': [
@@ -216,6 +285,11 @@ class Room:
                 ("A faded painting depicts a forgotten landscape.", "The scene shifts as you watch..."),
                 ("A floating orb of swirling memories.", "You see faces you've never met yet recognize..."),
                 ("A door standing alone without walls.", "Through the keyhole, you see yourself sleeping..."),
+                ("A strange artifact that pulses with light.", "It seems to respond to your thoughts..."),
+                ("A wall of photos and memories.", "They feel like your own but are not..."),
+                ("A door that leads to nowhere.", "It opens to a void that whispers your name...you better not cross it..."),
+                ("A floating object that seems to be a mirror.", "It shows you a different version of yourself..."),
+                ("A phone opened with distorted text you can't recognise...", "It seems to be a post in social media about you..."),
                 None
             ],
             'mall': [
@@ -225,7 +299,27 @@ class Room:
                 ("A store security camera.", "It follows your movement too precisely..."),
                 ("A bright sale sign flashing discounts.", "The text briefly changes to personal messages for you..."),
                 ("A vending machine with strange products.", "Items inside have your face on the packaging..."),
+                ("A shopping cart that rolls away on its own.", "It seems to be leading you somewhere..."),
                 None
+            ],
+            'Train_station': [
+                ("A train schedule board with your name.", "The next train is always 'now'..."),
+                ("A ticket machine that dispenses blank tickets.", "The tickets show places you've never been..."),
+                ("A waiting bench with a strange inscription.", "It reads 'You will never leave'..."),
+                ("A train conductor's hat left behind.", "It feels warm as if someone just wore it..."),
+                ("A train car filled with fog.", "You hear whispers of your name inside..."),
+                ("A station clock that ticks backward.", "Time seems to unravel around it..."),
+                ("A corpse with blood in the middle of the rails", "The face seems distorted but yet familiar..."),
+                None
+            ],
+            'Abandoned_amusement_park': [
+                ("A broken ride with a strange inscription.", "It reads 'You will never leave'..."),
+                ("A clown's mask left behind.", "It seems to be watching you..."),
+                ("A ticket booth with a strange inscription.", "It reads 'You will never leave'..."),
+                ("A funhouse mirror that distorts your reflection.", "You see a version of yourself that isn't you..."),
+                ("A carousel with horses that seem to move on their own.", "They look like people you know..."),
+                ("A Ferris wheel that creaks ominously.", "The view from the top shows a different world..."),
+                ("A toy clown with a distorted face", "It seems to be watching you..."),
             ]
         }
 
@@ -491,6 +585,20 @@ class Game:
                     {'name': 'Security Patrol', 'speed': 0.5, 'friendly': False, 'theme': 'mall'},
                     {'name': 'Faceless Clerk', 'speed': 0.6, 'friendly': False, 'theme': 'mall'},
                     {'name': 'Faceless Security Guard', 'speed': 0.4, 'friendly': False, 'theme': 'mall'}
+                ],
+                'Train_station':[
+                    {'name': 'Train conductor', 'speed': 0.4, 'friendly': False, 'theme': 'Train_station'},
+                    {'name': 'Crawling Woman', 'speed': 0.9, 'friendly': False, 'theme': 'Train_station'},
+                    {'name': 'Undead corpses', 'speed': 0.5, 'friendly': False, 'theme': 'Train_station'},
+                    {'name': 'The train', 'speed': 10.5, 'friendly': False, 'theme': 'Train_station'},
+                ],
+                'Abandoned_amusement_park':[
+                    {'name': 'The clown', 'speed': 0.4, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
+                    {'name': 'The clown with a knife', 'speed': 0.5, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
+                    {'name': 'The clown with a chainsaw', 'speed': 0.6, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
+                    {'name': 'The Mickey Mouse', 'speed': 0.4, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
+                    {'name': 'The Donald Duck', 'speed': 0.5, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
+                    {'name': 'The Goofy', 'speed': 0.6, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
                 ]
             }
             
@@ -502,7 +610,13 @@ class Game:
                 {'name': 'Shadow Walker', 'speed': 0.4, 'friendly': False, 'theme': 'limbo'},
                 {'name': 'Mind Eater', 'speed': 0.6, 'friendly': False, 'theme': 'limbo'},
                 {'name': 'Lost Soul', 'speed': 0.3, 'friendly': True, 'theme': 'limbo'},
-                {'name': 'Void Stalker', 'speed': 0.5, 'friendly': False, 'theme': 'limbo'}
+                {'name': 'Void Stalker', 'speed': 0.5, 'friendly': False, 'theme': 'limbo'},
+                {'name': 'The angel', 'speed': 0.4, 'friendly': False, 'theme': 'limbo'},
+                {'name': 'The demon', 'speed': 0.5, 'friendly': False, 'theme': 'limbo'},
+                {'name': 'The shadow', 'speed': 0.3, 'friendly': False, 'theme': 'limbo'},
+                {'name': 'The watcher', 'speed': 0.6, 'friendly': False, 'theme': 'limbo'},
+                {'name': 'Your friend', 'speed': 0.4, 'friendly': True, 'theme': 'limbo'},
+                {'name': 'Your worst dream','speed': 0.5, 'friendly': False, 'theme': 'limbo'},
             ]
             
             # Create a mix of themed and default entities
@@ -555,7 +669,7 @@ class Game:
 
     def generate_level(self):
         # Choose a theme for the level
-        themes = ['hospital', 'school', 'home', 'limbo', 'mall']
+        themes = ['hospital', 'school', 'home', 'limbo', 'mall','Train_station','Abandoned_amusement_park']
         
         # Theme progression: early levels are hospital and home, mid-levels include school and mall,
         # and higher levels tend toward limbo with higher frequency
