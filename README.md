@@ -28,7 +28,7 @@ after that just install necesary dependencies using pip install
 
 *currently you only need to install colorama and platform:*
 ```bash
-pip install colorama && pip install platform
+pip install colorama
 ```
 
 Lastly just launch it
