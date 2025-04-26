@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChronoTale: Download</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+      text-align: center;
+      overflow-x: hidden;
+    }
+    h1 {
+      font-size: 3.5em;
+      margin-bottom: 10px;
+      animation: fadeIn 1.5s ease;
+    }
+    p {
+      font-size: 1.3em;
+      margin-bottom: 30px;
+      animation: fadeIn 2s ease;
+    }
+    .download-btn {
+      background-color: #1abc9c;
+      border: none;
+      padding: 18px 40px;
+      font-size: 1.4em;
+      border-radius: 12px;
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      animation: fadeIn 2.5s ease;
+    }
+    .download-btn:hover {
+      background-color: #16a085;
+      transform: scale(1.05);
+    }
+    footer {
+      margin-top: 50px;
+      font-size: 0.9em;
+      color: #ccc;
+      animation: fadeIn 3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>ChronoTale</h1>
+  <p>Your journey across timelines begins here. Download the latest version and embark on your adventure!</p>
+
+  <a href="https://github.com/andy64lol/ChronoTale/archive/refs/heads/main.zip" 
+     class="download-btn" download>
+    Download ChronoTale (.zip)
+  </a>
+
+  <footer>
+    &copy; 2025 ChronoTale. Made by Andy64lol and buddies.
+  </footer>
+</body>
+</html>
