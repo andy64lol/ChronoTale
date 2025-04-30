@@ -3,8 +3,29 @@ import random
 import json
 import os
 import time
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from datetime import datetime
+
+# Color constants
+OKBLUE = '\033[94m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+CYAN = '\033[96m'
+MAGENTA = '\033[35m'
+YELLOW = '\033[33m'
+RED = '\033[31m'
+GREEN = '\033[32m'
+BLUE = '\033[94m'
+LIGHTCYAN = '\033[96m'
+LIGHTYELLOW = '\033[93m'
+BG_YELLOW = '\033[43m'
+BG_CYAN = '\033[46m'
+BG_LIGHTYELLOW = '\033[103m'
+BG_LIGHTCYAN = '\033[106m'
 
 # Constants
 INITIAL_GOLD = 100
@@ -413,6 +434,59 @@ STORYLINE = {
         "quest_line": ["Dragon's Peak Journey", "Dragon Trials", "The First Flight"],
         "reward": {"gold": 500, "exp": 700, "item": "Dragon Scale Armor"}
     },
+    "Chapter 3: The Gathering Storm": {
+        "title": "The Gathering Storm",
+        "description": "Dark forces gather in the distant lands, forming alliances that threaten the peace of all realms. You must unite the fractured kingdoms before it's too late.",
+        "required_level": 10,
+        "quest_line": ["Alliance of Kingdoms", "The Council Meeting", "The Diplomat's Journey"],
+        "reward": {"gold": 800, "exp": 1200, "item": "Diplomat's Signet"}
+    },
+    "Chapter 4: The Shadow Legion": {
+        "title": "The Shadow Legion",
+        "description": "A mysterious legion of shadow warriors has emerged from the forbidden lands. Their dark magic corrupts everything they touch.",
+        "required_level": 15,
+        "quest_line": ["Scouts of Darkness", "The Corrupted Forest", "The Shadow General"],
+        "reward": {"gold": 1200, "exp": 1800, "item": "Shadowbane Amulet"}
+    },
+    "Chapter 5: The Ancient Ones": {
+        "title": "The Ancient Ones",
+        "description": "Beings of immense power, forgotten by time, have awakened. Their return heralds an era of chaos unless their motives can be understood.",
+        "required_level": 20,
+        "quest_line": ["Whispers of the Past", "The Forbidden Library", "The Gateway"],
+        "reward": {"gold": 1500, "exp": 2500, "item": "Tome of the Ancients"}
+    },
+    "Chapter 6: The Final Confrontation": {
+        "title": "The Final Confrontation",
+        "description": "All paths have led to this moment. The fate of the world rests on your final battle against the ultimate darkness.",
+        "required_level": 25,
+        "quest_line": ["The Path Opens", "Allies United", "Darkness Falls"],
+        "reward": {"gold": 2000, "exp": 3000, "item": "Hero's Legacy"}
+    },
+    # Post-game storylines
+    "Epilogue: The New Beginning": {
+        "title": "The New Beginning",
+        "description": "Though the great darkness has been defeated, new challenges arise in a world forever changed by your actions.",
+        "required_level": 30,
+        "post_game": True,
+        "quest_line": ["Rebuilding the Realms", "New Threats Emerge", "The Hero's Journey Continues"],
+        "reward": {"gold": 3000, "exp": 4000, "item": "Crown of New Dawn"}
+    },
+    "Dimensional Rifts": {
+        "title": "Dimensional Rifts",
+        "description": "Strange portals have appeared throughout the land, leading to alternate realities and timelines. What dangers—and opportunities—might they hold?",
+        "required_level": 35,
+        "post_game": True,
+        "quest_line": ["The First Portal", "Mirror Worlds", "The Time Paradox"],
+        "reward": {"gold": 3500, "exp": 4500, "item": "Dimensional Compass"}
+    },
+    "Legacy of the Gods": {
+        "title": "Legacy of the Gods",
+        "description": "Ancient deities have taken notice of your heroic deeds. Now they challenge you to trials that will test the limits of your abilities.",
+        "required_level": 40,
+        "post_game": True,
+        "quest_line": ["Divine Challenge", "The Celestial Forge", "Ascension"],
+        "reward": {"gold": 4000, "exp": 5000, "item": "Godforged Artifact"}
+    },
     "Chapter 3: Shadows of the Past": {
         "title": "Shadows of the Past",
         "description": "Dark secrets emerge from the shadows of Shadowmere, threatening to unravel the peace. The hero must confront the darkness within.",
@@ -420,26 +494,26 @@ STORYLINE = {
         "quest_line": ["The Shadow's Call", "Ancient Secrets", "The Final Shadow"],
         "reward": {"gold": 1000, "exp": 1500, "item": "Shadow Blade"}
     },
-    "Chapter 4: The Shogunate's Struggle": {
-        "title": "The Shogunate's Struggle",
-        "description": "The Shogunate of Shirui faces tyranny and rebellion. The hero must navigate political intrigue and battle fierce warriors to restore balance.",
+    "Chapter 4: The Dark Sun's Rise": {
+        "title": "The Dark Sun's Rise",
+        "description": "The Dark Sun Order, the Empire's ruthless secret police, is expanding its power. You must uncover their plans before it's too late.",
         "required_level": 15,
-        "quest_line": ["Free the people", "Shogun's Challenge", "Kitsune's Secret"],
-        "reward": {"gold": 1500, "exp": 2000, "item": "Samurai Armor"}
+        "quest_line": ["Shadow Infiltration", "The Informant", "Dark Sun Archives"],
+        "reward": {"gold": 1500, "exp": 2000, "item": "Shadow Cloak"}
     },
-    "Chapter 5: The Iron Caliphate": {
-        "title": "The Iron Caliphate",
-        "description": "The Iron Caliphate of Al-Khilafah Al-Hadidiyah rises with an iron fist. The hero must face powerful foes and uncover ancient mysteries.",
+    "Chapter 5: Imperial Machinations": {
+        "title": "Imperial Machinations",
+        "description": "The Empire of Eternal Flame strengthens its grip on the lands while the Dark Sun Order enforces their will. You discover a resistance movement.",
         "required_level": 20,
-        "quest_line": ["Caliph's Wrath", "Guardian's Siege", "Knight's Honor"],
-        "reward": {"gold": 2000, "exp": 2500, "item": "Iron Caliph's Crown"}
+        "quest_line": ["Resistance Contact", "Imperial Fortress", "Escape from the Capital"],
+        "reward": {"gold": 2000, "exp": 2500, "item": "Resistance Insignia"}
     },
-    "Chapter 6: The Empire of Fire and Chains": {
-        "title": "The Empire of Fire and Chains",
-        "description": "The Tlācahcāyōtl Tletl Tecpanēcatl empire threatens to engulf the land in flames and chains. The hero must rally allies and ignite hope.",
+    "Chapter 6: Revolution's Dawn": {
+        "title": "Revolution's Dawn",
+        "description": "The time has come to strike against the Empire and the Dark Sun Order. You must unite the rebel factions and lead the final assault.",
         "required_level": 25,
-        "quest_line": ["Emperor's Decree", "Order of the Black Sun", "Sacred Fire"],
-        "reward": {"gold": 2500, "exp": 3000, "item": "Emperor's Crown"}
+        "quest_line": ["Uniting the Factions", "Battle for Freedom", "Emperor's Downfall"],
+        "reward": {"gold": 2500, "exp": 3000, "item": "Freedom's Banner"}
     },
     "Chapter 7: The Crimson Abyss": {
         "title": "The Crimson Abyss",
@@ -603,10 +677,22 @@ LOCATIONS= {
         "monsters": ["Crystal Golem", "Glimmering Sprite"],
         "description": "A cave filled with shimmering crystals and magical creatures."
     },
-    "Dark Legion's Fortress": {
+    "Imperial City": {
+        "type": "city",
+        "shops": ["Imperial Armory", "Grand Bazaar", "Royal Jeweler", "Alchemist's Guild"],
+        "monsters": ["Imperial Guard", "Dark Sun Agent", "Royal Knight"],
+        "description": "The sprawling capital of the Empire of Eternal Flame, with grand architecture and oppressive security provided by the Dark Sun Order."
+    },
+    "Dark Sun Headquarters": {
         "type": "dungeon",
-        "monsters": ["Dark Legionary Supreme Lord:Noctis"],
-        "description": "The stronghold of the Dark Legion, filled with powerful foes and dark magic."
+        "monsters": ["Dark Sun Enforcer", "Shadow Mage", "Dark Sun Commander", "Sun Lord Eclipsius"],
+        "description": "The hidden base of operations for the Dark Sun Order, the Empire's ruthless secret police. Few who enter ever leave."
+    },
+    "Resistance Hideout": {
+        "type": "town",
+        "shops": ["Blackmarket Trader", "Resistance Armorer", "Safe House"],
+        "monsters": ["Imperial Spy", "Mercenary"],
+        "description": "A secret network of caves and tunnels where rebels plan their resistance against the Empire and the Dark Sun Order."
     },
 }
 
@@ -808,59 +894,79 @@ QUESTS = [
     },
     {
         "id": 401,
-        "name": "Shogun's Challenge",
-        "description": "Face the Shogun's elite guards and prove your strength.",
-        "target": {"monster": "Shogun's Guard", "count": 3},
-        "reward": {"gold": 1200, "exp": 1600, "item": "Shogun's Blade"},
+        "name": "Shadow Infiltration",
+        "description": "Infiltrate the Dark Sun Order's outer circle to gather intelligence on their operations.",
+        "target": {"monster": "Dark Sun Agent", "count": 3},
+        "reward": {"gold": 1200, "exp": 1600, "item": "Agent's Mask"},
         "story": True,
         "chapter": 4,
-        "travel_locations": ["Shogunate Of Shirui"]
+        "travel_locations": ["Imperial City", "Shadowmere"]
     },
     {
         "id": 402,
-        "name": "Kitsune's Secret",
-        "description": "Uncover the mysterious secrets of the Kitsune Warrior.",
-        "target": {"monster": "Kitsune Warrior", "count": 1},
-        "reward": {"gold": 1300, "exp": 1700, "item": "Kitsune Mask"},
+        "name": "The Informant",
+        "description": "Make contact with a secret informant who can provide intel on the Dark Sun Order.",
+        "target": {"npc": "Mysterious Informant", "count": 1},
+        "reward": {"gold": 1300, "exp": 1700, "item": "Encrypted Documents"},
         "story": True,
         "chapter": 4,
-        "travel_locations": ["Shogunate Of Shirui"]
+        "travel_locations": ["Stormhaven", "Shadowmere"]
+    },
+    {
+        "id": 403,
+        "name": "Dark Sun Archives",
+        "description": "Break into the Dark Sun archives to uncover evidence of their crimes.",
+        "target": {"location": "Imperial City", "count": 1},
+        "reward": {"gold": 1400, "exp": 1800, "item": "Dark Sun Cipher"},
+        "story": True,
+        "chapter": 4,
+        "travel_locations": ["Imperial City", "Dark Sun Headquarters"]
     },
     {
         "id": 501,
-        "name": "Caliph's Wrath",
-        "description": "Defend against the wrath of the Iron Caliphate's forces.",
-        "target": {"monster": "Al-Hadidiyah Knight", "count": 5},
-        "reward": {"gold": 1800, "exp": 2200, "item": "Knight's Shield"},
+        "name": "Resistance Contact",
+        "description": "Establish contact with the resistance fighting against the Empire and the Dark Sun Order.",
+        "target": {"npc": "Resistance Leader", "count": 1},
+        "reward": {"gold": 1600, "exp": 2000, "item": "Resistance Badge"},
         "story": True,
         "chapter": 5,
-        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+        "travel_locations": ["Resistance Hideout", "Greenwood Village"]
     },
     {
         "id": 502,
-        "name": "Guardian's Siege",
-        "description": "Break the siege laid by the Iron Caliphate's guardians.",
-        "target": {"monster": "Al-Hadidiyah Guardian", "count": 3},
-        "reward": {"gold": 1900, "exp": 2300, "item": "Guardian's Blade"},
+        "name": "Imperial Fortress",
+        "description": "Infiltrate one of the Empire's fortresses to sabotage their weapons supply.",
+        "target": {"location": "Imperial Fortress", "count": 1},
+        "reward": {"gold": 1800, "exp": 2200, "item": "Imperial Officer's Key"},
         "story": True,
         "chapter": 5,
-        "travel_locations": ["The Iron Caliphate of Al-Khilafah Al-Hadidiyah"]
+        "travel_locations": ["Imperial City", "Thundercliff Hold"]
+    },
+    {
+        "id": 503,
+        "name": "Escape from the Capital",
+        "description": "Help resistance fighters escape from the Imperial City while evading Dark Sun agents.",
+        "target": {"npc": "Captured Resistance Member", "count": 3},
+        "reward": {"gold": 2000, "exp": 2400, "item": "Shadow Cloak"},
+        "story": True,
+        "chapter": 5,
+        "travel_locations": ["Imperial City", "Resistance Hideout"]
     },
     {
         "id": 601,
-        "name": "Emperor's Decree",
-        "description": "Carry out the Emperor's decree and face the Order of the Black Sun.",
-        "target": {"monster": "Secret Police from The Order of the Black Sun (Yohualli Tōnatiuh)", "count": 4},
-        "reward": {"gold": 2200, "exp": 2700, "item": "Black Sun Dagger"},
+        "name": "Uniting the Factions",
+        "description": "Travel across the land to unite the various resistance factions against the Empire.",
+        "target": {"npc": "Faction Leader", "count": 4},
+        "reward": {"gold": 2200, "exp": 2700, "item": "Unity Banner"},
         "story": True,
         "chapter": 6,
-        "travel_locations": ["Tlācahcāyōtl Tletl Tecpanēcatl/Empire of the Sacred Fire and Chains"]
+        "travel_locations": ["Stormhaven", "Verdant Spire", "Moonveil Harbor", "Resistance Hideout"]
     },
     {
         "id": 602,
-        "name": "Order of the Black Sun",
-        "description": "Infiltrate the Order and uncover their dark plans.",
-        "target": {"monster": "Tlācahcāyōtl Tletl Tecpanēcatl Sorcerer", "count": 2},
+        "name": "Battle for Freedom",
+        "description": "Lead an assault on the Dark Sun Headquarters to dismantle their power structure.",
+        "target": {"monster": "Dark Sun Commander", "count": 1},
         "reward": {"gold": 2300, "exp": 2800, "item": "Sorcerer's Tome"},
         "story": True,
         "chapter": 6,
@@ -1358,7 +1464,7 @@ def sell_item(item_name: str) -> None:
 
     # Check if item has a market price
     if item not in MARKET_PRICES:
-        print(f"This item cannot be sold.")
+        print("This item cannot be sold.")
         return
 
     # Remove from inventory and add gold
@@ -1427,159 +1533,159 @@ shop_items = [
 
 monsters = [
     # Greenwood Village Monsters (Level 1-2)
-    {"name": "Goblin", "level": 1, "health": 50, "attack": 10, "drops": ["Gold Coin", "Wooden Sword"]},
-    {"name": "Wolf", "level": 2, "health": 60, "attack": 12, "drops": ["Wolf Pelt", "Gold Coin"]},
-    {"name": "Forest Spider", "level": 1, "health": 45, "attack": 8, "drops": ["Spider Silk", "Gold Coin"]},
-    {"name": "Bandit", "level": 2, "health": 65, "attack": 14, "drops": ["Leather Armor", "Gold Coin"]},
-    {"name": "Dire Wolf", "level": 2, "health": 70, "attack": 15, "drops": ["Wolf Fang", "Gold Coin"]},
-    {"name": "Goblin Shaman", "level": 2, "health": 55, "attack": 13, "drops": ["Goblin Staff", "Gold Coin"], "boss": True},
-    {"name": "Goblin King", "level": 3, "health": 80, "attack": 20, "drops": ["Goblin Crown", "Gold Coin"],"boss": True},
+    {"name": "Goblin", "level": 1, "health": 50, "attack": 10, "drops": ["Gold Coin", "Wooden Sword"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Wolf", "level": 2, "health": 60, "attack": 12, "drops": ["Wolf Pelt", "Gold Coin"], "element": "Aer", "immunities": ["Aer"]},
+    {"name": "Forest Spider", "level": 1, "health": 45, "attack": 8, "drops": ["Spider Silk", "Gold Coin"], "element": "Venēnum", "immunities": ["Venēnum"]},
+    {"name": "Bandit", "level": 2, "health": 65, "attack": 14, "drops": ["Leather Armor", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Dire Wolf", "level": 2, "health": 70, "attack": 15, "drops": ["Wolf Fang", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Goblin Shaman", "level": 2, "health": 55, "attack": 13, "drops": ["Goblin Staff", "Gold Coin"], "boss": True, "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Goblin King", "level": 3, "health": 80, "attack": 20, "drops": ["Goblin Crown", "Gold Coin"], "boss": True, "element": "Gē", "immunities": ["Gē"]},
 
     # Added missing monsters
-    {"name": "Dragon Whelp", "level": 4, "health": 100, "attack": 25, "drops": ["Dragon Scale", "Gold Coin"]},
-    {"name": "Shadow Master", "level": 10, "health": 300, "attack": 60, "drops": ["Shadow Master's Cloak", "Gold Coin"], "boss": True},
-    {"name": "Blight Beast", "level": 7, "health": 180, "attack": 40, "drops": ["Blight Beast Claw", "Gold Coin"]},
+    {"name": "Dragon Whelp", "level": 4, "health": 100, "attack": 25, "drops": ["Dragon Scale", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Shadow Master", "level": 10, "health": 300, "attack": 60, "drops": ["Shadow Master's Cloak", "Gold Coin"], "boss": True, "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Blight Beast", "level": 7, "health": 180, "attack": 40, "drops": ["Blight Beast Claw", "Gold Coin"], "element": "Venēnum", "immunities": ["Venēnum"]},
 
     # Stormhaven Monsters (Level 2-3)
-    {"name": "Skeleton", "level": 2, "health": 75, "attack": 15, "drops": ["Gold Coin", "Bone Armor"]},
-    {"name": "Ghost", "level": 3, "health": 70, "attack": 18, "drops": ["Spirit Essence", "Gold Coin"]},
-    {"name": "Storm Elemental", "level": 3, "health": 85, "attack": 20, "drops": ["Storm Crystal", "Gold Coin"]},
-    {"name": "Pirate Scout", "level": 2, "health": 70, "attack": 16, "drops": ["Cutlass", "Gold Coin"]},
-    {"name": "Haunted Armor", "level": 3, "health": 80, "attack": 22, "drops": ["Cursed Shield", "Gold Coin"]},
-    {"name": "Sea Serpent", "level": 3, "health": 90, "attack": 25, "drops": ["Serpent Scale", "Gold Coin"]},
-    {"name": "Dreadlord Varkhull, the Crimson Abyss Pirate Captain", "level": 5, "health": 150, "attack": 30, "drops": ["Crimson Cutlass", "Gold Coin"], "boss": True},
+    {"name": "Skeleton", "level": 2, "health": 75, "attack": 15, "drops": ["Gold Coin", "Bone Armor"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Ghost", "level": 3, "health": 70, "attack": 18, "drops": ["Spirit Essence", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Storm Elemental", "level": 3, "health": 85, "attack": 20, "drops": ["Storm Crystal", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
+    {"name": "Pirate Scout", "level": 2, "health": 70, "attack": 16, "drops": ["Cutlass", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Haunted Armor", "level": 3, "health": 80, "attack": 22, "drops": ["Cursed Shield", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Sea Serpent", "level": 3, "health": 90, "attack": 25, "drops": ["Serpent Scale", "Gold Coin"], "element": "Aqua", "immunities": ["Aqua"]},
+    {"name": "Dreadlord Varkhull, the Crimson Abyss Pirate Captain", "level": 5, "health": 150, "attack": 30, "drops": ["Crimson Cutlass", "Gold Coin"], "boss": True, "element": "Ferrum", "immunities": ["Ferrum"]},
 
     # Dragon's Peak Monsters (Level 5-6)
-    {"name": "Fire Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Flame Sword"]},
-    {"name": "Ice Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Ice Sword"]},
-    {"name": "Electrical Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Lightning Sword"]},
-    {"name": "Plant Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Nature Sword"]},
-    {"name": "Earth Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Earth Sword"]},
-    {"name": "Wind Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Wind Sword"]},
-    {"name": "Water Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Water Sword"]},
-    {"name": "Fire Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"]},
-    {"name": "Ice Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"]},
-    {"name": "Thunder Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"]},
-    {"name": "Earth Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"]},
-    {"name": "Dragon Knight", "level": 5, "health": 150, "attack": 28, "drops": ["Dragon Armor", "Gold Coin"]},
-    {"name": "Water Wyvern", "level": 5, "health": 160, "attack": 30, "drops": ["Wyvern Wing", "Gold Coin"]},
-    {"name": "Dragon Overlord", "level": 12, "health": 600, "attack": 90, "drops": ["Dragon Scale", "Dragonfire Sword", "Gold Coin"], "boss": True},
+    {"name": "Fire Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Flame Sword"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Ice Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Ice Sword"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Electrical Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Lightning Sword"], "element": "Fulmen", "immunities": ["Fulmen"]},
+    {"name": "Plant Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Nature Sword"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Earth Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Earth Sword"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Wind Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Wind Sword"], "element": "Aer", "immunities": ["Aer"]},
+    {"name": "Water Dragon", "level": 6, "health": 200, "attack": 35, "drops": ["Dragon Scale", "Gold Coin", "Water Sword"], "element": "Aqua", "immunities": ["Aqua"]},
+    {"name": "Fire Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Ice Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Thunder Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
+    {"name": "Earth Wyvern", "level": 5, "health": 150, "attack": 28, "drops": ["Wyvern Scale", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Dragon Knight", "level": 5, "health": 150, "attack": 28, "drops": ["Dragon Armor", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Water Wyvern", "level": 5, "health": 160, "attack": 30, "drops": ["Wyvern Wing", "Gold Coin"], "element": "Aqua", "immunities": ["Aqua"]},
+    {"name": "Dragon Overlord", "level": 12, "health": 600, "attack": 90, "drops": ["Dragon Scale", "Dragonfire Sword", "Gold Coin"], "boss": True, "element": "Ignis", "immunities": ["Ignis"]},
 
     # Crystal Cave Monsters (Level 3-4)
-    {"name": "Crystal Golem", "level": 4, "health": 120, "attack": 25, "drops": ["Crystal Shard", "Gold Coin"]},
-    {"name": "Cave Troll", "level": 4, "health": 130, "attack": 28, "drops": ["Troll Hide", "Gold Coin"]},
-    {"name": "Crystal Spider", "level": 3, "health": 90, "attack": 22, "drops": ["Crystal Web", "Gold Coin"]},
-    {"name": "Rock Elemental", "level": 4, "health": 140, "attack": 26, "drops": ["Earth Stone", "Gold Coin"]},
-    {"name": "Cave Bat", "level": 3, "health": 80, "attack": 20, "drops": ["Bat Wing", "Gold Coin"]},
-    {"name": "Crystal Tarantula", "level": 4, "health": 110, "attack": 24, "drops": ["Crystal Fang", "Gold Coin"]},
-    {"name": "Crystal Giant Tarantula", "level": 7, "health": 200, "attack": 40, "drops": ["Crystal Eye", "Gold Coin"]},
-    {"name": "Crystal Serpent", "level": 4, "health": 110, "attack": 24, "drops": ["Serpent Scale", "Gold Coin"]},
-    {"name": "Corrupted Miner", "level": 4, "health": 115, "attack": 25, "drops": ["Miner's Pickaxe", "Gold Coin"]},
+    {"name": "Crystal Golem", "level": 4, "health": 120, "attack": 25, "drops": ["Crystal Shard", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Cave Troll", "level": 4, "health": 130, "attack": 28, "drops": ["Troll Hide", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Crystal Spider", "level": 3, "health": 90, "attack": 22, "drops": ["Crystal Web", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Rock Elemental", "level": 4, "health": 140, "attack": 26, "drops": ["Earth Stone", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Cave Bat", "level": 3, "health": 80, "attack": 20, "drops": ["Bat Wing", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Crystal Tarantula", "level": 4, "health": 110, "attack": 24, "drops": ["Crystal Fang", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Crystal Giant Tarantula", "level": 7, "health": 200, "attack": 40, "drops": ["Crystal Eye", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Crystal Serpent", "level": 4, "health": 110, "attack": 24, "drops": ["Serpent Scale", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Corrupted Miner", "level": 4, "health": 115, "attack": 25, "drops": ["Miner's Pickaxe", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
 
     # Shadowmere Monsters (Level 4-5)
-    {"name": "Shadow Beast", "level": 4, "health": 110, "attack": 24, "drops": ["Shadow Essence", "Gold Coin"]},
-    {"name": "Dark Knight", "level": 5, "health": 140, "attack": 28, "drops": ["Dark Armor", "Gold Coin"]},
-    {"name": "Wraith", "level": 5, "health": 120, "attack": 30, "drops": ["Soul Gem", "Gold Coin"]},
-    {"name": "Night Stalker", "level": 4, "health": 100, "attack": 26, "drops": ["Night Blade", "Gold Coin"]},
-    {"name": "Shadow Assassin", "level": 5, "health": 130, "attack": 32, "drops": ["Assassin's Dagger", "Gold Coin"]},
-    {"name": "Vampire", "level": 5, "health": 150, "attack": 35, "drops": ["Vampire Fang", "Gold Coin"]},
-    {"name": "Undead Knight", "level": 5, "health": 160, "attack": 38, "drops": ["Undead Blade", "Gold Coin"]},
-    {"name": "Undead Army General","level": 7, "health": 200, "attack": 40, "drops": ["Undead Armor", "Gold Coin"]},
-    {"name": "Undead Army Commander","level": 8, "health": 250, "attack": 50, "drops": ["Undead's Blade", "Gold Coin"]},
+    {"name": "Shadow Beast", "level": 4, "health": 110, "attack": 24, "drops": ["Shadow Essence", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Dark Knight", "level": 5, "health": 140, "attack": 28, "drops": ["Dark Armor", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Wraith", "level": 5, "health": 120, "attack": 30, "drops": ["Soul Gem", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Night Stalker", "level": 4, "health": 100, "attack": 26, "drops": ["Night Blade", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Shadow Assassin", "level": 5, "health": 130, "attack": 32, "drops": ["Assassin's Dagger", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Vampire", "level": 5, "health": 150, "attack": 35, "drops": ["Vampire Fang", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Undead Knight", "level": 5, "health": 160, "attack": 38, "drops": ["Undead Blade", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Undead Army General","level": 7, "health": 200, "attack": 40, "drops": ["Undead Armor", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Undead Army Commander","level": 8, "health": 250, "attack": 50, "drops": ["Undead's Blade", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
 
     # Frostvale Monsters (Level 3-4)
-    {"name": "Ice Troll", "level": 4, "health": 125, "attack": 26, "drops": ["Frozen Heart", "Gold Coin"]},
-    {"name": "Frost Giant", "level": 4, "health": 140, "attack": 28, "drops": ["Giant's Club", "Gold Coin"]},
-    {"name": "Snow Wolf", "level": 3, "health": 95, "attack": 20, "drops": ["Frost Pelt", "Gold Coin"]},
-    {"name": "Ice Elemental", "level": 4, "health": 115, "attack": 24, "drops": ["Ice Crystal", "Gold Coin"]},
-    {"name": "Frost Wraith", "level": 4, "health": 130, "attack": 30, "drops": ["Wraith Essence", "Gold Coin"]},
-    {"name": "Hatred frozen soul", "level": 5, "health": 150, "attack": 35, "drops": ["Frozen Soul", "Gold Coin"]},
-    {"name": "Ice Revenant", "level": 5, "health": 160, "attack": 32, "drops": ["Frozen Heart", "Gold Coin"]},
-    {"name": "Frost vengeful eye of the snow", "level": 7, "health": 200, "attack": 40, "drops": ["Frost Eye", "Gold Coin"]},
+    {"name": "Ice Troll", "level": 4, "health": 125, "attack": 26, "drops": ["Frozen Heart", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Frost Giant", "level": 4, "health": 140, "attack": 28, "drops": ["Giant's Club", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Snow Wolf", "level": 3, "health": 95, "attack": 20, "drops": ["Frost Pelt", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Ice Elemental", "level": 4, "health": 115, "attack": 24, "drops": ["Ice Crystal", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Frost Wraith", "level": 4, "health": 130, "attack": 30, "drops": ["Wraith Essence", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Hatred frozen soul", "level": 5, "health": 150, "attack": 35, "drops": ["Frozen Soul", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Ice Revenant", "level": 5, "health": 160, "attack": 32, "drops": ["Frozen Heart", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
+    {"name": "Frost vengeful eye of the snow", "level": 7, "health": 200, "attack": 40, "drops": ["Frost Eye", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
 
     # Long Shui Zhen Monsters (Level 4-8)
-    {"name": "Dragon Spirit", "level": 5, "health": 130, "attack": 28, "drops": ["Spirit Pearl", "Gold Coin"]},
-    {"name": "Water Elemental", "level": 4, "health": 110, "attack": 24, "drops": ["Water Essence", "Gold Coin"]},
-    {"name": "Jade Warrior", "level": 5, "health": 140, "attack": 26, "drops": ["Jade Sword", "Gold Coin"]},
-    {"name": "Jade General", "level": 5, "health": 150, "attack": 30, "drops": ["Jade Armor", "Gold Coin"]},
-    {"name": "Jade soldier", "level": 4, "health": 120, "attack": 22, "drops": ["Jade Shield", "Gold Coin"]},
-    {"name": "Jade Emperor's Guard", "level": 6, "health": 160, "attack": 32, "drops": ["Jade Shield", "Gold Coin"]},
-    {"name": "Jade Emperor", "level": 8, "health": 390, "attack": 65, "drops": ["Jade Crown", "Gold Coin"]},
-    {"name": "Legendary Dragon", "level": 8, "health": 400, "attack": 70, "drops": ["Dragon Scale", "Gold Coin"]},
+    {"name": "Dragon Spirit", "level": 5, "health": 130, "attack": 28, "drops": ["Spirit Pearl", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Water Elemental", "level": 4, "health": 110, "attack": 24, "drops": ["Water Essence", "Gold Coin"], "element": "Aqua", "immunities": ["Aqua"]},
+    {"name": "Jade Warrior", "level": 5, "health": 140, "attack": 26, "drops": ["Jade Sword", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Jade General", "level": 5, "health": 150, "attack": 30, "drops": ["Jade Armor", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Jade soldier", "level": 4, "health": 120, "attack": 22, "drops": ["Jade Shield", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Jade Emperor's Guard", "level": 6, "health": 160, "attack": 32, "drops": ["Jade Shield", "Gold Coin"], "element": "Lux", "immunities": ["Lux"]},
+    {"name": "Jade Emperor", "level": 8, "health": 390, "attack": 65, "drops": ["Jade Crown", "Gold Coin"], "element": "Lux", "immunities": ["Lux"]},
+    {"name": "Legendary Dragon", "level": 8, "health": 400, "attack": 70, "drops": ["Dragon Scale", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
 
     # Jade Lotus Village Monsters (Level 2-3)
-    {"name": "Lotus Spirit", "level": 3, "health": 85, "attack": 18, "drops": ["Lotus Petal", "Gold Coin"]},
-    {"name": "Pond Serpent", "level": 2, "health": 70, "attack": 16, "drops": ["Serpent Scale", "Gold Coin"]},
-    {"name": "Garden Guardian", "level": 3, "health": 90, "attack": 20, "drops": ["Sacred Charm", "Gold Coin"]},
-    {"name": "Lotus Guardian", "level": 3, "health": 95, "attack": 22, "drops": ["Lotus Shield", "Gold Coin"]},
-    {"name": "Koi Empress", "level": 3, "health": 100, "attack": 24, "drops": ["Koi Scale", "Gold Coin"]},
+    {"name": "Lotus Spirit", "level": 3, "health": 85, "attack": 18, "drops": ["Lotus Petal", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Pond Serpent", "level": 2, "health": 70, "attack": 16, "drops": ["Serpent Scale", "Gold Coin"], "element": "Aqua", "immunities": ["Aqua"]},
+    {"name": "Garden Guardian", "level": 3, "health": 90, "attack": 20, "drops": ["Sacred Charm", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Lotus Guardian", "level": 3, "health": 95, "attack": 22, "drops": ["Lotus Shield", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Koi Empress", "level": 3, "health": 100, "attack": 24, "drops": ["Koi Scale", "Gold Coin"], "element": "Aqua", "immunities": ["Aqua"]},
 
     # Silent Ashes Monsters (Level 5-6)
-    {"name": "Ash Revenant", "level": 6, "health": 160, "attack": 32, "drops": ["Revenant Ash", "Gold Coin"]},
-    {"name": "Cursed Wanderer", "level": 5, "health": 140, "attack": 28, "drops": ["Cursed Relic", "Gold Coin"]},
-    {"name": "Phoenix", "level": 6, "health": 180, "attack": 34, "drops": ["Phoenix Feather", "Gold Coin"]},
-    {"name": "Ash Wraith", "level": 5, "health": 150, "attack": 30, "drops": ["Wraith Essence", "Gold Coin"]},
-    {"name": "Burnt Guardian", "level": 5, "health": 145, "attack": 29, "drops": ["Guardian's Ash", "Gold Coin"]},
-    {"name": "Magmatic Knight,The fallen knight of the ashes", "level": 6, "health": 200, "attack": 40, "drops": ["Knight's Ash", "Gold Coin"]},
+    {"name": "Ash Revenant", "level": 6, "health": 160, "attack": 32, "drops": ["Revenant Ash", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Cursed Wanderer", "level": 5, "health": 140, "attack": 28, "drops": ["Cursed Relic", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Phoenix", "level": 6, "health": 180, "attack": 34, "drops": ["Phoenix Feather", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Ash Wraith", "level": 5, "health": 150, "attack": 30, "drops": ["Wraith Essence", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Burnt Guardian", "level": 5, "health": 145, "attack": 29, "drops": ["Guardian's Ash", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Magmatic Knight,The fallen knight of the ashes", "level": 6, "health": 200, "attack": 40, "drops": ["Knight's Ash", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
 
     # Thundercliff Hold Monsters (Level 4-5)
-    {"name": "Thunder Elemental", "level": 5, "health": 130, "attack": 28, "drops": ["Storm Crystal", "Gold Coin"]},
-    {"name": "Rock Wyvern", "level": 4, "health": 120, "attack": 26, "drops": ["Wyvern Scale", "Gold Coin"]},
-    {"name": "Storm Hawk", "level": 4, "health": 110, "attack": 24, "drops": ["Hawk Feather", "Gold Coin"]},
-    {"name": "Storm Wyvern", "level": 5, "health": 140, "attack": 30, "drops": ["Wyvern Wing", "Gold Coin"]},
-    {"name": "Thunder Mage", "level": 5, "health": 150, "attack": 32, "drops": ["Thunder Staff", "Gold Coin"]},
-    {"name": "Storm Guardian", "level": 5, "health": 160, "attack": 34, "drops": ["Guardian's Storm", "Gold Coin"]},
-    {"name": "Vision of the Thunder,the core of the storm", "level": 5, "health": 150, "attack": 32, "drops": ["Storm Eye", "Gold Coin"]},
+    {"name": "Thunder Elemental", "level": 5, "health": 130, "attack": 28, "drops": ["Storm Crystal", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
+    {"name": "Rock Wyvern", "level": 4, "health": 120, "attack": 26, "drops": ["Wyvern Scale", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Storm Hawk", "level": 4, "health": 110, "attack": 24, "drops": ["Hawk Feather", "Gold Coin"], "element": "Aer", "immunities": ["Aer"]},
+    {"name": "Storm Wyvern", "level": 5, "health": 140, "attack": 30, "drops": ["Wyvern Wing", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
+    {"name": "Thunder Mage", "level": 5, "health": 150, "attack": 32, "drops": ["Thunder Staff", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
+    {"name": "Storm Guardian", "level": 5, "health": 160, "attack": 34, "drops": ["Guardian's Storm", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
+    {"name": "Vision of the Thunder,the core of the storm", "level": 5, "health": 150, "attack": 32, "drops": ["Storm Eye", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
 
     # Shogunate Of Shirui Monsters (Level 5-12)
-    {"name": "The Shogun", "level": 12, "health": 400, "attack": 70, "drops": ["Samurai Armor", "Gold Coin"]},
-    {"name": "Shogun's Guard", "level": 8, "health": 350, "attack": 60, "drops": ["Shogun's Blade", "Gold Coin"]},
-    {"name": "Jade Samurai", "level": 7, "health": 300, "attack": 50, "drops": ["Jade Armor", "Gold Coin"]},
-    {"name": "Kitsune Warrior", "level": 6, "health": 250, "attack": 40, "drops": ["Kitsune Mask", "Gold Coin"]},
-    {"name": "Tengu Warrior", "level": 6, "health": 240, "attack": 38, "drops": ["Tengu Feather", "Gold Coin"]},
-    {"name": "Kappa Guardian", "level": 5, "health": 220, "attack": 35, "drops": ["Kappa Shell", "Gold Coin"]},
-    {"name": "Oni Berserker", "level": 7, "health": 280, "attack": 45, "drops": ["Oni Mask", "Gold Coin"]},
-    {"name": "Corrupted Ninja", "level": 5, "health": 200, "attack": 30, "drops": ["Ninja Star", "Gold Coin"]},
-    {"name": "Shadow Samurai", "level": 6, "health": 260, "attack": 42, "drops": ["Shadow Blade", "Gold Coin"]},
-    {"name": "Possessed Katana", "level": 5, "health": 210, "attack": 36, "drops": ["Cursed Katana", "Gold Coin"]},
+    {"name": "The Shogun", "level": 12, "health": 400, "attack": 70, "drops": ["Samurai Armor", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Shogun's Guard", "level": 8, "health": 350, "attack": 60, "drops": ["Shogun's Blade", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Jade Samurai", "level": 7, "health": 300, "attack": 50, "drops": ["Jade Armor", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
+    {"name": "Kitsune Warrior", "level": 6, "health": 250, "attack": 40, "drops": ["Kitsune Mask", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Tengu Warrior", "level": 6, "health": 240, "attack": 38, "drops": ["Tengu Feather", "Gold Coin"], "element": "Aer", "immunities": ["Aer"]},
+    {"name": "Kappa Guardian", "level": 5, "health": 220, "attack": 35, "drops": ["Kappa Shell", "Gold Coin"], "element": "Aqua", "immunities": ["Aqua"]},
+    {"name": "Oni Berserker", "level": 7, "health": 280, "attack": 45, "drops": ["Oni Mask", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Corrupted Ninja", "level": 5, "health": 200, "attack": 30, "drops": ["Ninja Star", "Gold Coin"], "element": "Venēnum", "immunities": ["Venēnum"]},
+    {"name": "Shadow Samurai", "level": 6, "health": 260, "attack": 42, "drops": ["Shadow Blade", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Possessed Katana", "level": 5, "health": 210, "attack": 36, "drops": ["Cursed Katana", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
 
     # The Iron Caliphate of Al-Khilafah Al-Hadidiyah Monsters (Level 7-12)
-    {"name": "Az-Zālim al-Muqaddas,The Caliph of Al-Khilafah Al-Hadidiyah", "level": 12, "health": 500, "attack": 80, "drops": ["Iron Caliph's Crown", "Gold Coin"], "boss": True},
-    {"name": "Al-Hadidiyah Guardian", "level": 11, "health": 450, "attack": 75, "drops": ["Guardian's Blade", "Gold Coin"]},
-    {"name": "Al-Hadidiyah Knight", "level": 10, "health": 400, "attack": 70, "drops": ["Knight's Shield", "Gold Coin"]},
-    {"name": "Mercenary of the caliphate", "level": 9, "health": 350, "attack": 65, "drops": ["Mercenary's Dagger", "Gold Coin"]},
-    {"name": "Loyalist of the caliphate", "level": 8, "health": 300, "attack": 60, "drops": ["Loyalist's Blade", "Gold Coin"]},
-    {"name": "High Priest of the caliphate", "level": 7, "health": 250, "attack": 55, "drops": ["High Priest's Staff", "Gold Coin"]},
-    {"name": "Al-Hadidiyah Sorcerer", "level": 7, "health": 240, "attack": 50, "drops": ["Sorcerer's Tome", "Gold Coin"]},
-    {"name": "Steel Golem", "level": 8, "health": 280, "attack": 60, "drops": ["Steel Core", "Gold Coin"]},
-    {"name": "Royal Janissary", "level": 9, "health": 320, "attack": 65, "drops": ["Janissary's Blade", "Gold Coin"]},
-    {"name": "Iron Caliphate General", "level": 10, "health": 370, "attack": 70, "drops": ["General's Armor", "Gold Coin"]},
+    {"name": "Az-Zālim al-Muqaddas,The Caliph of Al-Khilafah Al-Hadidiyah", "level": 12, "health": 500, "attack": 80, "drops": ["Iron Caliph's Crown", "Gold Coin"], "boss": True, "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Al-Hadidiyah Guardian", "level": 11, "health": 450, "attack": 75, "drops": ["Guardian's Blade", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Al-Hadidiyah Knight", "level": 10, "health": 400, "attack": 70, "drops": ["Knight's Shield", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Mercenary of the caliphate", "level": 9, "health": 350, "attack": 65, "drops": ["Mercenary's Dagger", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Loyalist of the caliphate", "level": 8, "health": 300, "attack": 60, "drops": ["Loyalist's Blade", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "High Priest of the caliphate", "level": 7, "health": 250, "attack": 55, "drops": ["High Priest's Staff", "Gold Coin"], "element": "Lux", "immunities": ["Lux"]},
+    {"name": "Al-Hadidiyah Sorcerer", "level": 7, "health": 240, "attack": 50, "drops": ["Sorcerer's Tome", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Steel Golem", "level": 8, "health": 280, "attack": 60, "drops": ["Steel Core", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Royal Janissary", "level": 9, "health": 320, "attack": 65, "drops": ["Janissary's Blade", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Iron Caliphate General", "level": 10, "health": 370, "attack": 70, "drops": ["General's Armor", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
 
 
     #  Tlācahcāyōtl Tletl Tecpanēcatl/Empire of the Sacred Fire and Chains Monsters (Level 7-12)
-    {"name": "Tēcpatl Tlamacazqui,The Emperor of the Sacred Fire and Chains", "level": 12, "health": 550, "attack": 85, "drops": ["Emperor's Crown", "Gold Coin"], "boss": True},
-    {"name": "Secret Police from The Order of the Black Sun (Yohualli Tōnatiuh)", "level": 10, "health": 400, "attack": 70, "drops": ["Black Sun Dagger", "Gold Coin"]},
-    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Knight", "level": 11, "health": 450, "attack": 75, "drops": ["Knight's Shield", "Gold Coin"]},
-    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Guardian", "level": 9, "health": 350, "attack": 65, "drops": ["Guardian's Blade", "Gold Coin"]},
-    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Sorcerer", "level": 8, "health": 300, "attack": 60, "drops": ["Sorcerer's Tome", "Gold Coin"]},
-    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl High Priest", "level": 7, "health": 250, "attack": 55, "drops": ["High Priest's Staff", "Gold Coin"]},
-    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Mercenary", "level": 9, "health": 320, "attack": 65, "drops": ["Mercenary's Dagger", "Gold Coin"]},
-    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Loyalist", "level": 8, "health": 280, "attack": 60, "drops": ["Loyalist's Blade", "Gold Coin"]},
-    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Royal Guard", "level": 10, "health": 370, "attack": 70, "drops": ["Royal Guard's Sword", "Gold Coin"]},
+    {"name": "Tēcpatl Tlamacazqui,The Emperor of the Sacred Fire and Chains", "level": 12, "health": 550, "attack": 85, "drops": ["Emperor's Crown", "Gold Coin"], "boss": True, "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Secret Police from The Order of the Black Sun (Yohualli Tōnatiuh)", "level": 10, "health": 400, "attack": 70, "drops": ["Black Sun Dagger", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Knight", "level": 11, "health": 450, "attack": 75, "drops": ["Knight's Shield", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Guardian", "level": 9, "health": 350, "attack": 65, "drops": ["Guardian's Blade", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Sorcerer", "level": 8, "health": 300, "attack": 60, "drops": ["Sorcerer's Tome", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl High Priest", "level": 7, "health": 250, "attack": 55, "drops": ["High Priest's Staff", "Gold Coin"], "element": "Lux", "immunities": ["Lux"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Mercenary", "level": 9, "health": 320, "attack": 65, "drops": ["Mercenary's Dagger", "Gold Coin"], "element": "Ferrum", "immunities": ["Ferrum"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Loyalist", "level": 8, "health": 280, "attack": 60, "drops": ["Loyalist's Blade", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Tlācahcāyōtl Tletl Tecpanēcatl Royal Guard", "level": 10, "health": 370, "attack": 70, "drops": ["Royal Guard's Sword", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
 
      # Crimson Abyss Monsters (Level 9-16)
-    {"name": "Crimson Abyss Demon", "level": 15, "health": 600, "attack": 100, "drops": ["Demon's Heart", "Gold Coin"]},
-    {"name": "Crimson Abyss Knight", "level": 14, "health": 550, "attack": 90, "drops": ["Knight's Blade", "Gold Coin"]},
-    {"name": "Crimson Abyss Sorcerer", "level": 13, "health": 500, "attack": 80, "drops": ["Sorcerer's Staff", "Gold Coin"]},
-    {"name": "Crimson Abyss Guardian", "level": 12, "health": 450, "attack": 75, "drops": ["Guardian's Shield", "Gold Coin"]},
-    {"name": "Abyssal Leviathan", "level": 16, "health": 700, "attack": 120, "drops": ["Leviathan Scale", "Gold Coin"], "boss": True},
+    {"name": "Crimson Abyss Demon", "level": 15, "health": 600, "attack": 100, "drops": ["Demon's Heart", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Crimson Abyss Knight", "level": 14, "health": 550, "attack": 90, "drops": ["Knight's Blade", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Crimson Abyss Sorcerer", "level": 13, "health": 500, "attack": 80, "drops": ["Sorcerer's Staff", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Crimson Abyss Guardian", "level": 12, "health": 450, "attack": 75, "drops": ["Guardian's Shield", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
+    {"name": "Abyssal Leviathan", "level": 16, "health": 700, "attack": 120, "drops": ["Leviathan Scale", "Gold Coin"], "boss": True, "element": "Aqua", "immunities": ["Aqua"]},
 
     # The Dark Legion (Level 17-20)
-    {"name": "Dark Legion Elite", "level": 17, "health": 800, "attack": 130, "drops": ["Dark Legion Armor", "Gold Coin"]},
-    {"name": "Dark Legion Warlock", "level": 18, "health": 750, "attack": 140, "drops": ["Warlock Staff", "Gold Coin"]},
-    {"name": "Dark Legion Commander", "level": 19, "health": 900, "attack": 150, "drops": ["Commander's Blade", "Gold Coin"]},
-    {"name": "Dark Legion's Shadow Assassin", "level": 17, "health": 700, "attack": 160, "drops": ["Shadow Dagger", "Gold Coin"]},
-    {"name": "Dark Legion Archpriest", "level": 18, "health": 850, "attack": 145, "drops": ["Dark Tome", "Gold Coin"]},
+    {"name": "Dark Legion Elite", "level": 17, "health": 800, "attack": 130, "drops": ["Dark Legion Armor", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Dark Legion Warlock", "level": 18, "health": 750, "attack": 140, "drops": ["Warlock Staff", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
+    {"name": "Dark Legion Commander", "level": 19, "health": 900, "attack": 150, "drops": ["Commander's Blade", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Dark Legion's Shadow Assassin", "level": 17, "health": 700, "attack": 160, "drops": ["Shadow Dagger", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
+    {"name": "Dark Legion Archpriest", "level": 18, "health": 850, "attack": 145, "drops": ["Dark Tome", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
     {"name": "Dark Legionary Supreme Lord:Noctis, the Obsidian Fallen Eternal", 
  "level": 20, 
  "health": 2000, 
@@ -1695,13 +1801,1098 @@ def grant_achievement(name):
         print(f"Description: {ACHIEVEMENTS[name]['desc']}")
         print(f"Reward: {reward}")
 
-# Enhanced crafting recipes
+# Elemental Combat Functions
+def calculate_elemental_damage(attacker_element: str, defender_element: str, base_damage: int) -> Tuple[int, str, Dict]:
+    """Calculate damage based on elemental interactions and return elemental reaction if applicable
+    
+    Args:
+        attacker_element: The element of the attacker
+        defender_element: The element of the defender
+        base_damage: The base damage amount
+        
+    Returns:
+        Tuple of (final_damage, reaction_name, reaction_effect)
+    """
+    damage_multiplier = 1.0
+    reaction_name = ""  # Empty string instead of None
+    reaction_effect = {}
+    
+    # Define damage types
+    damage_type = ELEMENTS.get(attacker_element, {}).get("damage_type", "physical")
+    
+    # Check for immunity (monster immune to their own element)
+    if attacker_element == defender_element and defender_element != "Nullum":
+        print_colored(f"The {defender_element} creature is immune to {attacker_element} damage!", WARNING)
+        return 0, "", {}  # Empty string instead of None
+    
+    # Check elemental strengths and weaknesses
+    if attacker_element in ELEMENTS and defender_element in ELEMENTS:
+        # Defender is weak to attacker's element
+        if defender_element in ELEMENTS[attacker_element].get("strength", []):
+            damage_multiplier = 1.5
+            print_colored(f"{attacker_element} is strong against {defender_element}!", OKGREEN)
+            
+        # Attacker's element is weak against defender's element
+        elif attacker_element in ELEMENTS[defender_element].get("strength", []):
+            damage_multiplier = 0.5
+            print_colored(f"{attacker_element} is weak against {defender_element}!", FAIL)
+    
+    # Check for potential elemental reaction
+    reaction_key = f"{attacker_element}+{defender_element}"
+    if reaction_key in ELEMENTAL_REACTIONS:
+        reaction = ELEMENTAL_REACTIONS[reaction_key]
+        reaction_name = reaction["name"]
+        reaction_effect = reaction["effect"]
+        reaction_multiplier = reaction["damage_multiplier"]
+        
+        # Apply elemental reaction multiplier
+        damage_multiplier *= reaction_multiplier
+        
+        print_colored(f"Elemental Reaction: {reaction_name}!", MAGENTA)
+        print_colored(f"{reaction['description']}", CYAN)
+    
+    # Calculate final damage with appropriate rounding
+    final_damage = int(base_damage * damage_multiplier)
+    
+    return final_damage, reaction_name, reaction_effect
+
+
+def apply_elemental_effects(entity_data: Dict, reaction_effect: Dict, is_player: bool = False) -> None:
+    """Apply elemental reaction effects to an entity
+    
+    Args:
+        entity_data: The entity to apply effects to (player or monster)
+        reaction_effect: The reaction effect data
+        is_player: Whether the entity is the player
+    """
+    if not reaction_effect:
+        return
+    
+    # Initialize status effects if not present
+    if "status_effects" not in entity_data:
+        entity_data["status_effects"] = {}
+    
+    duration = reaction_effect.get("duration", 3)
+    
+    # Apply each effect
+    for effect_type, effect_value in reaction_effect.items():
+        if effect_type == "duration":  # Skip the duration itself
+            continue
+            
+        # Apply damage over time effects
+        if effect_type in ["burn", "poison", "shock", "dot"]:
+            entity_data["status_effects"][effect_type] = {
+                "value": effect_value,
+                "duration": duration,
+                "description": f"Taking {effect_value} damage per turn"
+            }
+            entity_type = "You are" if is_player else "Enemy is"
+            print_colored(f"{entity_type} suffering from {effect_type} damage for {duration} turns!", WARNING)
+            
+        # Apply stat modifications
+        elif effect_type in ["attack", "defense", "evasion", "vision", "dodge", "slow", "movement"]:
+            entity_data["status_effects"][effect_type] = {
+                "value": effect_value,
+                "duration": duration,
+                "description": f"{effect_type.capitalize()} {'increased' if effect_value > 0 else 'decreased'} by {abs(effect_value)}"
+            }
+            stat_change = "boosted" if effect_value > 0 else "reduced"
+            entity_type = "Your" if is_player else "Enemy's"
+            print_colored(f"{entity_type} {effect_type} is {stat_change} by {abs(effect_value)} for {duration} turns!", CYAN if effect_value > 0 else WARNING)
+            
+        # Apply healing effects
+        elif effect_type == "heal" and effect_value > 0:
+            if is_player:
+                user_data["health"] = min(user_data["health"] + effect_value, user_data["max_health"])
+                print_colored(f"You are healed for {effect_value} HP!", OKGREEN)
+            else:
+                entity_data["health"] = min(entity_data["health"] + effect_value, entity_data.get("max_health", entity_data["health"]))
+                print_colored(f"Enemy is healed for {effect_value} HP!", FAIL)
+                
+        # Apply control effects
+        elif effect_type in ["immobilize", "stun", "confusion", "entangle"]:
+            entity_data["status_effects"][effect_type] = {
+                "value": True,
+                "duration": duration,
+                "description": f"Cannot move due to {effect_type}"
+            }
+            entity_type = "You are" if is_player else "Enemy is"
+            print_colored(f"{entity_type} {effect_type}d for {duration} turns!", WARNING if is_player else OKGREEN)
+
+
+def update_status_effects(entity_data: Dict, is_player: bool = False) -> None:
+    """Update and apply the effects of status conditions
+    
+    Args:
+        entity_data: The entity to update effects for
+        is_player: Whether the entity is the player
+    """
+    if "status_effects" not in entity_data:
+        return
+    
+    effects_to_remove = []
+    
+    for effect_name, effect_data in entity_data["status_effects"].items():
+        # Apply damage over time effects
+        if effect_name in ["burn", "poison", "shock", "dot"]:
+            damage = effect_data["value"]
+            if is_player:
+                user_data["health"] = max(0, user_data["health"] - damage)
+                print_colored(f"You take {damage} damage from {effect_name}!", FAIL)
+                if user_data["health"] <= 0:
+                    print_colored("You were defeated by status effects!", FAIL)
+            else:
+                entity_data["health"] -= damage
+                print_colored(f"Enemy takes {damage} damage from {effect_name}!", OKGREEN)
+                
+        # Decrement duration and remove expired effects
+        effect_data["duration"] -= 1
+        if effect_data["duration"] <= 0:
+            effects_to_remove.append(effect_name)
+            entity_type = "Your" if is_player else "Enemy's"
+            print_colored(f"{entity_type} {effect_name} effect has worn off.", CYAN)
+    
+    # Clean up expired effects
+    for effect_name in effects_to_remove:
+        del entity_data["status_effects"][effect_name]
+
+
+def get_player_element() -> str:
+    """Get the player's current element based on equipped items"""
+    # Default to physical damage
+    element = "Nullum"
+    
+    # Check for elemental weapon
+    if user_data.get("equipped", {}).get("weapon"):
+        weapon_name = user_data["equipped"]["weapon"]["name"]
+        
+        # Search through shop items or any available item collections
+        # Note: Just check the weapon name for now, assuming we'll add element attributes
+        # to weapons in the future
+        weapon_elements = {
+            "Flame Sword": "Ignis",
+            "Ice Sword": "Glacies",
+            "Lightning Sword": "Fulmen",
+            "Nature Sword": "Viridia",
+            "Earth Sword": "Gē",
+            "Wind Sword": "Aer",
+            "Water Sword": "Aqua",
+            "Light Sword": "Lux",
+            "Shadow Blade": "Tenebrae",
+            "Poison Dagger": "Venēnum",
+            "Steel Sword": "Ferrum",
+            "Spirit Blade": "Pneuma"
+        }
+        
+        # Check if the weapon has an elemental type
+        if weapon_name in weapon_elements:
+            element = weapon_elements[weapon_name]
+            
+    return element
+
+# Artifact categories 
+ARTIFACT_SLOTS = ["Headset", "Necklace", "Clock", "Flower", "Feather", "Ring"]
+
+# Function for enhancing weapons with enchantments
+def enchant_item() -> None:
+    """Function to enchant weapons and armor with special effects"""
+    print_header("ENCHANTMENT FORGE")
+    
+    if not user_data.get("inventory", []):
+        print_colored("You don't have any items to enchant!", FAIL)
+        return
+        
+    # Only show equipable items that can be enchanted
+    enchantable_items = []
+    for item in user_data["inventory"]:
+        if isinstance(item, dict) and item.get("type") in ["weapon", "armor"]:
+            enchantable_items.append(item)
+        elif isinstance(item, str):
+            # Check crafting recipes to see if it's a weapon or armor
+            if item in CRAFTING_RECIPES:
+                recipe = CRAFTING_RECIPES[item]
+                if recipe.get("type") in ["weapon", "armor"]:
+                    enchantable_items.append(item)
+    
+    if not enchantable_items:
+        print_colored("You don't have any items that can be enchanted!", FAIL)
+        return
+        
+    print_colored("Choose an item to enchant:", CYAN)
+    for idx, item in enumerate(enchantable_items, 1):
+        if isinstance(item, dict):
+            name = item["name"]
+            current_level = item.get("level", 1)
+            current_enchants = item.get("enchantments", {})
+            enchant_str = ", ".join([f"{ench} {lvl}" for ench, lvl in current_enchants.items()]) if current_enchants else "None"
+            print(f"{idx}. {name} (Level {current_level}) - Enchantments: {enchant_str}")
+        else:
+            print(f"{idx}. {item}")
+    
+    try:
+        choice = int(input("\nEnter item number (0 to cancel): "))
+        if choice == 0:
+            return
+        elif 1 <= choice <= len(enchantable_items):
+            selected_item = enchantable_items[choice-1]
+            
+            # If item is a string, convert to object
+            if isinstance(selected_item, str):
+                item_name = selected_item
+                if item_name in CRAFTING_RECIPES:
+                    recipe = CRAFTING_RECIPES[item_name]
+                    item_type = recipe.get("type", "")
+                    
+                    if item_type == "weapon":
+                        selected_item = {
+                            "name": item_name,
+                            "type": "weapon",
+                            "effect": recipe.get("effect", 10),
+                            "level": 1,
+                            "experience": 0,
+                            "enchantments": {},
+                            "element": recipe.get("element", "Nullum")
+                        }
+                    elif item_type == "armor":
+                        selected_item = {
+                            "name": item_name,
+                            "type": "armor", 
+                            "effect": recipe.get("effect", 5),
+                            "level": 1,
+                            "experience": 0,
+                            "enchantments": {}
+                        }
+                    
+                    # Remove string item from inventory
+                    user_data["inventory"].remove(item_name)
+                    # Add structured item to inventory
+                    user_data["inventory"].append(selected_item)
+            
+            # Show available enchantments for this item type
+            item_type = selected_item["type"] if isinstance(selected_item, dict) and "type" in selected_item else ""
+            available_enchants = []
+            
+            for enchant_name, enchant_info in ENCHANTMENTS.items():
+                if item_type in enchant_info.get("applicable_to", []):
+                    # Check if this enchantment is already at max level
+                    current_level = 0
+                    if isinstance(selected_item, dict) and "enchantments" in selected_item:
+                        if enchant_name in selected_item["enchantments"]:
+                            current_level = selected_item["enchantments"][enchant_name]
+                    
+                    max_level = enchant_info.get("max_level", 5)
+                    
+                    if current_level < max_level:
+                        available_enchants.append((enchant_name, enchant_info))
+            
+            if not available_enchants:
+                print_colored("This item has all possible enchantments at max level!", FAIL)
+                return
+                
+            item_name = selected_item["name"] if isinstance(selected_item, dict) and "name" in selected_item else str(selected_item)
+            print_colored(f"\nAvailable enchantments for {item_name}:", CYAN)
+            for idx, (enchant_name, enchant_info) in enumerate(available_enchants, 1):
+                current_level = selected_item.get("enchantments", {}).get(enchant_name, 0)
+                next_level = current_level + 1
+                materials = enchant_info.get("materials_per_level", {})
+                
+                print(f"{idx}. {enchant_name} {next_level} - {enchant_info['description']}")
+                print(f"   Required materials: " + ", ".join([f"{count} {material}" for material, count in materials.items()]))
+            
+            try:
+                enchant_choice = int(input("\nChoose enchantment (0 to cancel): "))
+                if enchant_choice == 0:
+                    return
+                elif 1 <= enchant_choice <= len(available_enchants):
+                    enchant_name, enchant_info = available_enchants[enchant_choice-1]
+                    
+                    # Check if user has necessary materials
+                    materials_needed = enchant_info.get("materials_per_level", {})
+                    missing_materials = []
+                    
+                    for material, count in materials_needed.items():
+                        player_count = 0
+                        for inv_item in user_data["inventory"]:
+                            if isinstance(inv_item, str) and inv_item == material:
+                                player_count += 1
+                            
+                        if player_count < count:
+                            missing_materials.append(f"{count - player_count} {material}")
+                    
+                    if missing_materials:
+                        print_colored("You don't have enough materials! Missing:", FAIL)
+                        for item in missing_materials:
+                            print(f"- {item}")
+                        return
+                    
+                    # Remove materials from inventory
+                    for material, count in materials_needed.items():
+                        for _ in range(count):
+                            user_data["inventory"].remove(material)
+                    
+                    # Apply enchantment
+                    current_level = selected_item.get("enchantments", {}).get(enchant_name, 0)
+                    if "enchantments" not in selected_item:
+                        selected_item["enchantments"] = {}
+                    
+                    selected_item["enchantments"][enchant_name] = current_level + 1
+                    
+                    print_colored(f"Successfully enchanted {selected_item['name']} with {enchant_name} {current_level + 1}!", OKGREEN)
+                    
+                    # If equipped, update stats
+                    for slot, equipped_item in user_data.get("equipped", {}).items():
+                        if isinstance(equipped_item, dict) and equipped_item.get("name") == selected_item["name"]:
+                            user_data["equipped"][slot] = selected_item
+                            print_colored("Updated equipped item with new enchantment.", CYAN)
+                            break
+                else:
+                    print_colored("Invalid choice.", FAIL)
+            except ValueError:
+                print_colored("Please enter a valid number.", FAIL)
+        else:
+            print_colored("Invalid choice.", FAIL)
+    except ValueError:
+        print_colored("Please enter a valid number.", FAIL)
+
+
+# Function for upgrading weapons and armor to increase their level
+def upgrade_item() -> None:
+    """Function to level up weapons and armor"""
+    print_header("ITEM UPGRADING")
+    
+    if not user_data.get("inventory", []):
+        print_colored("You don't have any items to upgrade!", FAIL)
+        return
+        
+    # Only show equipable items that can be upgraded
+    upgradable_items = []
+    for item in user_data["inventory"]:
+        if isinstance(item, dict) and item.get("type") in ["weapon", "armor"]:
+            upgradable_items.append(item)
+        elif isinstance(item, str):
+            # Check crafting recipes to see if it's a weapon or armor
+            if item in CRAFTING_RECIPES:
+                recipe = CRAFTING_RECIPES[item]
+                if recipe.get("type") in ["weapon", "armor"]:
+                    upgradable_items.append(item)
+    
+    if not upgradable_items:
+        print_colored("You don't have any items that can be upgraded!", FAIL)
+        return
+        
+    print_colored("Choose an item to upgrade:", CYAN)
+    for idx, item in enumerate(upgradable_items, 1):
+        if isinstance(item, dict):
+            name = item["name"]
+            current_level = item.get("level", 1)
+            print(f"{idx}. {name} (Level {current_level})")
+        else:
+            print(f"{idx}. {item}")
+    
+    try:
+        choice = int(input("\nEnter item number (0 to cancel): "))
+        if choice == 0:
+            return
+        elif 1 <= choice <= len(upgradable_items):
+            selected_item = upgradable_items[choice-1]
+            
+            # If item is a string, convert to object
+            if isinstance(selected_item, str):
+                item_name = selected_item
+                if item_name in CRAFTING_RECIPES:
+                    recipe = CRAFTING_RECIPES[item_name]
+                    item_type = recipe.get("type", "")
+                    
+                    if item_type == "weapon":
+                        selected_item = {
+                            "name": item_name,
+                            "type": "weapon",
+                            "effect": recipe.get("effect", 10),
+                            "level": 1,
+                            "experience": 0,
+                            "enchantments": {},
+                            "element": recipe.get("element", "Nullum")
+                        }
+                    elif item_type == "armor":
+                        selected_item = {
+                            "name": item_name,
+                            "type": "armor", 
+                            "effect": recipe.get("effect", 5),
+                            "level": 1,
+                            "experience": 0,
+                            "enchantments": {}
+                        }
+                    
+                    # Remove string item from inventory
+                    user_data["inventory"].remove(item_name)
+                    # Add structured item to inventory
+                    user_data["inventory"].append(selected_item)
+            
+            # Calculate upgrade requirements
+            current_level = selected_item.get("level", 1)
+            base_effect = selected_item.get("effect", 10)
+            item_type = selected_item.get("type", "weapon")
+            
+            # Gold cost increases with level
+            gold_cost = current_level * 50
+            
+            # Material requirements based on item type
+            materials_needed = {}
+            if item_type == "weapon":
+                materials_needed = {
+                    "Iron Ore": current_level * 2,
+                    "Magic Crystal": current_level
+                }
+            elif item_type == "armor":
+                materials_needed = {
+                    "Leather": current_level * 2,
+                    "Magic Crystal": current_level
+                }
+            
+            # Check if user has enough gold and materials
+            if user_data.get("gold", 0) < gold_cost:
+                print_colored(f"You don't have enough gold! Need {gold_cost} gold.", FAIL)
+                return
+                
+            missing_materials = []
+            for material, count in materials_needed.items():
+                player_count = 0
+                for inv_item in user_data["inventory"]:
+                    if isinstance(inv_item, str) and inv_item == material:
+                        player_count += 1
+                    
+                if player_count < count:
+                    missing_materials.append(f"{count - player_count} {material}")
+            
+            if missing_materials:
+                print_colored("You don't have enough materials! Missing:", FAIL)
+                for item in missing_materials:
+                    print(f"- {item}")
+                return
+            
+            # Show upgrade details
+            print_colored(f"\nUpgrade {selected_item['name']} from Level {current_level} to Level {current_level + 1}:", CYAN)
+            print(f"Current effect: {base_effect + (current_level - 1) * 5}")
+            print(f"New effect: {base_effect + current_level * 5}")
+            
+            print("\nRequired:")
+            print(f"- {gold_cost} gold")
+            for material, count in materials_needed.items():
+                print(f"- {count} {material}")
+            
+            confirm = input("\nProceed with upgrade? (y/n): ").lower()
+            if confirm == 'y':
+                # Deduct gold
+                user_data["gold"] -= gold_cost
+                
+                # Remove materials
+                for material, count in materials_needed.items():
+                    for _ in range(count):
+                        user_data["inventory"].remove(material)
+                
+                # Upgrade the item
+                selected_item["level"] = current_level + 1
+                selected_item["effect"] = base_effect + current_level * 5
+                
+                print_colored(f"Successfully upgraded {selected_item['name']} to Level {current_level + 1}!", OKGREEN)
+                
+                # If equipped, update stats
+                for slot, equipped_item in user_data.get("equipped", {}).items():
+                    if isinstance(equipped_item, dict) and equipped_item.get("name") == selected_item["name"]:
+                        user_data["equipped"][slot] = selected_item
+                        print_colored("Updated equipped item with new stats.", CYAN)
+                        break
+            else:
+                print_colored("Upgrade cancelled.", YELLOW)
+        else:
+            print_colored("Invalid choice.", FAIL)
+    except ValueError:
+        print_colored("Please enter a valid number.", FAIL)
+
+
+# Function for opening treasure chests with random loot
+def open_chest(tier: str = "Common") -> None:
+    """Open a treasure chest and get random loot
+    
+    Args:
+        tier: The rarity tier of the chest (Common, Uncommon, Rare, Epic, Legendary)
+    """
+    if tier not in CHEST_TIERS:
+        print_colored(f"Invalid chest tier: {tier}", FAIL)
+        return
+        
+    chest_info = CHEST_TIERS[tier]
+    gold_range = chest_info.get("gold_range", (10, 50))
+    item_count_range = chest_info.get("item_count_range", (1, 2))
+    item_chances = chest_info.get("item_chances", {})
+    equipment_rarity_chances = chest_info.get("equipment_rarity_chances", {})
+    artifact_rarity_chances = chest_info.get("artifact_rarity_chances", {})
+    
+    # Get chest color based on tier
+    tier_colors = {
+        "Common": CYAN,
+        "Uncommon": OKGREEN,
+        "Rare": BLUE,
+        "Epic": MAGENTA,
+        "Legendary": YELLOW
+    }
+    chest_color = tier_colors.get(tier, CYAN)
+    
+    print_header(f"OPENING {chest_color}{tier} CHEST{ENDC}")
+    print_colored(f"Opening {tier} chest...", chest_color)
+    time.sleep(1)
+    
+    # Roll for gold
+    gold_amount = random.randint(gold_range[0], gold_range[1])
+    user_data["gold"] += gold_amount
+    print_colored(f"You found {gold_amount} gold!", YELLOW)
+    
+    # Roll for items
+    item_count = random.randint(item_count_range[0], item_count_range[1])
+    
+    # Common materials that could drop from chests
+    common_materials = [
+        "Iron Ore", "Wood", "Leather", "Magic Crystal", "Magic Dust", 
+        "Fire Crystal", "Water Essence", "Earth Crystal", "Wind Crystal",
+        "Ice Crystal", "Thunder Crystal", "Light Crystal", "Shadow Essence",
+        "Poison Gland", "Steel Ingot", "Soul Fragment", "Plant Extract",
+        "Sharpening Stone", "Steel Plate", "Swift Feather", "Spirit Essence"
+    ]
+    
+    # Potions that could drop from chests
+    potions = list(POTION_RECIPES.keys())
+    
+    # Equipment (weapons and armor) that could drop
+    equipment = []
+    for item_name, item_info in CRAFTING_RECIPES.items():
+        if item_info.get("type") in ["weapon", "armor"]:
+            equipment.append(item_name)
+    
+    # Artifacts that could drop
+    artifacts = []
+    for item_name, item_info in CRAFTING_RECIPES.items():
+        if item_info.get("type") == "artifact":
+            artifacts.append(item_name)
+    
+    # Roll for each item
+    for i in range(item_count):
+        # Determine item type
+        item_roll = random.random()
+        current_chance = 0
+        
+        for item_type, chance in item_chances.items():
+            current_chance += chance
+            if item_roll <= current_chance:
+                # Found our item type!
+                if item_type == "material":
+                    # Roll for a material
+                    material = random.choice(common_materials)
+                    user_data["inventory"].append(material)
+                    print_colored(f"You found {material}!", OKGREEN)
+                    
+                elif item_type == "potion":
+                    # Roll for a potion
+                    potion = random.choice(potions)
+                    user_data["inventory"].append(potion)
+                    print_colored(f"You found {potion}!", CYAN)
+                    
+                elif item_type == "equipment":
+                    # Roll for equipment rarity
+                    rarity_roll = random.random()
+                    current_rarity_chance = 0
+                    selected_rarity = "Common"
+                    
+                    for rarity, rarity_chance in equipment_rarity_chances.items():
+                        current_rarity_chance += rarity_chance
+                        if rarity_roll <= current_rarity_chance:
+                            selected_rarity = rarity
+                            break
+                    
+                    # Filter equipment by rarity (as best we can)
+                    rarity_equipment = []
+                    for item in equipment:
+                        # For simplicity, just use some heuristics to guess rarity
+                        if selected_rarity == "Legendary" and "Legendary" in item:
+                            rarity_equipment.append(item)
+                        elif selected_rarity == "Epic" and any(word in item for word in ["Epic", "God", "Divine"]):
+                            rarity_equipment.append(item)
+                        elif selected_rarity == "Rare" and not any(word in item for word in ["Common", "Basic"]):
+                            rarity_equipment.append(item)
+                        elif selected_rarity == "Uncommon" and not any(word in item for word in ["Common", "Basic"]):
+                            rarity_equipment.append(item)
+                        elif selected_rarity == "Common":
+                            rarity_equipment.append(item)
+                    
+                    # If no equipment matched the criteria, just use any equipment
+                    if not rarity_equipment:
+                        rarity_equipment = equipment
+                    
+                    # Roll for a specific equipment
+                    if rarity_equipment:
+                        item = random.choice(rarity_equipment)
+                        user_data["inventory"].append(item)
+                        
+                        # Get rarity color
+                        rarity_color = tier_colors.get(selected_rarity, CYAN)
+                        print_colored(f"You found {rarity_color}{item}!{ENDC}", OKGREEN)
+                    
+                elif item_type == "artifact":
+                    # Roll for artifact rarity
+                    rarity_roll = random.random()
+                    current_rarity_chance = 0
+                    selected_rarity = "Common"
+                    
+                    for rarity, rarity_chance in artifact_rarity_chances.items():
+                        current_rarity_chance += rarity_chance
+                        if rarity_roll <= current_rarity_chance:
+                            selected_rarity = rarity
+                            break
+                    
+                    # Filter artifacts by rarity
+                    rarity_artifacts = []
+                    for artifact_name in artifacts:
+                        recipe = CRAFTING_RECIPES.get(artifact_name, {})
+                        if recipe.get("rarity") == selected_rarity:
+                            rarity_artifacts.append(artifact_name)
+                    
+                    # If no artifacts matched the criteria, just use any artifact
+                    if not rarity_artifacts:
+                        rarity_artifacts = artifacts
+                    
+                    # Roll for a specific artifact
+                    if rarity_artifacts:
+                        artifact = random.choice(rarity_artifacts)
+                        user_data["inventory"].append(artifact)
+                        
+                        # Get rarity color
+                        artifact_info = CRAFTING_RECIPES.get(artifact, {})
+                        rarity = artifact_info.get("rarity", "Common")
+                        rarity_color = tier_colors.get(rarity, CYAN)
+                        
+                        print_colored(f"You found {rarity_color}{artifact}!{ENDC}", YELLOW)
+                
+                break
+    
+    print_colored(f"\nChest looting complete!", OKGREEN)
+
+
+# Function to check for artifact set bonuses based on equipped artifacts
+def check_artifact_set_bonuses() -> None:
+    """Check for artifact set bonuses based on equipped artifacts"""
+    equipped_artifacts = []
+    
+    # Get all equipped artifacts
+    for slot in ARTIFACT_SLOTS:
+        slot_key = f"artifact_{slot.lower()}"
+        if user_data.get("equipped", {}).get(slot_key):
+            equipped_artifacts.append(user_data["equipped"][slot_key]["name"])
+    
+    # Check each set for bonuses
+    active_bonuses = {}
+    for set_name, set_info in ARTIFACT_SETS.items():
+        pieces = set_info.get("pieces", [])
+        equipped_count = sum(1 for artifact in equipped_artifacts if artifact in pieces)
+        
+        # Check if any set bonuses are active
+        for piece_count, bonus in set_info.get("bonuses", {}).items():
+            if equipped_count >= piece_count:
+                if set_name not in active_bonuses:
+                    active_bonuses[set_name] = {}
+                active_bonuses[set_name][piece_count] = bonus
+    
+    # Store active bonuses in user data
+    user_data["active_set_bonuses"] = active_bonuses
+    
+    # Print active bonuses
+    if active_bonuses:
+        print_colored("\nActive Artifact Set Bonuses:", YELLOW)
+        for set_name, bonuses in active_bonuses.items():
+            for piece_count, bonus in bonuses.items():
+                print(f"{set_name} ({piece_count}-piece): " + ", ".join([f"{stat}: {value}" for stat, value in bonus.items()]))
+
+
+# Function to use potions (elemental immunities, damage boosters, etc.)
+def use_potion(potion_name: str) -> None:
+    """Use a potion from inventory
+    
+    Args:
+        potion_name: The name of the potion to use
+    """
+    # Check if we have the potion
+    if potion_name not in user_data["inventory"]:
+        print_colored(f"You don't have a {potion_name}.", FAIL)
+        return
+        
+    # Check if it's a valid potion
+    if potion_name not in POTION_RECIPES:
+        print_colored(f"{potion_name} is not a usable potion.", FAIL)
+        return
+        
+    potion_info = POTION_RECIPES[potion_name]
+    effect = potion_info.get("effect", {})
+    
+    # Handle different potion effects
+    if "immunity" in effect:
+        element = effect["immunity"]
+        
+        # Initialize immunities if not present
+        if "active_immunities" not in user_data:
+            user_data["active_immunities"] = {}
+            
+        # Add immunity
+        user_data["active_immunities"][element] = True
+        print_colored(f"You are now immune to {element} damage for your next battle!", OKGREEN)
+        
+    elif "damage_boost" in effect:
+        element = effect["damage_boost"]
+        
+        # Initialize boosters if not present
+        if "element_boosters" not in user_data:
+            user_data["element_boosters"] = {}
+            
+        # Add damage boost
+        user_data["element_boosters"][element] = 2.0  # Double damage
+        print_colored(f"Your {element} damage is doubled for your next battle!", OKGREEN)
+        
+    # Remove the potion from inventory
+    user_data["inventory"].remove(potion_name)
+
+# Artifact rarities
+ARTIFACT_RARITIES = {
+    "Common": {
+        "color": '\033[96m',  # CYAN
+        "stat_multiplier": 1.0,
+        "drop_chance": 0.5
+    },
+    "Uncommon": {
+        "color": '\033[92m',  # OKGREEN
+        "stat_multiplier": 1.2,
+        "drop_chance": 0.3
+    },
+    "Rare": {
+        "color": '\033[94m',  # BLUE
+        "stat_multiplier": 1.5,
+        "drop_chance": 0.15
+    },
+    "Epic": {
+        "color": '\033[35m',  # MAGENTA
+        "stat_multiplier": 1.8,
+        "drop_chance": 0.04
+    },
+    "Legendary": {
+        "color": '\033[33m',  # YELLOW
+        "stat_multiplier": 2.0,
+        "drop_chance": 0.01
+    }
+}
+
+# Elemental potion recipes
+POTION_RECIPES = {
+    # Immunity Potions
+    "Elixir of Cold": {
+        "materials": {"Ice Crystal": 2, "Water Essence": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Ignis"},
+        "description": "Grants immunity to Ignis (fire) damage for one battle",
+        "type": "potion"
+    },
+    "Liquor Levitas": {
+        "materials": {"Wind Crystal": 2, "Feather": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Gē"},
+        "description": "Grants immunity to Gē (earth) damage for one battle",
+        "type": "potion"
+    },
+    "Aura of Lightning": {
+        "materials": {"Thunder Crystal": 2, "Metal Shard": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Aqua"},
+        "description": "Grants immunity to Aqua (water) damage for one battle",
+        "type": "potion"
+    },
+    "Essence of Drought": {
+        "materials": {"Fire Crystal": 2, "Sand": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Aqua"},
+        "description": "Grants immunity to Aqua (water) damage for one battle",
+        "type": "potion"
+    },
+    "Potion of Grounding": {
+        "materials": {"Earth Crystal": 2, "Iron Ore": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Fulmen"},
+        "description": "Grants immunity to Fulmen (lightning) damage for one battle",
+        "type": "potion"
+    },
+    "Essence of Heat": {
+        "materials": {"Fire Crystal": 2, "Coal": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Glacies"},
+        "description": "Grants immunity to Glacies (ice) damage for one battle",
+        "type": "potion"
+    },
+    "Veil of Shadows": {
+        "materials": {"Shadow Essence": 2, "Night Flower": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Lux"},
+        "description": "Grants immunity to Lux (light) damage for one battle",
+        "type": "potion"
+    },
+    "Radiant Elixir": {
+        "materials": {"Light Crystal": 2, "Sun Petal": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Tenebrae"},
+        "description": "Grants immunity to Tenebrae (darkness) damage for one battle",
+        "type": "potion"
+    },
+    "Antidote Supreme": {
+        "materials": {"Pure Water": 2, "Cleansing Herb": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Venēnum"},
+        "description": "Grants immunity to Venēnum (poison) damage for one battle",
+        "type": "potion"
+    },
+    "Rust Solution": {
+        "materials": {"Acid Extract": 2, "Plant Root": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Ferrum"},
+        "description": "Grants immunity to Ferrum (metal) damage for one battle",
+        "type": "potion"
+    },
+    "Spirit Ward": {
+        "materials": {"Soul Fragment": 2, "Holy Water": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Pneuma"},
+        "description": "Grants immunity to Pneuma (spirit) damage for one battle",
+        "type": "potion"
+    },
+    "Herbicide Mixture": {
+        "materials": {"Toxic Extract": 2, "Mushroom Spore": 3, "Magical Herb": 1},
+        "effect": {"immunity": "Viridia"},
+        "description": "Grants immunity to Viridia (plant) damage for one battle",
+        "type": "potion"
+    },
+    
+    # Damage Booster Potions
+    "Blazing Catalyst": {
+        "materials": {"Fire Crystal": 3, "Dragon Scale": 1, "Magical Herb": 2},
+        "effect": {"damage_boost": "Ignis"},
+        "description": "Doubles your Ignis (fire) damage for one battle",
+        "type": "potion"
+    },
+    "Tsunami Extract": {
+        "materials": {"Water Essence": 3, "Sea Shell": 1, "Magical Herb": 2},
+        "effect": {"damage_boost": "Aqua"},
+        "description": "Doubles your Aqua (water) damage for one battle",
+        "type": "potion"
+    },
+    "Earthen Might": {
+        "materials": {"Earth Crystal": 3, "Mountain Stone": 1, "Magical Herb": 2},
+        "effect": {"damage_boost": "Gē"},
+        "description": "Doubles your Gē (earth) damage for one battle",
+        "type": "potion"
+    },
+    "Tempest Brew": {
+        "materials": {"Wind Crystal": 3, "Cloud Essence": 1, "Magical Herb": 2},
+        "effect": {"damage_boost": "Aer"},
+        "description": "Doubles your Aer (air) damage for one battle",
+        "type": "potion"
+    },
+    "Voltaic Solution": {
+        "materials": {"Thunder Crystal": 3, "Charged Core": 1, "Magical Herb": 2},
+        "effect": {"damage_boost": "Fulmen"},
+        "description": "Doubles your Fulmen (lightning) damage for one battle",
+        "type": "potion"
+    },
+    "Frost Amplifier": {
+        "materials": {"Ice Crystal": 3, "Frozen Heart": 1, "Magical Herb": 2},
+        "effect": {"damage_boost": "Glacies"},
+        "description": "Doubles your Glacies (ice) damage for one battle",
+        "type": "potion"
+    }
+}
+
+# Enchantment types and their effects
+ENCHANTMENTS = {
+    # Weapon enchantments
+    "Sharpness": {
+        "description": "Increases weapon damage by 10% per level",
+        "max_level": 5,
+        "applicable_to": ["weapon"],
+        "materials_per_level": {"Sharpening Stone": 2, "Magic Dust": 1}
+    },
+    "Elemental Fury": {
+        "description": "Increases elemental damage by 10% per level", 
+        "max_level": 5,
+        "applicable_to": ["weapon"],
+        "materials_per_level": {"Elemental Essence": 2, "Magic Crystal": 1}
+    },
+    "Giant Slayer": {
+        "description": "Deals 15% more damage per level to large monsters",
+        "max_level": 3,
+        "applicable_to": ["weapon"],
+        "materials_per_level": {"Giant's Tooth": 1, "Magic Dust": 2}
+    },
+    "Soul Stealer": {
+        "description": "Has a 5% chance per level to steal health on hit",
+        "max_level": 3,
+        "applicable_to": ["weapon"],
+        "materials_per_level": {"Spirit Essence": 2, "Blood Crystal": 1}
+    },
+    "Critical Eye": {
+        "description": "Increases critical hit chance by a 5% per level",
+        "max_level": 5,
+        "applicable_to": ["weapon"],
+        "materials_per_level": {"Hawk's Eye": 1, "Magic Dust": 2}
+    },
+    
+    # Armor enchantments
+    "Protection": {
+        "description": "Reduces damage taken by 5% per level",
+        "max_level": 5,
+        "applicable_to": ["armor"],
+        "materials_per_level": {"Steel Plate": 2, "Magic Dust": 1}
+    },
+    "Elemental Resist": {
+        "description": "Reduces elemental damage by 10% per level",
+        "max_level": 5,
+        "applicable_to": ["armor"],
+        "materials_per_level": {"Elemental Barrier": 2, "Magic Crystal": 1}
+    },
+    "Health Boost": {
+        "description": "Increases maximum health by 10 per level",
+        "max_level": 5,
+        "applicable_to": ["armor"],
+        "materials_per_level": {"Vitality Crystal": 1, "Magic Dust": 2}
+    },
+    "Thorns": {
+        "description": "Deals 5% of damage back to attackers per level",
+        "max_level": 3,
+        "applicable_to": ["armor"],
+        "materials_per_level": {"Thorned Vine": 2, "Magic Dust": 1}
+    },
+    "Evasion": {
+        "description": "Increases dodge chance by 3% per level",
+        "max_level": 5,
+        "applicable_to": ["armor"],
+        "materials_per_level": {"Swift Feather": 2, "Magic Dust": 1}
+    }
+}
+
+# Random chest tiers and their potential contents
+CHEST_TIERS = {
+    "Common": {
+        "gold_range": (10, 50),
+        "item_count_range": (1, 2),
+        "item_chances": {
+            "material": 0.7,
+            "potion": 0.2,
+            "equipment": 0.1
+        },
+        "equipment_rarity_chances": {
+            "Common": 0.8,
+            "Uncommon": 0.2
+        }
+    },
+    "Uncommon": {
+        "gold_range": (30, 100),
+        "item_count_range": (1, 3),
+        "item_chances": {
+            "material": 0.6,
+            "potion": 0.3,
+            "equipment": 0.1
+        },
+        "equipment_rarity_chances": {
+            "Common": 0.6,
+            "Uncommon": 0.3,
+            "Rare": 0.1
+        }
+    },
+    "Rare": {
+        "gold_range": (75, 200),
+        "item_count_range": (2, 4),
+        "item_chances": {
+            "material": 0.5,
+            "potion": 0.3,
+            "equipment": 0.15,
+            "artifact": 0.05
+        },
+        "equipment_rarity_chances": {
+            "Common": 0.3,
+            "Uncommon": 0.5,
+            "Rare": 0.2
+        },
+        "artifact_rarity_chances": {
+            "Common": 0.6,
+            "Uncommon": 0.3,
+            "Rare": 0.1
+        }
+    },
+    "Epic": {
+        "gold_range": (150, 350),
+        "item_count_range": (3, 5),
+        "item_chances": {
+            "material": 0.4,
+            "potion": 0.3,
+            "equipment": 0.2,
+            "artifact": 0.1
+        },
+        "equipment_rarity_chances": {
+            "Uncommon": 0.4,
+            "Rare": 0.4,
+            "Epic": 0.2
+        },
+        "artifact_rarity_chances": {
+            "Uncommon": 0.5,
+            "Rare": 0.3,
+            "Epic": 0.2
+        }
+    },
+    "Legendary": {
+        "gold_range": (300, 800),
+        "item_count_range": (4, 6),
+        "item_chances": {
+            "material": 0.3,
+            "potion": 0.2,
+            "equipment": 0.3,
+            "artifact": 0.2
+        },
+        "equipment_rarity_chances": {
+            "Rare": 0.4,
+            "Epic": 0.4,
+            "Legendary": 0.2
+        },
+        "artifact_rarity_chances": {
+            "Rare": 0.5,
+            "Epic": 0.3,
+            "Legendary": 0.2
+        }
+    }
+}
+
+# Artifact set bonuses
+ARTIFACT_SETS = {
+    "Wisdom of the Ancients": {
+        "pieces": ["Crown of Wisdom", "Timekeeper's Watch", "Band of Power"],
+        "bonuses": {
+            2: {"intelligence": 15, "cooldown_reduction": 0.1},
+            3: {"intelligence": 30, "cooldown_reduction": 0.2, "max_mana": 50}
+        }
+    },
+    "Eternal Flame": {
+        "pieces": ["Ember Pendant", "Phoenix Plume", "Ring of Fire"],
+        "bonuses": {
+            2: {"fire_damage": 0.15, "fire_resistance": 0.15},
+            3: {"fire_damage": 0.3, "fire_resistance": 0.3, "revival_chance": 0.5}
+        }
+    },
+    "Nature's Embrace": {
+        "pieces": ["Leaf Crown", "Eternal Bloom", "Vine Bracelet"],
+        "bonuses": {
+            2: {"health_regen": 10, "mana_regen": 5},
+            3: {"health_regen": 20, "mana_regen": 10, "nature_control": True}
+        }
+    }
+}
+
+# Enhanced crafting recipes with elemental weapons and artifacts
 CRAFTING_RECIPES.update({
+    # Legendary Weapons
     "Void Blade": {
         "materials": {"Void Crystal": 3, "Dark Legion's Heart": 1, "Magic Crystal": 5},
         "level_required": 25,
         "type": "weapon",
-        "effect": 60
+        "effect": 60,
+        "element": "Tenebrae"
     },
     "Dragon God Armor": {
         "materials": {"Divine Dragon Scale": 5, "Dragon God's Crown": 1, "Gold Ore": 10},
@@ -1725,7 +2916,8 @@ CRAFTING_RECIPES.update({
         "materials": {"Dragon Scale": 5, "Magic Crystal": 3, "Gold Ore": 2},
         "level_required": 20,
         "type": "weapon",
-        "effect": 50
+        "effect": 50,
+        "element": "Ignis"
     },
     "Phoenix Armor": {
         "materials": {"Phoenix Feather": 3, "Magic Crystal": 2, "Gold Ore": 3},
@@ -1737,7 +2929,144 @@ CRAFTING_RECIPES.update({
         "materials": {"Dragon Scale": 3, "Magic Crystal": 2, "Wood": 4},
         "level_required": 22,
         "type": "weapon",
-        "effect": 45
+        "effect": 45,
+        "element": "Aer"
+    },
+    
+    # Elemental Weapons
+    "Flame Sword": {
+        "materials": {"Fire Crystal": 3, "Iron Ore": 5, "Wood": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Ignis"
+    },
+    "Frost Blade": {
+        "materials": {"Ice Crystal": 3, "Iron Ore": 5, "Wood": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Glacies"
+    },
+    "Lightning Staff": {
+        "materials": {"Thunder Crystal": 3, "Magic Wood": 5, "Crystal Shard": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Fulmen"
+    },
+    "Nature Scythe": {
+        "materials": {"Plant Extract": 3, "Strong Wood": 5, "Silk": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Viridia"
+    },
+    "Earth Mace": {
+        "materials": {"Earth Crystal": 3, "Iron Ore": 5, "Leather": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Gē"
+    },
+    "Wind Bow": {
+        "materials": {"Wind Crystal": 3, "Flexible Wood": 5, "Silk": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Aer"
+    },
+    "Water Trident": {
+        "materials": {"Water Essence": 3, "Iron Ore": 5, "Shell": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Aqua"
+    },
+    "Light Wand": {
+        "materials": {"Light Crystal": 3, "Magic Wood": 5, "Gold Ore": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Lux"
+    },
+    "Shadow Dagger": {
+        "materials": {"Shadow Essence": 3, "Dark Metal": 5, "Leather": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Tenebrae"
+    },
+    "Venomous Blade": {
+        "materials": {"Poison Gland": 3, "Iron Ore": 5, "Leather": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Venēnum"
+    },
+    "Steel Hammer": {
+        "materials": {"Steel Ingot": 3, "Iron Ore": 5, "Wood": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Ferrum"
+    },
+    "Spirit Blade": {
+        "materials": {"Soul Fragment": 3, "Magic Crystal": 5, "Pure Metal": 2},
+        "level_required": 15,
+        "type": "weapon",
+        "effect": 35,
+        "element": "Pneuma"
+    },
+    
+    # Artifacts
+    "Crown of Wisdom": {
+        "materials": {"Magic Crystal": 2, "Gold Ore": 3, "Pure Gem": 1},
+        "level_required": 10,
+        "type": "artifact",
+        "slot": "Headset",
+        "effect": {"intelligence": 10},
+        "rarity": "Rare"
+    },
+    "Ember Pendant": {
+        "materials": {"Fire Crystal": 2, "Silver Ore": 3, "Red Gem": 1},
+        "level_required": 10,
+        "type": "artifact",
+        "slot": "Necklace",
+        "effect": {"fire_resist": 0.15},
+        "rarity": "Uncommon"
+    },
+    "Timekeeper's Watch": {
+        "materials": {"Magic Gear": 2, "Gold Ore": 3, "Time Crystal": 1},
+        "level_required": 15,
+        "type": "artifact",
+        "slot": "Clock",
+        "effect": {"cooldown_reduction": 0.1},
+        "rarity": "Rare"
+    },
+    "Eternal Bloom": {
+        "materials": {"Plant Extract": 2, "Water Essence": 3, "Life Crystal": 1},
+        "level_required": 15,
+        "type": "artifact",
+        "slot": "Flower",
+        "effect": {"health_regen": 5},
+        "rarity": "Uncommon"
+    },
+    "Phoenix Plume": {
+        "materials": {"Phoenix Feather": 1, "Magic Crystal": 2, "Fire Crystal": 3},
+        "level_required": 20,
+        "type": "artifact",
+        "slot": "Feather",
+        "effect": {"revival_chance": 0.2},
+        "rarity": "Epic"
+    },
+    "Band of Power": {
+        "materials": {"Magic Metal": 2, "Strength Crystal": 3, "Blue Gem": 1},
+        "level_required": 10,
+        "type": "artifact",
+        "slot": "Ring",
+        "effect": {"attack": 8},
+        "rarity": "Uncommon"
     }
 })
 
@@ -1883,36 +3212,11 @@ dungeons = [
     {"name": "The Eternal Throne", "monsters": ["Dark Legionary Supreme Lord:Noctis, the Obsidian Fallen Eternal"], "loot": ["Eternal Crown", "Obsidian Blade", "Dark Legion's Heart", "Gold Coin"]},
 
     # Post-game Dungeons
-{
-    "name": "The Void Citadel",
-    "monsters": ["Void Reaper", "Dark Legion Elite"],
-    "loot": ["Void Scythe", "Void Crystal", "Void Armor"],
-    "description": "A fortress suspended in the void between dimensions."
-},
-    {
-        "name": "Dragon God's Sanctuary",
-        "monsters": ["Ancient Dragon God", "Dragon Elite Guard"],
-        "loot": ["Divine Dragon Scale", "Dragon God's Crown", "Divine Armor"],
-        "description": "The sacred realm where the first dragons originated."
-    },
-    {
-        "name": "Eternal Phoenix Spire",
-        "monsters": ["Eternal Phoenix", "Phoenix Guardian"],
-        "loot": ["Eternal Flame", "Phoenix Crown", "Phoenix Wings"],
-        "description": "A towering spire of eternal flame where the first phoenix was born."
-    },
-    {
-        "name": "Chaos Nexus",
-        "monsters": ["Chaos Incarnate", "Chaos Spawn"],
-        "loot": ["Chaos Blade", "Chaos Crystal", "Chaos Armor"],
-        "description": "The epicenter of all chaos in the universe."
-    },
-    {
-        "name": "The Infinite Abyss",
-        "monsters": ["Abyssal Overlord", "Abyss Dweller"],
-        "loot": ["Abyssal Crown", "Infinity Stone", "Abyssal Armor"],
-        "description": "An endless void where reality itself begins to break down."
-    },
+    {"name": "The Void Citadel", "monsters": ["Void Reaper", "Dark Legion Elite"], "loot": ["Void Scythe", "Void Crystal", "Void Armor"], "description": "A fortress suspended in the void between dimensions."},
+    {"name": "Dragon God's Sanctuary", "monsters": ["Ancient Dragon God", "Dragon Elite Guard"], "loot": ["Divine Dragon Scale", "Dragon God's Crown", "Divine Armor"], "description": "The sacred realm where the first dragons originated."},
+    {"name": "Eternal Phoenix Spire", "monsters": ["Eternal Phoenix", "Phoenix Guardian"], "loot": ["Eternal Flame", "Phoenix Crown", "Phoenix Wings"], "description": "A towering spire of eternal flame where the first phoenix was born."},
+    {"name": "Chaos Nexus", "monsters": ["Chaos Incarnate", "Chaos Spawn"], "loot": ["Chaos Blade", "Chaos Crystal", "Chaos Armor"], "description": "The epicenter of all chaos in the universe."},
+    {"name": "The Infinite Abyss", "monsters": ["Abyssal Overlord", "Abyss Dweller"], "loot": ["Abyssal Crown", "Infinity Stone", "Abyssal Armor"], "description": "An endless void where reality itself begins to break down."}
 ]
 
 
@@ -1970,22 +3274,23 @@ REVERSE = '\033[7m'
 HIDDEN = '\033[8m'
 STRIKETHROUGH = '\033[9m'
 
-import sys
-import time
-
 def print_colored(text: str, color_code: str = "") -> None:
     print(f"{color_code}{text}{ENDC}" if color_code else text)
 
-def print_animated(text: str, color_code: str = "", delay: float = None) -> None:
+def print_animated(text: str, color_code: str = "", delay: Optional[float] = None) -> None:
     length = len(text)
-    if delay is None:
-        delay = max(0.005, min(0.03, 1.0 / (length * 10)))
+    actual_delay = 0.01  # Default delay
+    if delay is not None:
+        actual_delay = delay
+    else:
+        actual_delay = max(0.005, min(0.03, 1.0 / (length * 10)))
+    
     if color_code:
         sys.stdout.write(color_code)
     for char in text:
         sys.stdout.write(char)
         sys.stdout.flush()
-        time.sleep(delay)
+        time.sleep(actual_delay)
     if color_code:
         sys.stdout.write(ENDC)
     sys.stdout.write("\n")
@@ -2008,6 +3313,7 @@ PROGRESS
 /dungeons          - Dungeon guides
 /timetravel        - Time travel guide
 /coolness          - Info about coolness
+/story             - Show storyline progress
 
 CRAFTING
 /craft             - Recipes calculator
@@ -2015,6 +3321,14 @@ CRAFTING
 /invcalc           - Inventory calculator
 /drops             - Monster drops
 /enchants          - Enchantments info
+
+ITEMS
+/equip <item>      - Equip an item from inventory
+/inspect <item>    - Inspect an item's special properties
+/upgrade           - Upgrade weapons and armor to increase their stats
+/enchant           - Apply enchantments to weapons and armor
+/chest <tier>      - Open a treasure chest (Common, Uncommon, Rare, Epic, Legendary)
+/use <potion>      - Use a potion from your inventory
 
 PETS
 /pet               - Pets guide
@@ -2084,6 +3398,656 @@ def show_location() -> None:
     print_animated(f"You are currently in: {current}")
     if current in LOCATIONS:
         print_animated(f"Description: {LOCATIONS[current]['description']}")
+
+# Function to inspect items (especially legendary items)
+def inspect_item(item_name: str) -> None:
+    """Inspect an item to see its special properties and effects"""
+    print_header("Item Inspection")
+    
+    if not item_name:
+        print_colored("Please specify an item to inspect.", WARNING)
+        return
+        
+    # Check if item is in inventory
+    if item_name not in user_data["inventory"]:
+        print_colored(f"You don't have '{item_name}' in your inventory.", FAIL)
+        return
+    
+    # Check if item is a legendary item
+    if item_name in LEGENDARY_ITEMS:
+        item = LEGENDARY_ITEMS[item_name]
+        print_colored("✧・゚: *✧・゚:* LEGENDARY ITEM *:・゚✧*:・゚✧", MAGENTA)
+        print_colored(f"Name: {item_name}", CYAN)
+        print(f"Type: {item['type'].capitalize()}")
+        print(f"Effect: +{item['effect']} {item['type']} {'damage' if item['type'] == 'weapon' else 'defense'}")
+        print_colored(f"Special Ability: {item['special_ability']}", OKGREEN)
+        print(f"Description: {item['description']}")
+        
+        # Show special note based on item type
+        if item['type'] == 'weapon':
+            print_colored("\nThis legendary weapon can be equipped to drastically increase your attack.", YELLOW)
+        elif item['type'] == 'armor':
+            print_colored("\nThis legendary armor can be equipped to drastically increase your defense.", YELLOW)
+        elif item['type'] == 'accessory':
+            print_colored("\nThis legendary accessory grants special abilities when carried in your inventory.", YELLOW)
+    
+    # Check if item is a weapon
+    elif item_name in WEAPONS:
+        weapon = WEAPONS[item_name]
+        print_colored("WEAPON", CYAN)
+        print(f"Name: {item_name}")
+        print(f"Damage: {weapon['damage']}")
+        print(f"Speed: {weapon['speed']}")
+        print(f"Price: {weapon['price']} gold")
+        if 'effect' in weapon:
+            print_colored(f"Special Effect: {weapon['effect']}", OKGREEN)
+    
+    # Otherwise it's a regular item
+    else:
+        print(f"Item: {item_name}")
+        
+        # Check for item types based on name patterns
+        if "Potion" in item_name:
+            print("Type: Consumable")
+            if "Health" in item_name:
+                print("Effect: Restores health when used")
+            elif "Mana" in item_name:
+                print("Effect: Restores mana when used")
+        elif any(armor_type in item_name for armor_type in ["Armor", "Shield", "Helmet", "Boots"]):
+            print("Type: Armor")
+            print("Effect: Increases defense when equipped")
+        else:
+            print("Type: Miscellaneous item")
+            print("This appears to be a regular item with no special properties.")
+
+# Elemental System
+ELEMENTS = {
+    "Ignis": {
+        "name": "Ignis",
+        "description": "The element of fire, capable of burning and dealing damage over time.",
+        "color": "\033[91m",  # Red
+        "weakness": ["Aqua", "Gē"],
+        "strength": ["Glacies", "Aer", "Pneuma"],
+        "damage_type": "elemental"
+    },
+    "Aqua": {
+        "name": "Aqua",
+        "description": "The element of water, versatile and adaptive, weakens fire.",
+        "color": "\033[94m",  # Blue
+        "weakness": ["Fulmen", "Glacies"],
+        "strength": ["Ignis", "Venēnum"],
+        "damage_type": "elemental"
+    },
+    "Gē": {
+        "name": "Gē",
+        "description": "The element of earth, sturdy and grounding, absorbs electricity.",
+        "color": "\033[33m",  # Yellow/Brown
+        "weakness": ["Aer", "Ferrum"],
+        "strength": ["Fulmen", "Ignis"],
+        "damage_type": "elemental"
+    },
+    "Aer": {
+        "name": "Aer",
+        "description": "The element of air, swift and evasive, disperses poison.",
+        "color": "\033[96m",  # Cyan
+        "weakness": ["Ignis", "Ferrum"],
+        "strength": ["Gē", "Venēnum"],
+        "damage_type": "elemental"
+    },
+    "Fulmen": {
+        "name": "Fulmen",
+        "description": "The element of lightning, delivering swift, powerful strikes.",
+        "color": "\033[95m",  # Magenta
+        "weakness": ["Gē", "Ferrum"],
+        "strength": ["Aqua", "Aer"],
+        "damage_type": "elemental"
+    },
+    "Glacies": {
+        "name": "Glacies",
+        "description": "The element of ice, freezing and slowing opponents.",
+        "color": "\033[96m",  # Light Cyan
+        "weakness": ["Ignis", "Ferrum"],
+        "strength": ["Aqua", "Aer"],
+        "damage_type": "elemental"
+    },
+    "Lux": {
+        "name": "Lux",
+        "description": "The element of light, purifying and revealing the hidden.",
+        "color": "\033[97m",  # White
+        "weakness": ["Tenebrae"],
+        "strength": ["Tenebrae", "Pneuma"],
+        "damage_type": "elemental"
+    },
+    "Tenebrae": {
+        "name": "Tenebrae",
+        "description": "The element of darkness, corrupting and concealing.",
+        "color": "\033[90m",  # Dark Gray
+        "weakness": ["Lux"],
+        "strength": ["Lux", "Pneuma"],
+        "damage_type": "elemental"
+    },
+    "Venēnum": {
+        "name": "Venēnum",
+        "description": "The element of poison, inflicting toxins and weakening foes.",
+        "color": "\033[92m",  # Green
+        "weakness": ["Aqua", "Aer"],
+        "strength": ["Gē", "Ferrum"],
+        "damage_type": "elemental"
+    },
+    "Ferrum": {
+        "name": "Ferrum",
+        "description": "The element of metal, resistant and conductive.",
+        "color": "\033[37m",  # Light Gray
+        "weakness": ["Venēnum", "Fulmen"],
+        "strength": ["Glacies", "Aer", "Gē"],
+        "damage_type": "elemental"
+    },
+    "Pneuma": {
+        "name": "Pneuma",
+        "description": "The element of spirit, affecting the soul and mind.",
+        "color": "\033[35m",  # Purple
+        "weakness": ["Lux", "Tenebrae"],
+        "strength": ["Venēnum", "Glacies"],
+        "damage_type": "elemental"
+    },
+    "Viridia": {
+        "name": "Viridia",
+        "description": "The element of plants and nature, with restorative and ensnaring abilities.",
+        "color": "\033[32m",  # Green
+        "weakness": ["Ignis", "Venēnum"],
+        "strength": ["Aqua", "Gē", "Aer"],
+        "damage_type": "elemental"
+    },
+    "Nullum": {
+        "name": "Nullum",
+        "description": "Non-elemental physical damage that ignores elemental resistances.",
+        "color": "\033[0m",  # Default/White
+        "weakness": [],
+        "strength": [],
+        "damage_type": "physical"
+    }
+}
+
+# Elemental Reactions
+ELEMENTAL_REACTIONS = {
+    # Original Reactions
+    "Ignis+Aqua": {
+        "name": "Fumus",
+        "description": "Creates a steam cloud that reduces vision and increases evasion.",
+        "effect": {"evasion": 15, "vision": -30, "duration": 5},
+        "damage_multiplier": 1.2,
+        "damage_type": "elemental"
+    },
+    "Ignis+Fulmen": {
+        "name": "Tempestas",
+        "description": "Creates a chain explosion with area effect burn and shock damage.",
+        "effect": {"area_damage": True, "burn": 3, "shock": 2, "duration": 5},
+        "damage_multiplier": 1.8,
+        "damage_type": "elemental"
+    },
+    "Aqua+Glacies": {
+        "name": "Congelatio",
+        "description": "Freezes the enemy, immobilizing them for a short duration.",
+        "effect": {"immobilize": 2, "duration": 5},
+        "damage_multiplier": 1.3,
+        "damage_type": "elemental"
+    },
+    "Aqua+Venēnum": {
+        "name": "Dilutio",
+        "description": "Creates a toxic mist that poisons all enemies in an area.",
+        "effect": {"area_damage": True, "poison": 4, "duration": 5},
+        "damage_multiplier": 1.5,
+        "damage_type": "elemental"
+    },
+    "Gē+Ferrum": {
+        "name": "Arma",
+        "description": "Temporarily raises defense or spawns protective armor.",
+        "effect": {"defense": 30, "duration": 3},
+        "damage_multiplier": 1.0,
+        "damage_type": "physical"
+    },
+    "Aer+Fulmen": {
+        "name": "Tonitrus",
+        "description": "Creates a thunderstorm that strikes multiple foes.",
+        "effect": {"multi_target": True, "shock": 3, "duration": 5},
+        "damage_multiplier": 1.6,
+        "damage_type": "elemental"
+    },
+    "Lux+Tenebrae": {
+        "name": "Umbra",
+        "description": "Creates an eclipse effect causing area blindness or HP drain.",
+        "effect": {"area_damage": True, "blind": 2, "drain": 5, "duration": 5},
+        "damage_multiplier": 1.7,
+        "damage_type": "elemental"
+    },
+    "Lux+Pneuma": {
+        "name": "Divinum",
+        "description": "Bestows a holy blessing that heals and cleanses allies.",
+        "effect": {"heal": 40, "cleanse": True, "duration": 5},
+        "damage_multiplier": 1.0,
+        "damage_type": "elemental"
+    },
+    "Tenebrae+Venēnum": {
+        "name": "Maleficium",
+        "description": "Inflicts a curse causing damage over time and debuffs.",
+        "effect": {"dot": 5, "attack": -15, "defense": -15, "duration": 5},
+        "damage_multiplier": 1.4,
+        "damage_type": "elemental"
+    },
+    "Ferrum+Fulmen": {
+        "name": "Magnetismus",
+        "description": "Creates a magnetic field that pulls enemies together.",
+        "effect": {"pull": True, "range": 3, "duration": 5},
+        "damage_multiplier": 1.2,
+        "damage_type": "elemental"
+    },
+    "Glacies+Pneuma": {
+        "name": "Frigus Animae",
+        "description": "Freezes the soul, slowing enemies and lowering spirit regeneration.",
+        "effect": {"slow": 30, "mana_regen": -50, "duration": 5},
+        "damage_multiplier": 1.3,
+        "damage_type": "elemental"
+    },
+    "Aer+Aqua": {
+        "name": "Nebula",
+        "description": "Creates a fog that increases dodge rate and conceals allies.",
+        "effect": {"dodge": 25, "stealth": True, "duration": 5},
+        "damage_multiplier": 1.0,
+        "damage_type": "elemental"
+    },
+    "Gē+Venēnum": {
+        "name": "Miasma",
+        "description": "Creates a toxic zone on the ground that damages over time.",
+        "effect": {"area_damage": True, "poison": 3, "movement": -20, "duration": 5},
+        "damage_multiplier": 1.4,
+        "damage_type": "elemental"
+    },
+    
+    # New Reactions with Viridia
+    "Viridia+Ignis": {
+        "name": "Combustio",
+        "description": "Plants burst into flames, creating widespread burning damage.",
+        "effect": {"area_damage": True, "burn": 5, "duration": 5},
+        "damage_multiplier": 1.5,
+        "damage_type": "elemental"
+    },
+    "Viridia+Aqua": {
+        "name": "Virescentia",
+        "description": "Plants flourish with water, creating a healing zone and boosting attack.",
+        "effect": {"healing_zone": True, "heal": 15, "attack": 15, "duration": 5},
+        "damage_multiplier": 1.0,
+        "damage_type": "elemental"
+    },
+    "Viridia+Venēnum": {
+        "name": "Toxicum",
+        "description": "Creates highly toxic plants that release deadly poison.",
+        "effect": {"poison": 7, "area_damage": True, "duration": 5},
+        "damage_multiplier": 1.7,
+        "damage_type": "elemental"
+    },
+    "Viridia+Aer": {
+        "name": "Pollinis",
+        "description": "Spreads pollen that causes confusion and mild healing.",
+        "effect": {"confusion": True, "heal": 10, "duration": 5},
+        "damage_multiplier": 1.2,
+        "damage_type": "elemental"
+    },
+    "Viridia+Gē": {
+        "name": "Arbores",
+        "description": "Creates massive roots that entangle foes and boost defense.",
+        "effect": {"entangle": True, "defense": 20, "duration": 5},
+        "damage_multiplier": 1.3,
+        "damage_type": "elemental"
+    },
+    "Viridia+Lux": {
+        "name": "Photosynthesis",
+        "description": "Plants absorb light energy for massive healing and energy restoration.",
+        "effect": {"heal": 30, "energy": 30, "duration": 5},
+        "damage_multiplier": 1.0,
+        "damage_type": "elemental"
+    },
+    
+    # Nullum combinations
+    "Nullum+Ignis": {
+        "name": "Flamma Pura",
+        "description": "Physical strike infused with fire, ignoring elemental resistances.",
+        "effect": {"pierce_resistance": True, "burn": 2, "duration": 5},
+        "damage_multiplier": 1.6,
+        "damage_type": "physical"
+    },
+    "Nullum+Aqua": {
+        "name": "Fluctus",
+        "description": "Physical force with water pressure, pushing enemies back.",
+        "effect": {"knockback": True, "slow": 15, "duration": 5},
+        "damage_multiplier": 1.4,
+        "damage_type": "physical"
+    },
+    "Nullum+Fulmen": {
+        "name": "Percussum",
+        "description": "Electrified physical strike that stuns enemies.",
+        "effect": {"stun": 2, "duration": 5},
+        "damage_multiplier": 1.5,
+        "damage_type": "physical"
+    },
+    "Nullum+Ferrum": {
+        "name": "Acies",
+        "description": "Perfect physical strike that increases critical chance.",
+        "effect": {"critical_chance": 20, "duration": 5},
+        "damage_multiplier": 1.8,
+        "damage_type": "physical"
+    }
+}
+
+# Legendary items with special effects
+LEGENDARY_ITEMS = {
+    "Crown of New Dawn": {
+        "type": "armor",
+        "effect": 30,
+        "special_ability": "Grants 10% chance to resurrect upon death",
+        "description": "A legendary crown forged from otherworldly materials, rumored to be blessed by the gods themselves."
+    },
+    "Dimensional Compass": {
+        "type": "accessory",
+        "effect": 0,
+        "special_ability": "Allows travel to dimensional rifts",
+        "description": "A mysterious compass that points to places between worlds."
+    },
+    "Godforged Artifact": {
+        "type": "weapon",
+        "effect": 50,
+        "special_ability": "Weapon damage scales with your character level",
+        "description": "A weapon of divine origin, growing in power as its wielder does."
+    },
+    "Celestial Aegis": {
+        "type": "armor",
+        "effect": 40,
+        "special_ability": "Reduces all damage by 20%",
+        "description": "A shield forged from the scales of a celestial dragon."
+    },
+    "Timekeeper's Pendant": {
+        "type": "accessory",
+        "effect": 0,
+        "special_ability": "30% chance to perform a double attack",
+        "description": "A pendant containing grains of timesand, allowing its wearer to occasionally bend time."
+    },
+    "Phoenix Plume": {
+        "type": "accessory",
+        "effect": 0,
+        "special_ability": "Auto-resurrect once per dungeon",
+        "description": "A feather from the legendary phoenix, pulsing with the essence of rebirth."
+    },
+    "Worldbreaker": {
+        "type": "weapon",
+        "effect": 60,
+        "special_ability": "10% chance to instantly defeat non-boss enemies",
+        "description": "A massive hammer said to have been used to shape the very mountains."
+    },
+    "Voidwalker Boots": {
+        "type": "armor",
+        "effect": 20,
+        "special_ability": "50% chance to dodge any attack",
+        "description": "Boots that phase in and out of reality, making the wearer difficult to hit."
+    }
+}
+
+# Post-game activity functions
+def dimensional_rifts() -> None:
+    """Function to handle dimensional rift exploration"""
+    print_header("DIMENSIONAL RIFTS")
+    
+    if "Dimensional Compass" not in user_data["inventory"]:
+        print_colored("You need the 'Dimensional Compass' to navigate the rifts!", WARNING)
+        print_colored("Complete the 'Dimensional Rifts' storyline to obtain it.", YELLOW)
+        return
+    
+    rifts = [
+        "Mirror Dimension", 
+        "Time Fracture", 
+        "Shadow Realm", 
+        "Elemental Plane", 
+        "Dream World"
+    ]
+    
+    print_colored("Available rifts:", CYAN)
+    for idx, rift in enumerate(rifts, 1):
+        print(f"{idx}. {rift}")
+    
+    choice = input("\nSelect a rift to explore (1-5) or 'back' to return: ")
+    
+    if choice.lower() == "back":
+        return
+    elif choice.isdigit() and 1 <= int(choice) <= len(rifts):
+        selected_rift = rifts[int(choice)-1]
+        print_colored(f"Entering the {selected_rift}...", CYAN)
+        print_colored("This feature will be expanded in future updates.", YELLOW)
+        
+        # Give player a small reward for trying this feature
+        reward_gold = random.randint(100, 500)
+        user_data["gold"] += reward_gold
+        print_colored(f"You found {reward_gold} gold in the rift!", OKGREEN)
+    else:
+        print_colored("Invalid choice.", FAIL)
+
+def divine_trials() -> None:
+    """Function to handle divine trials"""
+    print_header("DIVINE TRIALS")
+    
+    trials = [
+        "Trial of Strength", 
+        "Trial of Wisdom", 
+        "Trial of Courage", 
+        "Trial of Endurance", 
+        "Trial of Balance"
+    ]
+    
+    print_colored("The gods have set forth these trials:", CYAN)
+    for idx, trial in enumerate(trials, 1):
+        completed = f"{OKGREEN}✓{ENDC}" if f"{trial}" in user_data.get("completed_trials", []) else f"{YELLOW}◯{ENDC}"
+        print(f"{idx}. {completed} {trial}")
+    
+    choice = input("\nSelect a trial to attempt (1-5) or 'back' to return: ")
+    
+    if choice.lower() == "back":
+        return
+    elif choice.isdigit() and 1 <= int(choice) <= len(trials):
+        selected_trial = trials[int(choice)-1]
+        print_colored(f"Preparing for the {selected_trial}...", CYAN)
+        print_colored("This feature will be expanded in future updates.", YELLOW)
+        
+        # Mark trial as completed for testing purposes
+        user_data.setdefault("completed_trials", []).append(selected_trial)
+        
+        # Give player a small reward
+        if len(user_data.get("completed_trials", [])) >= 5:
+            if "Godforged Artifact" not in user_data["inventory"]:
+                user_data["inventory"].append("Godforged Artifact")
+                print_colored("You have completed all divine trials!", OKGREEN)
+                print_colored("The gods bestow upon you the GODFORGED ARTIFACT!", MAGENTA)
+    else:
+        print_colored("Invalid choice.", FAIL)
+
+def legendary_hunts() -> None:
+    """Function to handle legendary monster hunts"""
+    print_header("LEGENDARY HUNTS")
+    
+    legendary_monsters = [
+        {"name": "Ancient Dragon", "level": 35, "health": 500, "attack": 50, "drops": ["Dragon's Heart", "Dragon Scale"]},
+        {"name": "Behemoth", "level": 40, "health": 700, "attack": 60, "drops": ["Behemoth Horn", "Massive Hide"]},
+        {"name": "Kraken", "level": 45, "health": 800, "attack": 70, "drops": ["Kraken Ink", "Giant Tentacle"]},
+        {"name": "Phoenix", "level": 50, "health": 600, "attack": 80, "drops": ["Phoenix Plume", "Eternal Flame"]},
+        {"name": "World Serpent", "level": 55, "health": 1000, "attack": 90, "drops": ["Serpent Fang", "World Scale"]}
+    ]
+    
+    print_colored("These legendary beasts await worthy challengers:", CYAN)
+    for idx, monster in enumerate(legendary_monsters, 1):
+        hunted = f"{OKGREEN}✓{ENDC}" if monster["name"] in user_data.get("legendary_hunts_completed", []) else f"{YELLOW}◯{ENDC}"
+        print(f"{idx}. {hunted} {monster['name']} (Level {monster['level']})")
+        
+    choice = input("\nSelect a monster to hunt (1-5) or 'back' to return: ")
+    
+    if choice.lower() == "back":
+        return
+    elif choice.isdigit() and 1 <= int(choice) <= len(legendary_monsters):
+        selected_monster = legendary_monsters[int(choice)-1]
+        
+        if user_data["level"] < selected_monster["level"]:
+            print_colored("You are not strong enough to face this monster yet!", WARNING)
+            print_colored(f"Required level: {selected_monster['level']}", YELLOW)
+            return
+            
+        print_colored(f"Hunting the {selected_monster['name']}...", CYAN)
+        
+        # Simulate fight with the monster
+        fight(selected_monster)
+        
+        # If player survived and monster was defeated
+        if user_data["health"] > 0:
+            user_data.setdefault("legendary_hunts_completed", []).append(selected_monster["name"])
+    else:
+        print_colored("Invalid choice.", FAIL)
+
+def time_trials() -> None:
+    """Function to handle dungeon time trials"""
+    print_header("TIME TRIALS")
+    
+    # Get completed dungeons
+    completed_dungeons = user_data.get("dungeons_completed", [])
+    if len(completed_dungeons) < 3:
+        print_colored("You need to complete at least 3 dungeons to access Time Trials!", WARNING)
+        return
+        
+    print_colored("Select a dungeon to challenge in Time Trial mode:", CYAN)
+    for idx, dungeon_name in enumerate(completed_dungeons, 1):
+        trial_record = user_data.get("time_trial_records", {}).get(dungeon_name, "No record")
+        print(f"{idx}. {dungeon_name} - Best time: {trial_record}")
+    
+    choice = input("\nSelect a dungeon (1-{}) or 'back' to return: ".format(len(completed_dungeons)))
+    
+    if choice.lower() == "back":
+        return
+    elif choice.isdigit() and 1 <= int(choice) <= len(completed_dungeons):
+        selected_dungeon = completed_dungeons[int(choice)-1]
+        print_colored(f"Preparing Time Trial for {selected_dungeon}...", CYAN)
+        print_colored("This feature will be expanded in future updates.", YELLOW)
+        
+        # Simulate a trial record
+        completion_time = random.randint(60, 300)  # Random time between 1-5 minutes
+        minutes = completion_time // 60
+        seconds = completion_time % 60
+        time_str = f"{minutes}m {seconds}s"
+        
+        user_data.setdefault("time_trial_records", {})[selected_dungeon] = time_str
+        print_colored(f"Trial completed in {time_str}!", OKGREEN)
+        
+        if "Timekeeper's Pendant" not in user_data["inventory"] and len(user_data.get("time_trial_records", {})) >= 5:
+            user_data["inventory"].append("Timekeeper's Pendant")
+            print_colored("You've mastered the flow of time!", OKGREEN)
+            print_colored("You've earned the TIMEKEEPER'S PENDANT!", MAGENTA)
+    else:
+        print_colored("Invalid choice.", FAIL)
+
+def new_game_plus() -> None:
+    """Function to handle New Game+ mode"""
+    print_header("NEW GAME+")
+    
+    if user_data["level"] < 50:
+        print_colored("You need to reach level 50 to start New Game+!", WARNING)
+        return
+        
+    print_colored("WARNING: Starting New Game+ will reset your story progress", FAIL)
+    print_colored("but you'll keep your level, skills, and equipment.", YELLOW)
+    
+    confirm = input("\nAre you sure you want to start New Game+? (yes/no): ")
+    
+    if confirm.lower() == "yes":
+        # Reset story progress but keep character stats
+        user_data["active_quests"] = []
+        user_data["completed_quests"] = []
+        user_data["current_area"] = "Greenwood Village"
+        user_data["dungeons_completed"] = []
+        
+        # Add bonus
+        user_data["health"] += 50
+        user_data["max_health"] += 50
+        user_data["attack"] += 10
+        user_data["defense"] += 10
+        
+        print_colored("You have started New Game+!", OKGREEN)
+        print_colored("The world has reset, but you retain your power!", CYAN)
+        print_colored("You've gained permanent stat bonuses!", MAGENTA)
+    else:
+        print_colored("New Game+ cancelled.", YELLOW)
+
+def endless_tower() -> None:
+    """Function to handle the Endless Tower challenge"""
+    print_header("ENDLESS TOWER")
+    
+    current_floor = user_data.get("endless_tower_floor", 0)
+    print_colored(f"Current highest floor: {current_floor}", CYAN)
+    
+    print_colored("The Endless Tower challenges await...", YELLOW)
+    print_colored("Each floor contains stronger enemies than the last.", YELLOW)
+    print_colored("How high can you climb?", CYAN)
+    
+    options = ["Climb higher", "Claim rewards", "Exit"]
+    for idx, option in enumerate(options, 1):
+        print(f"{idx}. {option}")
+    
+    choice = input("\nSelect an option: ")
+    
+    if choice == "1":
+        # Climb to next floor
+        next_floor = current_floor + 1
+        print_colored(f"Climbing to floor {next_floor}...", CYAN)
+        
+        # Generate a monster based on floor number
+        monster = {
+            "name": f"Tower Guardian {next_floor}",
+            "level": 30 + next_floor,
+            "health": 100 + (next_floor * 20),
+            "attack": 20 + (next_floor * 3),
+            "drops": ["Tower Fragment", "Ancient Coin", "Magic Dust"]
+        }
+        
+        print_colored(f"You encounter {monster['name']}!", YELLOW)
+        
+        # Simulate fight
+        fight(monster)
+        
+        # If player won, advance to next floor
+        if user_data["health"] > 0:
+            user_data["endless_tower_floor"] = next_floor
+            print_colored(f"You've reached floor {next_floor}!", OKGREEN)
+            
+            # Special rewards for milestone floors
+            if next_floor == 10:
+                user_data["inventory"].append("Tower Champion's Badge")
+                print_colored("You've earned the Tower Champion's Badge!", MAGENTA)
+            elif next_floor == 25:
+                user_data["inventory"].append("Celestial Aegis")
+                print_colored("You've earned the CELESTIAL AEGIS!", MAGENTA)
+            elif next_floor == 50:
+                user_data["inventory"].append("Tower Master's Crown")
+                print_colored("You've earned the Tower Master's Crown!", MAGENTA)
+        else:
+            print_colored("You were defeated! The tower has repelled you.", FAIL)
+    elif choice == "2":
+        # Calculate rewards based on highest floor
+        if current_floor == 0:
+            print_colored("You haven't climbed any floors yet!", WARNING)
+            return
+            
+        gold_reward = current_floor * 100
+        exp_reward = current_floor * 50
+        
+        user_data["gold"] += gold_reward
+        user_data["exp"] += exp_reward
+        
+        print_colored(f"You received {gold_reward} gold and {exp_reward} experience!", OKGREEN)
+    elif choice == "3":
+        return
+    else:
+        print_colored("Invalid choice.", FAIL)
 
 # Developer settings and commands
 DEV_COMMANDS = {
@@ -2293,6 +4257,11 @@ def handle_command(cmd: str) -> None:
         "/guild_join": guild_join,
         "/guild_leave": guild_leave,
         "/guild_list": guild_list,
+        # New item enhancement commands
+        "/upgrade": upgrade_item,
+        "/enchant": enchant_item,
+        "/use": lambda: use_potion(cmd.split(" ", 1)[1] if len(cmd.split(" ", 1)) > 1 else ""),
+        "/chest": lambda: open_chest(cmd.split(" ", 1)[1] if len(cmd.split(" ", 1)) > 1 else "Common"),
         "/areas": area_guides,
         "/dungeons": dungeon_guides,
         "/timetravel": time_travel_guide,
@@ -2354,6 +4323,23 @@ def handle_command(cmd: str) -> None:
         train_pet(cmd.split(" ", 1)[1])
     elif cmd.startswith("/quest_complete "):
         complete_quest(cmd.split(" ", 1)[1])
+    # Post-game commands
+    elif cmd == "/postgame":
+        show_postgame_content()
+    elif cmd == "/rifts":
+        dimensional_rifts()
+    elif cmd == "/trials":
+        divine_trials()
+    elif cmd == "/legendary_hunts":
+        legendary_hunts()
+    elif cmd == "/time_trials":
+        time_trials()
+    elif cmd == "/newgame+":
+        new_game_plus()
+    elif cmd == "/tower":
+        endless_tower()
+    elif cmd.startswith("/inspect "):
+        inspect_item(cmd.split(" ", 1)[1])
     elif cmd in commands:
         commands[cmd]()
     else:
@@ -2439,28 +4425,10 @@ def adopt_pet(pet_name: str) -> None:
     print_header("Adopt Pet")
     print(f"Adopted a new pet named {pet_name}!")
 
-    def show_mobs(area: str = None) -> None:
-        print_header("Monsters")
-        target_area = area if area else user_data["current_area"]
-
-    target_area = user_data.get("current_area", None)
-    if target_area not in LOCATIONS:
-        print(f"Invalid area: {target_area}")
-        return
-
-    area_monster_names = LOCATIONS[target_area].get("monsters", [])
-    area_monsters = [m for m in monsters if m["name"] in area_monster_names]
-
-    if area_monsters:
-        print(f"Monsters in {target_area}:")
-        for monster in area_monsters:
-            print(f"- {monster['name']} (Level {monster['level']})")
-            print(f"  Health: {monster['health']}, Attack: {monster['attack']}")
-            if monster.get("boss", False):
-                print(f"  {RED}⚠ BOSS MONSTER ⚠{ENDC}")
-    else:
-        print(f"No monsters found in {target_area}")
-
+def show_mobs(area: Optional[str] = None) -> None:
+    print_header("Monsters")
+    target_area = area if area else user_data.get("current_area", "")
+    
     if target_area not in LOCATIONS:
         print(f"Invalid area: {target_area}")
         return
@@ -2506,8 +4474,8 @@ def fight(monster: Dict) -> None:
 
             if choice == "1":
                 # Calculate damage with equipped weapon
-                base_damage = user_data["attack"]
-                weapon_bonus = user_data["equipped"]["weapon"]["effect"] if user_data["equipped"]["weapon"] else 0
+                base_damage = user_data.get("attack", 10)  # Default attack value if not found
+                weapon_bonus = user_data.get("equipped", {}).get("weapon", {}).get("effect", 0)
                 damage = base_damage + weapon_bonus
 
                 if random.random() < CRITICAL_CHANCE:
@@ -2569,7 +4537,7 @@ def fight(monster: Dict) -> None:
 
             # Monster attacks if still alive
             if monster_health > 0:
-                defense_bonus = user_data["equipped"]["armor"]["effect"] if user_data["equipped"]["armor"] else 0
+                defense_bonus = user_data.get("equipped", {}).get("armor", {}).get("effect", 0)
                 damage_taken = max(1, monster["attack"] - defense_bonus)
                 if random.random() > DODGE_CHANCE:
                     user_data["health"] -= damage_taken
@@ -2593,19 +4561,10 @@ def fight(monster: Dict) -> None:
         # Check if monster is a boss
         if monster.get("boss", False):
             print(f"Congratulations! You defeated the boss {monster['name']}!")
-            # Mark dungeon as completed if in a dungeon
-            for dungeon in dungeons:
-                if monster['name'] in dungeon['monsters']:
-                    if dungeon['name'] not in user_data["dungeons_completed"]:
-                        user_data["dungeons_completed"].append(dungeon['name'])
-                        print(f"You have completed the dungeon: {dungeon['name']}!")
-                        # Reward player (example: gold and exp bonus)
-                        reward_gold = 500
-                        reward_exp = 1000
-                        user_data["gold"] += reward_gold
-                        user_data["exp"] += reward_exp
-                        print(f"You received {reward_gold} gold and {reward_exp} experience as a reward!")
-                    break
+            # Note: We no longer auto-complete dungeons here
+            # Dungeon completion is now handled directly in enter_dungeon function
+            # This prevents confusion between fighting bosses outside dungeons
+            # and completing dungeon runs
         else:
             # Check for level up
             check_level_up()
@@ -2649,10 +4608,10 @@ def save_game(slot: int = 1, auto: bool = False) -> None:
         print(f"Error saving game: {e}")
 
 def load_game(slot: int = 1) -> bool:
+    save_dir = get_save_directory()
+    filename = os.path.join(save_dir, f"save_{slot}.json")
+    
     try:
-        save_dir = get_save_directory()
-        filename = os.path.join(save_dir, f"save_{slot}.json")
-
         if not os.path.exists(filename):
             print(f"No saved game found in slot {slot}.")
             return False
@@ -2823,6 +4782,7 @@ def enter_dungeon(dungeon_name: str) -> None:
             max_monsters = min(max_monsters, len(dungeon["monsters"]))
 
         monsters_fought = 0
+        all_monsters_defeated = True
         for monster_name in dungeon["monsters"]:
             if monsters_fought >= max_monsters:
                 print_colored(f"Reached limit of {max_monsters} monsters for this dungeon (no boss present).", YELLOW)
@@ -2831,6 +4791,7 @@ def enter_dungeon(dungeon_name: str) -> None:
                 monster = next(m for m in monsters if m["name"].lower() == monster_name.lower())
                 if user_data["health"] <= 0:
                     print_colored("You were defeated! Dungeon run failed.", FAIL)
+                    all_monsters_defeated = False
                     return
                 # If monster is a boss, print special styled name
                 if monster.get("boss", False):
@@ -2839,13 +4800,30 @@ def enter_dungeon(dungeon_name: str) -> None:
                 else:
                     print_colored(f"Encountered: {monster['name']}", CYAN)
                 fight(monster)
+                if user_data["health"] <= 0:
+                    all_monsters_defeated = False
+                    break
                 monsters_fought += 1
             except StopIteration:
                 print_colored(f"Warning: Monster '{monster_name}' not found in database", WARNING)
                 continue
 
-        if user_data["health"] > 0:
+        if user_data["health"] > 0 and all_monsters_defeated:
             print_colored(f"You have completed the {dungeon['name']}!", OKGREEN)
+            
+            # Mark dungeon as completed
+            if dungeon['name'] not in user_data.get("dungeons_completed", []):
+                user_data.setdefault("dungeons_completed", []).append(dungeon['name'])
+                print_colored(f"Dungeon {dungeon['name']} has been marked as completed!", OKGREEN)
+                
+                # Additional reward for first completion
+                reward_gold = 500
+                reward_exp = 1000
+                user_data["gold"] += reward_gold
+                user_data["exp"] += reward_exp
+                print_colored(f"You received {reward_gold} gold and {reward_exp} experience as a completion reward!", MAGENTA)
+            
+            # Get loot regardless of completion status
             loot_item = random.choice(dungeon["loot"])
             print_colored(f"At the end of the dungeon, you found: {loot_item}", MAGENTA)
             user_data["inventory"].append(loot_item)
@@ -2947,19 +4925,19 @@ def list_dungeons() -> None:
             name = dungeon['name']
             completed = name in user_data.get("dungeons_completed", [])
             if completed:
-                print(f"{OKGREEN}[✓] {name}{ENDC}")
+                print(f"{OKGREEN}✓ {name}{ENDC}")
                 # Show rewards if completed
                 if "loot" in dungeon:
                     print(f"  Rewards collected: {', '.join(dungeon['loot'])}")
             else:
-                # Show requirements if not completed  
+                # Show requirements if not completed
                 reqs = []
                 if "level_required" in dungeon:
                     reqs.append(f"Level {dungeon['level_required']}")
                 if reqs:
-                    print(f"{FAIL}[!] {name} (Required: {', '.join(reqs)}){ENDC}")
+                    print(f"{FAIL}✗ {name} (Required: {', '.join(reqs)}){ENDC}")
                 else:
-                    print(f"{FAIL}[x] {name}{ENDC}")
+                    print(f"{FAIL}✗ {name}{ENDC}")
             # Show monsters
             if "monsters" in dungeon:
                 print(f"  Monsters: {', '.join(dungeon['monsters'])}")
@@ -3394,12 +5372,173 @@ def time_travel_guide() -> None:
 
 # Show inventory function stub
 def show_inventory() -> None:
-    print_header("Inventory")
+    print_header("INVENTORY")
     if not user_data["inventory"]:
         print("Your inventory is empty.")
         return
-    for idx, item in enumerate(user_data["inventory"], 1):
-        print(f"{idx}. {item}")
+        
+    # Group items by type
+    weapons = []
+    armors = []
+    accessories = []
+    artifacts = []
+    potions = []
+    misc = []
+    
+    for item_name in user_data["inventory"]:
+        # Check if this is an item object with details
+        if isinstance(item_name, dict):
+            item = item_name
+            item_name = item["name"]
+            
+            if item.get("type") == "weapon":
+                weapons.append(item)
+            elif item.get("type") == "armor":
+                armors.append(item)
+            elif item.get("type") == "accessory":
+                accessories.append(item)
+            elif item.get("type") == "artifact":
+                artifacts.append(item)
+            elif item.get("type") == "potion":
+                potions.append(item)
+            else:
+                misc.append(item_name)
+        else:
+            # For simple string items, check against recipes
+            if item_name in CRAFTING_RECIPES:
+                recipe = CRAFTING_RECIPES[item_name]
+                if recipe.get("type") == "weapon":
+                    weapons.append(item_name)
+                elif recipe.get("type") == "armor":
+                    armors.append(item_name)
+                elif recipe.get("type") == "accessory":
+                    accessories.append(item_name)
+                elif recipe.get("type") == "artifact":
+                    artifacts.append(item_name)
+                else:
+                    misc.append(item_name)
+            elif item_name in POTION_RECIPES:
+                potions.append(item_name)
+            else:
+                misc.append(item_name)
+    
+    # Display sections
+    if weapons:
+        print(f"\n{BLUE}WEAPONS:{ENDC}")
+        for idx, item in enumerate(weapons, 1):
+            if isinstance(item, dict):
+                level_str = f" (Level {item.get('level', 1)})" if item.get('level', 1) > 1 else ""
+                element_str = f" [{item.get('element', 'Nullum')}]" if 'element' in item else ""
+                enchant_str = ""
+                if "enchantments" in item and item["enchantments"]:
+                    enchants = []
+                    for name, level in item["enchantments"].items():
+                        enchants.append(f"{name} {level}")
+                    enchant_str = f" | {', '.join(enchants)}"
+                print(f"{idx}. {item['name']}{level_str}{element_str}{enchant_str}")
+            else:
+                print(f"{idx}. {item}")
+    
+    if armors:
+        print(f"\n{GREEN}ARMORS:{ENDC}")
+        for idx, item in enumerate(armors, 1):
+            if isinstance(item, dict):
+                level_str = f" (Level {item.get('level', 1)})" if item.get('level', 1) > 1 else ""
+                enchant_str = ""
+                if "enchantments" in item and item["enchantments"]:
+                    enchants = []
+                    for name, level in item["enchantments"].items():
+                        enchants.append(f"{name} {level}")
+                    enchant_str = f" | {', '.join(enchants)}"
+                print(f"{idx}. {item['name']}{level_str}{enchant_str}")
+            else:
+                print(f"{idx}. {item}")
+    
+    if accessories:
+        print(f"\n{MAGENTA}ACCESSORIES:{ENDC}")
+        for idx, item in enumerate(accessories, 1):
+            if isinstance(item, dict):
+                print(f"{idx}. {item['name']}")
+            else:
+                print(f"{idx}. {item}")
+    
+    if artifacts:
+        print(f"\n{YELLOW}ARTIFACTS:{ENDC}")
+        for idx, item in enumerate(artifacts, 1):
+            if isinstance(item, dict):
+                rarity = item.get("rarity", "Common")
+                slot = item.get("slot", "")
+                rarity_color = ARTIFACT_RARITIES.get(rarity, {}).get("color", "")
+                print(f"{idx}. {rarity_color}{item['name']}{ENDC} ({slot})")
+            else:
+                # Try to get artifact info from recipes
+                artifact_info = CRAFTING_RECIPES.get(item, {})
+                rarity = artifact_info.get("rarity", "Common")
+                slot = artifact_info.get("slot", "")
+                rarity_color = ARTIFACT_RARITIES.get(rarity, {}).get("color", "")
+                if slot:
+                    print(f"{idx}. {rarity_color}{item}{ENDC} ({slot})")
+                else:
+                    print(f"{idx}. {item}")
+    
+    if potions:
+        print(f"\n{CYAN}POTIONS:{ENDC}")
+        for idx, item in enumerate(potions, 1):
+            if isinstance(item, dict):
+                print(f"{idx}. {item['name']}")
+            else:
+                # Try to get potion description from recipes
+                potion_info = POTION_RECIPES.get(item, {})
+                desc = potion_info.get("description", "")
+                if desc:
+                    print(f"{idx}. {item} - {desc}")
+                else:
+                    print(f"{idx}. {item}")
+    
+    if misc:
+        print(f"\n{ENDC}OTHER ITEMS:{ENDC}")
+        for idx, item in enumerate(misc, 1):
+            print(f"{idx}. {item}")
+    
+    print(f"\nGold: {user_data['gold']}")
+    
+    # Display equipped items
+    print("\nEquipped:")
+    
+    # Weapon
+    if user_data.get("equipped", {}).get("weapon"):
+        weapon = user_data["equipped"]["weapon"]
+        level_str = f" (Level {weapon.get('level', 1)})" if weapon.get('level', 1) > 1 else ""
+        element_str = f" [{weapon.get('element', 'Nullum')}]" if 'element' in weapon else ""
+        print(f"Weapon: {weapon['name']}{level_str}{element_str}")
+    else:
+        print("Weapon: None")
+        
+    # Armor
+    if user_data.get("equipped", {}).get("armor"):
+        armor = user_data["equipped"]["armor"]
+        level_str = f" (Level {armor.get('level', 1)})" if armor.get('level', 1) > 1 else ""
+        print(f"Armor: {armor['name']}{level_str}")
+    else:
+        print("Armor: None")
+        
+    # Accessory
+    if user_data.get("equipped", {}).get("accessory"):
+        print(f"Accessory: {user_data['equipped']['accessory']['name']}")
+    else:
+        print("Accessory: None")
+        
+    # Artifacts
+    print("\nArtifacts:")
+    for slot in ARTIFACT_SLOTS:
+        slot_key = f"artifact_{slot.lower()}"
+        if user_data.get("equipped", {}).get(slot_key):
+            artifact = user_data["equipped"][slot_key]
+            rarity = artifact.get("rarity", "Common")
+            rarity_color = ARTIFACT_RARITIES.get(rarity, {}).get("color", "")
+            print(f"{slot}: {rarity_color}{artifact.get('name', 'Unknown')}{ENDC}")
+        else:
+            print(f"{slot}: None")
 
 # Daily monster function stub
 def daily_monster() -> None:
@@ -3800,8 +5939,8 @@ def fight_monster(monster_name: str) -> None:
 
                 if choice == "1":
                     # Calculate damage with equipped weapon
-                    base_damage = user_data["attack"]
-                    weapon_bonus = user_data["equipped"]["weapon"]["effect"] if user_data["equipped"]["weapon"] else 0
+                    base_damage = user_data.get("attack", 10)  # Default attack value if not found
+                    weapon_bonus = user_data.get("equipped", {}).get("weapon", {}).get("effect", 0)
                     damage = base_damage + weapon_bonus
 
                     if random.random() < CRITICAL_CHANCE:
@@ -3863,7 +6002,7 @@ def fight_monster(monster_name: str) -> None:
 
                 # Monster attacks if still alive
                 if monster_health > 0:
-                    defense_bonus = user_data["equipped"]["armor"]["effect"] if user_data["equipped"]["armor"] else 0
+                    defense_bonus = user_data.get("equipped", {}).get("armor", {}).get("effect", 0)
                     damage_taken = max(1, monster["attack"] - defense_bonus)
                     if random.random() > DODGE_CHANCE:
                         user_data["health"] -= damage_taken
@@ -4092,7 +6231,7 @@ def delete_save_prompt() -> None:
     except ValueError:
         print("Invalid input. Please enter a number.")
 
-def talk_to_npc(npc_name: str = None) -> None:
+def talk_to_npc(npc_name: Optional[str] = None) -> None:
     if not npc_name:
         print_header("Available NPCs")
         npcs_here = [name for name, npc in NPCS.items() if npc["location"] == user_data["current_area"]]
@@ -4221,8 +6360,38 @@ def list_npcs() -> None:
 def show_storyline() -> None:
     print_header("Main Storyline")
     current_chapter = None
-
+    
+    # Count completed main chapters and check for post-game access
+    completed_main_chapters = 0
     for chapter_name, chapter in STORYLINE.items():
+        # Skip post-game chapters in the count
+        if chapter.get("post_game", False):
+            continue
+            
+        completed_quests = all(
+            any(q["name"] == quest_name and q["id"] in user_data["completed_quests"] 
+                for q in QUESTS)
+            for quest_name in chapter["quest_line"]
+        )
+        
+        if completed_quests:
+            completed_main_chapters += 1
+    
+    # Check if player has unlocked post-game content
+    post_game_unlocked = completed_main_chapters >= 6  # After completing 6 main chapters
+    if post_game_unlocked and not user_data.get("post_game_unlocked", False):
+        user_data["post_game_unlocked"] = True
+        print_colored("✧・゚: *✧・゚:* CONGRATULATIONS *:・゚✧*:・゚✧", CYAN)
+        print_colored("You have completed the main storyline and unlocked post-game content!", OKGREEN)
+        print_colored("New adventures and challenges await in the post-game chapters!", OKGREEN)
+        print_colored("Type '/postgame' to access special post-game content.", MAGENTA)
+
+    # Display chapters based on story progression
+    for chapter_name, chapter in STORYLINE.items():
+        # Skip post-game chapters if not unlocked
+        if chapter.get("post_game", False) and not user_data.get("post_game_unlocked", False):
+            continue
+            
         if user_data["level"] >= chapter["required_level"]:
             completed_quests = all(
                 any(q["name"] == quest_name and q["id"] in user_data["completed_quests"] 
@@ -4236,7 +6405,13 @@ def show_storyline() -> None:
                 status = f"{YELLOW}► In Progress{ENDC}"
             else:
                 status = f"{FAIL}- Locked{ENDC}"
-            print(f"\n{BOLD}{chapter['title']} [{status}]{ENDC}")
+                
+            # Add special formatting for post-game chapters
+            if chapter.get("post_game", False):
+                print(f"\n{BOLD}{MAGENTA}⚝ {chapter['title']} [{status}] ⚝{ENDC}")
+            else:
+                print(f"\n{BOLD}{chapter['title']} [{status}]{ENDC}")
+                
             print(f"Required Level: {chapter['required_level']}")
             print(f"Description: {chapter['description']}")
 
@@ -4248,6 +6423,68 @@ def show_storyline() -> None:
                     if quest:
                         quest_status = f"{OKGREEN}✓{ENDC}" if quest["id"] in user_data["completed_quests"] else f"{YELLOW}►{ENDC}"
                         print(f"  {quest_status} {quest_name}")
+                        
+def show_postgame_content() -> None:
+    """Display post-game exclusive content and challenges"""
+    if not user_data.get("post_game_unlocked", False):
+        print_colored("You have not yet unlocked post-game content.", FAIL)
+        print_colored("Complete the main storyline first!", YELLOW)
+        return
+        
+    print_header("POST-GAME CONTENT")
+    print_colored("Welcome to the post-game adventures!", MAGENTA)
+    
+    # Show available post-game activities
+    print("\n" + BOLD + "Available Activities:" + ENDC)
+    
+    # Dimensional Rifts
+    print(f"\n{CYAN}1. Dimensional Rifts{ENDC}")
+    print("  Explore alternate realities with unique challenges and rewards.")
+    print("  Requirements: Level 35+")
+    
+    # Divine Trials
+    print(f"\n{CYAN}2. Divine Trials{ENDC}")
+    print("  Face the challenges of the gods to earn divine artifacts.")
+    print("  Requirements: Level 40+")
+    
+    # Legendary Hunts
+    print(f"\n{CYAN}3. Legendary Hunts{ENDC}")
+    print("  Track down and defeat legendary monsters for rare loot.")
+    print("  Requirements: Level 30+")
+    
+    # Time Trials
+    print(f"\n{CYAN}4. Time Trials{ENDC}")
+    print("  Complete dungeons against the clock for special rewards.")
+    print("  Requirements: Complete any 3 dungeons")
+    
+    # New Game+
+    print(f"\n{CYAN}5. New Game+{ENDC}")
+    print("  Start a new journey with your current level and equipment.")
+    print("  Requirements: Level 50+")
+    
+    # Endless Tower
+    print(f"\n{CYAN}6. Endless Tower{ENDC}")
+    print("  Climb the infinite tower with increasingly difficult challenges.")
+    print("  Requirements: Level 35+")
+    
+    choice = input("\nEnter a number to learn more, or type 'back' to return: ")
+    
+    if choice == "1" and user_data["level"] >= 35:
+        dimensional_rifts()
+    elif choice == "2" and user_data["level"] >= 40:
+        divine_trials()
+    elif choice == "3" and user_data["level"] >= 30:
+        legendary_hunts()
+    elif choice == "4" and len(user_data.get("dungeons_completed", [])) >= 3:
+        time_trials()
+    elif choice == "5" and user_data["level"] >= 50:
+        new_game_plus()
+    elif choice == "6" and user_data["level"] >= 35:
+        endless_tower()
+    elif choice.lower() == "back":
+        return
+    else:
+        print_colored("You don't meet the requirements or made an invalid choice.", WARNING)
 
 
 
