@@ -6907,17 +6907,20 @@ if __name__ == "__main__":
     last_save = time.time()
 
     while True:
+        # Auto-save check with error handling
+        current_time = time.time()
         try:
-            # Auto-save check with error handling
-            try:
-                current_time = time.time()
-                if current_time - last_save > AUTO_SAVE_INTERVAL:
-                    auto_save()
-                    last_save = current_time
-            except Exception as e:
-                print(f"{FAIL}Auto-save error: {e}{ENDC}")
+            if current_time - last_save > AUTO_SAVE_INTERVAL:
+                auto_save()
+                last_save = current_time
+        except Exception as e:
+            print(f"{FAIL}Auto-save error: {e}{ENDC}")
 
+        try:
             command = input(f"\n{YELLOW}>> {ENDC}").strip()
+            if command.lower() == "back":
+                continue
+                
             # Do not convert to lowercase to preserve command arguments
             handle_command(command.lower())
 
