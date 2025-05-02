@@ -5,6 +5,10 @@ import os
 import time
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
+from colorama import Fore, Style, init
+
+# Initialize colorama for cross-platform compatibility
+init(autoreset=True, convert=True, strip=False)
 
 # Color constants
 OKBLUE = '\033[94m'
@@ -1804,62 +1808,59 @@ def grant_achievement(name):
 # Elemental Combat Functions
 def calculate_elemental_damage(attacker_element: str, defender_element: str, base_damage: int) -> Tuple[int, str, Dict]:
     """Calculate damage based on elemental interactions and return elemental reaction if applicable
-    
+
     Args:
         attacker_element: The element of the attacker
         defender_element: The element of the defender
         base_damage: The base damage amount
-        
+
     Returns:
         Tuple of (final_damage, reaction_name, reaction_effect)
     """
     damage_multiplier = 1.0
     reaction_name = ""  # Empty string instead of None
     reaction_effect = {}
-    
-    # Define damage types
+
+    # Define damage types and apply base multiplier
     damage_type = ELEMENTS.get(attacker_element, {}).get("damage_type", "physical")
-    
+    if damage_type == "physical":
+        damage_multiplier = 1.2  # Physical damage gets a slight bonus
+    else:
+        damage_multiplier = 1.0  # Elemental damage uses normal multiplier
+
     # Check for immunity (monster immune to their own element)
     if attacker_element == defender_element and defender_element != "Nullum":
         print_colored(f"The {defender_element} creature is immune to {attacker_element} damage!", WARNING)
         return 0, "", {}  # Empty string instead of None
-    
+
     # Check elemental strengths and weaknesses
     if attacker_element in ELEMENTS and defender_element in ELEMENTS:
         # Defender is weak to attacker's element
         if defender_element in ELEMENTS[attacker_element].get("strength", []):
             damage_multiplier = 1.5
             print_colored(f"{attacker_element} is strong against {defender_element}!", OKGREEN)
-            
         # Attacker's element is weak against defender's element
         elif attacker_element in ELEMENTS[defender_element].get("strength", []):
             damage_multiplier = 0.5
             print_colored(f"{attacker_element} is weak against {defender_element}!", FAIL)
-    
-    # Check for potential elemental reaction
+# Check for potential elemental reaction
     reaction_key = f"{attacker_element}+{defender_element}"
     if reaction_key in ELEMENTAL_REACTIONS:
         reaction = ELEMENTAL_REACTIONS[reaction_key]
         reaction_name = reaction["name"]
         reaction_effect = reaction["effect"]
         reaction_multiplier = reaction["damage_multiplier"]
-        
         # Apply elemental reaction multiplier
         damage_multiplier *= reaction_multiplier
-        
         print_colored(f"Elemental Reaction: {reaction_name}!", MAGENTA)
         print_colored(f"{reaction['description']}", CYAN)
-    
     # Calculate final damage with appropriate rounding
     final_damage = int(base_damage * damage_multiplier)
-    
     return final_damage, reaction_name, reaction_effect
-
 
 def apply_elemental_effects(entity_data: Dict, reaction_effect: Dict, is_player: bool = False) -> None:
     """Apply elemental reaction effects to an entity
-    
+
     Args:
         entity_data: The entity to apply effects to (player or monster)
         reaction_effect: The reaction effect data
@@ -1867,18 +1868,18 @@ def apply_elemental_effects(entity_data: Dict, reaction_effect: Dict, is_player:
     """
     if not reaction_effect:
         return
-    
+
     # Initialize status effects if not present
     if "status_effects" not in entity_data:
         entity_data["status_effects"] = {}
-    
+
     duration = reaction_effect.get("duration", 3)
-    
+
     # Apply each effect
     for effect_type, effect_value in reaction_effect.items():
         if effect_type == "duration":  # Skip the duration itself
             continue
-            
+
         # Apply damage over time effects
         if effect_type in ["burn", "poison", "shock", "dot"]:
             entity_data["status_effects"][effect_type] = {
@@ -1888,7 +1889,7 @@ def apply_elemental_effects(entity_data: Dict, reaction_effect: Dict, is_player:
             }
             entity_type = "You are" if is_player else "Enemy is"
             print_colored(f"{entity_type} suffering from {effect_type} damage for {duration} turns!", WARNING)
-            
+
         # Apply stat modifications
         elif effect_type in ["attack", "defense", "evasion", "vision", "dodge", "slow", "movement"]:
             entity_data["status_effects"][effect_type] = {
@@ -1899,7 +1900,7 @@ def apply_elemental_effects(entity_data: Dict, reaction_effect: Dict, is_player:
             stat_change = "boosted" if effect_value > 0 else "reduced"
             entity_type = "Your" if is_player else "Enemy's"
             print_colored(f"{entity_type} {effect_type} is {stat_change} by {abs(effect_value)} for {duration} turns!", CYAN if effect_value > 0 else WARNING)
-            
+
         # Apply healing effects
         elif effect_type == "heal" and effect_value > 0:
             if is_player:
@@ -1908,7 +1909,7 @@ def apply_elemental_effects(entity_data: Dict, reaction_effect: Dict, is_player:
             else:
                 entity_data["health"] = min(entity_data["health"] + effect_value, entity_data.get("max_health", entity_data["health"]))
                 print_colored(f"Enemy is healed for {effect_value} HP!", FAIL)
-                
+
         # Apply control effects
         elif effect_type in ["immobilize", "stun", "confusion", "entangle"]:
             entity_data["status_effects"][effect_type] = {
@@ -1922,16 +1923,16 @@ def apply_elemental_effects(entity_data: Dict, reaction_effect: Dict, is_player:
 
 def update_status_effects(entity_data: Dict, is_player: bool = False) -> None:
     """Update and apply the effects of status conditions
-    
+
     Args:
         entity_data: The entity to update effects for
         is_player: Whether the entity is the player
     """
     if "status_effects" not in entity_data:
         return
-    
+
     effects_to_remove = []
-    
+
     for effect_name, effect_data in entity_data["status_effects"].items():
         # Apply damage over time effects
         if effect_name in ["burn", "poison", "shock", "dot"]:
@@ -1944,14 +1945,14 @@ def update_status_effects(entity_data: Dict, is_player: bool = False) -> None:
             else:
                 entity_data["health"] -= damage
                 print_colored(f"Enemy takes {damage} damage from {effect_name}!", OKGREEN)
-                
+
         # Decrement duration and remove expired effects
         effect_data["duration"] -= 1
         if effect_data["duration"] <= 0:
             effects_to_remove.append(effect_name)
             entity_type = "Your" if is_player else "Enemy's"
             print_colored(f"{entity_type} {effect_name} effect has worn off.", CYAN)
-    
+
     # Clean up expired effects
     for effect_name in effects_to_remove:
         del entity_data["status_effects"][effect_name]
@@ -1961,11 +1962,11 @@ def get_player_element() -> str:
     """Get the player's current element based on equipped items"""
     # Default to physical damage
     element = "Nullum"
-    
+
     # Check for elemental weapon
     if user_data.get("equipped", {}).get("weapon"):
         weapon_name = user_data["equipped"]["weapon"]["name"]
-        
+
         # Search through shop items or any available item collections
         # Note: Just check the weapon name for now, assuming we'll add element attributes
         # to weapons in the future
@@ -1983,25 +1984,52 @@ def get_player_element() -> str:
             "Steel Sword": "Ferrum",
             "Spirit Blade": "Pneuma"
         }
-        
+
         # Check if the weapon has an elemental type
         if weapon_name in weapon_elements:
             element = weapon_elements[weapon_name]
-            
+
     return element
 
-# Artifact categories 
+# Artifact categories and elements
 ARTIFACT_SLOTS = ["Headset", "Necklace", "Clock", "Flower", "Feather", "Ring"]
+
+ARTIFACT_ELEMENTS = {
+    "Ignis": {"bonus": {"fire_damage": 15, "attack": 5}},
+    "Aqua": {"bonus": {"water_damage": 15, "defense": 5}},
+    "Gē": {"bonus": {"earth_damage": 15, "health": 20}},
+    "Aer": {"bonus": {"wind_damage": 15, "speed": 3}},
+    "Fulmen": {"bonus": {"lightning_damage": 15, "critical_chance": 5}},
+    "Glacies": {"bonus": {"ice_damage": 15, "defense": 5}},
+    "Lux": {"bonus": {"light_damage": 15, "healing": 10}},
+    "Tenebrae": {"bonus": {"dark_damage": 15, "lifesteal": 5}},
+    "Venēnum": {"bonus": {"poison_damage": 15, "dot_damage": 5}},
+    "Ferrum": {"bonus": {"physical_damage": 15, "armor_pen": 5}},
+    "Pneuma": {"bonus": {"spirit_damage": 15, "mana": 20}},
+    "Viridia": {"bonus": {"nature_damage": 15, "regeneration": 5}}
+}
+
+def calculate_artifact_bonuses():
+    """Calculate total bonuses from equipped artifacts"""
+    bonuses = {}
+    for slot in ARTIFACT_SLOTS:
+        slot_key = f"artifact_{slot.lower()}"
+        if artifact := user_data.get("equipped", {}).get(slot_key):
+            element = artifact.get("element")
+            if element in ARTIFACT_ELEMENTS:
+                for stat, value in ARTIFACT_ELEMENTS[element]["bonus"].items():
+                    bonuses[stat] = bonuses.get(stat, 0) + value
+    return bonuses
 
 # Function for enhancing weapons with enchantments
 def enchant_item() -> None:
     """Function to enchant weapons and armor with special effects"""
     print_header("ENCHANTMENT FORGE")
-    
+
     if not user_data.get("inventory", []):
         print_colored("You don't have any items to enchant!", FAIL)
         return
-        
+
     # Only show equipable items that can be enchanted
     enchantable_items = []
     for item in user_data["inventory"]:
@@ -2013,11 +2041,11 @@ def enchant_item() -> None:
                 recipe = CRAFTING_RECIPES[item]
                 if recipe.get("type") in ["weapon", "armor"]:
                     enchantable_items.append(item)
-    
+
     if not enchantable_items:
         print_colored("You don't have any items that can be enchanted!", FAIL)
         return
-        
+
     print_colored("Choose an item to enchant:", CYAN)
     for idx, item in enumerate(enchantable_items, 1):
         if isinstance(item, dict):
@@ -2028,21 +2056,21 @@ def enchant_item() -> None:
             print(f"{idx}. {name} (Level {current_level}) - Enchantments: {enchant_str}")
         else:
             print(f"{idx}. {item}")
-    
+
     try:
         choice = int(input("\nEnter item number (0 to cancel): "))
         if choice == 0:
             return
         elif 1 <= choice <= len(enchantable_items):
             selected_item = enchantable_items[choice-1]
-            
+
             # If item is a string, convert to object
             if isinstance(selected_item, str):
                 item_name = selected_item
                 if item_name in CRAFTING_RECIPES:
                     recipe = CRAFTING_RECIPES[item_name]
                     item_type = recipe.get("type", "")
-                    
+
                     if item_type == "weapon":
                         selected_item = {
                             "name": item_name,
@@ -2062,16 +2090,20 @@ def enchant_item() -> None:
                             "experience": 0,
                             "enchantments": {}
                         }
-                    
-                    # Remove string item from inventory
-                    user_data["inventory"].remove(item_name)
-                    # Add structured item to inventory
-                    user_data["inventory"].append(selected_item)
-            
+
+                    # Convert string item to structured item
+                    if isinstance(selected_item, str):
+                        user_data["inventory"].remove(item_name)
+                        user_data["inventory"].append(selected_item)
+
             # Show available enchantments for this item type
-            item_type = selected_item["type"] if isinstance(selected_item, dict) and "type" in selected_item else ""
+            item_type = ""
+            if isinstance(selected_item, dict):
+                item_type = selected_item.get("type", "")
+            elif isinstance(selected_item, str) and selected_item in CRAFTING_RECIPES:
+                item_type = CRAFTING_RECIPES[selected_item].get("type", "")
             available_enchants = []
-            
+
             for enchant_name, enchant_info in ENCHANTMENTS.items():
                 if item_type in enchant_info.get("applicable_to", []):
                     # Check if this enchantment is already at max level
@@ -2079,66 +2111,75 @@ def enchant_item() -> None:
                     if isinstance(selected_item, dict) and "enchantments" in selected_item:
                         if enchant_name in selected_item["enchantments"]:
                             current_level = selected_item["enchantments"][enchant_name]
-                    
+
                     max_level = enchant_info.get("max_level", 5)
-                    
+
                     if current_level < max_level:
                         available_enchants.append((enchant_name, enchant_info))
-            
+
             if not available_enchants:
                 print_colored("This item has all possible enchantments at max level!", FAIL)
                 return
-                
+
             item_name = selected_item["name"] if isinstance(selected_item, dict) and "name" in selected_item else str(selected_item)
             print_colored(f"\nAvailable enchantments for {item_name}:", CYAN)
             for idx, (enchant_name, enchant_info) in enumerate(available_enchants, 1):
                 current_level = selected_item.get("enchantments", {}).get(enchant_name, 0)
                 next_level = current_level + 1
                 materials = enchant_info.get("materials_per_level", {})
-                
+
                 print(f"{idx}. {enchant_name} {next_level} - {enchant_info['description']}")
-                print(f"   Required materials: " + ", ".join([f"{count} {material}" for material, count in materials.items()]))
-            
+                print("   Required materials: " + ", ".join([f"{count} {material}" for material, count in materials.items()]))
+
             try:
                 enchant_choice = int(input("\nChoose enchantment (0 to cancel): "))
                 if enchant_choice == 0:
                     return
                 elif 1 <= enchant_choice <= len(available_enchants):
                     enchant_name, enchant_info = available_enchants[enchant_choice-1]
-                    
+
                     # Check if user has necessary materials
                     materials_needed = enchant_info.get("materials_per_level", {})
                     missing_materials = []
-                    
+
                     for material, count in materials_needed.items():
                         player_count = 0
                         for inv_item in user_data["inventory"]:
                             if isinstance(inv_item, str) and inv_item == material:
                                 player_count += 1
-                            
+
                         if player_count < count:
                             missing_materials.append(f"{count - player_count} {material}")
-                    
+
                     if missing_materials:
                         print_colored("You don't have enough materials! Missing:", FAIL)
                         for item in missing_materials:
                             print(f"- {item}")
                         return
-                    
+
                     # Remove materials from inventory
                     for material, count in materials_needed.items():
                         for _ in range(count):
                             user_data["inventory"].remove(material)
-                    
+
                     # Apply enchantment
-                    current_level = selected_item.get("enchantments", {}).get(enchant_name, 0)
-                    if "enchantments" not in selected_item:
+                    # Ensure selected_item is a dictionary with enchantments
+                    if isinstance(selected_item, str):
+                        selected_item = {
+                            "name": selected_item,
+                            "type": CRAFTING_RECIPES[selected_item].get("type", ""),
+                            "effect": CRAFTING_RECIPES[selected_item].get("effect", 0),
+                            "level": 1,
+                            "enchantments": {}
+                        }
+                    elif isinstance(selected_item, dict) and "enchantments" not in selected_item:
                         selected_item["enchantments"] = {}
-                    
+
+                    current_level = selected_item["enchantments"].get(enchant_name, 0)
                     selected_item["enchantments"][enchant_name] = current_level + 1
-                    
+
                     print_colored(f"Successfully enchanted {selected_item['name']} with {enchant_name} {current_level + 1}!", OKGREEN)
-                    
+
                     # If equipped, update stats
                     for slot, equipped_item in user_data.get("equipped", {}).items():
                         if isinstance(equipped_item, dict) and equipped_item.get("name") == selected_item["name"]:
@@ -2159,11 +2200,11 @@ def enchant_item() -> None:
 def upgrade_item() -> None:
     """Function to level up weapons and armor"""
     print_header("ITEM UPGRADING")
-    
+
     if not user_data.get("inventory", []):
         print_colored("You don't have any items to upgrade!", FAIL)
         return
-        
+
     # Only show equipable items that can be upgraded
     upgradable_items = []
     for item in user_data["inventory"]:
@@ -2175,11 +2216,11 @@ def upgrade_item() -> None:
                 recipe = CRAFTING_RECIPES[item]
                 if recipe.get("type") in ["weapon", "armor"]:
                     upgradable_items.append(item)
-    
+
     if not upgradable_items:
         print_colored("You don't have any items that can be upgraded!", FAIL)
         return
-        
+
     print_colored("Choose an item to upgrade:", CYAN)
     for idx, item in enumerate(upgradable_items, 1):
         if isinstance(item, dict):
@@ -2188,21 +2229,21 @@ def upgrade_item() -> None:
             print(f"{idx}. {name} (Level {current_level})")
         else:
             print(f"{idx}. {item}")
-    
+
     try:
         choice = int(input("\nEnter item number (0 to cancel): "))
         if choice == 0:
             return
         elif 1 <= choice <= len(upgradable_items):
             selected_item = upgradable_items[choice-1]
-            
+
             # If item is a string, convert to object
             if isinstance(selected_item, str):
                 item_name = selected_item
                 if item_name in CRAFTING_RECIPES:
                     recipe = CRAFTING_RECIPES[item_name]
                     item_type = recipe.get("type", "")
-                    
+
                     if item_type == "weapon":
                         selected_item = {
                             "name": item_name,
@@ -2222,20 +2263,20 @@ def upgrade_item() -> None:
                             "experience": 0,
                             "enchantments": {}
                         }
-                    
+
                     # Remove string item from inventory
                     user_data["inventory"].remove(item_name)
                     # Add structured item to inventory
                     user_data["inventory"].append(selected_item)
-            
+
             # Calculate upgrade requirements
             current_level = selected_item.get("level", 1)
             base_effect = selected_item.get("effect", 10)
             item_type = selected_item.get("type", "weapon")
-            
+
             # Gold cost increases with level
             gold_cost = current_level * 50
-            
+
             # Material requirements based on item type
             materials_needed = {}
             if item_type == "weapon":
@@ -2248,54 +2289,54 @@ def upgrade_item() -> None:
                     "Leather": current_level * 2,
                     "Magic Crystal": current_level
                 }
-            
+
             # Check if user has enough gold and materials
             if user_data.get("gold", 0) < gold_cost:
                 print_colored(f"You don't have enough gold! Need {gold_cost} gold.", FAIL)
                 return
-                
+
             missing_materials = []
             for material, count in materials_needed.items():
                 player_count = 0
                 for inv_item in user_data["inventory"]:
                     if isinstance(inv_item, str) and inv_item == material:
                         player_count += 1
-                    
+
                 if player_count < count:
                     missing_materials.append(f"{count - player_count} {material}")
-            
+
             if missing_materials:
                 print_colored("You don't have enough materials! Missing:", FAIL)
                 for item in missing_materials:
                     print(f"- {item}")
                 return
-            
+
             # Show upgrade details
             print_colored(f"\nUpgrade {selected_item['name']} from Level {current_level} to Level {current_level + 1}:", CYAN)
             print(f"Current effect: {base_effect + (current_level - 1) * 5}")
             print(f"New effect: {base_effect + current_level * 5}")
-            
+
             print("\nRequired:")
             print(f"- {gold_cost} gold")
             for material, count in materials_needed.items():
                 print(f"- {count} {material}")
-            
+
             confirm = input("\nProceed with upgrade? (y/n): ").lower()
             if confirm == 'y':
                 # Deduct gold
                 user_data["gold"] -= gold_cost
-                
+
                 # Remove materials
                 for material, count in materials_needed.items():
                     for _ in range(count):
                         user_data["inventory"].remove(material)
-                
+
                 # Upgrade the item
                 selected_item["level"] = current_level + 1
                 selected_item["effect"] = base_effect + current_level * 5
-                
+
                 print_colored(f"Successfully upgraded {selected_item['name']} to Level {current_level + 1}!", OKGREEN)
-                
+
                 # If equipped, update stats
                 for slot, equipped_item in user_data.get("equipped", {}).items():
                     if isinstance(equipped_item, dict) and equipped_item.get("name") == selected_item["name"]:
@@ -2313,21 +2354,21 @@ def upgrade_item() -> None:
 # Function for opening treasure chests with random loot
 def open_chest(tier: str = "Common") -> None:
     """Open a treasure chest and get random loot
-    
+
     Args:
         tier: The rarity tier of the chest (Common, Uncommon, Rare, Epic, Legendary)
     """
     if tier not in CHEST_TIERS:
         print_colored(f"Invalid chest tier: {tier}", FAIL)
         return
-        
+
     chest_info = CHEST_TIERS[tier]
     gold_range = chest_info.get("gold_range", (10, 50))
     item_count_range = chest_info.get("item_count_range", (1, 2))
     item_chances = chest_info.get("item_chances", {})
     equipment_rarity_chances = chest_info.get("equipment_rarity_chances", {})
     artifact_rarity_chances = chest_info.get("artifact_rarity_chances", {})
-    
+
     # Get chest color based on tier
     tier_colors = {
         "Common": CYAN,
@@ -2337,19 +2378,19 @@ def open_chest(tier: str = "Common") -> None:
         "Legendary": YELLOW
     }
     chest_color = tier_colors.get(tier, CYAN)
-    
+
     print_header(f"OPENING {chest_color}{tier} CHEST{ENDC}")
     print_colored(f"Opening {tier} chest...", chest_color)
     time.sleep(1)
-    
+
     # Roll for gold
     gold_amount = random.randint(gold_range[0], gold_range[1])
     user_data["gold"] += gold_amount
     print_colored(f"You found {gold_amount} gold!", YELLOW)
-    
+
     # Roll for items
     item_count = random.randint(item_count_range[0], item_count_range[1])
-    
+
     # Common materials that could drop from chests
     common_materials = [
         "Iron Ore", "Wood", "Leather", "Magic Crystal", "Magic Dust", 
@@ -2358,28 +2399,28 @@ def open_chest(tier: str = "Common") -> None:
         "Poison Gland", "Steel Ingot", "Soul Fragment", "Plant Extract",
         "Sharpening Stone", "Steel Plate", "Swift Feather", "Spirit Essence"
     ]
-    
+
     # Potions that could drop from chests
     potions = list(POTION_RECIPES.keys())
-    
+
     # Equipment (weapons and armor) that could drop
     equipment = []
     for item_name, item_info in CRAFTING_RECIPES.items():
         if item_info.get("type") in ["weapon", "armor"]:
             equipment.append(item_name)
-    
+
     # Artifacts that could drop
     artifacts = []
     for item_name, item_info in CRAFTING_RECIPES.items():
         if item_info.get("type") == "artifact":
             artifacts.append(item_name)
-    
+
     # Roll for each item
     for i in range(item_count):
         # Determine item type
         item_roll = random.random()
         current_chance = 0
-        
+
         for item_type, chance in item_chances.items():
             current_chance += chance
             if item_roll <= current_chance:
@@ -2389,25 +2430,25 @@ def open_chest(tier: str = "Common") -> None:
                     material = random.choice(common_materials)
                     user_data["inventory"].append(material)
                     print_colored(f"You found {material}!", OKGREEN)
-                    
+
                 elif item_type == "potion":
                     # Roll for a potion
                     potion = random.choice(potions)
                     user_data["inventory"].append(potion)
                     print_colored(f"You found {potion}!", CYAN)
-                    
+
                 elif item_type == "equipment":
                     # Roll for equipment rarity
                     rarity_roll = random.random()
                     current_rarity_chance = 0
                     selected_rarity = "Common"
-                    
+
                     for rarity, rarity_chance in equipment_rarity_chances.items():
                         current_rarity_chance += rarity_chance
                         if rarity_roll <= current_rarity_chance:
                             selected_rarity = rarity
                             break
-                    
+
                     # Filter equipment by rarity (as best we can)
                     rarity_equipment = []
                     for item in equipment:
@@ -2422,87 +2463,87 @@ def open_chest(tier: str = "Common") -> None:
                             rarity_equipment.append(item)
                         elif selected_rarity == "Common":
                             rarity_equipment.append(item)
-                    
+
                     # If no equipment matched the criteria, just use any equipment
                     if not rarity_equipment:
                         rarity_equipment = equipment
-                    
+
                     # Roll for a specific equipment
                     if rarity_equipment:
                         item = random.choice(rarity_equipment)
                         user_data["inventory"].append(item)
-                        
+
                         # Get rarity color
                         rarity_color = tier_colors.get(selected_rarity, CYAN)
                         print_colored(f"You found {rarity_color}{item}!{ENDC}", OKGREEN)
-                    
+
                 elif item_type == "artifact":
                     # Roll for artifact rarity
                     rarity_roll = random.random()
                     current_rarity_chance = 0
                     selected_rarity = "Common"
-                    
+
                     for rarity, rarity_chance in artifact_rarity_chances.items():
                         current_rarity_chance += rarity_chance
                         if rarity_roll <= current_rarity_chance:
                             selected_rarity = rarity
                             break
-                    
+
                     # Filter artifacts by rarity
                     rarity_artifacts = []
                     for artifact_name in artifacts:
                         recipe = CRAFTING_RECIPES.get(artifact_name, {})
                         if recipe.get("rarity") == selected_rarity:
                             rarity_artifacts.append(artifact_name)
-                    
+
                     # If no artifacts matched the criteria, just use any artifact
                     if not rarity_artifacts:
                         rarity_artifacts = artifacts
-                    
+
                     # Roll for a specific artifact
                     if rarity_artifacts:
                         artifact = random.choice(rarity_artifacts)
                         user_data["inventory"].append(artifact)
-                        
+
                         # Get rarity color
                         artifact_info = CRAFTING_RECIPES.get(artifact, {})
                         rarity = artifact_info.get("rarity", "Common")
                         rarity_color = tier_colors.get(rarity, CYAN)
-                        
+
                         print_colored(f"You found {rarity_color}{artifact}!{ENDC}", YELLOW)
-                
+
                 break
-    
-    print_colored(f"\nChest looting complete!", OKGREEN)
+
+    print_colored("\nChest looting complete!", OKGREEN)
 
 
 # Function to check for artifact set bonuses based on equipped artifacts
 def check_artifact_set_bonuses() -> None:
     """Check for artifact set bonuses based on equipped artifacts"""
     equipped_artifacts = []
-    
+
     # Get all equipped artifacts
     for slot in ARTIFACT_SLOTS:
         slot_key = f"artifact_{slot.lower()}"
         if user_data.get("equipped", {}).get(slot_key):
             equipped_artifacts.append(user_data["equipped"][slot_key]["name"])
-    
+
     # Check each set for bonuses
     active_bonuses = {}
     for set_name, set_info in ARTIFACT_SETS.items():
         pieces = set_info.get("pieces", [])
         equipped_count = sum(1 for artifact in equipped_artifacts if artifact in pieces)
-        
+
         # Check if any set bonuses are active
         for piece_count, bonus in set_info.get("bonuses", {}).items():
             if equipped_count >= piece_count:
                 if set_name not in active_bonuses:
                     active_bonuses[set_name] = {}
                 active_bonuses[set_name][piece_count] = bonus
-    
+
     # Store active bonuses in user data
     user_data["active_set_bonuses"] = active_bonuses
-    
+
     # Print active bonuses
     if active_bonuses:
         print_colored("\nActive Artifact Set Bonuses:", YELLOW)
@@ -2514,7 +2555,7 @@ def check_artifact_set_bonuses() -> None:
 # Function to use potions (elemental immunities, damage boosters, etc.)
 def use_potion(potion_name: str) -> None:
     """Use a potion from inventory
-    
+
     Args:
         potion_name: The name of the potion to use
     """
@@ -2522,38 +2563,38 @@ def use_potion(potion_name: str) -> None:
     if potion_name not in user_data["inventory"]:
         print_colored(f"You don't have a {potion_name}.", FAIL)
         return
-        
+
     # Check if it's a valid potion
     if potion_name not in POTION_RECIPES:
         print_colored(f"{potion_name} is not a usable potion.", FAIL)
         return
-        
+
     potion_info = POTION_RECIPES[potion_name]
     effect = potion_info.get("effect", {})
-    
+
     # Handle different potion effects
     if "immunity" in effect:
         element = effect["immunity"]
-        
+
         # Initialize immunities if not present
         if "active_immunities" not in user_data:
             user_data["active_immunities"] = {}
-            
+
         # Add immunity
         user_data["active_immunities"][element] = True
         print_colored(f"You are now immune to {element} damage for your next battle!", OKGREEN)
-        
+
     elif "damage_boost" in effect:
         element = effect["damage_boost"]
-        
+
         # Initialize boosters if not present
         if "element_boosters" not in user_data:
             user_data["element_boosters"] = {}
-            
+
         # Add damage boost
         user_data["element_boosters"][element] = 2.0  # Double damage
         print_colored(f"Your {element} damage is doubled for your next battle!", OKGREEN)
-        
+
     # Remove the potion from inventory
     user_data["inventory"].remove(potion_name)
 
@@ -2661,7 +2702,7 @@ POTION_RECIPES = {
         "description": "Grants immunity to Viridia (plant) damage for one battle",
         "type": "potion"
     },
-    
+
     # Damage Booster Potions
     "Blazing Catalyst": {
         "materials": {"Fire Crystal": 3, "Dragon Scale": 1, "Magical Herb": 2},
@@ -2734,7 +2775,7 @@ ENCHANTMENTS = {
         "applicable_to": ["weapon"],
         "materials_per_level": {"Hawk's Eye": 1, "Magic Dust": 2}
     },
-    
+
     # Armor enchantments
     "Protection": {
         "description": "Reduces damage taken by 5% per level",
@@ -2932,7 +2973,7 @@ CRAFTING_RECIPES.update({
         "effect": 45,
         "element": "Aer"
     },
-    
+
     # Elemental Weapons
     "Flame Sword": {
         "materials": {"Fire Crystal": 3, "Iron Ore": 5, "Wood": 2},
@@ -3018,7 +3059,7 @@ CRAFTING_RECIPES.update({
         "effect": 35,
         "element": "Pneuma"
     },
-    
+
     # Artifacts
     "Crown of Wisdom": {
         "materials": {"Magic Crystal": 2, "Gold Ore": 3, "Pure Gem": 1},
@@ -3220,59 +3261,83 @@ dungeons = [
 ]
 
 
-# ANSI color codes for output
+# Game Constants
+CRITICAL_CHANCE = 0.15
+DODGE_CHANCE = 0.10
+BASE_FLEE_CHANCE = 0.40
+FLEE_SPEED_MODIFIER = 0.05
+MIN_FLEE_CHANCE = 0.10
+MAX_FLEE_CHANCE = 0.90
+AUTO_SAVE_INTERVAL = 300  # 5 minutes
+MIN_DAMAGE = 1
+BASE_SPEED = 5
+EXP_MULTIPLIER = 20
 
-# Text color (foreground)
-HEADER = '\033[95m'
-OKBLUE = '\033[94m'
-OKGREEN = '\033[92m'
-WARNING = '\033[93m'
-FAIL = '\033[91m'
-ENDC = '\033[0m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
-CYAN = '\033[96m'
-MAGENTA = '\033[35m'
-YELLOW = '\033[33m'
-RED = '\033[31m'
-GREEN = '\033[32m'
-BLUE = '\033[34m'
-WHITE = '\033[37m'
-BLACK = '\033[30m'
-GREY = '\033[90m'
-LIGHTRED = '\033[91m'
-LIGHTGREEN = '\033[92m'
-LIGHTYELLOW = '\033[93m'
-LIGHTBLUE = '\033[94m'
-LIGHTMAGENTA = '\033[95m'
-LIGHTCYAN = '\033[96m'
+# Color Constants
+COLORS = {
+    'header': Fore.MAGENTA,
+    'ok_blue': Fore.BLUE,
+    'ok_green': Fore.GREEN,
+    'warning': Fore.YELLOW,
+    'fail': Fore.RED,
+    'end': Style.RESET_ALL,
+    'bold': Style.BRIGHT,
+    'cyan': Fore.CYAN,
+    'magenta': Fore.MAGENTA,
+    'yellow': Fore.YELLOW
+}
+
+# Text color (foreground) - for backward compatibility
+HEADER = COLORS['header']
+OKBLUE = Fore.BLUE
+OKGREEN = Fore.GREEN
+WARNING = Fore.YELLOW
+FAIL = Fore.RED
+ENDC = Style.RESET_ALL
+BOLD = Style.BRIGHT
+UNDERLINE = '\033[4m'  # Not available in colorama
+CYAN = Fore.CYAN
+MAGENTA = Fore.MAGENTA
+YELLOW = Fore.YELLOW
+RED = Fore.RED
+GREEN = Fore.GREEN
+BLUE = Fore.BLUE
+WHITE = Fore.WHITE
+BLACK = Fore.BLACK
+GREY = Fore.BLACK + Style.DIM
+LIGHTRED = Fore.LIGHTRED_EX
+LIGHTGREEN = Fore.LIGHTGREEN_EX
+LIGHTYELLOW = Fore.LIGHTYELLOW_EX
+LIGHTBLUE = Fore.LIGHTBLUE_EX
+LIGHTMAGENTA = Fore.LIGHTMAGENTA_EX
+LIGHTCYAN = Fore.LIGHTCYAN_EX
 
 # Background colors
-BG_BLACK = '\033[40m'
-BG_RED = '\033[41m'
-BG_GREEN = '\033[42m'
-BG_YELLOW = '\033[43m'
-BG_BLUE = '\033[44m'
-BG_MAGENTA = '\033[45m'
-BG_CYAN = '\033[46m'
-BG_WHITE = '\033[47m'
-BG_GREY = '\033[100m'
-BG_LIGHTRED = '\033[101m'
-BG_LIGHTGREEN = '\033[102m'
-BG_LIGHTYELLOW = '\033[103m'
-BG_LIGHTBLUE = '\033[104m'
-BG_LIGHTMAGENTA = '\033[105m'
-BG_LIGHTCYAN = '\033[106m'
-BG_BRIGHTWHITE = '\033[107m'
+BG_BLACK = Back.BLACK
+BG_RED = Back.RED
+BG_GREEN = Back.GREEN
+BG_YELLOW = Back.YELLOW
+BG_BLUE = Back.BLUE
+BG_MAGENTA = Back.MAGENTA
+BG_CYAN = Back.CYAN
+BG_WHITE = Back.WHITE
+BG_GREY = Back.BLACK + Style.DIM
+BG_LIGHTRED = Back.LIGHTRED_EX
+BG_LIGHTGREEN = Back.LIGHTGREEN_EX
+BG_LIGHTYELLOW = Back.LIGHTYELLOW_EX
+BG_LIGHTBLUE = Back.LIGHTBLUE_EX
+BG_LIGHTMAGENTA = Back.LIGHTMAGENTA_EX
+BG_LIGHTCYAN = Back.LIGHTCYAN_EX
+BG_BRIGHTWHITE = Back.WHITE + Style.BRIGHT
 
 # Text effects
-RESET = '\033[0m'
-DIM = '\033[2m'
-ITALIC = '\033[3m'
-BLINK = '\033[5m'
-REVERSE = '\033[7m'
-HIDDEN = '\033[8m'
-STRIKETHROUGH = '\033[9m'
+RESET = Style.RESET_ALL
+DIM = Style.DIM
+ITALIC = '\033[3m'  # Not available in colorama
+BLINK = '\033[5m'  # Not available in colorama
+REVERSE = '\033[7m'  # Not available in colorama
+HIDDEN = '\033[8m'  # Not available in colorama
+STRIKETHROUGH = '\033[9m'  # Not available in colorama
 
 def print_colored(text: str, color_code: str = "") -> None:
     print(f"{color_code}{text}{ENDC}" if color_code else text)
@@ -3284,7 +3349,7 @@ def print_animated(text: str, color_code: str = "", delay: Optional[float] = Non
         actual_delay = delay
     else:
         actual_delay = max(0.005, min(0.03, 1.0 / (length * 10)))
-    
+
     if color_code:
         sys.stdout.write(color_code)
     for char in text:
@@ -3298,9 +3363,10 @@ def print_animated(text: str, color_code: str = "", delay: Optional[float] = Non
 
 # Function to display headers with color
 def print_header(title: str) -> None:
-    print("\n" + "=" * 40)
+    separator = f"{CYAN}{'=' * 40}{ENDC}"
+    print(f"\n{separator}")
     print(f"{BOLD}{MAGENTA}{title}{ENDC}")
-    print("=" * 40)
+    print(separator)
 
 # Show the help menu
 def show_help() -> None:
@@ -3403,16 +3469,16 @@ def show_location() -> None:
 def inspect_item(item_name: str) -> None:
     """Inspect an item to see its special properties and effects"""
     print_header("Item Inspection")
-    
+
     if not item_name:
         print_colored("Please specify an item to inspect.", WARNING)
         return
-        
+
     # Check if item is in inventory
     if item_name not in user_data["inventory"]:
         print_colored(f"You don't have '{item_name}' in your inventory.", FAIL)
         return
-    
+
     # Check if item is a legendary item
     if item_name in LEGENDARY_ITEMS:
         item = LEGENDARY_ITEMS[item_name]
@@ -3422,7 +3488,7 @@ def inspect_item(item_name: str) -> None:
         print(f"Effect: +{item['effect']} {item['type']} {'damage' if item['type'] == 'weapon' else 'defense'}")
         print_colored(f"Special Ability: {item['special_ability']}", OKGREEN)
         print(f"Description: {item['description']}")
-        
+
         # Show special note based on item type
         if item['type'] == 'weapon':
             print_colored("\nThis legendary weapon can be equipped to drastically increase your attack.", YELLOW)
@@ -3430,7 +3496,7 @@ def inspect_item(item_name: str) -> None:
             print_colored("\nThis legendary armor can be equipped to drastically increase your defense.", YELLOW)
         elif item['type'] == 'accessory':
             print_colored("\nThis legendary accessory grants special abilities when carried in your inventory.", YELLOW)
-    
+
     # Check if item is a weapon
     elif item_name in WEAPONS:
         weapon = WEAPONS[item_name]
@@ -3441,11 +3507,11 @@ def inspect_item(item_name: str) -> None:
         print(f"Price: {weapon['price']} gold")
         if 'effect' in weapon:
             print_colored(f"Special Effect: {weapon['effect']}", OKGREEN)
-    
+
     # Otherwise it's a regular item
     else:
         print(f"Item: {item_name}")
-        
+
         # Check for item types based on name patterns
         if "Potion" in item_name:
             print("Type: Consumable")
@@ -3662,7 +3728,7 @@ ELEMENTAL_REACTIONS = {
         "damage_multiplier": 1.4,
         "damage_type": "elemental"
     },
-    
+
     # New Reactions with Viridia
     "Viridia+Ignis": {
         "name": "Combustio",
@@ -3706,7 +3772,7 @@ ELEMENTAL_REACTIONS = {
         "damage_multiplier": 1.0,
         "damage_type": "elemental"
     },
-    
+
     # Nullum combinations
     "Nullum+Ignis": {
         "name": "Flamma Pura",
@@ -3794,12 +3860,12 @@ LEGENDARY_ITEMS = {
 def dimensional_rifts() -> None:
     """Function to handle dimensional rift exploration"""
     print_header("DIMENSIONAL RIFTS")
-    
+
     if "Dimensional Compass" not in user_data["inventory"]:
         print_colored("You need the 'Dimensional Compass' to navigate the rifts!", WARNING)
         print_colored("Complete the 'Dimensional Rifts' storyline to obtain it.", YELLOW)
         return
-    
+
     rifts = [
         "Mirror Dimension", 
         "Time Fracture", 
@@ -3807,20 +3873,20 @@ def dimensional_rifts() -> None:
         "Elemental Plane", 
         "Dream World"
     ]
-    
+
     print_colored("Available rifts:", CYAN)
     for idx, rift in enumerate(rifts, 1):
         print(f"{idx}. {rift}")
-    
+
     choice = input("\nSelect a rift to explore (1-5) or 'back' to return: ")
-    
+
     if choice.lower() == "back":
         return
     elif choice.isdigit() and 1 <= int(choice) <= len(rifts):
         selected_rift = rifts[int(choice)-1]
         print_colored(f"Entering the {selected_rift}...", CYAN)
         print_colored("This feature will be expanded in future updates.", YELLOW)
-        
+
         # Give player a small reward for trying this feature
         reward_gold = random.randint(100, 500)
         user_data["gold"] += reward_gold
@@ -3831,7 +3897,7 @@ def dimensional_rifts() -> None:
 def divine_trials() -> None:
     """Function to handle divine trials"""
     print_header("DIVINE TRIALS")
-    
+
     trials = [
         "Trial of Strength", 
         "Trial of Wisdom", 
@@ -3839,24 +3905,24 @@ def divine_trials() -> None:
         "Trial of Endurance", 
         "Trial of Balance"
     ]
-    
+
     print_colored("The gods have set forth these trials:", CYAN)
     for idx, trial in enumerate(trials, 1):
         completed = f"{OKGREEN}✓{ENDC}" if f"{trial}" in user_data.get("completed_trials", []) else f"{YELLOW}◯{ENDC}"
         print(f"{idx}. {completed} {trial}")
-    
+
     choice = input("\nSelect a trial to attempt (1-5) or 'back' to return: ")
-    
+
     if choice.lower() == "back":
         return
     elif choice.isdigit() and 1 <= int(choice) <= len(trials):
         selected_trial = trials[int(choice)-1]
         print_colored(f"Preparing for the {selected_trial}...", CYAN)
         print_colored("This feature will be expanded in future updates.", YELLOW)
-        
+
         # Mark trial as completed for testing purposes
         user_data.setdefault("completed_trials", []).append(selected_trial)
-        
+
         # Give player a small reward
         if len(user_data.get("completed_trials", [])) >= 5:
             if "Godforged Artifact" not in user_data["inventory"]:
@@ -3869,7 +3935,7 @@ def divine_trials() -> None:
 def legendary_hunts() -> None:
     """Function to handle legendary monster hunts"""
     print_header("LEGENDARY HUNTS")
-    
+
     legendary_monsters = [
         {"name": "Ancient Dragon", "level": 35, "health": 500, "attack": 50, "drops": ["Dragon's Heart", "Dragon Scale"]},
         {"name": "Behemoth", "level": 40, "health": 700, "attack": 60, "drops": ["Behemoth Horn", "Massive Hide"]},
@@ -3877,29 +3943,29 @@ def legendary_hunts() -> None:
         {"name": "Phoenix", "level": 50, "health": 600, "attack": 80, "drops": ["Phoenix Plume", "Eternal Flame"]},
         {"name": "World Serpent", "level": 55, "health": 1000, "attack": 90, "drops": ["Serpent Fang", "World Scale"]}
     ]
-    
+
     print_colored("These legendary beasts await worthy challengers:", CYAN)
     for idx, monster in enumerate(legendary_monsters, 1):
         hunted = f"{OKGREEN}✓{ENDC}" if monster["name"] in user_data.get("legendary_hunts_completed", []) else f"{YELLOW}◯{ENDC}"
         print(f"{idx}. {hunted} {monster['name']} (Level {monster['level']})")
-        
+
     choice = input("\nSelect a monster to hunt (1-5) or 'back' to return: ")
-    
+
     if choice.lower() == "back":
         return
     elif choice.isdigit() and 1 <= int(choice) <= len(legendary_monsters):
         selected_monster = legendary_monsters[int(choice)-1]
-        
+
         if user_data["level"] < selected_monster["level"]:
             print_colored("You are not strong enough to face this monster yet!", WARNING)
             print_colored(f"Required level: {selected_monster['level']}", YELLOW)
             return
-            
+
         print_colored(f"Hunting the {selected_monster['name']}...", CYAN)
-        
+
         # Simulate fight with the monster
         fight(selected_monster)
-        
+
         # If player survived and monster was defeated
         if user_data["health"] > 0:
             user_data.setdefault("legendary_hunts_completed", []).append(selected_monster["name"])
@@ -3909,36 +3975,36 @@ def legendary_hunts() -> None:
 def time_trials() -> None:
     """Function to handle dungeon time trials"""
     print_header("TIME TRIALS")
-    
+
     # Get completed dungeons
     completed_dungeons = user_data.get("dungeons_completed", [])
     if len(completed_dungeons) < 3:
         print_colored("You need to complete at least 3 dungeons to access Time Trials!", WARNING)
         return
-        
+
     print_colored("Select a dungeon to challenge in Time Trial mode:", CYAN)
     for idx, dungeon_name in enumerate(completed_dungeons, 1):
         trial_record = user_data.get("time_trial_records", {}).get(dungeon_name, "No record")
         print(f"{idx}. {dungeon_name} - Best time: {trial_record}")
-    
+
     choice = input("\nSelect a dungeon (1-{}) or 'back' to return: ".format(len(completed_dungeons)))
-    
+
     if choice.lower() == "back":
         return
     elif choice.isdigit() and 1 <= int(choice) <= len(completed_dungeons):
         selected_dungeon = completed_dungeons[int(choice)-1]
         print_colored(f"Preparing Time Trial for {selected_dungeon}...", CYAN)
         print_colored("This feature will be expanded in future updates.", YELLOW)
-        
+
         # Simulate a trial record
         completion_time = random.randint(60, 300)  # Random time between 1-5 minutes
         minutes = completion_time // 60
         seconds = completion_time % 60
         time_str = f"{minutes}m {seconds}s"
-        
+
         user_data.setdefault("time_trial_records", {})[selected_dungeon] = time_str
         print_colored(f"Trial completed in {time_str}!", OKGREEN)
-        
+
         if "Timekeeper's Pendant" not in user_data["inventory"] and len(user_data.get("time_trial_records", {})) >= 5:
             user_data["inventory"].append("Timekeeper's Pendant")
             print_colored("You've mastered the flow of time!", OKGREEN)
@@ -3949,29 +4015,29 @@ def time_trials() -> None:
 def new_game_plus() -> None:
     """Function to handle New Game+ mode"""
     print_header("NEW GAME+")
-    
+
     if user_data["level"] < 50:
         print_colored("You need to reach level 50 to start New Game+!", WARNING)
         return
-        
+
     print_colored("WARNING: Starting New Game+ will reset your story progress", FAIL)
     print_colored("but you'll keep your level, skills, and equipment.", YELLOW)
-    
+
     confirm = input("\nAre you sure you want to start New Game+? (yes/no): ")
-    
+
     if confirm.lower() == "yes":
         # Reset story progress but keep character stats
         user_data["active_quests"] = []
         user_data["completed_quests"] = []
         user_data["current_area"] = "Greenwood Village"
         user_data["dungeons_completed"] = []
-        
+
         # Add bonus
         user_data["health"] += 50
         user_data["max_health"] += 50
         user_data["attack"] += 10
         user_data["defense"] += 10
-        
+
         print_colored("You have started New Game+!", OKGREEN)
         print_colored("The world has reset, but you retain your power!", CYAN)
         print_colored("You've gained permanent stat bonuses!", MAGENTA)
@@ -3981,25 +4047,25 @@ def new_game_plus() -> None:
 def endless_tower() -> None:
     """Function to handle the Endless Tower challenge"""
     print_header("ENDLESS TOWER")
-    
+
     current_floor = user_data.get("endless_tower_floor", 0)
     print_colored(f"Current highest floor: {current_floor}", CYAN)
-    
+
     print_colored("The Endless Tower challenges await...", YELLOW)
     print_colored("Each floor contains stronger enemies than the last.", YELLOW)
     print_colored("How high can you climb?", CYAN)
-    
+
     options = ["Climb higher", "Claim rewards", "Exit"]
     for idx, option in enumerate(options, 1):
         print(f"{idx}. {option}")
-    
+
     choice = input("\nSelect an option: ")
-    
+
     if choice == "1":
         # Climb to next floor
         next_floor = current_floor + 1
         print_colored(f"Climbing to floor {next_floor}...", CYAN)
-        
+
         # Generate a monster based on floor number
         monster = {
             "name": f"Tower Guardian {next_floor}",
@@ -4008,17 +4074,17 @@ def endless_tower() -> None:
             "attack": 20 + (next_floor * 3),
             "drops": ["Tower Fragment", "Ancient Coin", "Magic Dust"]
         }
-        
+
         print_colored(f"You encounter {monster['name']}!", YELLOW)
-        
+
         # Simulate fight
         fight(monster)
-        
+
         # If player won, advance to next floor
         if user_data["health"] > 0:
             user_data["endless_tower_floor"] = next_floor
             print_colored(f"You've reached floor {next_floor}!", OKGREEN)
-            
+
             # Special rewards for milestone floors
             if next_floor == 10:
                 user_data["inventory"].append("Tower Champion's Badge")
@@ -4036,13 +4102,13 @@ def endless_tower() -> None:
         if current_floor == 0:
             print_colored("You haven't climbed any floors yet!", WARNING)
             return
-            
+
         gold_reward = current_floor * 100
         exp_reward = current_floor * 50
-        
+
         user_data["gold"] += gold_reward
         user_data["exp"] += exp_reward
-        
+
         print_colored(f"You received {gold_reward} gold and {exp_reward} experience!", OKGREEN)
     elif choice == "3":
         return
@@ -4172,6 +4238,9 @@ def handle_command(cmd: str) -> None:
 
     parts = cmd.lower().split()
     base_cmd = parts[0] if parts else ""
+
+    # Add command highlighting
+    print_colored(f"\nExecuting command: {cmd}", CYAN)
 
     # Special handling for /dev command
     if base_cmd == "/dev":
@@ -4428,7 +4497,7 @@ def adopt_pet(pet_name: str) -> None:
 def show_mobs(area: Optional[str] = None) -> None:
     print_header("Monsters")
     target_area = area if area else user_data.get("current_area", "")
-    
+
     if target_area not in LOCATIONS:
         print(f"Invalid area: {target_area}")
         return
@@ -4480,16 +4549,16 @@ def fight(monster: Dict) -> None:
 
                 if random.random() < CRITICAL_CHANCE:
                     damage *= 2
-                    print("Critical hit!")
+                    print_colored("Critical hit!", YELLOW)
 
                 monster_health -= damage
-                print(f"You deal {damage} damage!")
+                print_colored(f"You deal {damage} damage!", OKGREEN)
 
             elif choice == "2":
                 if user_data["skills"]:
-                    print("\nAvailable skills:")
+                    print_colored("\nAvailable skills:", CYAN)
                     for i, skill in enumerate(user_data["skills"], 1):
-                        print(f"[{i}] {skill}")
+                        print_colored(f"[{i}] {skill}", GREEN)
                     try:
                         skill_choice = int(input("Choose skill (0 to cancel): "))
                         if skill_choice == 0:
@@ -4576,72 +4645,197 @@ def fight(monster: Dict) -> None:
         user_data["health"] = 1  # Prevent death, set to 1 HP
 
 def get_save_slots() -> List[str]:
-    saves = [f for f in os.listdir() if f.startswith("save_") and f.endswith(".json")]
-    return sorted(saves)
+    save_dir = get_save_directory()
+    try:
+        saves = [f for f in os.listdir(save_dir) if f.startswith("save_") and f.endswith(".json")]
+        return sorted(saves)
+    except Exception:
+        return []
 
 def get_save_directory() -> str:
     save_dir = os.path.join(os.getcwd(), "saves")
     os.makedirs(save_dir, exist_ok=True)
     return save_dir
 
-def save_game(slot: int = 1, auto: bool = False) -> None:
+def save_game(slot: int = 1, auto: bool = False) -> bool:
     try:
+        # Validate user data
+        if not user_data or user_data.get("class") is None:
+            if not auto:
+                print(f"{FAIL}No game data to save!{ENDC}")
+            return False
+            
+        # Create save directory
+        save_dir = get_save_directory()
+        os.makedirs(save_dir, exist_ok=True)
+        
+        # Add validation
+        if not isinstance(slot, int) or slot < 0:
+            print(f"{FAIL}Invalid save slot!{ENDC}")
+            return False
+
+        # Create save directory
+        save_dir = get_save_directory()
+        os.makedirs(save_dir, exist_ok=True)
+
+        # Define filenames
+        filename = os.path.join(save_dir, f"save_{slot}.json")
+        backup_file = os.path.join(save_dir, f"save_{slot}.json.backup")
+        temp_file = os.path.join(save_dir, f"save_{slot}.json.temp")
+
+        # Prepare save data with checksum
         save_data = {
             "user_data": user_data,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "version": "1.0"
         }
+        
+        # Calculate data checksum
+        data_str = json.dumps(save_data, sort_keys=True)
+        save_data["checksum"] = str(hash(data_str))
 
-        save_dir = get_save_directory()
-        filename = os.path.join(save_dir, f"save_{slot}.json")
+        # Write to temporary file first
+        with open(temp_file, "w", encoding='utf-8') as f:
+            json.dump(save_data, f, indent=2, ensure_ascii=False)
 
-        # Create backup of existing save
+        # Create backup of existing save if it exists
         if os.path.exists(filename):
-            backup_file = f"{filename}.backup"
-            os.replace(filename, backup_file)
+            try:
+                os.replace(filename, backup_file)
+            except Exception as e:
+                if not auto:
+                    print(f"{WARNING}Could not create backup: {e}{ENDC}")
 
-        with open(filename, "w") as f:
-            json.dump(save_data, f, indent=2)
+        # Atomic rename of temp file to actual save file
+        try:
+            os.replace(temp_file, filename)
+            if not auto:
+                print(f"{OKGREEN}Game saved successfully in slot {slot}!{ENDC}")
+            return True
+        except Exception as e:
+            if not auto:
+                print(f"{FAIL}Error during final save: {e}{ENDC}")
+            if os.path.exists(backup_file):
+                os.replace(backup_file, filename)
+                if not auto:
+                    print(f"{WARNING}Restored from backup{ENDC}")
+            return False
+
+    except FileNotFoundError as e:
         if not auto:
-            print(f"Game saved successfully in slot {slot}!")
+            print(f"{FAIL}Save directory not found: {e}{ENDC}")
+        return False
+    except PermissionError as e:
+        if not auto:
+            print(f"{FAIL}Permission denied when saving: {e}{ENDC}")
+        return False
+    except json.JSONDecodeError as e:
+        if not auto:
+            print(f"{FAIL}Error encoding save data: {e}{ENDC}")
+        return False
     except Exception as e:
-        print(f"Error saving game: {e}")
+        if not auto:
+            print(f"{FAIL}Unexpected error saving game: {e}{ENDC}")
+        return False
+    finally:
+        # Cleanup temp file if it exists
+        if os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+            except:
+                pass
+
+def verify_save_data(save_data: dict) -> bool:
+    """Verify save data integrity using checksum"""
+    if "checksum" not in save_data:
+        return True  # Old save format, assume valid
+    
+    checksum = save_data.pop("checksum")
+    data_str = json.dumps(save_data, sort_keys=True)
+    save_data["checksum"] = checksum
+    return str(hash(data_str)) == checksum
+
+def repair_save_data(data: dict) -> dict:
+    """Attempt to repair corrupted save data"""
+    try:
+        # Ensure all required fields exist
+        data.setdefault("user_data", {})
+        data.setdefault("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        data.setdefault("version", "1.0")
+        
+        # Repair user_data
+        if isinstance(data["user_data"], dict):
+            ensure_user_data_keys(data["user_data"])
+            # Fix common corruption issues
+            if not isinstance(data["user_data"].get("inventory"), list):
+                data["user_data"]["inventory"] = []
+            if not isinstance(data["user_data"].get("gold"), int):
+                data["user_data"]["gold"] = INITIAL_GOLD
+            if not isinstance(data["user_data"].get("health"), int):
+                data["user_data"]["health"] = INITIAL_HEALTH
+        else:
+            data["user_data"] = {
+                "name": None,
+                "class": None,
+                "level": 1,
+                "inventory": [],
+                "gold": INITIAL_GOLD,
+                "health": INITIAL_HEALTH,
+                "max_health": INITIAL_HEALTH
+            }
+        
+        return data
+    except Exception as e:
+        print(f"{FAIL}Error during save repair: {e}{ENDC}")
+        return data
 
 def load_game(slot: int = 1) -> bool:
     save_dir = get_save_directory()
     filename = os.path.join(save_dir, f"save_{slot}.json")
+    backup_file = os.path.join(save_dir, f"save_{slot}.json.backup")
     
-    try:
-        if not os.path.exists(filename):
-            print(f"No saved game found in slot {slot}.")
-            return False
+    def try_load_file(file_path: str, is_backup: bool = False) -> tuple[bool, dict]:
+        try:
+            with open(file_path, "r", encoding='utf-8') as f:
+                save_data = json.load(f)
+                if verify_save_data(save_data):
+                    return True, save_data
+                print(f"{WARNING}{'Backup save' if is_backup else 'Save'} file corrupted, attempting repair...{ENDC}")
+                repaired_data = repair_save_data(save_data)
+                return True, repaired_data
+        except Exception as e:
+            print(f"{FAIL}Error loading {'backup ' if is_backup else ''}save: {e}{ENDC}")
+            return False, {}
 
-        with open(filename, "r", encoding='utf-8') as f:
-            save_data = json.load(f)
-            if save_data.get("version") != "1.0":
-                print("Warning: Save file version mismatch")
-            global user_data
-            user_data = save_data["user_data"]
-            ensure_user_data_keys(user_data)
-            print(f"Game loaded successfully from slot {slot}!")
-            print(f"Save timestamp: {save_data['timestamp']}")
-            return True
-    except Exception as e:
-        print(f"Error loading game: {e}")
-        # Try to load backup if it exists
-        backup_file = f"{filename}.backup"
-        if os.path.exists(backup_file):
-            print("Attempting to load backup...")
-            try:
-                with open(backup_file, "r", encoding='utf-8') as f:
-                    save_data = json.load(f)
-                    user_data = save_data["user_data"]
-                    ensure_user_data_keys(user_data)
-                    print("Backup loaded successfully!")
-                    return True
-            except Exception:
-                print("Backup load failed.")
+    if not os.path.exists(filename):
+        print(f"{WARNING}No saved game found in slot {slot}.{ENDC}")
         return False
+
+    # Try loading main save
+    success, save_data = try_load_file(filename)
+    
+    # If main save fails, try backup
+    if not success and os.path.exists(backup_file):
+        print(f"{WARNING}Attempting to load backup...{ENDC}")
+        success, save_data = try_load_file(backup_file, True)
+        if success:
+            # Restore backup as main save
+            try:
+                with open(filename, "w", encoding='utf-8') as f:
+                    json.dump(save_data, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"{WARNING}Could not restore backup as main save: {e}{ENDC}")
+
+    if success:
+        global user_data
+        user_data = save_data["user_data"]
+        ensure_user_data_keys(user_data)
+        print(f"{OKGREEN}Game loaded successfully from slot {slot}!{ENDC}")
+        print(f"Save timestamp: {save_data['timestamp']}")
+        return True
+
+    print(f"{FAIL}Failed to load save and backup. Starting new game...{ENDC}")
+    return False
 
 def auto_save() -> None:
     save_game(slot=0, auto=True)
@@ -4680,37 +4874,43 @@ def delete_save(slot: int) -> None:
 def show_quests() -> None:
     print_header("Available Quests")
 
+    # Initialize quest-related data if not present
+    if "active_quests" not in user_data:
+        user_data["active_quests"] = []
+    if "completed_quests" not in user_data:
+        user_data["completed_quests"] = []
+
     # Check if player has Hylit companion for narration
-    has_hylit = "Hylit" in user_data["pets"]
+    has_hylit = "Hylit" in user_data.get("pets", [])
 
     # Show story quests first
-    print("\nStory Quests:")
+    print_colored("\nStory Quests:", CYAN)
     story_quests = [q for q in QUESTS if q.get("story", False)
-                   and q["id"] not in user_data["completed_quests"]
-                   and q not in user_data["active_quests"]]
+                   and q["id"] not in user_data.get("completed_quests", [])
+                   and q not in user_data.get("active_quests", [])]
 
     for quest in story_quests:
         if has_hylit:
             print_animated(f"Hylit says: 'A new quest awaits you! {quest['name']}'", CYAN)
             print_animated(f"Hylit narrates: {quest['description']}", CYAN)
         else:
-            print(f"\n[Chapter {quest['chapter']}] {quest['name']}")
-            print(f"Description: {quest['description']}")
+            print_colored(f"\n[Chapter {quest.get('chapter', '?')}] {quest['name']}", YELLOW)
+            print_colored(f"Description: {quest['description']}", CYAN)
 
-        print(f"Reward: {quest['reward']['gold']} gold, {quest['reward']['exp']} exp")
+        print_colored(f"Reward: {quest['reward']['gold']} gold, {quest['reward']['exp']} exp", GREEN)
         if "item" in quest["reward"]:
-            print(f"Special Reward: {quest['reward']['item']}")
+            print_colored(f"Special Reward: {quest['reward']['item']}", MAGENTA)
 
         # Add travel requirement narration if quest has travel locations
         if "travel_locations" in quest:
             if has_hylit:
                 print_animated(f"Hylit whispers: 'You must travel to these places: {', '.join(quest['travel_locations'])}'", CYAN)
             else:
-                print(f"Travel to: {', '.join(quest['travel_locations'])}")
+                print_colored(f"Travel to: {', '.join(quest['travel_locations'])}", BLUE)
 
-        if input("Accept story quest? (y/n): ").lower() == 'y':
-            user_data["active_quests"].append(quest)
-            print("Story quest accepted!")
+        if input(f"{YELLOW}Accept story quest? (y/n): {ENDC}").lower() == 'y':
+            user_data.setdefault("active_quests", []).append(quest)
+            print_colored("Story quest accepted!", OKGREEN)
 
     # Show side quests
     print("\nSide Quests:")
@@ -4810,19 +5010,19 @@ def enter_dungeon(dungeon_name: str) -> None:
 
         if user_data["health"] > 0 and all_monsters_defeated:
             print_colored(f"You have completed the {dungeon['name']}!", OKGREEN)
-            
+
             # Mark dungeon as completed
             if dungeon['name'] not in user_data.get("dungeons_completed", []):
                 user_data.setdefault("dungeons_completed", []).append(dungeon['name'])
                 print_colored(f"Dungeon {dungeon['name']} has been marked as completed!", OKGREEN)
-                
+
                 # Additional reward for first completion
                 reward_gold = 500
                 reward_exp = 1000
                 user_data["gold"] += reward_gold
                 user_data["exp"] += reward_exp
                 print_colored(f"You received {reward_gold} gold and {reward_exp} experience as a completion reward!", MAGENTA)
-            
+
             # Get loot regardless of completion status
             loot_item = random.choice(dungeon["loot"])
             print_colored(f"At the end of the dungeon, you found: {loot_item}", MAGENTA)
@@ -4860,6 +5060,28 @@ def equip_item(item_name: str) -> None:
     if not user_data["class"]:
         print(f"{FAIL}You need to create a character first! Use /new{ENDC}")
         return
+
+    try:
+        # Find item case-insensitively
+        item = next((i for i in user_data["inventory"] if isinstance(i, dict) and i.get("name", "").lower() == item_name.lower() or 
+                    isinstance(i, str) and i.lower() == item_name.lower()), None)
+        
+        if not item:
+            print(f"{WARNING}You don't have {item_name} in your inventory.{ENDC}")
+            return
+
+        # Handle artifacts
+        if isinstance(item, dict) and item.get("type") == "artifact":
+            slot_key = f"artifact_{item['slot'].lower()}"
+            user_data.setdefault("equipped", {})[slot_key] = item
+            print(f"{OKGREEN}Equipped {item['name']} in {item['slot']} slot!{ENDC}")
+            
+            # Recalculate bonuses
+            bonuses = calculate_artifact_bonuses()
+            print("\nCurrent artifact bonuses:")
+            for stat, value in bonuses.items():
+                print(f"{stat}: +{value}")
+            return
 
     try:
         # Case-insensitive match for item in inventory
@@ -4909,7 +5131,7 @@ def show_stats() -> None:
 
 # New functions for additional commands
 def list_dungeons() -> None:
-    print_header("Dungeon List")
+    print(f"{BOLD}{CYAN}=== DUNGEON LIST ==={ENDC}")
     # Group dungeons by area
     dungeons_by_area = {}
     for dungeon in dungeons:
@@ -4920,7 +5142,7 @@ def list_dungeons() -> None:
 
     # Display dungeons by area with completion status
     for area, area_dungeons in sorted(dungeons_by_area.items()):
-        print(f"\n{BOLD}{CYAN}{area}:{ENDC}")
+        print(f"\n{BOLD}{MAGENTA}► {area}:{ENDC}")
         for dungeon in sorted(area_dungeons, key=lambda x: x['name']):
             name = dungeon['name']
             completed = name in user_data.get("dungeons_completed", [])
@@ -4928,19 +5150,25 @@ def list_dungeons() -> None:
                 print(f"{OKGREEN}✓ {name}{ENDC}")
                 # Show rewards if completed
                 if "loot" in dungeon:
-                    print(f"  Rewards collected: {', '.join(dungeon['loot'])}")
+                    print(f"{CYAN}  Rewards collected: {', '.join(dungeon['loot'])}{ENDC}")
             else:
                 # Show requirements if not completed
                 reqs = []
                 if "level_required" in dungeon:
                     reqs.append(f"Level {dungeon['level_required']}")
                 if reqs:
-                    print(f"{FAIL}✗ {name} (Required: {', '.join(reqs)}){ENDC}")
+                    print(f"{FAIL}✗ {name} {YELLOW}(Required: {', '.join(reqs)}){ENDC}")
                 else:
                     print(f"{FAIL}✗ {name}{ENDC}")
-            # Show monsters
+            # Show monsters with colored text
             if "monsters" in dungeon:
-                print(f"  Monsters: {', '.join(dungeon['monsters'])}")
+                boss_monsters = [m for m in dungeon['monsters'] if any(mon['name'] == m and mon.get('boss', False) for mon in monsters)]
+                normal_monsters = [m for m in dungeon['monsters'] if m not in boss_monsters]
+                
+                if normal_monsters:
+                    print(f"{BLUE}  Regular Monsters: {', '.join(normal_monsters)}{ENDC}")
+                if boss_monsters:
+                    print(f"{RED}  Boss Monsters: {', '.join(boss_monsters)}{ENDC}")
 
 def show_bestiary() -> None:
     print_header("Bestiary")
@@ -4967,16 +5195,97 @@ def guild_leave() -> None:
     user_data["guild"] = None
 
 def guild_list() -> None:
-    print_header("Guild List")
-    # For now, just a static list of guilds
-    guilds = ["Warriors", "Mages", "Rogues", "Paladins", "Hunters"]
-    for guild in guilds:
-        print(f"- {guild}")
+    print_header("Guild System")
+    GUILD_RANKS = {
+        "Initiate": 0,
+        "Member": 100,
+        "Veteran": 500,
+        "Elite": 1000,
+        "Master": 2000
+    }
+    
+    if not user_data.get("guild_stats"):
+        user_data["guild_stats"] = {
+            "rank": "Initiate",
+            "contribution": 0,
+            "guild_quests_completed": 0
+        }
+    
+    # Show all guilds and their benefits
+    guilds = {
+        "Warriors": {"bonus": "Attack +10%", "requirement": "Level 5"},
+        "Mages": {"bonus": "Magic +15%", "requirement": "Level 5"},
+        "Rogues": {"bonus": "Stealth +20%", "requirement": "Level 5"},
+        "Paladins": {"bonus": "Defense +10%", "requirement": "Level 5"},
+        "Hunters": {"bonus": "Critical +5%", "requirement": "Level 5"},
+        "Alchemists": {"bonus": "Potion Effect +25%", "requirement": "Level 10"},
+        "Dragon Knights": {"bonus": "Dragon Damage +30%", "requirement": "Level 15"},
+        "Shadow Walkers": {"bonus": "Night Damage +20%", "requirement": "Level 20"}
+    }
+    
+    print("Available Guilds:")
+    for guild, info in guilds.items():
+        print(f"\n{guild}")
+        print(f"Benefit: {info['bonus']}")
+        print(f"Requirement: {info['requirement']}")
+        
+    if user_data["guild"]:
+        print(f"\nYour Guild: {user_data['guild']}")
+        print(f"Rank: {user_data['guild_stats']['rank']}")
+        print(f"Contribution: {user_data['guild_stats']['contribution']}")
+        print(f"Guild Quests Completed: {user_data['guild_stats']['guild_quests_completed']}")
 
 # Trading system
 def trading_system() -> None:
     print_header("Trading System")
-    print("Trading system is under development. Stay tuned!")
+    
+    if not user_data.get("trade_history"):
+        user_data["trade_history"] = []
+        user_data["trade_reputation"] = 0
+    
+    print(f"Trade Reputation: {user_data['trade_reputation']}")
+    
+    print("\nTrading Options:")
+    print("1. Create Trade Offer")
+    print("2. View Active Trades")
+    print("3. Trade History")
+    print("4. Market Prices")
+    print("5. Exit Trading")
+    
+    choice = input("\nChoose an option (1-5): ")
+    
+    if choice == "1":
+        print("\nCreate Trade Offer:")
+        print("Your Inventory:")
+        for item in user_data["inventory"]:
+            print(f"- {item}")
+        item = input("Enter item to trade: ")
+        price = input("Enter asking price in gold: ")
+        if item in user_data["inventory"]:
+            trade_offer = {
+                "item": item,
+                "price": int(price),
+                "seller": user_data["name"],
+                "status": "active"
+            }
+            user_data["trade_history"].append(trade_offer)
+            print("Trade offer created!")
+    
+    elif choice == "2":
+        print("\nActive Trades:")
+        active_trades = [t for t in user_data["trade_history"] if t["status"] == "active"]
+        for i, trade in enumerate(active_trades, 1):
+            print(f"{i}. {trade['item']} - {trade['price']} gold")
+    
+    elif choice == "3":
+        print("\nTrade History:")
+        for trade in user_data["trade_history"]:
+            print(f"{trade['item']} - {trade['price']} gold - {trade['status']}")
+    
+    elif choice == "4":
+        print("\nCurrent Market Prices:")
+        for item, price in MARKET_PRICES.items():
+            print(f"{item}: {price} gold")
 
 # Professions system
 def professions_system() -> None:
@@ -5072,6 +5381,11 @@ def create_character() -> None:
     if user_data["class"] is not None:
         print("You have already created a character!")
         return
+
+    # Initialize equipment and inventory
+    user_data["equipped"] = {"weapon": None, "armor": None}
+    user_data["inventory"] = []
+    user_data["materials"] = {}
 
     print_header("Character Creation")
 
@@ -5376,7 +5690,7 @@ def show_inventory() -> None:
     if not user_data["inventory"]:
         print("Your inventory is empty.")
         return
-        
+
     # Group items by type
     weapons = []
     armors = []
@@ -5384,13 +5698,13 @@ def show_inventory() -> None:
     artifacts = []
     potions = []
     misc = []
-    
+
     for item_name in user_data["inventory"]:
         # Check if this is an item object with details
         if isinstance(item_name, dict):
             item = item_name
-            item_name = item["name"]
-            
+            item_name = item.get("name", "Unknown Item")
+
             if item.get("type") == "weapon":
                 weapons.append(item)
             elif item.get("type") == "armor":
@@ -5421,24 +5735,31 @@ def show_inventory() -> None:
                 potions.append(item_name)
             else:
                 misc.append(item_name)
-    
+
     # Display sections
     if weapons:
         print(f"\n{BLUE}WEAPONS:{ENDC}")
         for idx, item in enumerate(weapons, 1):
             if isinstance(item, dict):
-                level_str = f" (Level {item.get('level', 1)})" if item.get('level', 1) > 1 else ""
+                name = item.get('name', 'Unknown Item')
+                level = item.get('level', 1)
+                level_str = f" (Level {level})" if level > 1 else ""
                 element_str = f" [{item.get('element', 'Nullum')}]" if 'element' in item else ""
                 enchant_str = ""
-                if "enchantments" in item and item["enchantments"]:
+                if 'enchantments' in item and isinstance(item['enchantments'], dict):
                     enchants = []
-                    for name, level in item["enchantments"].items():
-                        enchants.append(f"{name} {level}")
+                    for ench_name, ench_level in item['enchantments'].items():
+                        enchants.append(f"{ench_name} {ench_level}")
                     enchant_str = f" | {', '.join(enchants)}"
-                print(f"{idx}. {item['name']}{level_str}{element_str}{enchant_str}")
+                print(f"{idx}. {name}{level_str}{element_str}{enchant_str}")
             else:
-                print(f"{idx}. {item}")
-    
+                # For string items, check if they have a recipe with enchantments
+                recipe = CRAFTING_RECIPES.get(item, {})
+                if recipe and 'enchantments' in recipe:
+                    print(f"{idx}. {item} | {recipe['enchantments']}")
+                else:
+                    print(f"{idx}. {item}")
+
     if armors:
         print(f"\n{GREEN}ARMORS:{ENDC}")
         for idx, item in enumerate(armors, 1):
@@ -5453,7 +5774,7 @@ def show_inventory() -> None:
                 print(f"{idx}. {item['name']}{level_str}{enchant_str}")
             else:
                 print(f"{idx}. {item}")
-    
+
     if accessories:
         print(f"\n{MAGENTA}ACCESSORIES:{ENDC}")
         for idx, item in enumerate(accessories, 1):
@@ -5461,7 +5782,7 @@ def show_inventory() -> None:
                 print(f"{idx}. {item['name']}")
             else:
                 print(f"{idx}. {item}")
-    
+
     if artifacts:
         print(f"\n{YELLOW}ARTIFACTS:{ENDC}")
         for idx, item in enumerate(artifacts, 1):
@@ -5480,7 +5801,7 @@ def show_inventory() -> None:
                     print(f"{idx}. {rarity_color}{item}{ENDC} ({slot})")
                 else:
                     print(f"{idx}. {item}")
-    
+
     if potions:
         print(f"\n{CYAN}POTIONS:{ENDC}")
         for idx, item in enumerate(potions, 1):
@@ -5494,17 +5815,17 @@ def show_inventory() -> None:
                     print(f"{idx}. {item} - {desc}")
                 else:
                     print(f"{idx}. {item}")
-    
+
     if misc:
         print(f"\n{ENDC}OTHER ITEMS:{ENDC}")
         for idx, item in enumerate(misc, 1):
             print(f"{idx}. {item}")
-    
+
     print(f"\nGold: {user_data['gold']}")
-    
+
     # Display equipped items
     print("\nEquipped:")
-    
+
     # Weapon
     if user_data.get("equipped", {}).get("weapon"):
         weapon = user_data["equipped"]["weapon"]
@@ -5513,7 +5834,7 @@ def show_inventory() -> None:
         print(f"Weapon: {weapon['name']}{level_str}{element_str}")
     else:
         print("Weapon: None")
-        
+
     # Armor
     if user_data.get("equipped", {}).get("armor"):
         armor = user_data["equipped"]["armor"]
@@ -5521,13 +5842,13 @@ def show_inventory() -> None:
         print(f"Armor: {armor['name']}{level_str}")
     else:
         print("Armor: None")
-        
+
     # Accessory
     if user_data.get("equipped", {}).get("accessory"):
         print(f"Accessory: {user_data['equipped']['accessory']['name']}")
     else:
         print("Accessory: None")
-        
+
     # Artifacts
     print("\nArtifacts:")
     for slot in ARTIFACT_SLOTS:
@@ -5568,8 +5889,20 @@ def gambling_guide() -> None:
 
 # Duel info function stub
 def duel_info() -> None:
-    print_header("Duel Info")
-    print("Duel feature is coming soon! Challenge your friends.")
+    print_header("Duel System")
+    if not user_data.get("duels", {}):
+        user_data["duels"] = {"wins": 0, "losses": 0, "rank": "Novice"}
+    
+    print(f"Your Duel Stats:")
+    print(f"Wins: {user_data['duels']['wins']}")
+    print(f"Losses: {user_data['duels']['losses']}")
+    print(f"Rank: {user_data['duels']['rank']}")
+    
+    print("\nDuel Commands:")
+    print("/duel_challenge [player] - Challenge another player")
+    print("/duel_accept - Accept a challenge")
+    print("/duel_decline - Decline a challenge")
+    print("/duel_rankings - View rankings")
 
 # Farming guide function stub
 # Farming data structures
@@ -5900,6 +6233,16 @@ def travel_to_area() -> None:
         print("Invalid input")
 
 def fight_monster(monster_name: str) -> None:
+    """
+    Initiates combat with a specified monster.
+    
+    Args:
+        monster_name (str): Name of the monster to fight
+        
+    Raises:
+        ValueError: If monster level is too high for player
+        KeyError: If monster not found in database
+    """
     try:
         monster = next((m for m in monsters if m["name"].lower() == monster_name.lower()), None)
         if not monster:
@@ -6169,7 +6512,7 @@ def check_location() -> None:
         print(f"  Monsters: {', '.join(dungeon['monsters'])}")
         print(f"  Possible Loot: {', '.join(dungeon['loot'])}")
 
-def search_resources() -> None:
+def search_resources() -> bool:
     print_header("Resource Search")
     search_type = random.choice(["monster", "material"])
 
@@ -6182,8 +6525,10 @@ def search_resources() -> None:
             print(f"Health: {monster['health']}")
             print(f"Attack: {monster['attack']}")
             print(f"Possible drops: {', '.join(monster['drops'])}")
+            return True
         else:
             print("No monsters found in this area.")
+            return False
     else:
         available_materials = [name for name, info in MATERIALS.items() 
                              if user_data["current_area"] in info["areas"]]
@@ -6197,8 +6542,10 @@ def search_resources() -> None:
                 print("You have the right tool to gather this!")
             elif tool_required:
                 print("You need the right tool to gather this.")
+            return True
         else:
             print("No materials found in this area.")
+            return False
 
 def save_prompt() -> None:
     print_header("Save Game")
@@ -6234,39 +6581,47 @@ def delete_save_prompt() -> None:
 def talk_to_npc(npc_name: Optional[str] = None) -> None:
     if not npc_name:
         print_header("Available NPCs")
-        npcs_here = [name for name, npc in NPCS.items() if npc["location"] == user_data["current_area"]]
+        npcs_here = []
+        for name, npc_data in NPCS.items():
+            if npc_data.get("location") == user_data.get("current_area"):
+                npcs_here.append(name)
         if npcs_here:
-            print(f"NPCs in {user_data['current_area']}:")
+            print(f"NPCs in {user_data.get('current_area')}:")
             for name in npcs_here:
                 print(f"- {name}")
         else:
-            print(f"No NPCs found in {user_data['current_area']}")
+            print(f"No NPCs found in {user_data.get('current_area')}")
         return
 
     try:
-        npc = next((npc for name, npc in NPCS.items() if name.lower() == npc_name.lower()), None)
-        if not npc:
+        npc_data = None
+        for name, data in NPCS.items():
+            if name.lower() == npc_name.lower():
+                npc_data = data
+                break
+
+        if not npc_data:
             print(f"{FAIL}No NPC named '{npc_name}' found.{ENDC}")
             return
 
-        if npc["location"] != user_data["current_area"]:
-            print(f"{WARNING}This NPC is in {npc['location']}. You need to travel there first!{ENDC}")
+        if npc_data.get("location") != user_data.get("current_area"):
+            print(f"{WARNING}This NPC is in {npc_data.get('location')}. You need to travel there first!{ENDC}")
             return
 
         print_header(f"Talking to {npc_name}")
-        print_animated(npc["dialogues"]["greeting"], CYAN)
+        print_animated(npc_data["dialogues"]["greeting"], CYAN)
 
         while True:
             print(f"\n{BOLD}Options:{ENDC}")
             options = []
 
-            if "quests" in npc:
+            if "quests" in npc_data:
                 options.append("1. Ask about quests")
-            if "story" in npc["dialogues"]:
+            if "story" in npc_data["dialogues"]:
                 options.append("2. Listen to story")
-            if "shop" in npc:
+            if "shop" in npc_data:
                 options.append("3. Trade/Shop")
-            if "additional" in npc["dialogues"]:
+            if "additional" in npc_data["dialogues"]:
                 options.append("4. Ask for advice")
             options.append("5. End conversation")
 
@@ -6275,12 +6630,17 @@ def talk_to_npc(npc_name: Optional[str] = None) -> None:
 
             choice = input(f"\n{YELLOW}What would you like to do? {ENDC}")
 
-            if choice == "1" and "quests" in npc:
-                print_animated(npc["dialogues"].get("quest", "No quests available."), YELLOW)
-                available_quests = [q for q in QUESTS if q["name"] in npc["quests"] 
-                                  and q["id"] not in user_data["completed_quests"]
-                                  and q not in user_data["active_quests"]]
-
+            if choice == "1" and isinstance(npc_data, dict) and "quests" in npc_data:
+                dialogues = npc_data.get("dialogues", {})
+                available_quests = []
+                if isinstance(dialogues, dict):
+                    quest_dialogue = dialogues.get("quest", "No quests available.")
+                    print_animated(quest_dialogue, YELLOW)
+                    npc_quests = npc_data.get("quests", [])
+                    available_quests = [q for q in QUESTS if q["name"] in npc_quests 
+                                      and q["id"] not in user_data["completed_quests"]
+                                      and q not in user_data["active_quests"]]
+                    
                 if available_quests:
                     for quest in available_quests:
                         print(f"\n{CYAN}Quest: {quest['name']}{ENDC}")
@@ -6294,27 +6654,30 @@ def talk_to_npc(npc_name: Optional[str] = None) -> None:
                 else:
                     print(f"{YELLOW}No available quests at the moment.{ENDC}")
 
-            elif choice == "2" and "story" in npc["dialogues"]:
-                if isinstance(npc["dialogues"]["story"], dict):
-                    for part, text in npc["dialogues"]["story"].items():
+            elif choice == "2" and "story" in npc_data["dialogues"]:
+                if isinstance(npc_data["dialogues"]["story"], dict):
+                    for part, text in npc_data["dialogues"]["story"].items():
                         print_animated(f"\n{MAGENTA}{part.capitalize()}:{ENDC}", delay=0.02)
                         print_animated(text, CYAN, delay=0.03)
                         input(f"\n{YELLOW}Press Enter to continue...{ENDC}")
                 else:
-                    print_animated(npc["dialogues"]["story"], CYAN)
+                    print_animated(npc_data["dialogues"]["story"], CYAN)
 
-            elif choice == "3" and "shop" in npc:
+            elif choice == "3" and isinstance(npc_data, dict) and "shop" in npc_data:
                 print(f"\n{BOLD}Available items:{ENDC}")
-                for item in npc["shop"]:
-                    price = WEAPONS[item]["price"] if item in WEAPONS else MARKET_PRICES.get(item, 0)
-                    print(f"{item}: {price} gold")
+                shop_items = npc_data.get("shop", [])
+                if isinstance(shop_items, list):
+                    for item in shop_items:
+                        if isinstance(item, str):
+                            price = WEAPONS[item]["price"] if item in WEAPONS else MARKET_PRICES.get(item, 0)
+                            print(f"{item}: {price} gold")
 
                 while True:
                     item = input(f"\n{YELLOW}What would you like to buy? (or press Enter to cancel): {ENDC}").strip()
                     if not item:
                         break
 
-                    if item in npc["shop"]:
+                    if item in npc_data["shop"]:
                         price = WEAPONS[item]["price"] if item in WEAPONS else MARKET_PRICES.get(item, 0)
                         if user_data["gold"] >= price:
                             user_data["gold"] -= price
@@ -6325,8 +6688,8 @@ def talk_to_npc(npc_name: Optional[str] = None) -> None:
                     else:
                         print(f"{FAIL}Item not available.{ENDC}")
 
-            elif choice == "4" and "additional" in npc["dialogues"]:
-                advice = random.choice(npc["dialogues"]["additional"])
+            elif choice == "4" and "additional" in npc_data["dialogues"]:
+                advice = random.choice(npc_data["dialogues"]["additional"])
                 print_animated(advice, CYAN)
 
             elif choice == "5" or choice.lower() == "exit":
@@ -6360,23 +6723,23 @@ def list_npcs() -> None:
 def show_storyline() -> None:
     print_header("Main Storyline")
     current_chapter = None
-    
+
     # Count completed main chapters and check for post-game access
     completed_main_chapters = 0
     for chapter_name, chapter in STORYLINE.items():
         # Skip post-game chapters in the count
         if chapter.get("post_game", False):
             continue
-            
+
         completed_quests = all(
             any(q["name"] == quest_name and q["id"] in user_data["completed_quests"] 
                 for q in QUESTS)
             for quest_name in chapter["quest_line"]
         )
-        
+
         if completed_quests:
             completed_main_chapters += 1
-    
+
     # Check if player has unlocked post-game content
     post_game_unlocked = completed_main_chapters >= 6  # After completing 6 main chapters
     if post_game_unlocked and not user_data.get("post_game_unlocked", False):
@@ -6391,7 +6754,7 @@ def show_storyline() -> None:
         # Skip post-game chapters if not unlocked
         if chapter.get("post_game", False) and not user_data.get("post_game_unlocked", False):
             continue
-            
+
         if user_data["level"] >= chapter["required_level"]:
             completed_quests = all(
                 any(q["name"] == quest_name and q["id"] in user_data["completed_quests"] 
@@ -6405,13 +6768,13 @@ def show_storyline() -> None:
                 status = f"{YELLOW}► In Progress{ENDC}"
             else:
                 status = f"{FAIL}- Locked{ENDC}"
-                
+
             # Add special formatting for post-game chapters
             if chapter.get("post_game", False):
                 print(f"\n{BOLD}{MAGENTA}⚝ {chapter['title']} [{status}] ⚝{ENDC}")
             else:
                 print(f"\n{BOLD}{chapter['title']} [{status}]{ENDC}")
-                
+
             print(f"Required Level: {chapter['required_level']}")
             print(f"Description: {chapter['description']}")
 
@@ -6423,52 +6786,52 @@ def show_storyline() -> None:
                     if quest:
                         quest_status = f"{OKGREEN}✓{ENDC}" if quest["id"] in user_data["completed_quests"] else f"{YELLOW}►{ENDC}"
                         print(f"  {quest_status} {quest_name}")
-                        
+
 def show_postgame_content() -> None:
     """Display post-game exclusive content and challenges"""
     if not user_data.get("post_game_unlocked", False):
         print_colored("You have not yet unlocked post-game content.", FAIL)
         print_colored("Complete the main storyline first!", YELLOW)
         return
-        
+
     print_header("POST-GAME CONTENT")
     print_colored("Welcome to the post-game adventures!", MAGENTA)
-    
+
     # Show available post-game activities
     print("\n" + BOLD + "Available Activities:" + ENDC)
-    
+
     # Dimensional Rifts
     print(f"\n{CYAN}1. Dimensional Rifts{ENDC}")
     print("  Explore alternate realities with unique challenges and rewards.")
     print("  Requirements: Level 35+")
-    
+
     # Divine Trials
     print(f"\n{CYAN}2. Divine Trials{ENDC}")
     print("  Face the challenges of the gods to earn divine artifacts.")
     print("  Requirements: Level 40+")
-    
+
     # Legendary Hunts
     print(f"\n{CYAN}3. Legendary Hunts{ENDC}")
     print("  Track down and defeat legendary monsters for rare loot.")
     print("  Requirements: Level 30+")
-    
+
     # Time Trials
     print(f"\n{CYAN}4. Time Trials{ENDC}")
     print("  Complete dungeons against the clock for special rewards.")
     print("  Requirements: Complete any 3 dungeons")
-    
+
     # New Game+
     print(f"\n{CYAN}5. New Game+{ENDC}")
     print("  Start a new journey with your current level and equipment.")
     print("  Requirements: Level 50+")
-    
+
     # Endless Tower
     print(f"\n{CYAN}6. Endless Tower{ENDC}")
     print("  Climb the infinite tower with increasingly difficult challenges.")
     print("  Requirements: Level 35+")
-    
+
     choice = input("\nEnter a number to learn more, or type 'back' to return: ")
-    
+
     if choice == "1" and user_data["level"] >= 35:
         dimensional_rifts()
     elif choice == "2" and user_data["level"] >= 40:
@@ -6489,8 +6852,47 @@ def show_postgame_content() -> None:
 
 
 
+# Initialize default user data if not exists
+def init_user_data():
+    global user_data
+    if not user_data:
+        user_data = {
+            "name": None,
+            "class": None,
+            "profession": None,
+            "has_chosen_profession": False,
+            "level": 1,
+            "inventory": [],
+            "equipped": {"weapon": None, "armor": None},
+            "gold": INITIAL_GOLD,
+            "coolness": 0,
+            "guild": None,
+            "pets": [],
+            "progress": "starter",
+            "exp": 0,
+            "health": INITIAL_HEALTH,
+            "max_health": INITIAL_HEALTH,
+            "attack": 10,
+            "defense": 0,
+            "speed": 5,
+            "skills": [],
+            "active_quests": [],
+            "completed_quests": [],
+            "materials": {},
+            "tools": ["Axe", "Pickaxe", "Flask", "Hunting Knife"],
+            "current_area": "Greenwood Village",
+            "monsters_killed": 0,
+            "dungeons_completed": []
+        }
+
 # Main loop
 if __name__ == "__main__":
+    init_user_data()
+    
+    # Create save directory if it doesn't exist
+    save_dir = get_save_directory()
+    os.makedirs(save_dir, exist_ok=True)
+    
     print("\n")  # Add a blank line for spacing
     print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
     print_animated(f"{BOLD}{CYAN}     Welcome to Legacies of our Legends RPG!{ENDC}")
@@ -6506,10 +6908,14 @@ if __name__ == "__main__":
 
     while True:
         try:
-            # Auto-save check
-            if time.time() - last_save > AUTO_SAVE_INTERVAL:
-                auto_save()
-                last_save = time.time()
+            # Auto-save check with error handling
+            try:
+                current_time = time.time()
+                if current_time - last_save > AUTO_SAVE_INTERVAL:
+                    auto_save()
+                    last_save = current_time
+            except Exception as e:
+                print(f"{FAIL}Auto-save error: {e}{ENDC}")
 
             command = input(f"\n{YELLOW}>> {ENDC}").strip()
             # Do not convert to lowercase to preserve command arguments
@@ -6522,3 +6928,5 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"{FAIL}Error: {e}{ENDC}")
             print_animated("Type '/help' for available commands.", YELLOW)
+            if str(e).lower() == 'exit':
+                break
