@@ -351,7 +351,7 @@ class Room:
                 random_directions.append('/upstairs')
             else:
                 random_directions.append('/downstairs')
-                
+
         # Set available directions based on descriptions + random availability
         self.available_directions = {
             '/upstairs': 'up' in self.stairs.lower() or '/upstairs' in random_directions,
@@ -422,8 +422,8 @@ class Game:
                             data = pickle.load(f)
                         player = data['player']
                         print(f"{slot}. {player.name} - Level {player.level} - Sanity: {player.sanity}")
-                    except:
-                        print(f"{slot}. [Corrupted Save]")
+                    except (pickle.PickleError, EOFError) as e:
+                        print(f"{slot}. [Corrupted Save] ({e})")
                 else:
                     print(f"{slot}. [Empty]")
 
@@ -442,7 +442,8 @@ class Game:
         try:
             with open('highscore.txt', 'r') as f:
                 return int(f.read().strip())
-        except:
+        except (FileNotFoundError, ValueError) as e:
+            print(Fore.RED + f"\nCould not load high score: {e}" + Style.RESET_ALL)
             return 0
 
     def save_high_score(self, score):
@@ -452,8 +453,11 @@ class Game:
                     f.write(str(score))
                 self.high_score = score
                 print(Fore.GREEN + f"\nNew High Score: {score}!" + Style.RESET_ALL)
-        except:
-            pass
+
+        
+        except (FileNotFoundError, ValueError) as e:
+            print(Fore.RED + f"\nCould not load high score: {e}" + Style.RESET_ALL)
+            return 0
 
     def show_menu(self):
         self.clear_screen()
@@ -531,7 +535,7 @@ class Game:
     def generate_entities(self):
         if self.game_mode == "nightmare":
             self.entities = []
-            
+
             # Theme-based entities
             theme_entities = {
                 'hospital': [
@@ -601,10 +605,10 @@ class Game:
                     {'name': 'The Goofy', 'speed': 0.6, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
                 ]
             }
-            
+
             # Get the current level theme
             current_theme = self.level_theme if hasattr(self, 'level_theme') else 'limbo'
-            
+
             # Default entities for mixed themes
             default_entities = [
                 {'name': 'Shadow Walker', 'speed': 0.4, 'friendly': False, 'theme': 'limbo'},
@@ -618,11 +622,11 @@ class Game:
                 {'name': 'Your friend', 'speed': 0.4, 'friendly': True, 'theme': 'limbo'},
                 {'name': 'Your worst dream','speed': 0.5, 'friendly': False, 'theme': 'limbo'},
             ]
-            
+
             # Create a mix of themed and default entities
             theme_specific = theme_entities.get(current_theme, default_entities)
             all_entities = theme_specific + default_entities  # Mix theme-specific with default entities
-            
+
             # Higher player level means more entities and they're faster
             if self.player:
                 num_entities = min(34, 20 + (self.player.level // 5))
@@ -630,20 +634,20 @@ class Game:
             else:
                 num_entities = 20
                 level_speed_boost = 0
-            
+
             for _ in range(num_entities):
                 entity_type = random.choice(all_entities).copy()
-                
+
                 # Apply level-based speed boost
                 entity_type['speed'] = min(0.9, entity_type['speed'] + level_speed_boost)
-                
+
                 # Position the entity
                 entity_type['pos'] = (
                     random.randint(X_MIN, X_MAX),
                     random.randint(Y_MIN, Y_MAX),
                     random.randint(Z_MIN, Z_MAX)
                 )
-                
+
                 # Make sure entity isn't placed directly on the player
                 if self.player:
                     if entity_type['pos'] == (self.player.x, self.player.y, self.player.z):
@@ -653,7 +657,7 @@ class Game:
                             random.randint(Y_MIN, Y_MAX),
                             random.randint(Z_MIN, Z_MAX)
                         )
-                
+
                 self.entities.append(entity_type)
 
     def initialize_game(self):
@@ -670,7 +674,7 @@ class Game:
     def generate_level(self):
         # Choose a theme for the level
         themes = ['hospital', 'school', 'home', 'limbo', 'mall','Train_station','Abandoned_amusement_park']
-        
+
         # Theme progression: early levels are hospital and home, mid-levels include school and mall,
         # and higher levels tend toward limbo with higher frequency
         if self.player is None:
@@ -689,9 +693,9 @@ class Game:
         else:
             theme_weights = [1, 2, 1, 10, 1]  # Limbo dominant at high levels
             level = self.player.level
-        
+
         self.level_theme = random.choices(themes, weights=theme_weights, k=1)[0]
-        
+
         # Generate the exit far from the player
         while True:
             self.exit = (
@@ -699,7 +703,7 @@ class Game:
                 random.randint(Y_MIN, Y_MAX),
                 random.randint(Z_MIN, Z_MAX)
             )
-            
+
             # Make sure exit is far enough from player
             if self.player:
                 distance = abs(self.exit[0] - self.player.x) + abs(self.exit[1] - self.player.y) + abs(self.exit[2] - self.player.z)
@@ -707,7 +711,7 @@ class Game:
                     break
             else:
                 break
-        
+
         # Generate special door for heaven/hell endings
         if self.player is not None and self.player.level >= 50:  # Special door appears after level 50
             z = 5 if random.random() < 0.5 else -5  # Top or bottom floor
@@ -719,12 +723,12 @@ class Game:
             self.special_door = (x, y, z)
         else:
             self.special_door = None
-            
+
         # Pre-generate some rooms to create consistency in the world
         # This creates a more coherent "tiled map" feeling
         self.discovered_areas = set()  # Reset discovered areas
         self.room_map = {}  # Store pre-generated rooms
-        
+
         # Generate a number of predefined rooms
         num_predefined = min(50, 20 + (level // 2))  # More rooms at higher levels
         for _ in range(num_predefined):
@@ -735,10 +739,10 @@ class Game:
             )
             if pos not in self.room_map:
                 self.room_map[pos] = Room(theme=self.level_theme, level=level)
-                
+
         # Add specific room at exit location
         self.room_map[self.exit] = Room(theme='limbo', level=level)  # Exit is always limbo-themed
-        
+
         # If there's a special door, make that room special too
         if self.special_door:
             special_room = Room(theme='limbo', level=level)
@@ -762,7 +766,7 @@ class Game:
     def check_endings(self):
         if self.player is None:
             return False
-            
+
         current_pos = (self.player.x, self.player.y, self.player.z)
 
         # Wall of photos ending (Real ending)
@@ -872,7 +876,7 @@ class Game:
     def next_level(self):
         if self.player is None:
             return
-            
+
         self.player.level += 1
         self.player.sanity = min(self.player.sanity + 15, SANITY_MAX)  # Reward for completing a level
 
@@ -893,9 +897,9 @@ class Game:
     def display_room(self):
         if self.player is None:
             return
-            
+
         current_pos = (self.player.x, self.player.y, self.player.z)
-        
+
         # Use the room from our tiled map if it exists, otherwise create a new one
         if hasattr(self, 'room_map') and current_pos in self.room_map:
             self.current_room = self.room_map[current_pos]
@@ -904,17 +908,17 @@ class Game:
             level = self.player.level if self.player else 1
             theme = self.level_theme if hasattr(self, 'level_theme') else None
             self.current_room = Room(theme=theme, level=level)
-            
+
             # Add to discovered areas and room map
             self.discovered_areas.add(current_pos)
             if hasattr(self, 'room_map'):
                 self.room_map[current_pos] = self.current_room
-        
+
         # Make sure current_room is set
         if self.current_room is None:
             self.current_room = Room(theme=self.level_theme if hasattr(self, 'level_theme') else None, 
                                      level=self.player.level if self.player else 1)
-        
+
         # Display room description with theme information
         theme_colors = {
             'hospital': Fore.CYAN,
@@ -923,24 +927,24 @@ class Game:
             'limbo': Fore.MAGENTA,
             'mall': Fore.BLUE
         }
-        
+
         # Show theme info at higher levels when player has more experience
         if self.player and self.player.level > 5 and hasattr(self.current_room, 'theme') and self.current_room.theme:
             theme_color = theme_colors.get(self.current_room.theme, Fore.WHITE)
             theme_name = self.current_room.theme.upper()
             print(f"\n{theme_color}[{theme_name} ZONE - LEVEL {self.player.level}]{Style.RESET_ALL}")
-        
+
         # Display room description with null checks
         if hasattr(self.current_room, 'description') and self.current_room.description:
             print(f"\n{self.current_room.description}")
         else:
             print("\nAn undefined space that feels wrong somehow.")
-            
+
         if hasattr(self.current_room, 'stairs') and self.current_room.stairs:
             print(f"{self.current_room.stairs}")
         else:
             print("There are no visible stairs or elevators.")
-            
+
         if hasattr(self.current_room, 'paths') and self.current_room.paths:
             print(f"{self.current_room.paths}")
         else:
@@ -981,7 +985,7 @@ class Game:
                 print(Fore.WHITE + "\nA radiant door pulses with warm light. It calls to you." + Style.RESET_ALL)
             else:
                 print(Fore.RED + "\nA dark door emanates dread. Something waits beyond." + Style.RESET_ALL)
-                
+
         # Display minimap for player with adjacency information
         if hasattr(self.player, 'has_light') and self.player.has_light and hasattr(self, 'room_map'):  # Only show minimap if player has light
             print(Fore.CYAN + "\nAdjacent Rooms:" + Style.RESET_ALL)
@@ -1010,7 +1014,7 @@ class Game:
         if self.player is None:
             print(Fore.RED + "\nNo active player." + Style.RESET_ALL)
             return
-            
+
         print(Fore.CYAN + "\n=== STATS ===" + Style.RESET_ALL)
         print(f"Name: {self.player.name}")
         print(f"Level: {self.player.level}")
@@ -1026,17 +1030,17 @@ class Game:
         print(f"Position: ({self.player.x}, {self.player.y}, {self.player.z})")
 
         if self.game_mode == "nightmare":
-            print(Fore.RED + f"Game Mode: Nightmare" + Style.RESET_ALL)
+            print(Fore.RED + "Game Mode: Nightmare" + Style.RESET_ALL)
         elif self.game_mode == "coma":
-            print(Fore.YELLOW + f"Game Mode: Coma" + Style.RESET_ALL)
+            print(Fore.YELLOW + "Game Mode: Coma" + Style.RESET_ALL)
         else:
-            print(Fore.GREEN + f"Game Mode: Dreaming" + Style.RESET_ALL)
+            print(Fore.GREEN + "Game Mode: Dreaming" + Style.RESET_ALL)
 
     def show_inventory(self):
         if self.player is None:
             print(Fore.RED + "\nNo active player." + Style.RESET_ALL)
             return
-            
+
         if not self.player.inventory:
             print(Fore.YELLOW + "\nYour inventory is empty." + Style.RESET_ALL)
             return
@@ -1049,11 +1053,11 @@ class Game:
         if self.player is None:
             print(Fore.RED + "\nNo active player." + Style.RESET_ALL)
             return
-            
+
         # Handle directions with slash prefix for consistency
         if direction.startswith('/'):
             direction = direction[1:]
-            
+
         if direction not in directions:
             print(Fore.RED + f"Invalid direction. Use: {', '.join(directions.keys())}" + Style.RESET_ALL)
             return
@@ -1062,7 +1066,7 @@ class Game:
         if not hasattr(self, 'current_room') or self.current_room is None:
             self.current_room = Room(theme=self.level_theme if hasattr(self, 'level_theme') else None, 
                                      level=self.player.level if self.player else 1)
-            
+
         # Check if the direction is available in the current room
         if not hasattr(self.current_room, 'available_directions') or not self.current_room.available_directions.get(direction, False):
             print(Fore.RED + f"You can't go {direction} from here." + Style.RESET_ALL)
@@ -1113,17 +1117,17 @@ class Game:
         if self.player is None:
             print(Fore.RED + "\nNo active player." + Style.RESET_ALL)
             return
-            
+
         if not self.current_room:
             print(Fore.RED + "\nNo current room to interact with." + Style.RESET_ALL)
             return
-            
+
         if action == "examine":
             if (hasattr(self.current_room, 'interactable') and 
                 self.current_room.interactable and 
                 isinstance(self.current_room.interactable, tuple) and 
                 len(self.current_room.interactable) > 1):
-                
+
                 print(Fore.CYAN + f"\n{self.current_room.interactable[1]}" + Style.RESET_ALL)
 
                 # Sometimes interacting gives sanity
@@ -1138,7 +1142,7 @@ class Game:
             if (hasattr(self.current_room, 'interactable') and 
                 self.current_room.interactable and 
                 isinstance(self.current_room.interactable, tuple)):
-                
+
                 # Higher chance of finding something to test inventory properly
                 if random.random() < 0.9:  
                     item = random.choice(list(items.keys()))
@@ -1166,7 +1170,7 @@ class Game:
         if self.player is None:
             print(Fore.RED + "\nNo active player." + Style.RESET_ALL)
             return
-            
+
         if item == 'battery':
             gain = random.randint(10, 20)
             self.player.sanity = int(min(SANITY_MAX, self.player.sanity + gain))
@@ -1283,12 +1287,18 @@ class Game:
                     if random.random() < 0.3:
                         ex, ey, ez = entity['pos']
                         # Move entity closer to player
-                        if ex < self.player.x: ex += 1
-                        elif ex > self.player.x: ex -= 1
-                        if ey < self.player.y: ey += 1
-                        elif ey > self.player.y: ey -= 1
-                        if ez < self.player.z: ez += 1
-                        elif ez > self.player.z: ez -= 1
+                        if ex < self.player.x:
+                            ex += 1
+                        elif ex > self.player.x:
+                            ex -= 1
+                        if ey < self.player.y:
+                            ey += 1
+                        elif ey > self.player.y:
+                            ey -= 1
+                        if ez < self.player.z:
+                            ez += 1
+                        elif ez > self.player.z:
+                            ez -= 1
                         entity['pos'] = (ex, ey, ez)
 
         elif item == 'compass':
@@ -1338,7 +1348,7 @@ class Game:
         if self.player is None:
             print(Fore.RED + "\nNo active player to save." + Style.RESET_ALL)
             return False
-            
+
         if slot_number is None:
             print(Fore.CYAN + "\nSave slots:" + Style.RESET_ALL)
             for slot in range(1, MAX_SLOTS + 1):
@@ -1349,8 +1359,8 @@ class Game:
                             data = pickle.load(f)
                         player = data['player']
                         print(f"{slot}. {player.name} - Level {player.level} - Sanity: {player.sanity}")
-                    except:
-                        print(f"{slot}. [Corrupted Save]")
+                    except (pickle.PickleError, EOFError) as e:
+                        print(f"{slot}. [Corrupted Save] ({e})")
                 else:
                     print(f"{slot}. [Empty]")
 
@@ -1408,7 +1418,7 @@ class Game:
     def process_command(self, command):
         if not command:
             return
-            
+
         if command in directions:
             self.move(command)
 
