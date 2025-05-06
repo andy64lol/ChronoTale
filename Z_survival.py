@@ -1,4 +1,3 @@
-
 """
 Z_survival...
 This game takes part in 2057, a new zombie virus, denominated as Necroa_A, has been spreading on Earth...
@@ -16,6 +15,7 @@ import json
 import math
 import sys
 from datetime import datetime
+from typing import Dict, List, Optional, Union
 
 # Setup save folder
 SAVES_FOLDER = "saves"
@@ -119,8 +119,11 @@ class Animations:
                 time.sleep(0.3)
 
 # Game constants
-SAVE_FILE = "zombie_game_save.json"
-DEATH_LOG_FILE = "hardcore_death_log.json"  # File to track hardcore mode deaths
+# Save file paths
+SAVES_FOLDER = "saves"
+SAVE_FILE = os.path.join(SAVES_FOLDER, "save.json")
+DEATH_LOG_FILE = os.path.join(SAVES_FOLDER, "hardcore_death_log.json")
+
 MAX_HEALTH = 75  # Reduced for hardcore mode
 MAX_STAMINA = 80
 MAX_HUNGER = 80
@@ -1010,7 +1013,7 @@ ITEMS = {
         },
         "description": "A standard baseball bat that has been methodically upgraded with metal reinforcements—nails, screws, metal plates, and wrapped wire. These modifications transform a sporting good into a dedicated skull-crusher, adding both weight and durability. The additional mass requires more strength to wield effectively but delivers devastating impacts. The metal additions occasionally catch on bone or clothing, requiring a forceful tug to free the weapon after a solid hit."
     },
-    
+
     # Craftable Firearms and Ammunition
     "makeshift_revolver": {
         "name": "Improvised Revolver",
@@ -1387,8 +1390,23 @@ class GameState:
     """Main class to handle game state and save/load functionality."""
 
     def __init__(self):
+        # Ensure saves directory exists
+        if not os.path.exists(SAVES_FOLDER):
+            os.makedirs(SAVES_FOLDER)
+            
         # Initialize death log for hardcore mode tracking
-        self.death_log = None
+        self.death_log = {
+            "total_deaths": 0,
+            "deaths": []
+        }
+        self.death_log.update(self.load_death_log() or {})
+        
+        # Initialize crafting skill
+        self.crafting_skill = 0
+        
+        # Initialize combat state
+        self.in_combat = False
+        self.current_zombie = None
 
         self.player = {
             "name": "",
@@ -1509,7 +1527,8 @@ class GameState:
 
     def start_game(self):
         """Initialize and start the game."""
-        # Load death log at game start
+        # Clear screen and load death log at game start
+        self.clear_screen()
         self.death_log = self.load_death_log()
 
         self.clear_screen()
@@ -1533,34 +1552,34 @@ class GameState:
 
         # Always show save slots at startup
         save_slots = self.get_save_slots()
-        
+
         # Display stylish save slots header
         divider = "=" * 50
         print(Colors.colorize(f"\n{divider}", Colors.RED))
         print(Colors.colorize("LOAD GAME".center(50), Colors.BOLD + Colors.YELLOW))
         print(Colors.colorize(f"{divider}", Colors.RED))
-        
+
         print(Colors.colorize(f"\n{divider}", Colors.CYAN))
         print(Colors.colorize("SAVE SLOTS".center(50), Colors.BOLD + Colors.CYAN))
         print(Colors.colorize(f"{divider}", Colors.CYAN))
-        
+
         # Display save slots in a more stylish format
         if save_slots:
             print()  # Add space before slots
             for save in save_slots:
                 slot_header = f"Slot {save['slot']}:"
                 print(Colors.colorize(slot_header, Colors.BOLD + Colors.GREEN))
-                
+
                 # Display character info with colors
                 character_info = f"Survivor: {Colors.colorize(save['name'], Colors.YELLOW)}, "
                 character_info += f"Level {Colors.colorize(str(save['level']), Colors.YELLOW)} "
                 character_info += f"({Colors.colorize(str(save['days_survived']), Colors.RED)} days survived)"
                 print(character_info)
-                
+
                 # Display location with cyan color
                 location_info = f"Location: {Colors.colorize(LOCATIONS[save['location']]['name'], Colors.CYAN)}"
                 print(location_info)
-                
+
                 # Display save date with purple color
                 date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M:%S')
                 print(f"Saved: {Colors.colorize(date_str, Colors.MAGENTA)}")
@@ -1568,22 +1587,22 @@ class GameState:
         else:
             print(Colors.colorize("\nNo saved games found.", Colors.YELLOW))
             print(Colors.colorize("Start a new game and use /save [slot] to create your first save.", Colors.CYAN))
-        
+
         # Calculate empty slots
         used_slots = [save['slot'] for save in save_slots]
         empty_slots = [i for i in range(1, MAX_SAVE_SLOTS + 1) if i not in used_slots]
-        
+
         # Show empty slots in a more attractive format
         if empty_slots:
             print(Colors.colorize("\nEmpty slots:", Colors.BOLD))
             empty_slots_str = ", ".join([str(slot) for slot in empty_slots])
             print(Colors.colorize(f"[{empty_slots_str}]", Colors.BLUE))
-            
+
         # Always ask to load a save file at the start
         print(Colors.colorize(f"\n{divider}", Colors.RED))
         # This is the key prompt that needs to appear for every player at startup
         load_option = input(Colors.colorize("Load a saving file? (y/n): ", Colors.BOLD + Colors.GREEN))
-        
+
         if load_option.lower() == 'y' and save_slots:
             # Prompt for slot
             while True:
@@ -1604,7 +1623,7 @@ class GameState:
         elif load_option.lower() == 'y' and not save_slots:
             print(Colors.colorize("\nNo save files found. Starting a new game.", Colors.YELLOW))
             time.sleep(1.5)
-        
+
         # Character creation for new game
         while not self.player["name"]:
             name = input(Colors.colorize("\nEnter your survivor's name: ", Colors.GREEN))
@@ -1706,14 +1725,14 @@ class GameState:
         - "heavy_action" - Heavy actions like combat, long travel (2-5 hours)
         - "rest" - Rest or sleep (special case, handled separately with hours parameter)
         - "zero" - Commands that don't consume time (help, save, stats, etc.)
-        
+
         Parameters:
         - command_type: The type of action being performed
         - hours: Optional specific number of hours to pass (used for rest/sleep)
         """
         if command_type == "zero":
             return 0
-            
+
         if command_type == "rest" and hours is not None:
             # Use the specific hours provided for rest/sleep
             hours_passed = hours
@@ -1918,43 +1937,43 @@ class GameState:
                             'location': save_data.get('location', 'Unknown'),
                             'saved_date': os.path.getmtime(slot_file)
                         })
-                except:
+                except (FileNotFoundError, json.JSONDecodeError) as e:
                     # If there's an error reading the save file, just skip it
                     pass
         return save_slots
 
     def save_game(self, slot=None):
         """Save game state to file.
-        
+
         Args:
             slot: Optional save slot number (1-5). If None, prompt for slot.
         """
         # Get existing save slots
         save_slots = self.get_save_slots()
-        
+
         # Display save slots if no slot is provided
         if slot is None:
             self.clear_screen()
             print(Colors.colorize("\n=== SAVE GAME ===", Colors.BOLD + Colors.CYAN))
-            
+
             # Show existing save slots
             if save_slots:
                 print("\nExisting save slots:")
                 for save in save_slots:
                     date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M')
                     print(f"  {save['slot']}. {save['name']} (Level {save['level']}, {save['days_survived']} days, {save['location']}) - {date_str}")
-            
+
             # Calculate available slots
             used_slots = [save['slot'] for save in save_slots]
             available_slots = [i for i in range(1, MAX_SAVE_SLOTS + 1) if i not in used_slots]
-            
+
             # Show available empty slots
             if available_slots:
                 print("\nEmpty save slots:", end=" ")
                 for slot_num in available_slots:
                     print(f"{slot_num}", end=" ")
                 print()
-            
+
             # Prompt for slot
             while True:
                 try:
@@ -1968,7 +1987,7 @@ class GameState:
                         print(f"Please enter a number between 1 and {MAX_SAVE_SLOTS}.")
                 except ValueError:
                     print("Please enter a valid number.")
-        
+
         # Confirm overwrite if slot is occupied
         slot_file = os.path.join(SAVES_FOLDER, f"save_slot_{slot}.json")
         if os.path.exists(slot_file):
@@ -1976,42 +1995,49 @@ class GameState:
             if confirmation != 'y':
                 print("Save cancelled.")
                 return False
-        
+
         # Save the game
         try:
+            # Ensure saves directory exists
+            if not os.path.exists(SAVES_FOLDER):
+                os.makedirs(SAVES_FOLDER)
+
             with open(slot_file, 'w') as f:
-                json.dump(self.player, f)
+                json.dump(self.player, f, indent=4)
             print(f"Game saved successfully to slot {slot}.")
             return True
+        except PermissionError:
+            print("Error: No permission to write save file.")
+            return False
         except Exception as e:
             print(f"Error saving game: {e}")
             return False
 
     def load_game(self, slot=None):
         """Load game state from file.
-        
+
         Args:
             slot: Optional save slot number (1-5). If None, prompt for slot.
         """
         # Get available save slots
         save_slots = self.get_save_slots()
-        
+
         # Check if there are any save slots
         if not save_slots:
             print("No saved games found.")
             return False
-        
+
         # Display save slots if no slot is provided
         if slot is None:
             self.clear_screen()
             print(Colors.colorize("\n=== LOAD GAME ===", Colors.BOLD + Colors.CYAN))
-            
+
             # Show existing save slots
             print("\nAvailable save slots:")
             for save in save_slots:
                 date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M')
                 print(f"  {save['slot']}. {save['name']} (Level {save['level']}, {save['days_survived']} days, {save['location']}) - {date_str}")
-            
+
             # Prompt for slot
             while True:
                 try:
@@ -2025,16 +2051,30 @@ class GameState:
                         print(f"Save slot {slot} does not exist. Please choose from the available slots.")
                 except ValueError:
                     print("Please enter a valid number.")
-        
+
         # Load the game
         slot_file = os.path.join(SAVES_FOLDER, f"save_slot_{slot}.json")
         try:
             if os.path.exists(slot_file):
-                with open(slot_file, 'r') as f:
-                    self.player = json.load(f)
-                print(f"Game loaded successfully from slot {slot}.")
-                return True
+                try:
+                    with open(slot_file, 'r') as f:
+                        loaded_data = json.load(f)
+                        # Validate loaded data has required fields
+                        required_fields = ["name", "health", "max_health", "stamina", "location"]
+                        if all(field in loaded_data for field in required_fields):
+                            self.player = loaded_data
+                            print(f"Game loaded successfully from slot {slot}.")
+                            return True
+                        else:
+                            print("Error: Save file appears to be corrupted.")
+                            return False
+                except json.JSONDecodeError:
+                    print("Error: Save file is corrupted.")
+                    return False
             print(f"Save slot {slot} does not exist.")
+            return False
+        except PermissionError:
+            print("Error: No permission to read save file.")
             return False
         except Exception as e:
             print(f"Error loading game: {e}")
@@ -2481,14 +2521,14 @@ class GameState:
         hunger_status = "Well Fed" if hunger_percent > 70 else "Hungry" if hunger_percent > 30 else "Starving"
         hunger_display = f"Hunger: {p['hunger']}/{p['max_hunger']} ({hunger_status})"
         print(Colors.colorize(hunger_display, hunger_color))
-        
+
         # Sleep status
         if "sleep" not in p:
             p["sleep"] = 100
-        
+
         if "max_sleep" not in p:
             p["max_sleep"] = 100
-            
+
         sleep_percent = p['sleep'] / p['max_sleep'] * 100
         sleep_color = Colors.health_color(p['sleep'], p['max_sleep'])
         sleep_status = "Well Rested" if sleep_percent > 70 else "Tired" if sleep_percent > 30 else "Exhausted"
@@ -2549,7 +2589,7 @@ class GameState:
             # Durability with color
             durability_percent = weapon['durability'] / 100
             durability_color = Colors.health_color(weapon['durability'], 100)
-            print(Colors.colorize(f"  Durability: {weapon['durability']}/100", durability_color))
+            print(f"  Durability: {durability_percent:.0f}%", durability_color)
 
             if "ammo" in weapon:
                 ammo_color = Colors.GREEN if weapon['ammo'] > 0 else Colors.RED
@@ -2767,11 +2807,17 @@ class GameState:
         hunger_modifier = weather_info.get("hunger_modifier", 1.0)
         thirst_modifier = weather_info.get("thirst_modifier", 1.0)
         stamina_modifier = weather_info.get("stamina_modifier", 1.0)
-        
+
         # Ensure sleep stat exists
         if "sleep" not in self.player:
             self.player["sleep"] = 100
             self.player["max_sleep"] = 100
+
+        if self.player["hunger"] > 20 and self.player["thirst"] > 20:
+            stamina_gain = min(int(hours * 3 * TIME_FACTOR * stamina_modifier), # use stamina_modifier here
+                              self.player["max_stamina"] - self.player["stamina"])
+            if stamina_gain > 0:
+                self.player["stamina"] += stamina_gain
 
         # Weather-specific descriptions
         if hunger_modifier > 1.0 or thirst_modifier > 1.0:
@@ -2783,7 +2829,7 @@ class GameState:
         # Decrease hunger and thirst based on time and weather (faster in hardcore mode)
         hunger_loss = int(hours * 5 * TIME_FACTOR * hunger_modifier)
         thirst_loss = int(hours * 8 * TIME_FACTOR * thirst_modifier)
-        
+
         # Decrease sleep (only when not in a sleeping command)
         sleeping = getattr(self, '_sleeping', False)
         if not sleeping:
@@ -2812,6 +2858,8 @@ class GameState:
             print(Colors.colorize("\n⚠️ You are getting hungry. Find food soon.", Colors.YELLOW))
         if old_thirst > 30 and self.player["thirst"] <= 30:
             print(Colors.colorize("\n⚠️ You are getting thirsty. Find water soon.", Colors.YELLOW))
+        if old_sleep > 30 and self.player["sleep"] <= 30:
+            print(Colors.colorize("\n⚠️ You're starting to feel tired. Get some sleep soon.", Colors.YELLOW))
 
         # Critical hunger and thirst effects (more severe in hardcore mode)
         if self.player["hunger"] <= 0:
@@ -2907,7 +2955,6 @@ class GameState:
 
         # Stamina regeneration (affected by hardcore mode, status effects, and weather)
         regen_modifier = 1.0
-
         # Apply weather effects to stamina regeneration
         if current_weather == "stormy":
             regen_modifier *= 0.5  # Stormy weather halves stamina recovery
@@ -2978,7 +3025,7 @@ class GameState:
                     try:
                         os.remove(SAVE_FILE)
                         death_message += "\nYour save file has been deleted. (PERMADEATH)"
-                    except:
+                    except (ValueError, TypeError):
                         pass
 
             print(Colors.colorize(death_message, Colors.BOLD + Colors.RED))
@@ -2989,20 +3036,20 @@ class GameState:
         if self.in_combat:
             print(Colors.colorize("You can't sleep while in combat!", Colors.RED))
             return
-            
+
         # Get current hour of day
         current_hour = self.player.get("hours_passed", 0) % 24
-        
+
         # Calculate hours until dawn (6 AM)
         if current_hour < 6:
             hours_until_dawn = 6 - current_hour
         else:
             hours_until_dawn = (24 - current_hour) + 6
-            
+
         # Get sleep duration - default to sleeping until dawn
         sleep_until_dawn = True
         hours = hours_until_dawn
-        
+
         if args:
             try:
                 specified_hours = max(1, min(24, int(args[0])))
@@ -3020,23 +3067,23 @@ class GameState:
         # Get current location and its safety level
         current_location = self.player["location"]
         location_info = LOCATIONS[current_location]
-        
+
         # Check if at camp with damaged barricades
         if current_location == "camp" and location_info.get("barricades_intact") is False:
             sleep_safety = 0.4  # 40% safe if barricades are broken
             print(Colors.colorize("Warning: The camp barricades are damaged, making sleep riskier.", Colors.YELLOW))
         else:
             sleep_safety = location_info.get("sleep_safety", 0.5)  # Default 50% if not specified
-        
+
         # Get current weather and its effects
         current_weather = self.player.get("current_weather", "clear")
         weather_info = WEATHER_TYPES.get(current_weather, WEATHER_TYPES["clear"])
-        
+
         # Weather affects sleep quality and zombie activity
         weather_effect = ""
         rest_quality_modifier = 1.0
         danger_modifier = 1.0
-        
+
         if current_weather == "stormy":
             rest_quality_modifier = 0.7  # 30% less effective rest
             danger_modifier = 1.3  # 30% more dangerous
@@ -3045,6 +3092,10 @@ class GameState:
             rest_quality_modifier = 0.8  # 20% less effective rest
             danger_modifier = 1.2  # 20% more dangerous
             weather_effect = "The rain patters on the roof as you try to sleep."
+        elif current_weather == "foggy":
+            rest_quality_modifier = 0.9  # 10% less effective rest
+            danger_modifier = 1.1  # 10% more dangerous
+            weather_effect = "The fog makes it hard to sleep soundly."
         elif current_weather == "windy":
             rest_quality_modifier = 0.9  # 10% less effective rest
             danger_modifier = 1.1  # 10% more dangerous
@@ -3053,16 +3104,24 @@ class GameState:
             rest_quality_modifier = 1.2  # 20% more effective rest
             danger_modifier = 0.9  # 10% less dangerous
             weather_effect = "The clear night provides restful conditions."
-        
+        elif current_weather == "hot":
+            rest_quality_modifier = 0.8  # 20% less effective rest
+            danger_modifier = 1.1  # 10% more dangerous
+            weather_effect = "The oppressive heat makes it hard to sleep."
+        elif current_weather == "cold":
+            rest_quality_modifier = 0.9  # 10% less effective rest
+            danger_modifier = 0.9  # 10% less dangerous
+            weather_effect = "The cold makes you shiver while you try to sleep."
+
         if weather_effect:
-            print(Colors.colorize(f"\n{weather_effect}", Colors.YELLOW))
-        
+            print(Colors.colorize(f"\n{weather_effect}", weather_info["color"]))
+
         # Calculate death risk based on location safety and weather
         death_risk = (1.0 - sleep_safety) * danger_modifier
-        
+
         print(f"Sleeping for {hours} hours...")
         Animations.loading_bar(length=10, delay=0.05, message="Sleeping")
-        
+
         # Roll for death risk
         if random.random() < death_risk:
             death_message = "You were killed in your sleep by zombies!"
@@ -3071,34 +3130,34 @@ class GameState:
                 self.record_death(death_message)
             self.game_running = False
             return
-            
+
         # Successful sleep - recover stats
         stamina_recovery = min(hours * 10 * rest_quality_modifier, self.player["max_stamina"] - self.player["stamina"])
         self.player["stamina"] += stamina_recovery
-        
+
         # Hunger and thirst still deplete while sleeping, but at a slower rate
         self.player["hunger"] = max(0, self.player["hunger"] - (hours * 2))
         self.player["thirst"] = max(0, self.player["thirst"] - (hours * 3))
-        
+
         # Set sleeping flag so sleep doesn't decrease during sleep
         self._sleeping = True
-        
+
         # Ensure sleep stat exists
         if "sleep" not in self.player:
             self.player["sleep"] = 100
             self.player["max_sleep"] = 100
-            
+
         # Calculate how long you actually sleep based on sleep bar
         actual_hours = hours
-        
+
         # Higher sleep means you're less tired and more likely to wake up early
         current_sleep_percent = (self.player["sleep"] / self.player["max_sleep"]) * 100
-        
+
         # Calculate probability of sleeping the full duration vs waking up early
         # At 0% sleep, you'll sleep the full time because you're exhausted
         # At 100% sleep, you have a 70% chance of waking up early
         wake_early_chance = (current_sleep_percent * 0.7) / 100
-        
+
         # If sleeping until dawn and sleep meter is somewhat high, might wake up early
         if sleep_until_dawn and random.random() < wake_early_chance:
             # Wake up 1-3 hours before dawn
@@ -3106,43 +3165,43 @@ class GameState:
             if early_wake < hours:
                 actual_hours = hours - early_wake
                 print(Colors.colorize(f"\nYou wake up naturally {early_wake} hour(s) before dawn.", Colors.CYAN))
-                
+
         # Advance game time by actual sleep duration
         self.advance_time("rest", hours=actual_hours)
-            
+
         # Sleep recovery based on time, conditions, and sleep quality
         sleep_recovery = min(
             hours * 8 * rest_quality_modifier,  # Base recovery
             self.player["max_sleep"] - self.player["sleep"]  # Cap at max_sleep
         )
-        
+
         # Apply sleep recovery
         old_sleep = self.player["sleep"]
         self.player["sleep"] = min(self.player["max_sleep"], old_sleep + sleep_recovery)
-        
+
         # Reset sleeping flag
         self._sleeping = False
-        
+
         # Display results
         print(Colors.colorize(f"\nYou slept for {actual_hours} hours and recovered {stamina_recovery:.0f} stamina.", Colors.GREEN))
-        
+
         # Display sleep recovery if significant
         if sleep_recovery > 0:
             sleep_gain = self.player["sleep"] - old_sleep
             print(Colors.colorize(f"Your sleep meter improved by {sleep_gain:.0f} points.", Colors.GREEN))
-        
+
         # Check for health recovery if in camp or with improved shelter
         if current_location == "camp" and CAMP_UPGRADES["shelter"]["level"] > 1:
             health_recovery = min(hours * CAMP_UPGRADES["shelter"]["level"], self.player["max_health"] - self.player["health"])
             self.player["health"] += health_recovery
             print(Colors.colorize(f"Your comfortable shelter helped you heal. Recovered {health_recovery:.0f} health.", Colors.GREEN))
-        
+
         # Show warning if hunger or thirst are low after sleeping
         if self.player["hunger"] < 20:
             print(Colors.colorize("You wake up feeling very hungry.", Colors.YELLOW))
         if self.player["thirst"] < 20:
             print(Colors.colorize("Your mouth is dry from thirst.", Colors.YELLOW))
-            
+
         # "Insane" effect if sleep is too low
         if self.player.get("sleep", 0) < 30:
             if not self.player.get("insane", False):
@@ -3153,7 +3212,7 @@ class GameState:
             if self.player.get("insane", False):
                 self.player["insane"] = False
                 print(Colors.colorize("You feel clear-headed and alert again after a good rest.", Colors.GREEN))
-                
+
     def cmd_rest(self, *args):
         """Rest to recover stamina at the cost of hunger and thirst."""
         if self.in_combat:
@@ -3182,30 +3241,30 @@ class GameState:
         if current_weather == "stormy":
             rest_quality_modifier = 0.6  # Storms make rest less effective
             danger_modifier = 1.2  # But thunder can mask your presence from zombies
-            print(Colors.colorize("\nThe storm makes rest difficult, with thunder and lightning disturbing your sleep.", Colors.BLUE))
+            print(Colors.colorize("\nThe storm makes rest difficult, with thunder and lightning disturbing your sleep.", weather_info["color"]))
         elif current_weather == "rainy":
             rest_quality_modifier = 0.8  # Rain makes rest somewhat less effective
             danger_modifier = 0.9  # Rain masks sounds, making zombie encounters less likely
-            print(Colors.colorize("\nThe rain patters on the roof as you try to rest.", Colors.BLUE))
+            print(Colors.colorize("\nThe rain patters on the roof as you try to rest.", weather_info["color"]))
         elif current_weather == "foggy":
             rest_quality_modifier = 0.9  # Fog has minimal impact on rest
             danger_modifier = 1.3  # But makes zombie ambushes more likely
-            print(Colors.colorize("\nThe thick fog creates an eerie atmosphere as you try to rest.", Colors.CYAN))
+            print(Colors.colorize("\nThe thick fog creates an eerie atmosphere as you try to rest.", weather_info["color"]))
         elif current_weather == "hot":
             rest_quality_modifier = 0.7  # Heat makes rest less effective
             danger_modifier = 1.1  # Heat makes zombies more active
-            print(Colors.colorize("\nThe oppressive heat makes it difficult to sleep comfortably.", Colors.RED))
+            print(Colors.colorize("\nThe oppressive heat makes it difficult to sleep comfortably.", weather_info["color"]))
         elif current_weather == "cold":
             rest_quality_modifier = 0.8  # Cold makes rest less effective
             danger_modifier = 0.8  # Cold makes zombies more sluggish
-            print(Colors.colorize("\nYou huddle for warmth as you try to rest in the cold.", Colors.BLUE))
+            print(Colors.colorize("\nYou huddle for warmth as you try to rest in the cold.", weather_info["color"]))
         elif current_weather == "clear":
             rest_quality_modifier = 1.2  # Clear weather improves rest quality
-            print(Colors.colorize("\nThe peaceful clear weather provides ideal conditions for rest.", Colors.GREEN))
+            print(Colors.colorize("\nThe peaceful clear weather provides ideal conditions for rest.", weather_info["color"]))
         elif current_weather == "windy":
             rest_quality_modifier = 0.85  # Wind makes rest somewhat less effective
             danger_modifier = 1.1  # Wind can mask zombie sounds, increasing surprise encounters
-            print(Colors.colorize("\nThe howling wind makes it harder to sleep soundly.", Colors.YELLOW))
+            print(Colors.colorize("\nThe howling wind makes it harder to sleep soundly.", weather_info["color"]))
 
         print(f"Resting for {hours} hours...")
         Animations.loading_bar(length=10, delay=0.02, message="Resting")
@@ -3247,7 +3306,6 @@ class GameState:
             # Then update day count
             new_days = self.player["hours_passed"] // 24
             if new_days > self.player["days_survived"]:
-                days_added = new_days - self.player["days_survived"]
                 self.player["days_survived"] = new_days
                 days = self.player["days_survived"]
                 print(Colors.colorize(f"You have survived for {days} days!", Colors.GREEN))
@@ -3711,8 +3769,10 @@ class GameState:
 
             # Check if weapon has reach advantage (like spear)
             elif weapon.get("reach", 0) > 1:
+                hit_chance = 0.8 + min(0.05 * (self.player["level"] - 1), 0.15) # Initialize hit_chance
                 # Weapons with reach have better hit chance and reduce chance of being hit back
                 hit_chance_bonus = 0.1
+                hit_chance += hit_chance_bonus  # Add the bonus to the hit chance
                 print(Colors.colorize(f"You attack with your {weapon['name']}, keeping the zombie at a distance.", Colors.CYAN))
 
             # Reduce weapon durability (unless already handled, like with the molotov)
@@ -3801,12 +3861,26 @@ class GameState:
                     crit_chance += 0.02  # Cold weather allows for more deliberate strikes
 
                 if hardcore_mode and random.random() < crit_chance:
-                    critical_hit = True
-                    damage = int(damage * 1.5)  # 50% more damage on critical
-                    print(Colors.colorize("⚡ CRITICAL HIT!", Colors.BOLD + Colors.YELLOW))
+                    critical_hit = False
+                    crit_chance = 0.1  # Base 10% critical hit chance for hardcore mode
 
-                zombie["health"] -= damage
-                print(f"You hit the {zombie['name']} for {Colors.colorize(str(damage), Colors.RED)} damage!")
+                    # Weather affects critical hit chance
+                    if current_weather == "stormy":
+                        crit_chance += 0.05  # Dramatic lightning enhances critical moments
+                    elif current_weather == "hot":
+                        crit_chance -= 0.03  # Heat makes precise strikes harder
+                    elif current_weather == "cold":
+                        crit_chance += 0.02  # Cold weather allows for more deliberate strikes
+
+                    if hardcore_mode and random.random() < crit_chance:
+                        critical_hit = True
+                        damage = int(damage * 1.5)  # 50% more damage on critical
+                        print(Colors.colorize("⚡ CRITICAL HIT!", Colors.BOLD + Colors.YELLOW))
+
+                        # **Use the `critical_hit` variable here**
+                        if critical_hit:
+                            zombie["health"] -= damage
+                            print(f"You hit the {zombie['name']} for {Colors.colorize(str(damage), Colors.RED)} damage!")
 
                 # Weapon special effects in hardcore mode
                 if hardcore_mode and weapon:
@@ -3951,7 +4025,8 @@ class GameState:
                             try:
                                 os.remove(SAVE_FILE)
                                 print(Colors.colorize("\nHARDCORE MODE: Your save file has been deleted.", Colors.BOLD + Colors.RED))
-                            except:
+                            except Exception as e:
+                                print(f"Error removing save file: {e}")
                                 pass
 
                     print(Colors.colorize("\n💀 You have died... Game over.", Colors.BOLD + Colors.RED))
@@ -4010,7 +4085,6 @@ class GameState:
         zombie = self.current_zombie
 
         # Stamina affects escape chance in hardcore mode
-        stamina_percent = self.player["stamina"] / self.player["max_stamina"]
         stamina_penalty = 0
 
         if hardcore_mode:
@@ -4163,12 +4237,16 @@ class GameState:
                     self.record_death(f"Killed while fleeing from {zombie_name}")
 
                     # Delete save file in permadeath mode
-                    if PERMADEATH and os.path.exists(SAVE_FILE):
-                        try:
-                            os.remove(SAVE_FILE)
-                            print(Colors.colorize("\nHARDCORE MODE: Your save file has been deleted.", Colors.BOLD + Colors.RED))
-                        except:
-                            pass
+                    if PERMADEATH:
+                        save_slots = self.get_save_slots()
+                        for save in save_slots:
+                            slot_file = os.path.join(SAVES_FOLDER, f"save_slot_{save['slot']}.json")
+                            try:
+                                os.remove(slot_file)
+                                print(Colors.colorize("\nHARDCORE MODE: Your save file has been deleted.", Colors.BOLD + Colors.RED))
+                            except Exception as e:
+                                print(f"Error removing save file: {e}")
+                                pass
 
                 print(Colors.colorize("\n💀 You have died while trying to escape... Game over.", Colors.BOLD + Colors.RED))
                 self.end_combat(False)
@@ -4308,46 +4386,46 @@ class GameState:
             except ValueError:
                 print("Invalid save slot. Please use a number.")
                 return
-        
+
         # Save the game
         self.save_game(slot)
 
     def cmd_saves_list(self, *args):
         """Display a list of all available save slots."""
         save_slots = self.get_save_slots()
-        
+
         # Display stylish save slots header
         divider = "=" * 50
         print(Colors.colorize(f"\n{divider}", Colors.RED))
         print(Colors.colorize("SAVE SLOT MANAGEMENT".center(50), Colors.BOLD + Colors.YELLOW))
         print(Colors.colorize(f"{divider}", Colors.RED))
-        
+
         print(Colors.colorize(f"\n{divider}", Colors.CYAN))
         print(Colors.colorize("AVAILABLE SAVE SLOTS".center(50), Colors.BOLD + Colors.CYAN))
         print(Colors.colorize(f"{divider}", Colors.CYAN))
-        
+
         # Display save slots in a more stylish format
         if save_slots:
             print()  # Add space before slots
             for save in save_slots:
                 slot_header = f"Slot {save['slot']}:"
                 print(Colors.colorize(slot_header, Colors.BOLD + Colors.GREEN))
-                
+
                 # Display character info with colors
                 character_info = f"Survivor: {Colors.colorize(save['name'], Colors.YELLOW)}, "
                 character_info += f"Level {Colors.colorize(str(save['level']), Colors.YELLOW)} "
                 character_info += f"({Colors.colorize(str(save['days_survived']), Colors.RED)} days survived)"
                 print(character_info)
-                
+
                 # Display location with cyan color
                 location_info = f"Location: {Colors.colorize(LOCATIONS[save['location']]['name'], Colors.CYAN)}"
                 print(location_info)
-                
+
                 # Display zombie kills and resources gathered
                 stats = f"Zombies Killed: {Colors.colorize(str(save.get('zombies_killed', 0)), Colors.RED)}, "
                 stats += f"Resources: {Colors.colorize(str(save.get('resources_gathered', 0)), Colors.GREEN)}"
                 print(stats)
-                
+
                 # Display save date with purple color
                 date_str = datetime.fromtimestamp(save['saved_date']).strftime('%Y-%m-%d %H:%M:%S')
                 print(f"Saved: {Colors.colorize(date_str, Colors.MAGENTA)}")
@@ -4355,30 +4433,30 @@ class GameState:
         else:
             print(Colors.colorize("\nNo saved games found.", Colors.YELLOW))
             print(Colors.colorize("Start a new game and use /save [slot] to create your first save.", Colors.CYAN))
-        
+
         # Calculate empty slots
         used_slots = [save['slot'] for save in save_slots]
         empty_slots = [i for i in range(1, MAX_SAVE_SLOTS + 1) if i not in used_slots]
-        
+
         # Show empty slots in a more attractive format
         if empty_slots:
             print(Colors.colorize("Empty slots:", Colors.BOLD))
             empty_slots_str = ", ".join([str(slot) for slot in empty_slots])
             print(Colors.colorize(f"[{empty_slots_str}]", Colors.BLUE))
-        
+
         # Usage tips with styled box
         print(Colors.colorize(f"\n{divider}", Colors.GREEN))
         print(Colors.colorize("SAVE COMMANDS".center(50), Colors.BOLD + Colors.GREEN))
         print(Colors.colorize(f"{divider}", Colors.GREEN))
-        
+
         print(f"\n  {Colors.colorize('/save [slot]', Colors.YELLOW)} - Save to a slot (1-5)")
         print(f"  {Colors.colorize('/load [slot]', Colors.YELLOW)} - Load from a slot (1-5)")
         print(f"  {Colors.colorize('/saves_list', Colors.YELLOW)} - Show this list of save slots")
-        
+
         # Some flavor text
         print(Colors.colorize(f"\n{divider}", Colors.RED))
         print(Colors.colorize("Every save is a story waiting to be continued...".center(50), Colors.MAGENTA))
-    
+
     def cmd_load(self, *args):
         """Load a saved game using the slot system."""
         # Check if a slot number was provided as an argument
@@ -4394,7 +4472,7 @@ class GameState:
             except ValueError:
                 print("Invalid save slot. Please use a number.")
                 return
-        
+
         # Load the game
         if self.load_game(slot):
             self.cmd_status()
@@ -4654,31 +4732,31 @@ class GameState:
             forecast_time = Colors.colorize(f"In {(i+1)*6} hours ({time_str}) {time_period}: ", time_color)
             forecast_weather = Colors.colorize(f"{weather_symbol} {weather_name}", weather_color)
             print(f"{forecast_time}{forecast_weather}")
-            
+
     def cmd_upgrade_camp(self, *args):
         """View or upgrade camp facilities."""
         if self.player["location"] != "camp":
             print(Colors.colorize("You must be at the camp to upgrade facilities!", Colors.RED))
             return
-            
+
         if args and args[0].lower() in CAMP_UPGRADES:
             # Upgrade a specific facility
             upgrade_id = args[0].lower()
             self.upgrade_facility(upgrade_id)
             return
-        
+
         # Display available upgrades
         print(Colors.colorize("\n=== CAMP FACILITIES ===", Colors.BOLD + Colors.CYAN))
         print(Colors.colorize("Your camp can be upgraded to improve safety and survival odds.", Colors.YELLOW))
         print(Colors.colorize("Materials are required for each upgrade.", Colors.YELLOW))
-        
+
         # List all current upgrades and their levels
         print(Colors.colorize("\nCURRENT FACILITIES:", Colors.BOLD + Colors.GREEN))
-        
+
         for upgrade_id, upgrade in CAMP_UPGRADES.items():
             level = upgrade["level"]
             max_level = upgrade["max_level"]
-            
+
             if level == 0:
                 status = Colors.colorize("Not Built", Colors.RED)
             else:
@@ -4686,38 +4764,38 @@ class GameState:
                     status = Colors.colorize(f"Level {level} (MAX)", Colors.GREEN)
                 else:
                     status = Colors.colorize(f"Level {level}/{max_level}", Colors.YELLOW)
-            
+
             # Draw a progress bar for visual representation
             bar_length = 10
             filled = int((level / max_level) * bar_length)
             bar = "[" + "=" * filled + " " * (bar_length - filled) + "]"
-            
+
             print(f"{Colors.colorize(upgrade['name'], Colors.BOLD + Colors.CYAN)}: {status} {bar}")
             print(f"  {Colors.colorize(upgrade['description'], Colors.BLUE)}")
             print(f"  {Colors.colorize('Benefit:', Colors.GREEN)} {upgrade['benefits']}")
-            
+
             # Show barricade HP if this is the barricades
             if upgrade_id == "barricades" and level > 0:
                 current_hp = upgrade.get("hp", 0)
                 max_hp = upgrade.get("max_hp", 100)
                 hp_percent = (current_hp / max_hp) * 100
                 hp_color = Colors.health_color(current_hp, max_hp)
-                
+
                 print(f"  {Colors.colorize('Barricade HP:', Colors.YELLOW)} {Colors.colorize(f'{current_hp}/{max_hp} ({hp_percent:.1f}%)', hp_color)}")
-                
+
                 if current_hp < max_hp * 0.25:
                     print(f"  {Colors.colorize('⚠️ CRITICAL DAMAGE! Barricades need immediate repairs!', Colors.RED)}")
                 elif current_hp < max_hp * 0.5:
                     print(f"  {Colors.colorize('⚠️ WARNING: Barricades are significantly damaged!', Colors.YELLOW)}")
-            
+
             print("")
-        
+
         # Show upgrade instructions
         print(Colors.colorize("\nHOW TO UPGRADE:", Colors.BOLD + Colors.CYAN))
         print(f"Use {Colors.colorize('/upgrade_camp [facility_name]', Colors.GREEN)} to upgrade a specific facility.")
         print(f"Example: {Colors.colorize('/upgrade_camp shelter', Colors.GREEN)} to upgrade your shelter.")
         print(f"Repair barricades with {Colors.colorize('/repair_barricades', Colors.GREEN)}.")
-        
+
         # Explain how facility levels affect gameplay
         print(Colors.colorize("\nFACILITY BENEFITS:", Colors.BOLD + Colors.CYAN))
         print("- Shelter: Improves sleep safety and recovery")
@@ -4725,77 +4803,77 @@ class GameState:
         print("- Workshop: Enables more advanced crafting")
         print("- Garden: Provides food over time")
         print("- Radio: Gives information about nearby resources")
-        
+
         # Advancing time for checking camp facilities
         self.advance_time("light_action")
-    
+
     def upgrade_facility(self, facility_id):
         """Upgrade a specific camp facility."""
         if facility_id not in CAMP_UPGRADES:
             print(Colors.colorize(f"Unknown facility: {facility_id}", Colors.RED))
             return
-            
+
         facility = CAMP_UPGRADES[facility_id]
         current_level = facility["level"]
         max_level = facility["max_level"]
-        
+
         if current_level >= max_level:
             print(Colors.colorize(f"Your {facility['name']} is already at maximum level!", Colors.YELLOW))
             return
-            
+
         # Calculate materials needed for upgrade
         materials_needed = {
             "wood": (current_level + 1) * 2,
             "metal_scrap": current_level + 1,
             "cloth": current_level
         }
-        
+
         # Special requirements for advanced facilities
         if facility_id in ["machine_guns", "radio", "drones"]:
             materials_needed["metal_scrap"] *= 2
             materials_needed["cloth"] *= 2
-            
+
         if facility_id == "workshop" and current_level >= 2:
             materials_needed["metal_scrap"] *= 2
-            
+
         # Check if player has enough materials
         can_upgrade = True
         missing_materials = {}
-        
+
         for material, amount in materials_needed.items():
             available = 0
             for idx, item in enumerate(self.player["inventory"]):
                 if item.get("id") == material:
                     available += item.get("count", 1)
-            
+
             if available < amount:
                 can_upgrade = False
                 missing_materials[material] = amount - available
-        
+
         # Display upgrade information
         print(Colors.colorize(f"\n=== UPGRADE {facility['name'].upper()} ===", Colors.BOLD + Colors.CYAN))
         print(f"Current level: {Colors.colorize(str(current_level), Colors.YELLOW)}/{Colors.colorize(str(max_level), Colors.GREEN)}")
         print(f"Benefits: {Colors.colorize(facility['benefits'], Colors.BLUE)}")
-        
+
         # Display materials required
         print(Colors.colorize("\nMaterials required:", Colors.BOLD))
         for material, amount in materials_needed.items():
             material_name = ITEMS.get(material, {}).get("name", material)
-            
+
             if material in missing_materials:
                 status = Colors.colorize(f"MISSING {missing_materials[material]}", Colors.RED)
             else:
                 status = Colors.colorize("Available", Colors.GREEN)
-                
+
             print(f"- {material_name}: {amount} ({status})")
-        
+
         # Perform upgrade if possible
         if can_upgrade:
             confirm = input(Colors.colorize("\nConfirm upgrade? (y/n): ", Colors.GREEN))
             if confirm.lower() != "y":
                 print("Upgrade cancelled.")
                 return
-                
+
             # Remove materials from inventory
             for material, amount in materials_needed.items():
                 remaining = amount
@@ -4803,150 +4881,150 @@ class GameState:
                     if item.get("id") == material:
                         to_use = min(remaining, item.get("count", 1))
                         remaining -= to_use
-                        
+
                         if item.get("count", 1) <= to_use:
                             # Remove item completely
                             self.player["inventory"].pop(idx)
                         else:
                             # Reduce count
                             self.player["inventory"][idx]["count"] -= to_use
-                        
+
                         if remaining <= 0:
                             break
-                
+
             # Apply upgrade
             facility["level"] += 1
-            
+
             # Update effects based on facility
             if facility_id == "barricades":
                 # Barricades get more HP with level
                 facility["max_hp"] = 100 * facility["level"]
                 facility["hp"] = facility["max_hp"]  # Fully repaired after upgrade
                 LOCATIONS["camp"]["barricades_intact"] = True
-                
+
             elif facility_id == "shelter":
                 # Better shelter improves sleep quality
                 pass  # Already checked in sleep command
-                
+
             print(Colors.colorize(f"\nUpgrade successful! {facility['name']} is now level {facility['level']}!", Colors.BOLD + Colors.GREEN))
-            
+
             # Show specific benefits from upgrade
             if facility_id == "workshop":
-                print(Colors.colorize(f"You can now craft more advanced items!", Colors.YELLOW))
+                print(Colors.colorize("You can now craft more advanced items!", Colors.YELLOW))
             elif facility_id == "barricades":
-                print(Colors.colorize(f"Your camp is now better protected against zombie attacks!", Colors.YELLOW))
+                print(Colors.colorize("Your camp is now better protected against zombie attacks!", Colors.YELLOW))
             elif facility_id == "garden":
-                print(Colors.colorize(f"Your garden will now produce more food over time!", Colors.YELLOW))
-            
+                print(Colors.colorize("Your garden will now produce more food over time!", Colors.YELLOW))
+
             # Upgrading takes time
             self.advance_time("medium_action")
         else:
             print(Colors.colorize("\nYou don't have enough materials for this upgrade.", Colors.RED))
             print("Go scavenging to find more resources.")
-    
+
     def cmd_eat(self, *args):
         """Eat food to reduce hunger and possibly gain health."""
         if self.in_combat:
             print(Colors.colorize("You can't eat during combat!", Colors.RED))
             return
-            
+
         if not args:
             print(Colors.colorize("You need to specify what to eat. Usage: /eat [item_id]", Colors.YELLOW))
             print("Use /inventory to see what food items you have.")
             return
-            
+
         item_id = args[0].lower()
-        
+
         # Check if the player has this item
         item_index = None
         for idx, item in enumerate(self.player["inventory"]):
             if item["id"] == item_id:
                 item_index = idx
                 break
-                
+
         if item_index is None:
             print(Colors.colorize(f"You don't have {item_id} in your inventory.", Colors.RED))
             return
-            
+
         # Check if the item is food
         item_data = ITEMS.get(item_id, {})
         if not item_data or item_data.get("type") != "food":
             print(Colors.colorize(f"{item_data.get('name', item_id)} is not edible!", Colors.RED))
             return
-            
+
         # Process eating the food
         food_name = item_data.get("name", item_id)
         hunger_value = item_data.get("hunger_value", 10)
         health_value = item_data.get("health_value", 0)
-        
+
         # Calculate safety probability (percentage chance of food being safe)
         safety_prob = item_data.get("safety", 79)  # Default 79% safe like an apple
-        
+
         # Pills can increase safety probability if the player has them
         has_pills = False
         for inv_item in self.player["inventory"]:
             if inv_item.get("id") == "antibiotics" or inv_item.get("id") == "med_pills":
                 has_pills = True
                 break
-                
+
         if has_pills:
             safety_prob += 15  # Pills increase safety by 15%
             safety_prob = min(safety_prob, 99)  # Cap at 99% safety (never 100% safe)
             print(Colors.colorize("You take some medicine before eating to prevent illness.", Colors.CYAN))
-            
+
         # Check for thirst reduction from the food (some foods like fruits help with thirst)
         thirst_value = item_data.get("thirst_value", 0)
-        
+
         # Apply effects
         print(Colors.colorize(f"\nYou eat the {food_name}.", Colors.CYAN))
-        
+
         # Hunger reduction
         old_hunger = self.player["hunger"]
         self.player["hunger"] = min(self.player["max_hunger"], old_hunger + hunger_value)
         hunger_gain = self.player["hunger"] - old_hunger
-        
+
         hunger_message = f"Hunger: {old_hunger} → {self.player['hunger']} (+{hunger_gain})"
         print(Colors.colorize(hunger_message, Colors.GREEN))
-        
+
         # Health restoration if applicable
         if health_value > 0:
             old_health = self.player["health"]
             self.player["health"] = min(self.player["max_health"], old_health + health_value)
             health_gain = self.player["health"] - old_health
-            
+
             health_message = f"Health: {old_health} → {self.player['health']} (+{health_gain})"
             print(Colors.colorize(health_message, Colors.GREEN))
-            
+
         # Thirst effect if applicable
         if thirst_value > 0:
             old_thirst = self.player["thirst"]
             self.player["thirst"] = min(self.player["max_thirst"], old_thirst + thirst_value)
             thirst_gain = self.player["thirst"] - old_thirst
-            
+
             thirst_message = f"Thirst: {old_thirst} → {self.player['thirst']} (+{thirst_gain})"
             print(Colors.colorize(thirst_message, Colors.GREEN))
-            
+
         # Check for food illness based on safety probability
         if random.randint(1, 100) > safety_prob:
             print(Colors.colorize("\nYou don't feel so good after eating that...", Colors.RED))
             Animations.loading_bar(length=10, message="Feeling ill")
-            
+
             # Determine severity of illness
             recovery_chance = item_data.get("recovery_chance", 80)  # 80% chance of recovery by default
-            
+
             if has_pills:
                 recovery_chance += 15  # Pills increase recovery chance
                 recovery_chance = min(recovery_chance, 99)  # Cap at 99%
-                
+
             # Check if player recovers or gets severely ill
             if random.randint(1, 100) <= recovery_chance:
                 # Mild illness
                 health_loss = random.randint(5, 15)
                 self.player["health"] = max(1, self.player["health"] - health_loss)
-                
+
                 print(Colors.colorize(f"You feel sick for a while, losing {health_loss} health.", Colors.YELLOW))
                 print(Colors.colorize("Fortunately, you recover after a few hours of discomfort.", Colors.GREEN))
-                
+
                 # Add sickness effect for hardcore mode
                 if self.player.get("hardcore_mode", False):
                     self.player["stamina"] = max(0, self.player["stamina"] - 20)
@@ -4956,9 +5034,9 @@ class GameState:
                 print(Colors.colorize("\n⚠️ You've contracted SEVERE FOOD POISONING!", Colors.BOLD + Colors.RED))
                 health_loss = random.randint(40, 60)
                 self.player["health"] = max(0, self.player["health"] - health_loss)
-                
+
                 print(Colors.colorize(f"You lose {health_loss} health from the poisoning!", Colors.RED))
-                
+
                 # Check if player died
                 if self.player["health"] <= 0:
                     death_message = "You died from severe food poisoning."
@@ -4970,43 +5048,43 @@ class GameState:
                 else:
                     # Survived but severely weakened
                     print(Colors.colorize("You barely survive the ordeal, but are severely weakened.", Colors.YELLOW))
-                    
+
                     # Add illness effects for hardcore mode
                     if self.player.get("hardcore_mode", False):
                         self.player["infected"] = True
                         self.player["stamina"] = max(0, self.player["stamina"] - 50)
                         print(Colors.colorize("You've developed an infection that will continue to weaken you.", Colors.RED))
-                    
+
         # Remove the item from inventory after eating
         item = self.player["inventory"][item_index]
         if item.get("count", 1) > 1:
             item["count"] -= 1
         else:
             self.player["inventory"].pop(item_index)
-            
+
         # Eating takes a small amount of time
         self.advance_time("light_action")
-        
+
     def cmd_dismantle(self, *args):
         """Break down an item into its components."""
         if self.in_combat:
             print(Colors.colorize("You can't dismantle items during combat!", Colors.RED))
             return
-            
+
         if not args:
             print(Colors.colorize("\nUsage: /dismantle [item_id]", Colors.YELLOW))
             print(Colors.colorize("This command breaks down weapons and items into their component parts.\n", Colors.CYAN))
-            
+
             # Display items that can be dismantled
             dismantlable_items = []
             for idx, item in enumerate(self.player["inventory"]):
                 item_id = item["id"]
                 item_data = ITEMS.get(item_id, {})
-                
+
                 # Check if item has craft_recipe or dismantle_yield
                 if "craft_recipe" in item_data or "dismantle_yield" in item_data:
                     dismantlable_items.append((idx, item))
-            
+
             if dismantlable_items:
                 print(Colors.colorize("Items you can dismantle:", Colors.GREEN))
                 for idx, item in dismantlable_items:
@@ -5015,22 +5093,22 @@ class GameState:
             else:
                 print(Colors.colorize("You don't have any items that can be dismantled.", Colors.RED))
             return
-            
+
         try:
             item_idx = int(args[0])
             if item_idx < 0 or item_idx >= len(self.player["inventory"]):
                 print(Colors.colorize("Invalid item index!", Colors.RED))
                 return
-                
+
             item = self.player["inventory"][item_idx]
             item_id = item["id"]
             item_data = ITEMS.get(item_id, {})
-            
+
             # Check if item is currently equipped
             if self.player.get("equipped") == item_id:
                 print(Colors.colorize("You can't dismantle your equipped weapon!", Colors.RED))
                 return
-                
+
             # Determine what components the item breaks down into
             components = {}
             if "dismantle_yield" in item_data:
@@ -5046,14 +5124,14 @@ class GameState:
             else:
                 print(Colors.colorize(f"The {ITEMS[item_id]['name']} cannot be dismantled.", Colors.RED))
                 return
-                
+
             # Now perform the dismantling
             print(Colors.colorize(f"\nDismantling {ITEMS[item_id]['name']}...", Colors.CYAN))
             Animations.loading_bar(length=10, message="Breaking down components")
-            
+
             # Remove the item from inventory
             self.remove_from_inventory(item_idx)
-            
+
             # Add the components to inventory
             print(Colors.colorize("\nYou recovered:", Colors.GREEN))
             for component, amount in components.items():
@@ -5063,78 +5141,78 @@ class GameState:
                 else:
                     component_name = component.replace('_', ' ').title()
                 print(f"- {Colors.colorize(component_name, Colors.YELLOW)} x{amount}")
-                
+
             # Time advancement for dismantling (light action)
-            hours_passed = self.advance_time("light_action")
-            
+            self.advance_time("light_action")
+
             # Check for skill improvement chance (crafting-related)
             if random.random() < 0.1:  # 10% chance
                 self.player["crafting_skill"] = min(10, self.player.get("crafting_skill", 0) + 1)
                 print(Colors.colorize("\nYou've gained insight into how things are assembled. Crafting skill improved!", Colors.MAGENTA))
-                
+
         except ValueError:
             print(Colors.colorize("Please specify a valid item number.", Colors.RED))
         except Exception as e:
             print(Colors.colorize(f"Error dismantling item: {e}", Colors.RED))
-    
+
     def cmd_repair_barricades(self, *args):
         """Repair damaged camp barricades."""
         if self.player["location"] != "camp":
             print(Colors.colorize("You must be at the camp to repair barricades!", Colors.RED))
             return
-            
+
         # Check if barricades exist
         if CAMP_UPGRADES["barricades"]["level"] == 0:
             print(Colors.colorize("You haven't built any barricades yet!", Colors.RED))
             print(f"Use {Colors.colorize('/upgrade_camp barricades', Colors.GREEN)} to build them first.")
             return
-            
+
         # Check if barricades are already at max HP
         barricades = CAMP_UPGRADES["barricades"]
         if barricades["hp"] >= barricades["max_hp"]:
             print(Colors.colorize("The barricades are already in perfect condition!", Colors.GREEN))
             return
-            
+
         # Calculate repair needs
         max_hp = barricades["max_hp"]
         current_hp = barricades["hp"]
         missing_hp = max_hp - current_hp
         repair_percentage = (missing_hp / max_hp) * 100
-        
+
         # Materials needed based on damage
         materials_needed = {
             "wood": math.ceil(missing_hp / 50),  # 1 wood per 50 HP
             "metal_scrap": math.ceil(missing_hp / 100)  # 1 metal per 100 HP
         }
-        
+
         # Check if player has enough materials
         can_repair = True
         missing_materials = {}
-        
+
         for material, amount in materials_needed.items():
             available = 0
             for item in self.player["inventory"]:
                 if item.get("id") == material:
                     available += item.get("count", 1)
-            
+
             if available < amount:
                 can_repair = False
                 missing_materials[material] = amount - available
-        
+
         # Display repair information
         print(Colors.colorize("\n=== REPAIR BARRICADES ===", Colors.BOLD + Colors.CYAN))
-        
+
         # Show current HP status
         hp_color = Colors.health_color(current_hp, max_hp)
         hp_percentage = (current_hp / max_hp) * 100
         print(f"Current status: {Colors.colorize(f'{current_hp}/{max_hp} HP ({hp_percentage:.1f}%)', hp_color)}")
-        
+
         # Visual representation
         bar_length = 20
         filled = int((current_hp / max_hp) * bar_length)
         bar = "[" + "=" * filled + " " * (bar_length - filled) + "]"
         print(f"Integrity: {Colors.colorize(bar, hp_color)}")
-        
+
         # Repair assessment
         if repair_percentage < 25:
             assessment = "Minor repairs needed"
@@ -5142,28 +5220,28 @@ class GameState:
             assessment = "Moderate repairs needed"
         else:
             assessment = "Major repairs needed"
-            
+
         print(Colors.colorize(f"\n{assessment}", Colors.YELLOW))
-        
+
         # Materials required
         print(Colors.colorize("\nMaterials required:", Colors.BOLD))
         for material, amount in materials_needed.items():
             material_name = ITEMS.get(material, {}).get("name", material)
-            
+
             if material in missing_materials:
                 status = Colors.colorize(f"MISSING {missing_materials[material]}", Colors.RED)
             else:
                 status = Colors.colorize("Available", Colors.GREEN)
-                
+
             print(f"- {material_name}: {amount} ({status})")
-        
+
         # Perform repair if possible
         if can_repair:
             confirm = input(Colors.colorize("\nConfirm repair? (y/n): ", Colors.GREEN))
             if confirm.lower() != "y":
                 print("Repair cancelled.")
                 return
-                
+
             # Remove materials from inventory
             for material, amount in materials_needed.items():
                 remaining = amount
@@ -5172,24 +5250,24 @@ class GameState:
                     if item.get("id") == material:
                         to_use = min(remaining, item.get("count", 1))
                         remaining -= to_use
-                        
+
                         if item.get("count", 1) <= to_use:
                             # Remove item completely
                             self.player["inventory"].remove(item)
                         else:
                             # Reduce count
                             item["count"] -= to_use
-                        
+
                         if remaining <= 0:
                             break
-            
+
             # Apply repair
             barricades["hp"] = max_hp
             LOCATIONS["camp"]["barricades_intact"] = True
-            
+
             print(Colors.colorize("\nRepairs successful! The barricades are now fully restored!", Colors.BOLD + Colors.GREEN))
             print(Colors.colorize("Your camp is secure once again.", Colors.YELLOW))
-            
+
             # Repairing takes time
             self.advance_time("medium_action")
         else:
@@ -5201,19 +5279,19 @@ class GameState:
         if self.in_combat:
             print(Colors.colorize("You can't scavenge while in combat!", Colors.RED))
             return
-            
+
         # Get current location type
         current_location = self.player["location"]
         location_info = LOCATIONS[current_location]
         location_type = location_info.get("type", "urban")  # Default to urban if not specified
-        
+
         # Determine scavenge area based on location type
         area_id = location_type
-        
+
         # If the location has a specific scavenge area defined, use that instead
         if "scavenge_area" in location_info:
             area_id = location_info["scavenge_area"]
-            
+
         # Check if this is a valid scavenge area
         if area_id not in SCAVENGE_AREAS:
             print(Colors.colorize(f"Unknown area: {area_id}", Colors.RED))
