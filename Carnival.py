@@ -124,6 +124,8 @@ def shop():
     print(f"Current Costume: {player['equipped_costume']}")
     print("\n[1] Costumes 👕")
     print("[2] Consumables 🎫")
+    print("[3] Card Packs 🎴")
+    print("[4] Manage Deck 📋")
     print("[0] Back")
 
     choice = input("Choose category: ")
@@ -132,6 +134,10 @@ def shop():
         shop_costumes()
     elif choice == "2":
         shop_consumables()
+    elif choice == "3":
+        buy_card_pack()
+    elif choice == "4":
+        manage_deck()
     elif choice != "0":
         print(Fore.RED + "Invalid choice.")
 
@@ -446,16 +452,26 @@ def minigame_menu():
 [15] Balloon Pop (2)
 [16] Ring Toss (3)
 [17] Duck Shooting (3)
-[18] Back
+[18] Target Shooting (3)
+[19] Whack-a-Mole (2)
+[20] Bottle Toss (3)
+[21] 👑 Treasure Hunt (VIP) (5)
+[22] 👑 Card Battle (VIP) (5)
+[23] Back
 """)
         choice = input("Select: ")
         games = [paper_scissors_rock, coin_flip_game, high_low, guess_the_number, 
                 quick_math, word_shuffle, lucky_spinner, dart_throw, reaction_test, 
                 melody_memory, guess_password, hangman_game, memory_match, number_racing,
                 balloon_pop, ring_toss, duck_shooting]
-        if choice == "18":
+        if choice == "22":
             break
-        elif choice in map(str, range(1, 15)):
+        elif choice in map(str, range(1, 21)):
+            games = [paper_scissors_rock, coin_flip_game, high_low, guess_the_number, 
+                    quick_math, word_shuffle, lucky_spinner, dart_throw, reaction_test, 
+                    melody_memory, guess_password, hangman_game, memory_match, number_racing,
+                    balloon_pop, ring_toss, duck_shooting, target_shooting, whack_a_mole, 
+                    bottle_toss]
             games[int(choice)-1]()
         else:
             print("Invalid.")
@@ -515,6 +531,8 @@ def gambling_menu():
 [2] Card Draw (draw vs dealer)
 [3] Wheel of Fate (spin for multiplier)
 [4] Lucky Slots (2 tickets per pull)
+[5] Lucky Dice (dice betting)
+[6] Race Track (animal racing)
 [0] Back
 """)
     choice = input("Choose a game: ")
@@ -526,10 +544,91 @@ def gambling_menu():
         wheel_of_fate()
     elif choice == "4":
         lucky_slots()
+    elif choice == "5":
+        lucky_dice()
+    elif choice == "6":
+        race_track()
     elif choice == "0":
         return
     else:
         print("Invalid.")
+
+def lucky_dice():
+    bet = int(input("Place your bet: "))
+    if bet > player["tickets"] or bet <= 0:
+        print("Invalid bet!")
+        return
+        
+    print("\n🎲 Choose your bet:")
+    print("[1] Single number (1-6) - 6x payout")
+    print("[2] Even/Odd - 2x payout")
+    print("[3] High (4-6)/Low (1-3) - 2x payout")
+    
+    choice = input("Your choice: ")
+    if choice == "1":
+        num = int(input("Choose number (1-6): "))
+        dice = random.randint(1, 6)
+        print(f"🎲 Rolled: {dice}")
+        if num == dice:
+            winnings = bet * 6
+            print(Fore.GREEN + f"You win! +{winnings} tickets!")
+            player["tickets"] += winnings
+        else:
+            print(Fore.RED + f"You lose! -{bet} tickets")
+            player["tickets"] -= bet
+    
+    elif choice == "2":
+        guess = input("Even or Odd? ").lower()
+        dice = random.randint(1, 6)
+        print(f"🎲 Rolled: {dice}")
+        if (guess == "even" and dice % 2 == 0) or (guess == "odd" and dice % 2 != 0):
+            print(Fore.GREEN + f"You win! +{bet} tickets!")
+            player["tickets"] += bet
+        else:
+            print(Fore.RED + f"You lose! -{bet} tickets")
+            player["tickets"] -= bet
+            
+    elif choice == "3":
+        guess = input("High or Low? ").lower()
+        dice = random.randint(1, 6)
+        print(f"🎲 Rolled: {dice}")
+        if (guess == "high" and dice >= 4) or (guess == "low" and dice <= 3):
+            print(Fore.GREEN + f"You win! +{bet} tickets!")
+            player["tickets"] += bet
+        else:
+            print(Fore.RED + f"You lose! -{bet} tickets")
+            player["tickets"] -= bet
+
+def race_track():
+    animals = ["🐎 Horse", "🐪 Camel", "🐢 Turtle", "🐰 Rabbit"]
+    multipliers = [2, 3, 4, 2]
+    
+    print("\n🏁 Race Track Betting")
+    for i, (animal, mult) in enumerate(zip(animals, multipliers), 1):
+        print(f"[{i}] {animal} - {mult}x payout")
+        
+    bet = int(input("\nPlace your bet: "))
+    if bet > player["tickets"] or bet <= 0:
+        print("Invalid bet!")
+        return
+        
+    choice = int(input("Choose your animal (1-4): ")) - 1
+    if choice < 0 or choice >= len(animals):
+        print("Invalid choice!")
+        return
+        
+    print("\n🏁 Race starting...")
+    time.sleep(1)
+    winner = random.randint(0, len(animals)-1)
+    print(f"🏆 Winner: {animals[winner]}")
+    
+    if choice == winner:
+        winnings = bet * multipliers[choice]
+        print(Fore.GREEN + f"You win! +{winnings} tickets!")
+        player["tickets"] += winnings
+    else:
+        print(Fore.RED + f"You lose! -{bet} tickets")
+        player["tickets"] -= bet
 
 def lucky_slots():
     clear()
@@ -950,3 +1049,409 @@ def duck_shooting():
         player["tickets"] += tickets
     else:
         print(Fore.RED + "Better luck next time!")
+
+
+def target_shooting():
+    if not pay_to_play(3):
+        return
+    clear()
+    print(Fore.CYAN + "🎯 Target Shooting!")
+    targets = ["🎯", "⭕", "🔴", "⚪"]
+    points = 0
+    
+    for round in range(3):
+        print(f"\nRound {round+1}/3")
+        target_line = " ".join([random.choice(targets) for _ in range(4)])
+        print(target_line)
+        shot = int(input("Choose target position (1-4): ")) - 1
+        
+        if 0 <= shot < 4:
+            if target_line[shot*2] == "🎯":
+                print(Fore.GREEN + "Bullseye! +3 points")
+                points += 3
+            elif target_line[shot*2] == "⭕":
+                print(Fore.YELLOW + "Close! +2 points")
+                points += 2
+            elif target_line[shot*2] == "🔴":
+                print(Fore.YELLOW + "Almost! +1 point")
+                points += 1
+            else:
+                print(Fore.RED + "Miss!")
+        
+    tickets = points * 2
+    if tickets > 0:
+        print(Fore.GREEN + f"You won {tickets} tickets!")
+        player["tickets"] += tickets
+
+def whack_a_mole():
+    if not pay_to_play(2):
+        return
+    clear()
+    print(Fore.MAGENTA + "🔨 Whack-a-Mole!")
+    holes = ["⚫"] * 9
+    score = 0
+    
+    for round in range(6):
+        mole_pos = random.randint(0, 8)
+        holes[mole_pos] = "🦔"
+        
+        print("\nWhack the mole!")
+        for i in range(0, 9, 3):
+            print(" ".join(holes[i:i+3]))
+            
+        try:
+            whack = int(input("Choose position (1-9): ")) - 1
+            if 0 <= whack < 9:
+                if whack == mole_pos:
+                    print(Fore.GREEN + "Got it! +1 point")
+                    score += 1
+                else:
+                    print(Fore.RED + "Missed!")
+            holes[mole_pos] = "⚫"
+        except ValueError:
+            print("Invalid input!")
+            
+    tickets = score * 3
+    if tickets > 0:
+        print(Fore.GREEN + f"You whacked {score} moles! +{tickets} tickets")
+        player["tickets"] += tickets
+
+def bottle_toss():
+    if not pay_to_play(3):
+        return
+    clear()
+    print(Fore.BLUE + "🎳 Bottle Toss!")
+    bottles = ["🍾"] * 6
+    hits = 0
+    
+    for throw in range(3):
+        print("\nBottles:", " ".join(bottles))
+        input("Press Enter to throw...")
+        
+        power = random.random()
+        if power > 0.7:
+            hit_pos = random.randint(0, len(bottles)-1)
+            if bottles[hit_pos] == "🍾":
+                print(Fore.GREEN + "Great throw! Bottle knocked down!")
+                bottles[hit_pos] = "💥"
+                hits += 1
+            else:
+                print(Fore.YELLOW + "Already knocked down!")
+        else:
+            print(Fore.RED + "Miss!")
+            
+    tickets = hits * 4
+    if tickets > 0:
+        print(Fore.GREEN + f"You knocked down {hits} bottles! +{tickets} tickets")
+        player["tickets"] += tickets
+
+def treasure_hunt():
+    if "VIP Pass 🌟" not in player["inventory"]:
+        print(Fore.RED + "❌ This game requires a VIP Pass!")
+        return
+    if not pay_to_play(5):
+        return
+        
+    clear()
+    print(Fore.YELLOW + "💎 VIP Treasure Hunt!")
+    treasures = ["💎", "👑", "💰", "⭐", "❌"]
+    map_size = 5
+    treasure_map = random.choices(treasures, weights=[1, 1, 2, 2, 4], k=map_size)
+    attempts = 3
+    score = 0
+    
+    while attempts > 0:
+        print(f"\nAttempts left: {attempts}")
+        print("Map:", " ".join("?" * map_size))
+        choice = int(input(f"Choose location (1-{map_size}): ")) - 1
+        
+        if 0 <= choice < map_size:
+            find = treasure_map[choice]
+            if find == "💎":
+                print(Fore.CYAN + "Found a diamond! +10 points")
+                score += 10
+            elif find == "👑":
+                print(Fore.YELLOW + "Found a crown! +8 points")
+                score += 8
+            elif find == "💰":
+                print(Fore.GREEN + "Found treasure! +5 points")
+                score += 5
+            elif find == "⭐":
+                print(Fore.YELLOW + "Found a star! +3 points")
+                score += 3
+            else:
+                print(Fore.RED + "Nothing here! ❌")
+        else:
+            print(Fore.RED + "Invalid location!")
+            
+        attempts -= 1
+    
+    tickets = score
+    if tickets > 0:
+        print(Fore.GREEN + f"You earned {tickets} tickets!")
+        player["tickets"] += tickets
+        update_mission_progress("vip_games")
+
+# Card game data structures
+CARD_DATABASE = {
+    # Legendary Cards (Power 10-12)
+    "Supreme Dragon": {"power": 12, "emoji": "🐲", "rarity": "legendary", "rank": "SS"},
+    "Ancient Phoenix": {"power": 11, "emoji": "🦅", "rarity": "legendary", "rank": "SS"},
+    "Divine Angel": {"power": 11, "emoji": "👼", "rarity": "legendary", "rank": "SS"},
+    "Cosmic Entity": {"power": 10, "emoji": "🌌", "rarity": "legendary", "rank": "S"},
+    "Time Wizard": {"power": 10, "emoji": "⌛", "rarity": "legendary", "rank": "S"},
+    
+    # Epic Cards (Power 8-9)
+    "Dragon Lord": {"power": 9, "emoji": "🐉", "rarity": "epic", "rank": "A"},
+    "Storm Giant": {"power": 9, "emoji": "🌩️", "rarity": "epic", "rank": "A"},
+    "War Golem": {"power": 8, "emoji": "🗿", "rarity": "epic", "rank": "A"},
+    "Shadow Assassin": {"power": 8, "emoji": "🗡️", "rarity": "epic", "rank": "A"},
+    "Demon Prince": {"power": 8, "emoji": "👿", "rarity": "epic", "rank": "A"},
+    
+    # Rare Cards (Power 6-7)
+    "Battle Mage": {"power": 7, "emoji": "🔮", "rarity": "rare", "rank": "B"},
+    "Holy Knight": {"power": 7, "emoji": "⚔️", "rarity": "rare", "rank": "B"},
+    "Forest Ranger": {"power": 6, "emoji": "🏹", "rarity": "rare", "rank": "B"},
+    "Mystic Healer": {"power": 6, "emoji": "💚", "rarity": "rare", "rank": "B"},
+    "Fire Wizard": {"power": 6, "emoji": "🔥", "rarity": "rare", "rank": "B"}
+}
+
+# Generate remaining cards programmatically
+elements = ["Fire", "Water", "Earth", "Air", "Light", "Dark", "Nature", "Metal", "Ice", "Lightning"]
+classes = ["Warrior", "Mage", "Rogue", "Cleric", "Archer", "Knight", "Monk", "Paladin", "Druid", "Necromancer"]
+ranks = ["C", "D", "E"]
+
+# Generate common and uncommon cards
+for element in elements:
+    for class_type in classes:
+        power = random.randint(2, 5)
+        rarity = "common" if power <= 3 else "uncommon"
+        rank = ranks[0] if power == 5 else ranks[1] if power == 4 else ranks[2]
+        
+        card_name = f"{element} {class_type}"
+        CARD_DATABASE[card_name] = {
+            "power": power,
+            "emoji": random.choice(["⚔️", "🗡️", "🏹", "🔮", "💫", "⭐", "🌟", "✨", "💥", "⚡"]),
+            "rarity": rarity,
+            "rank": rank
+        }
+
+CARD_NPCS = {
+    "Novice Duelist": {"difficulty": 1, "deck_size": 30},
+    "Veteran Knight": {"difficulty": 2, "deck_size": 35},
+    "Dragon Master": {"difficulty": 3, "deck_size": 40},
+    "Dark Wizard": {"difficulty": 4, "deck_size": 45}
+}
+
+if "card_collection" not in player:
+    player["card_collection"] = []
+    player["current_deck"] = []
+
+def buy_card_pack():
+    pack_cost = 10
+    if player["tickets"] < pack_cost:
+        print(Fore.RED + f"Not enough tickets! Need {pack_cost} tickets.")
+        return
+    
+    player["tickets"] -= pack_cost
+    cards = []
+    for _ in range(5):
+        rarity = random.choices(["common", "uncommon", "rare", "legendary"], 
+                              weights=[60, 25, 10, 5])[0]
+        possible_cards = [card for card, data in CARD_DATABASE.items() 
+                         if data["rarity"] == rarity]
+        card = random.choice(possible_cards)
+        cards.append(card)
+        player["card_collection"].append(card)
+    
+    print(Fore.GREEN + "\nYou got:")
+    for card in cards:
+        print(f"{CARD_DATABASE[card]['emoji']} {card} ({CARD_DATABASE[card]['rarity']})")
+
+def manage_deck():
+    while True:
+        clear()
+        print(Fore.CYAN + "📋 Deck Management")
+        print(f"Current deck: {len(player['current_deck'])}/30 cards")
+        print("\n[1] View collection")
+        print("[2] Build new deck")
+        print("[3] View current deck")
+        print("[0] Back")
+        
+        choice = input("Choose option: ")
+        if choice == "1":
+            view_collection()
+        elif choice == "2":
+            build_deck()
+        elif choice == "3":
+            view_deck()
+        elif choice == "0":
+            break
+
+def view_collection():
+    clear()
+    print(Fore.YELLOW + "🎴 Your Collection:")
+    collection = {}
+    for card in player["card_collection"]:
+        collection[card] = collection.get(card, 0) + 1
+    
+    for card, count in collection.items():
+        print(f"{CARD_DATABASE[card]['emoji']} {card} x{count} (Power: {CARD_DATABASE[card]['power']})")
+    input("\nPress Enter to continue...")
+
+def view_deck():
+    clear()
+    print(Fore.GREEN + "🎴 Current Deck:")
+    deck_contents = {}
+    for card in player["current_deck"]:
+        deck_contents[card] = deck_contents.get(card, 0) + 1
+    
+    for card, count in deck_contents.items():
+        print(f"{CARD_DATABASE[card]['emoji']} {card} x{count}")
+    input("\nPress Enter to continue...")
+
+def build_deck():
+    clear()
+    print(Fore.CYAN + "Build your deck (30-50 cards)")
+    player["current_deck"] = []
+    
+    while len(player["current_deck"]) < 30 or (len(player["current_deck"]) < 50 and input("\nAdd more cards? (y/n): ").lower() == 'y'):
+        clear()
+        print(f"Cards in deck: {len(player['current_deck'])}/30")
+        collection = {}
+        for card in player["card_collection"]:
+            if card not in player["current_deck"]:
+                collection[card] = collection.get(card, 0) + 1
+        
+        print("\nAvailable cards:")
+        for i, (card, count) in enumerate(collection.items(), 1):
+            print(f"[{i}] {CARD_DATABASE[card]['emoji']} {card} x{count}")
+        print("[0] Cancel")
+        
+        choice = input("Add card (or 0 to cancel): ")
+        if choice == "0":
+            return
+        try:
+            idx = int(choice) - 1
+            card = list(collection.keys())[idx]
+            player["current_deck"].append(card)
+        except (ValueError, IndexError):
+            print("Invalid choice!")
+            continue
+    
+    print(Fore.GREEN + "Deck complete!")
+
+def show_card_tutorial():
+    clear()
+    print(Fore.CYAN + "🎴 Card Battle Tutorial")
+    print("""
+Welcome to the Card Battle System! Here are the key rules:
+
+1. Deck Building:
+   - Minimum deck size: 30 cards
+   - Maximum deck size: 50 cards
+   - You can have multiple copies of the same card
+
+2. Card Ranks:
+   SS - Ultimate cards (Power 11-12)
+   S  - Legendary cards (Power 10)
+   A  - Epic cards (Power 8-9)
+   B  - Rare cards (Power 6-7)
+   C  - Uncommon cards (Power 4-5)
+   D  - Common cards (Power 3)
+   E  - Basic cards (Power 2)
+
+3. Battle Rules:
+   - Each player draws 3 cards per round
+   - Higher power cards win the round
+   - First to win 2 rounds wins the match
+   - Winning matches earns tickets
+
+4. Card Types:
+   - 151 unique cards available
+   - 5 rarity levels: legendary, epic, rare, uncommon, common
+   - 10 elements and 10 classes for variety
+
+Tips:
+- Build a balanced deck with different power levels
+- Collect stronger cards from card packs
+- Plan your strategy based on opponent's style
+    """)
+    input("\nPress Enter to continue...")
+
+def card_battle():
+    if len(player["current_deck"]) < 30:
+        print(Fore.RED + "You need a deck of at least 30 cards to play!")
+        print(Fore.YELLOW + "Type 'tutorial' to learn the rules, or press Enter to exit.")
+        if input().lower() == 'tutorial':
+            show_card_tutorial()
+        return
+        
+    clear()
+    print(Fore.YELLOW + "🎴 Card Battle!")
+    
+    print("\nChoose opponent:")
+    for i, (npc, data) in enumerate(CARD_NPCS.items(), 1):
+        print(f"[{i}] {npc}")
+    
+    try:
+        choice = int(input("Select opponent: ")) - 1
+        opponent = list(CARD_NPCS.keys())[choice]
+    except (ValueError, IndexError):
+        print("Invalid choice!")
+        return
+        
+    print(f"\nBattling against {opponent}!")
+    npc_deck = []
+    for _ in range(CARD_NPCS[opponent]["deck_size"]):
+        npc_deck.append(random.choice(list(CARD_DATABASE.keys())))
+    
+    player_hand = random.sample(list(CARD_DATABASE.keys()), 3)
+    cpu_hand = random.sample(list(CARD_DATABASE.keys()), 3)
+    
+    player_score = 0
+    cpu_score = 0
+    rounds = 3
+    
+    for round in range(rounds):
+        print(f"\nRound {round + 1}/{rounds}")
+        print("\nYour cards:")
+        for i, card in enumerate(player_hand, 1):
+            print(f"[{i}] {CARD_DATABASE[card]['emoji']} {card} (Power: {CARD_DATABASE[card]['power']})")
+            
+        choice = int(input("\nChoose your card (1-3): ")) - 1
+        if choice < 0 or choice >= len(player_hand):
+            print(Fore.RED + "Invalid choice!")
+            continue
+            
+        player_card = player_hand[choice]
+        cpu_card = random.choice(cpu_hand)
+        
+        print(f"\nYou played: {CARD_DATABASE[player_card]['emoji']} {player_card}")
+        print(f"CPU played: {CARD_DATABASE[cpu_card]['emoji']} {cpu_card}")
+        
+        if CARD_DATABASE[player_card]['power'] > CARD_DATABASE[cpu_card]['power']:
+            print(Fore.GREEN + "You win this round!")
+            player_score += 1
+        elif CARD_DATABASE[player_card]['power'] < CARD_DATABASE[cpu_card]['power']:
+            print(Fore.RED + "CPU wins this round!")
+            cpu_score += 1
+        else:
+            print(Fore.YELLOW + "It's a tie!")
+            
+        player_hand.remove(player_card)
+        cpu_hand.remove(cpu_card)
+        
+    print(f"\nFinal Score - You: {player_score} | CPU: {cpu_score}")
+    
+    if player_score > cpu_score:
+        tickets = 10
+        print(Fore.GREEN + f"You won the battle! +{tickets} tickets!")
+        player["tickets"] += tickets
+        update_mission_progress("vip_games")
+    elif player_score < cpu_score:
+        print(Fore.RED + "You lost the battle!")
+    else:
+        tickets = 5
+        print(Fore.YELLOW + f"It's a tie! +{tickets} tickets")
+        player["tickets"] += tickets
