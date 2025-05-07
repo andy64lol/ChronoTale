@@ -8,6 +8,9 @@ from colorama import init, Fore, Style
 # Initialize colorama
 init(autoreset=True)
 
+# Constants
+VERSION = "1.1.0"
+
 # Game data persistence
 def load_game_data():
     """Load game statistics from JSON file"""
@@ -16,19 +19,28 @@ def load_game_data():
             data = json.load(f)
             if 'purchased_games' not in data:
                 data['purchased_games'] = []
+            if 'settings' not in data:
+                data['settings'] = {'colors_enabled': True}
             return data
     except (FileNotFoundError, json.JSONDecodeError):
-        return {'plays': 0, 'tokens': 0, 'purchased_games': []}
+        return {'plays': 0, 'tokens': 0, 'purchased_games': [], 'settings': {'colors_enabled': True}}
 
 def save_game_data(data):
     """Save game statistics to JSON file"""
     with open('game_data.json', 'w') as f:
         json.dump(data, f)
 
+def color_text(text, color):
+    """Apply color to text if colors are enabled"""
+    data = load_game_data()
+    if data['settings']['colors_enabled']:
+        return color + text + Style.RESET_ALL
+    return text
+
 # Core functions
 def display_banner():
     """Display the ChronoTale banner with pixel font"""
-    print(Fore.YELLOW + r"""
+    banner = r"""
  ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░▒▓██████▓▒░░▒▓█▓▒░      ░▒▓████████▓▒░                    ░▒▓█▓▒░       ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓███████▓▒░  
 ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░             ░▒▓██▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
 ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░             ░▒▓██▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
@@ -36,13 +48,14 @@ def display_banner():
 ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░             ░▒▓██▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
 ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░             ░▒▓██▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
  ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░  ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░                    ░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░ 
-""" + Fore.CYAN + "A Multidimensional Adventure Launcher")
+"""
+    print(color_text(banner, Fore.YELLOW) + color_text("A Multidimensional Adventure Launcher", Fore.CYAN))
     print("\n" + "═" * 50 + "\n")
 
 def check_file(file_name):
     """Check if a game file exists"""
     if not os.path.isfile(file_name):
-        print(Fore.RED + f"█ Error: {file_name} not found!")
+        print(color_text(f"█ Error: {file_name} not found!", Fore.RED))
         return False
     return True
 
@@ -50,19 +63,19 @@ def launch_game(file_name):
     """Launch the specified game file"""
     try:
         game_name = os.path.splitext(os.path.basename(file_name))[0]
-        print(Fore.GREEN + f"\n█ Launching {game_name}..." + Style.RESET_ALL)
+        print(color_text(f"\n█ Launching {game_name}...", Fore.GREEN) + Style.RESET_ALL)
 
         # Pixel-style loading animation
         frames = ["[■□□□]", "[■■□□]", "[■■■□]", "[■■■■]"]
         for frame in frames:
-            print(Fore.BLUE + f"█ Loading {frame}", end='\r')
+            print(color_text(f"█ Loading {frame}", Fore.BLUE), end='\r')
             time.sleep(0.2)
 
         subprocess.run([sys.executable, file_name], check=True)
     except subprocess.CalledProcessError as e:
-        print(Fore.RED + f"█ Crash: Game exited with error {e.returncode}")
+        print(color_text(f"█ Crash: Game exited with error {e.returncode}", Fore.RED))
     except Exception as e:
-        print(Fore.RED + f"█ Crash: {e}")
+        print(color_text(f"█ Crash: {e}", Fore.RED))
 
 # Menu system
 def games_menu(data):
@@ -80,18 +93,18 @@ def games_menu(data):
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         display_banner()
-        print(Fore.CYAN + f"█ Total Plays: {data['plays']} | Tokens: {data['tokens']}")
+        print(color_text(f"█ Total Plays: {data['plays']} | Tokens: {data['tokens']}", Fore.CYAN))
         print("\n" + "═" * 50 + "\n")
-        print(Fore.MAGENTA + "█ Available Games:\n")
+        print(color_text("█ Available Games:\n", Fore.MAGENTA))
         
         # Display games with numbering
         for idx, (name, file) in enumerate(all_games, 1):
-            print(Fore.CYAN + f"█ [{idx}] {name}")
+            print(color_text(f"█ [{idx}] {name}", Fore.CYAN))
         
         back_number = len(all_games) + 1
-        print(Fore.RED + f"█ [{back_number}] Back to Main Menu")
+        print(color_text(f"█ [{back_number}] Back to Main Menu", Fore.RED))
 
-        choice = input(Fore.YELLOW + "\n█ Select: " + Style.RESET_ALL)
+        choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
 
         try:
             choice_int = int(choice)
@@ -113,14 +126,14 @@ def games_menu(data):
                     data['tokens'] += 5 + int(time_tokens)
                     save_game_data(data)
                     
-                    input(Fore.YELLOW + "\n█ Press Enter to continue..." + Style.RESET_ALL)
+                    input(color_text("\n█ Press Enter to continue...", Fore.YELLOW) + Style.RESET_ALL)
             elif choice_int == back_number:
                 return
             else:
-                print(Fore.RED + "\n█ Invalid input!")
+                print(color_text("\n█ Invalid input!", Fore.RED))
                 time.sleep(1)
         except ValueError:
-            print(Fore.RED + "\n█ Invalid input!")
+            print(color_text("\n█ Invalid input!", Fore.RED))
             time.sleep(1)
 
 def shop_menu(data):
@@ -132,19 +145,19 @@ def shop_menu(data):
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         display_banner()
-        print(Fore.CYAN + "█ Welcome to the Token Shop!")
-        print(Fore.YELLOW + "█ Available Items:\n")
+        print(color_text("█ Welcome to the Token Shop!", Fore.CYAN))
+        print(color_text("█ Available Items:\n", Fore.YELLOW))
         
         # Display purchasable games
         for idx, game in enumerate(purchasable_games, 1):
             purchased = any(g[0] == game["name"] and g[1] == game["file"] for g in data['purchased_games'])
-            status = Fore.GREEN + "Purchased" if purchased else Fore.YELLOW + f"Cost: {game['cost']} Tokens"
-            print(Fore.CYAN + f"█ [{idx}] {game['name']} - {status}")
+            status = color_text("Purchased", Fore.GREEN) if purchased else color_text(f"Cost: {game['cost']} Tokens", Fore.YELLOW)
+            print(color_text(f"█ [{idx}] {game['name']} - {status}", Fore.CYAN))
         
-        print(Fore.RED + f"█ [{len(purchasable_games)+1}] Back to Main Menu")
-        print(Fore.CYAN + f"\n█ Your current balance: {data['tokens']} Tokens")
+        print(color_text(f"█ [{len(purchasable_games)+1}] Back to Main Menu", Fore.RED))
+        print(color_text(f"\n█ Your current balance: {data['tokens']} Tokens", Fore.CYAN))
         
-        choice = input(Fore.YELLOW + "\n█ Select: " + Style.RESET_ALL)
+        choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
         
         try:
             choice_int = int(choice)
@@ -152,7 +165,7 @@ def shop_menu(data):
                 selected_game = purchasable_games[choice_int - 1]
                 # Check if already purchased
                 if any(g[0] == selected_game["name"] and g[1] == selected_game["file"] for g in data['purchased_games']):
-                    print(Fore.RED + "█ You already own this game!")
+                    print(color_text("█ You already own this game!", Fore.RED))
                     time.sleep(1)
                     continue
                 # Check tokens
@@ -160,35 +173,51 @@ def shop_menu(data):
                     data['tokens'] -= selected_game["cost"]
                     data['purchased_games'].append([selected_game["name"], selected_game["file"]])
                     save_game_data(data)
-                    print(Fore.GREEN + f"█ Purchased {selected_game['name']}!")
+                    print(color_text(f"█ Purchased {selected_game['name']}!", Fore.GREEN))
                     time.sleep(1)
                 else:
-                    print(Fore.RED + "█ Insufficient tokens!")
+                    print(color_text("█ Insufficient tokens!", Fore.RED))
                     time.sleep(1)
             elif choice_int == len(purchasable_games) + 1:
                 return
             else:
-                print(Fore.RED + "█ Invalid input!")
+                print(color_text("█ Invalid input!", Fore.RED))
                 time.sleep(1)
         except ValueError:
-            print(Fore.RED + "█ Invalid input!")
+            print(color_text("█ Invalid input!", Fore.RED))
             time.sleep(1)
 
 def credits_menu():
     """Display credits"""
     os.system('cls' if os.name == 'nt' else 'clear')
     display_banner()
-    print(Fore.CYAN + "█ Credits:")
-    print(Fore.GREEN + "█ Developed by ChronoTale Studios")
-    input(Fore.YELLOW + "\n█ Press Enter to return to main menu..." + Style.RESET_ALL)
+    print(color_text("█ Credits:", Fore.CYAN))
+    print(color_text("█ Developed by andy64lol", Fore.GREEN))
+    print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
+    input(color_text("\n█ Press Enter to return to main menu...", Fore.YELLOW) + Style.RESET_ALL)
 
-def settings_menu():
+def settings_menu(data):
     """Display settings"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    display_banner()
-    print(Fore.CYAN + "█ Settings:")
-    print(Fore.YELLOW + "█ Settings menu is under construction")
-    input(Fore.YELLOW + "\n█ Press Enter to return to main menu..." + Style.RESET_ALL)
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        display_banner()
+        print(color_text("█ Settings:", Fore.CYAN))
+        print(color_text(f"█ [1] Toggle Colors: {'ON' if data['settings']['colors_enabled'] else 'OFF'}", Fore.CYAN))
+        print(color_text("█ [2] Back to Main Menu", Fore.RED))
+        print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
+        
+        choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
+        
+        if choice == '1':
+            data['settings']['colors_enabled'] = not data['settings']['colors_enabled']
+            save_game_data(data)
+            print(color_text(f"█ Colors {'enabled' if data['settings']['colors_enabled'] else 'disabled'}!", Fore.GREEN))
+            time.sleep(1)
+        elif choice == '2':
+            return
+        else:
+            print(color_text("█ Invalid input!", Fore.RED))
+            time.sleep(1)
 
 def main_menu():
     """Main menu controller"""
@@ -196,16 +225,17 @@ def main_menu():
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         display_banner()
-        print(Fore.CYAN + f"█ Total Plays: {data['plays']} | Tokens: {data['tokens']}")
+        print(color_text(f"█ Total Plays: {data['plays']} | Tokens: {data['tokens']}", Fore.CYAN))
         print("\n" + "═" * 50 + "\n")
-        print(Fore.MAGENTA + "█ Main Menu:\n")
-        print(Fore.CYAN + "█ [1] Games")
-        print(Fore.CYAN + "█ [2] Shop")
-        print(Fore.CYAN + "█ [3] Credits")
-        print(Fore.CYAN + "█ [4] Settings")
-        print(Fore.RED + "█ [5] Quit")
+        print(color_text("█ Main Menu:\n", Fore.MAGENTA))
+        print(color_text("█ [1] Games", Fore.CYAN))
+        print(color_text("█ [2] Shop", Fore.CYAN))
+        print(color_text("█ [3] Credits", Fore.CYAN))
+        print(color_text("█ [4] Settings", Fore.CYAN))
+        print(color_text("█ [5] Quit", Fore.RED))
+        print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
 
-        choice = input(Fore.YELLOW + "\n█ Select: " + Style.RESET_ALL)
+        choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
 
         if choice == '1':
             games_menu(data)
@@ -214,18 +244,18 @@ def main_menu():
         elif choice == '3':
             credits_menu()
         elif choice == '4':
-            settings_menu()
+            settings_menu(data)
         elif choice == '5':
-            print(Fore.YELLOW + "\n█ Closing...")
+            print(color_text("\n█ Closing...", Fore.YELLOW))
             time.sleep(1)
             break
         else:
-            print(Fore.RED + "\n█ Invalid input!")
+            print(color_text("\n█ Invalid input!", Fore.RED))
             time.sleep(1)
 
 if __name__ == "__main__":
     try:
         main_menu()
     except KeyboardInterrupt:
-        print(Fore.YELLOW + "\n█ Force quit!")
+        print(color_text("\n█ Force quit!", Fore.YELLOW))
         sys.exit(0)
