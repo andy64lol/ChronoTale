@@ -1,11 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ChronoTale: Begin your journey across timelines. Download the latest adventure now!">
-  <meta name="theme-color" content="#1abc9c">
-  <title>ChronoTale: Download</title>
+  <meta name="description" content="Text Adventure Hub: Your Gateway to Interactive Stories">
+  <title>ChronoTale</title>
   <style>
     * {
       margin: 0;
@@ -14,127 +14,147 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      overflow: hidden;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      font-family: -apple-system, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
       color: #fff;
-      animation: fadeInBody 1.5s ease forwards;
-      position: relative;
-    }
-
-    body::before, body::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 200%; height: 200%;
-      background: radial-gradient(#ffffff22 1px, transparent 1px);
-      background-size: 50px 50px;
-      animation: moveStars 100s linear infinite;
-      z-index: 0;
-    }
-
-    body::after {
-      background-size: 100px 100px;
-      opacity: 0.5;
-      animation: moveStars 150s linear infinite reverse;
-    }
-
-    @keyframes moveStars {
-      from { transform: translate(0, 0); }
-      to { transform: translate(-50%, -50%); }
-    }
-
-    .card {
-      position: relative;
-      z-index: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 40px;
-      max-width: 600px;
-      width: 100%;
+      line-height: 1.6;
+      min-height: 100vh;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      animation: fadeUp 2s ease forwards;
+      padding: 3rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem);
-      margin-bottom: 0.5em;
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #4a9eff 0%, #3ee7ff 50%, #1a1a1a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(74, 158, 255, 0.2);
+      letter-spacing: 2px;
     }
 
-    p {
-      font-size: clamp(1.2rem, 3vw, 1.6rem);
-      margin-bottom: 2em;
-      max-width: 500px;
+    .description {
+      font-size: 1.3rem;
+      margin-bottom: 2.5rem;
+      background: linear-gradient(135deg, #4a9eff 0%, #3ee7ff 50%, #1a1a1a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      max-width: 600px;
       margin-left: auto;
       margin-right: auto;
-      opacity: 0.9;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .feature {
+      padding: 1.2rem;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 100%);
+      border-radius: 10px;
+      transition: all 0.3s;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      font-size: 0.95rem;
+    }
+
+    .feature:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-title {
+      color: #4a9eff;
+      margin-bottom: 0.4rem;
+      font-size: 1.1rem;
+      font-weight: 600;
     }
 
     .download-btn {
-      background: linear-gradient(135deg, #1abc9c, #16a085);
-      border: none;
-      padding: 18px 40px;
-      font-size: 1.3em;
-      border-radius: 12px;
-      color: #fff;
-      text-decoration: none;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(26, 188, 156, 0.5);
-      transition: all 0.3s ease;
       display: inline-block;
+      background: linear-gradient(45deg, #4a9eff, #3ee7ff, #4a9eff);
+      background-size: 200% auto;
+      color: white;
+      padding: 1rem 2.5rem;
+      animation: shine 3s linear infinite;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
     }
 
-    .download-btn:hover,
-    .download-btn:focus {
-      background: linear-gradient(135deg, #16a085, #1abc9c);
-      transform: scale(1.05);
-      box-shadow: 0 8px 30px rgba(26, 188, 156, 0.7);
-      outline: none;
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
     }
 
     footer {
-      margin-top: 2em;
-      font-size: 0.9em;
-      opacity: 0.7;
-      transition: opacity 0.3s;
+      margin-top: 3rem;
+      color: #666;
+      font-size: 0.9rem;
     }
 
-    footer:hover {
-      opacity: 1;
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
     }
 
-    @keyframes fadeInBody {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    @keyframes shine {
+      to {
+        background-position: 200% center;
+      }
     }
 
-    @keyframes fadeUp {
-      0% { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
+    .logo {
+      animation: float 3s ease-in-out infinite;
+      font-size: 4rem;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
-  <div class="card">
+    <div class="logo">🕹️</div>
     <h1>ChronoTale</h1>
-    <p>Your journey across timelines begins here. Download the latest version and embark on your adventure!</p>
+    <p class="description">Experience the power of imagination through our collection of text-based adventures - where words create worlds.</p>
+    
+    <div class="features">
+      <div class="feature">
+        <h3 class="feature-title">Diverse Games</h3>
+        <p>Explore a variety of genres, from classic RPGs to modern survival stories.</p>
+      </div>
+      <div class="feature">
+        <h3 class="feature-title">Simple Yet Deep</h3>
+        <p>Rich storytelling with meaningful choices.</p>
+      </div>
+      <div class="feature">
+        <h3 class="feature-title">Your Story</h3>
+        <p>Your own story, all in a terminal.</p>
+      </div>
+    </div>
 
-    <a href="https://github.com/andy64lol/ChronoTale/archive/refs/heads/main.zip" 
-       class="download-btn" download>
-      Download ChronoTale (.zip)
-    </a>
-
-    <footer>
-      &copy; 2025 ChronoTale. Made with ❤️ by Andy64lol and buddies.
-    </footer>
-  </div>
+  <a href="https://github.com/andy64lol/ChronoTale/archive/refs/heads/main.zip" 
+     class="download-btn" download>
+    Download ChronoTale 1.1.0 (.zip)
+  </a>
+    <footer>© 2025 ChronoTale</footer>
 </body>
 </html>
