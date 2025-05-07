@@ -180,7 +180,6 @@ def credits_menu():
     display_banner()
     print(Fore.CYAN + "█ Credits:")
     print(Fore.GREEN + "█ Developed by ChronoTale Studios")
-    print(Fore.GREEN + "█ Original Concept by The Visionary Team")
     input(Fore.YELLOW + "\n█ Press Enter to return to main menu..." + Style.RESET_ALL)
 
 def settings_menu():
