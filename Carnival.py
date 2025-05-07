@@ -125,9 +125,9 @@ def shop():
     print("\n[1] Costumes 👕")
     print("[2] Consumables 🎫")
     print("[0] Back")
-    
+
     choice = input("Choose category: ")
-    
+
     if choice == "1":
         shop_costumes()
     elif choice == "2":
@@ -140,7 +140,7 @@ def shop_costumes():
     print(Fore.LIGHTBLUE_EX + "👕 Costume Shop")
     print(f"Your Tickets: {player['tickets']}")
     available_costumes = [(name, data) for name, data in COSTUMES.items() if data["available"]]
-    
+
     for i, (name, data) in enumerate(available_costumes):
         price = data["price"]
         if data.get("halloween_discount") and is_halloween():
@@ -149,7 +149,7 @@ def shop_costumes():
             price = int(price * 0.8)  # 20% discount
         print(f"[{i+1}] {name} - {price} tickets")
     print("[0] Back")
-    
+
     choice = input("Choose costume: ")
     if choice == "0":
         return
@@ -157,7 +157,7 @@ def shop_costumes():
         index = int(choice) - 1
         costume_name, costume_data = available_costumes[index]
         price = costume_data["price"]
-        
+
         if player["tickets"] >= price:
             player["tickets"] -= price
             player["inventory"].append(costume_name)
@@ -173,11 +173,11 @@ def shop_consumables():
     clear()
     print(Fore.LIGHTBLUE_EX + "🎫 Consumables Shop")
     print(f"Your Tickets: {player['tickets']}")
-    
+
     for i, (name, data) in enumerate(CONSUMABLES.items()):
         print(f"[{i+1}] {name} - {data['price']} tickets")
     print("[0] Back")
-    
+
     choice = input("Choose item: ")
     if choice == "0":
         return
@@ -185,7 +185,7 @@ def shop_consumables():
         index = int(choice) - 1
         item_name = list(CONSUMABLES.keys())[index]
         item_data = CONSUMABLES[item_name]
-        
+
         if player["tickets"] >= item_data["price"]:
             player["tickets"] -= item_data["price"]
             player["inventory"].append(item_name)
@@ -225,7 +225,7 @@ def check_costume_achievements():
         award_achievement("Costume Collector: Own 10 costumes")
     if all(c in player["inventory"] for c in ["Bear 🐻", "Panda 🐼", "Polar Bear 🐻‍❄️"]):
         award_achievement("Bear Family: Collect all bears")
-    
+
 def check_item_achievements():
     consumable_count = sum(1 for item in player["inventory"] if item in CONSUMABLES)
     if consumable_count >= 3:
@@ -440,15 +440,22 @@ def minigame_menu():
 [9] Reaction Test (2)
 [10] Melody Memory (3)
 [11] Guess the Password (4)
-[12] Back
+[12] Hangman (3)
+[13] Memory Match (4)
+[14] Number Racing (2)
+[15] Balloon Pop (2)
+[16] Ring Toss (3)
+[17] Duck Shooting (3)
+[18] Back
 """)
         choice = input("Select: ")
         games = [paper_scissors_rock, coin_flip_game, high_low, guess_the_number, 
                 quick_math, word_shuffle, lucky_spinner, dart_throw, reaction_test, 
-                melody_memory, guess_password]
-        if choice == "12":
+                melody_memory, guess_password, hangman_game, memory_match, number_racing,
+                balloon_pop, ring_toss, duck_shooting]
+        if choice == "18":
             break
-        elif choice in map(str, range(1, 12)):
+        elif choice in map(str, range(1, 15)):
             games[int(choice)-1]()
         else:
             print("Invalid.")
@@ -530,7 +537,7 @@ def lucky_slots():
     print("[1] Single Pull (2 tickets)")
     print("[2] Ten Pulls (6 tickets)")
     choice = input("Choose option: ")
-    
+
     symbols = ["🍒", "🍊", "🍋", "💎", "7️⃣", "⭐"]
     payouts = {
         "🍒🍒🍒": 3,
@@ -540,7 +547,7 @@ def lucky_slots():
         "7️⃣7️⃣7️⃣": 15,
         "⭐⭐⭐": 20
     }
-    
+
     def single_pull():
         result = [random.choice(symbols) for _ in range(3)]
         print(" ".join(result))
@@ -550,7 +557,7 @@ def lucky_slots():
             print(Fore.GREEN + f"Winner! +{winnings} tickets!")
             return winnings
         return 0
-    
+
     if choice == "1" and player["tickets"] >= 2:
         player["tickets"] -= 2
         player["tickets"] += single_pull()
@@ -615,7 +622,19 @@ def wheel_of_fate():
 
 def main_menu():
     while True:
-        print(Fore.CYAN + "\n🎪 CARNIVAL - MAIN MENU 🎪")
+        colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN]
+        carnival_art = f"""
+{random.choice(colors)} ░▒▓██████▓▒░  ░▒▓██████▓▒░ ░▒▓███████▓▒░ ░▒▓███████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓██████▓▒░ ░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░       ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░       ░▒▓████████▓▒░░▒▓███████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒▒▓█▓▒░ ░▒▓████████▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░       ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)} ░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░   ░▒▓██▓▒░   ░▒▓█▓▒░░▒▓█▓▒░░▒▓████████▓▒░
+
+        🎪 Welcome to the Carnival! 🎪
+        """
+        print(carnival_art)
         print(f"👤 {player['equipped_costume']} {player['name']} | 🎟️ Tickets: {player['tickets']}")
         print("🎒 Inventory:", ", ".join(player["inventory"]) or "Empty")
         print("⚡ Active Items:", ", ".join(player["equipped_items"]) or "None")
@@ -654,8 +673,21 @@ def main_menu():
 
 def start_game():
     clear()
-    print(Fore.CYAN + "🎪 Welcome to the Carnival Game!")
-    player["name"] = input("Enter your name: ")
+    colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN]
+    carnival_art = f"""
+{random.choice(colors)} ░▒▓██████▓▒░  ░▒▓██████▓▒░ ░▒▓███████▓▒░ ░▒▓███████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓██████▓▒░ ░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░       ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░       ░▒▓████████▓▒░░▒▓███████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒▒▓█▓▒░ ░▒▓████████▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░       ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)}░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░        
+{random.choice(colors)} ░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░   ░▒▓██▓▒░   ░▒▓█▓▒░░▒▓█▓▒░░▒▓████████▓▒░
+
+        🎪 Welcome to the Carnival! 🎪
+        """
+    print(carnival_art)
+    print(Fore.CYAN + "Enter your name to begin:")
+    player["name"] = input("> ")
     main_menu()
 
 start_game()
@@ -666,7 +698,7 @@ def paper_scissors_rock():
     player_choice = input(f"Choose ({', '.join(choices)}): ")
     computer = random.choice(choices)
     print(f"Computer chose: {computer}")
-    
+
     if player_choice == computer:
         print(Fore.YELLOW + "Draw! Get your ticket back.")
         player["tickets"] += 1
@@ -700,7 +732,7 @@ def high_low():
     print(f"Number is: {prev_number}")
     choice = input("Will the next number be Higher or Lower? ").lower()
     print(f"Number was: {number}")
-    
+
     if ((choice == "higher" and number > prev_number) or 
         (choice == "lower" and number < prev_number)):
         print(Fore.GREEN + "Correct! +4 tickets")
@@ -738,3 +770,183 @@ def update_mission_progress(mission_type, amount=1):
                 print(f"Reward: {mission['reward']} tickets")
                 player["tickets"] += mission["reward"]
                 player["completed_missions"].append(mission_id)
+
+
+def hangman_game():
+    if not pay_to_play(3):
+        return
+    words = ["carnival", "ticket", "prize", "game", "fun", "play", "win"]
+    word = random.choice(words)
+    guessed = set()
+    tries = 6
+
+    while tries > 0:
+        display = ''.join(c if c in guessed else '_' for c in word)
+        print(f"\nWord: {display}")
+        print(f"Tries left: {tries}")
+        if display == word:
+            print(Fore.GREEN + "You won! +6 tickets")
+            player["tickets"] += 6
+            return
+        guess = input("Guess a letter: ").lower()
+        if guess in guessed:
+            print("Already guessed!")
+            continue
+        guessed.add(guess)
+        if guess not in word:
+            tries -= 1
+    print(Fore.RED + f"Game Over! The word was: {word}")
+
+def memory_match():
+    if not pay_to_play(4):
+        return
+    emojis = ["🎪", "🎠", "🎡", "🎢", "🎨", "🎭"] * 2
+    random.shuffle(emojis)
+    revealed = [False] * 12
+    matched = set()
+    first_choice = None
+
+    while len(matched) < 6:
+        print("\nMemory Match Board:")
+        for i in range(12):
+            if revealed[i] or i in matched:
+                print(emojis[i], end=" ")
+            else:
+                print("❓", end=" ")
+            if (i + 1) % 4 == 0:
+                print()
+
+        choice = int(input("\nPick a card (1-12): ")) - 1
+        if choice < 0 or choice > 11 or revealed[choice]:
+            print("Invalid choice!")
+            continue
+
+        revealed[choice] = True
+        print(f"Card {choice + 1}: {emojis[choice]}")
+
+        if first_choice is None:
+            first_choice = choice
+        else:
+            if emojis[first_choice] == emojis[choice]:
+                print(Fore.GREEN + "Match found!")
+                matched.add(first_choice)
+                matched.add(choice)
+            else:
+                print("No match!")
+                revealed[first_choice] = False
+                revealed[choice] = False
+            first_choice = None
+            time.sleep(1)
+
+    print(Fore.GREEN + "You completed the memory game! +8 tickets")
+    player["tickets"] += 8
+
+def number_racing():
+    if not pay_to_play(2):
+        return
+    player_num = random.randint(1, 10)
+    finish_line = 20
+    player_pos = 0
+    computer_pos = 0
+
+    print(f"Your racing number: {player_num}")
+    while player_pos < finish_line and computer_pos < finish_line:
+        input("Press Enter to roll...")
+        roll = random.randint(1, 10)
+        print(f"You rolled: {roll}")
+        if roll == player_num:
+            player_pos += 3
+            print(Fore.GREEN + "Perfect roll! +3 spaces")
+        else:
+            player_pos += 1
+
+        comp_roll = random.randint(1, 10)
+        computer_pos += 1 if comp_roll != 7 else 3
+
+        print(f"\nYou: {'🏎️' + '=' * player_pos}")
+        print(f"CPU: {'🚗' + '=' * computer_pos}")
+
+    if player_pos >= finish_line:
+        print(Fore.GREEN + "You win! +5 tickets")
+        player["tickets"] += 5
+    else:
+        print(Fore.RED + "Computer wins!")
+
+
+
+def balloon_pop():
+    if not pay_to_play(2):
+        return
+    balloons = ["🎈", "💥"]
+    target = random.randint(1, 5)
+    print(f"Pop exactly {target} balloons!")
+    popped = 0
+    for _ in range(5):
+        choice = input(f"Pop balloon {_+1}? (y/n): ").lower()
+        if choice == 'y':
+            result = random.choice(balloons)
+            if result == "🎈":
+                print("Pop! 🎈 → 💥")
+                popped += 1
+            else:
+                print("Already popped! 💥")
+
+    if popped == target:
+        print(Fore.GREEN + "Perfect! +5 tickets")
+        player["tickets"] += 5
+    else:
+        print(Fore.RED + f"You popped {popped}/{target} balloons!")
+
+def ring_toss():
+    if not pay_to_play(3):
+        return
+    targets = ["🎯", "⭕", "❌"]
+    hits = 0
+    print("Toss 3 rings!")
+    for i in range(3):
+        input(f"Press Enter to toss ring {i+1}...")
+        result = random.choices(targets, weights=[1, 2, 3])[0]
+        if result == "🎯":
+            print(Fore.GREEN + "Perfect throw! 🎯")
+            hits += 2
+        elif result == "⭕":
+            print(Fore.YELLOW + "Close! ⭕")
+            hits += 1
+        else:
+            print(Fore.RED + "Miss! ❌")
+
+    print(f"Total points: {hits}")
+    tickets = hits * 2
+    if tickets > 0:
+        print(Fore.GREEN + f"You won {tickets} tickets!")
+        player["tickets"] += tickets
+
+def duck_shooting():
+    if not pay_to_play(3):
+        return
+    ducks = ["🦆", "🎯"]
+    score = 0
+    shots = 3
+
+    print("Shoot the moving ducks! You have 3 shots.")
+    while shots > 0:
+        lineup = "".join(random.choices(ducks, k=5))
+        print("\nDucks:", lineup)
+        position = int(input("Choose position to shoot (1-5): ")) - 1
+
+        if 0 <= position < 5:
+            if lineup[position] == "🦆":
+                print(Fore.GREEN + "Hit! 🎯")
+                score += 1
+            else:
+                print(Fore.RED + "Miss!")
+        else:
+            print("Invalid position!")
+        shots -= 1
+
+    tickets = score * 3
+    if tickets > 0:
+        print(Fore.GREEN + f"You hit {score} ducks! +{tickets} tickets")
+        player["tickets"] += tickets
+    else:
+        print(Fore.RED + "Better luck next time!")
