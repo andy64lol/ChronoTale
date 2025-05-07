@@ -21,9 +21,11 @@
 ## Method 1
 ---
 
-Clone it using git clone
+Clone this repository using git clone
 
 and then use cd ~/ChronoTale/
+
+after that use source venv/bin/activate
 
 Lastly just launch it
 
