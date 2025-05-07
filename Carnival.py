@@ -1474,7 +1474,12 @@ CHAMPIONSHIP_BRACKETS = [
 
 if "card_collection" not in player:
     player["card_collection"] = []
+if "current_deck" not in player:
     player["current_deck"] = []
+if "missions" not in player:
+    player["missions"] = {}
+if "completed_missions" not in player:
+    player["completed_missions"] = []
 
 def buy_card_pack():
     pack_cost = 10
@@ -1723,10 +1728,16 @@ def card_battle(opponent=None, championship=False):
 
     print(f"\nBattling against {opponent}!")
     npc_deck = []
-    for _ in range(CARD_NPCS[opponent]["deck_size"]):
-        npc_deck.append(random.choice(list(CARD_DATABASE.keys())))
+    if opponent in CARD_NPCS:
+        for _ in range(CARD_NPCS[opponent]["deck_size"]):
+            npc_deck.append(random.choice(list(CARD_DATABASE.keys())))
+    else:
+        # Default deck size if opponent not found
+        for _ in range(30):
+            npc_deck.append(random.choice(list(CARD_DATABASE.keys())))
 
-    player_hand = random.sample(player["current_deck"], 3) if not championship else random.sample(player["current_deck"], 3)
+    try:
+        player_hand = random.sample(player["current_deck"], min(3, len(player["current_deck"])))
     cpu_hand = random.sample(npc_deck, 3)
 
     player_score = 0
@@ -1739,9 +1750,13 @@ def card_battle(opponent=None, championship=False):
         for i, card in enumerate(player_hand, 1):
             print(f"[{i}] {CARD_DATABASE[card]['emoji']} {card} (Power: {CARD_DATABASE[card]['power']})")
 
-        choice = int(input("\nChoose your card (1-3): ")) - 1
-        if choice < 0 or choice >= len(player_hand):
-            print(Fore.RED + "Invalid choice!")
+        try:
+            choice = int(input("\nChoose your card (1-3): ")) - 1
+            if choice < 0 or choice >= len(player_hand):
+                print(Fore.RED + "Invalid choice!")
+                continue
+        except ValueError:
+            print(Fore.RED + "Invalid input! Please enter a number.")
             continue
 
         player_card = player_hand[choice]
