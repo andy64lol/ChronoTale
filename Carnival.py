@@ -770,6 +770,9 @@ def redeem_code():
     input("\nPress Enter to continue...")
 
 def main_menu():
+    init_player_attributes()
+    check_daily_reward()
+    
     while True:
         colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN]
         carnival_art = f"""
@@ -792,13 +795,17 @@ def main_menu():
         print("""
 [1] Play Minigames
 [2] Ticket Shop
-[3] Save Game
-[4] Load Game
-[5] Tutorials
-[6] Gambling Games
-[7] Talk to NPCs
-[8] Redeem Code
-[9] Exit
+[3] Pet Shop 🐾
+[4] Daily Challenges 📅
+[5] Leaderboard 🏆
+[6] Save Game
+[7] Load Game
+[8] Tutorials
+[10] Gambling Games
+[11] Talk to NPCs
+[12] Redeem Code
+[13] Manage Pets 🐾
+[0] Exit
 """)
         choice = input("Select option: ")
         if choice == "1":
@@ -806,22 +813,176 @@ def main_menu():
         elif choice == "2":
             shop()
         elif choice == "3":
-            save_menu()
+            pet_shop()
         elif choice == "4":
-            load_menu()
+            check_daily_challenges()
         elif choice == "5":
-            tutorials()
+            show_leaderboard()
         elif choice == "6":
-            gambling_menu()
+            save_menu()
         elif choice == "7":
-            talk_to_npcs()
+            load_menu()
         elif choice == "8":
+            tutorials()
+        elif choice == "10":
+            gambling_menu()
+        elif choice == "11":
+            talk_to_npcs()
+        elif choice == "12":
             redeem_code()
-        elif choice == "9":
+        elif choice == "13":
+            equip_pet()
+        elif choice == "0":
             print("Thanks for playing!")
             break
         else:
             print("Invalid.")
+
+# Pet System
+PETS = {
+    "Cat 🐱": {"price": 50, "bonus": "luck", "value": 1.1, "description": "Increases luck in games"},
+    "Dog 🐕": {"price": 50, "bonus": "tickets", "value": 1.1, "description": "Extra tickets from games"},
+    "Bird 🦜": {"price": 75, "bonus": "card_power", "value": 1.1, "description": "Boosts TCG card power"},
+    "Dragon 🐉": {"price": 200, "bonus": "all", "value": 1.15, "description": "Enhances all stats"},
+    "Robot 🤖": {"price": 100, "bonus": "minigames", "value": 1.2, "description": "Better minigame performance"},
+    "Phoenix 🔥": {"price": 150, "bonus": "revival", "value": 1.0, "description": "One free retry per game"},
+    "Unicorn 🦄": {"price": 180, "bonus": "magic", "value": 1.2, "description": "Increased rare card chances"},
+    "Panda 🐼": {"price": 80, "bonus": "gambling", "value": 1.15, "description": "Better gambling odds"},
+    "Fox 🦊": {"price": 120, "bonus": "stealth", "value": 1.1, "description": "Peek opponent's cards occasionally"},
+    "Turtle 🐢": {"price": 60, "bonus": "defense", "value": 1.2, "description": "Reduces ticket losses"},
+    "Lion 🦁": {"price": 160, "bonus": "attack", "value": 1.25, "description": "Increases battle power"},
+    "Owl 🦉": {"price": 90, "bonus": "wisdom", "value": 1.1, "description": "Better prize choices"},
+    "Hamster 🐹": {"price": 40, "bonus": "savings", "value": 1.05, "description": "Shop discount"},
+    "Penguin 🐧": {"price": 70, "bonus": "ice", "value": 1.15, "description": "Better winter event rewards"},
+    "Butterfly 🦋": {"price": 85, "bonus": "transform", "value": 1.1, "description": "Change card type once per battle"}
+}
+
+# Global Leaderboard
+LEADERBOARD = {}
+
+# Daily Challenges
+DAILY_CHALLENGES = {
+    "Monday": {"task": "Win 5 minigames", "reward": 20},
+    "Tuesday": {"task": "Win 3 card battles", "reward": 25},
+    "Wednesday": {"task": "Earn 100 tickets", "reward": 30},
+    "Thursday": {"task": "Complete 2 missions", "reward": 25},
+    "Friday": {"task": "Win 2 gambling games", "reward": 20},
+    "Saturday": {"task": "Buy 2 items", "reward": 25},
+    "Sunday": {"task": "Win championship", "reward": 50}
+}
+
+# Initialize additional player attributes
+def init_player_attributes():
+    if "pets" not in player:
+        player["pets"] = []
+    if "active_pet" not in player:
+        player["active_pet"] = None
+    if "daily_challenges" not in player:
+        player["daily_challenges"] = {}
+    
+    if "last_daily_reward" not in player:
+        player["last_daily_reward"] = None
+
+def check_daily_reward():
+    from datetime import datetime
+    today = datetime.now().date()
+    if player["last_daily_reward"] is None or datetime.strptime(player["last_daily_reward"], "%Y-%m-%d").date() < today:
+        player["tickets"] += 10
+        player["last_daily_reward"] = today.strftime("%Y-%m-%d")
+        print(Fore.GREEN + "🎁 Daily Reward: +10 tickets!")
+
+def pet_shop():
+    clear()
+    print(Fore.CYAN + "🐾 Pet Shop")
+    print(f"Your tickets: {player['tickets']}")
+    
+    for pet, data in PETS.items():
+        if pet in player["pets"]:
+            status = "Owned"
+        else:
+            status = f"{data['price']} tickets"
+        print(f"\n{pet} - {status}")
+        print(f"Bonus: {data['bonus'].title()} +{(data['value']-1)*100}%")
+        print(f"Effect: {data['description']}")
+    
+    choice = input("\nBuy pet (or Enter to exit): ")
+    if choice in PETS and choice not in player["pets"]:
+        if player["tickets"] >= PETS[choice]["price"]:
+            player["tickets"] -= PETS[choice]["price"]
+            player["pets"].append(choice)
+            print(Fore.GREEN + f"You bought {choice}!")
+            equip_pet(choice)
+        else:
+            print(Fore.RED + "Not enough tickets!")
+
+def equip_pet(pet=None):
+    if pet is None:
+        clear()
+        print(Fore.CYAN + "🐾 Your Pets")
+        for i, pet in enumerate(player["pets"], 1):
+            status = "Active" if pet == player["active_pet"] else "Inactive"
+            print(f"[{i}] {pet} - {status}")
+        print("[0] Unequip pet")
+        
+        choice = input("Choose pet to equip: ")
+        if choice == "0":
+            player["active_pet"] = None
+            print("Pet unequipped!")
+            return
+        try:
+            pet = player["pets"][int(choice)-1]
+        except (ValueError, IndexError):
+            return
+            
+    if pet in player["pets"]:
+        player["active_pet"] = pet
+        print(f"Equipped {pet}!")
+
+def check_daily_challenges():
+    clear()
+    print(Fore.YELLOW + "📅 Daily Challenges")
+    
+    import time
+    current_day = time.strftime("%A")
+    challenge = DAILY_CHALLENGES[current_day]
+    
+    if current_day not in player["daily_challenges"]:
+        player["daily_challenges"][current_day] = False
+        
+    if player["daily_challenges"][current_day]:
+        print("✅ Today's challenge completed!")
+    else:
+        print(f"Task: {challenge['task']}")
+        print(f"Reward: {challenge['reward']} tickets")
+        
+    input("\nPress Enter to continue...")
+
+def update_leaderboard(score, game_type):
+    player_name = f"{player['equipped_costume']} {player['name']}"
+    if player_name not in LEADERBOARD:
+        LEADERBOARD[player_name] = {}
+    if game_type not in LEADERBOARD[player_name]:
+        LEADERBOARD[player_name][game_type] = 0
+    LEADERBOARD[player_name][game_type] = max(LEADERBOARD[player_name][game_type], score)
+
+def show_leaderboard():
+    clear()
+    print(Fore.CYAN + "🏆 Leaderboard")
+    
+    categories = ["Minigames", "Card Battles", "Championship"]
+    for category in categories:
+        print(f"\n=== {category} ===")
+        sorted_scores = sorted(
+            [(name, data.get(category, 0)) for name, data in LEADERBOARD.items()],
+            key=lambda x: x[1],
+            reverse=True
+        )
+        for i, (name, score) in enumerate(sorted_scores[:5], 1):
+            print(f"{i}. {name}: {score}")
+            
+    input("\nPress Enter to continue...")
+
+
 
 def start_game():
     clear()
@@ -1643,10 +1804,89 @@ Tips:
     """)
     input("\nPress Enter to continue...")
 
-def championship_mode():
-    # Championship is now free for all
-    if not pay_to_play(2):  # Reduced entry fee
+def soccer_championship():
+    if not pay_to_play(2):
         return
+    
+    clear()
+    print(Fore.GREEN + "⚽ Soccer Championship!")
+    
+    opponents = [
+        {"name": "Rookie Striker", "skill": 1, "reward": 10},
+        {"name": "Local Champion", "skill": 2, "reward": 15},
+        {"name": "Professional Player", "skill": 3, "reward": 20},
+        {"name": "World Cup Star", "skill": 4, "reward": 30}
+    ]
+    
+    score = 0
+    for opponent in opponents:
+        print(f"\nFacing {opponent['name']}...")
+        success = random.random() > (0.2 * opponent['skill'])
+        if success:
+            print(Fore.GREEN + "Goal! 🥅⚽")
+            score += 1
+            player["tickets"] += opponent["reward"]
+            print(f"+{opponent['reward']} tickets!")
+        else:
+            print(Fore.RED + "Miss! ❌")
+    
+    if score >= 3:
+        print(Fore.GREEN + "🏆 Soccer Championship Winner!")
+        award_achievement("Soccer Champion")
+
+def golf_championship():
+    if not pay_to_play(2):
+        return
+    
+    clear()
+    print(Fore.GREEN + "⛳ Golf Championship!")
+    
+    courses = [
+        {"name": "Beginner's Green", "par": 3, "reward": 10},
+        {"name": "Pro Circuit", "par": 4, "reward": 15},
+        {"name": "Master's Challenge", "par": 5, "reward": 20},
+        {"name": "Champion's Vista", "par": 4, "reward": 30}
+    ]
+    
+    total_score = 0
+    for course in courses:
+        print(f"\nPlaying {course['name']}...")
+        strokes = random.randint(course['par']-1, course['par']+2)
+        print(f"Strokes: {strokes} (Par: {course['par']})")
+        
+        if strokes <= course['par']:
+            reward = course['reward']
+            player["tickets"] += reward
+            print(Fore.GREEN + f"Great shot! +{reward} tickets!")
+        else:
+            print(Fore.RED + "Over par!")
+        total_score += strokes
+    
+    if total_score <= 18:
+        print(Fore.GREEN + "🏆 Golf Championship Winner!")
+        award_achievement("Golf Champion")
+
+def championship_mode():
+    if not pay_to_play(2):
+        return
+        
+    clear()
+    print(Fore.CYAN + "🏆 Championship Selection")
+    print("\n[1] Card Championship")
+    print("[2] Soccer Championship")
+    print("[3] Golf Championship")
+    print("[0] Back")
+    
+    choice = input("Choose championship: ")
+    
+    if choice == "1":
+        card_championship()
+    elif choice == "2":
+        soccer_championship()
+    elif choice == "3":
+        golf_championship()
+
+def card_championship():
 
     # Give access to all cards for championship
     temp_collection = player["card_collection"].copy()
@@ -1736,8 +1976,7 @@ def card_battle(opponent=None, championship=False):
         for _ in range(30):
             npc_deck.append(random.choice(list(CARD_DATABASE.keys())))
 
-    try:
-        player_hand = random.sample(player["current_deck"], min(3, len(player["current_deck"])))
+    player_hand = random.sample(player["card_collection"], min(3, len(player["card_collection"])))
     cpu_hand = random.sample(npc_deck, 3)
 
     player_score = 0
