@@ -4,7 +4,7 @@
 
 ---
 
-**Our games:**
+**Our free games:**
 
 * Legacies of our Legends
 * Z_Survival
@@ -23,13 +23,6 @@
 Clone it using git clone
 
 and then use cd ~/ChronoTale/
-
-after that just install necesary dependencies using pip install
-
-*currently you only need to install colorama and platform:*
-```bash
-pip install colorama
-```
 
 Lastly just launch it
 
