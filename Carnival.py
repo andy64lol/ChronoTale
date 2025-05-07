@@ -1192,29 +1192,115 @@ def treasure_hunt():
         player["tickets"] += tickets
         update_mission_progress("vip_games")
 
-# Card game data structures
+# ChronoSpace TCG - Card Database
 CARD_DATABASE = {
-    # Legendary Cards (Power 10-12)
+    # === ChronoSpace Mythic Cards ===
+    "Time Lord Chronos": {"power": 15, "emoji": "⌛", "rarity": "mythic", "rank": "SSS", "faction": "Time Keepers"},
+    "Void Emperor": {"power": 14, "emoji": "🌌", "rarity": "mythic", "rank": "SSS", "faction": "Void Walkers"},
+    "Space-Time Dragon": {"power": 14, "emoji": "🐉", "rarity": "mythic", "rank": "SSS", "faction": "Cosmic Beasts"},
+    "Reality Weaver": {"power": 13, "emoji": "🕸️", "rarity": "mythic", "rank": "SSS", "faction": "Dimensional Weavers"},
+    
+    # === ChronoSpace Legendary Cards ===
+    "Quantum Knight": {"power": 12, "emoji": "⚔️", "rarity": "legendary", "rank": "SS", "faction": "Time Keepers"},
+    "Void Stalker": {"power": 11, "emoji": "👁️", "rarity": "legendary", "rank": "SS", "faction": "Void Walkers"},
+    "Temporal Phoenix": {"power": 11, "emoji": "🦅", "rarity": "legendary", "rank": "SS", "faction": "Cosmic Beasts"},
+    "Space Architect": {"power": 10, "emoji": "🏗️", "rarity": "legendary", "rank": "S", "faction": "Dimensional Weavers"},
+    
+    # === ChronoSpace Epic Cards ===
+    "Time Mage": {"power": 9, "emoji": "🧙", "rarity": "epic", "rank": "A", "faction": "Time Keepers"},
+    "Void Hunter": {"power": 9, "emoji": "🏹", "rarity": "epic", "rank": "A", "faction": "Void Walkers"},
+    "Star Beast": {"power": 8, "emoji": "🦁", "rarity": "epic", "rank": "A", "faction": "Cosmic Beasts"},
+    "Reality Shaper": {"power": 8, "emoji": "🎨", "rarity": "epic", "rank": "A", "faction": "Dimensional Weavers"},
+    # === Mythic Cards (Power 13+) ===
+    "Eternal Leviathan": {"power": 14, "emoji": "🦈", "rarity": "mythic", "rank": "SSS"},
+    "Celestial Overlord": {"power": 13, "emoji": "🌠", "rarity": "mythic", "rank": "SSS"},
+    "Void Seraph": {"power": 13, "emoji": "🕊️", "rarity": "mythic", "rank": "SSS"},
+    "Dark Legionary Supreme Lord: Noctis, the Obsidian Fallen Eternal": {"power": 15, "emoji": "🛡️🌑", "rarity": "mythic", "rank": "SSS"},
+
+    # === Legendary Cards (Fantasy) ===
     "Supreme Dragon": {"power": 12, "emoji": "🐲", "rarity": "legendary", "rank": "SS"},
     "Ancient Phoenix": {"power": 11, "emoji": "🦅", "rarity": "legendary", "rank": "SS"},
     "Divine Angel": {"power": 11, "emoji": "👼", "rarity": "legendary", "rank": "SS"},
     "Cosmic Entity": {"power": 10, "emoji": "🌌", "rarity": "legendary", "rank": "S"},
     "Time Wizard": {"power": 10, "emoji": "⌛", "rarity": "legendary", "rank": "S"},
-    
-    # Epic Cards (Power 8-9)
+    "Abyss Warden": {"power": 10, "emoji": "🧿", "rarity": "legendary", "rank": "S"},
+    "Chrono Beast": {"power": 11, "emoji": "⏳", "rarity": "legendary", "rank": "SS"},
+    "Saviour from Another World": {"power": 12, "emoji": "🌟🧝", "rarity": "legendary", "rank": "SS"},
+
+    # === Legendary Cards (Sci-fi) ===
+    "Quantum Core": {"power": 12, "emoji": "⚛️", "rarity": "legendary", "rank": "SS"},
+    "AI Overmind": {"power": 11, "emoji": "🧠", "rarity": "legendary", "rank": "SS"},
+    "Warp Phantom": {"power": 10, "emoji": "👻", "rarity": "legendary", "rank": "S"},
+
+    # === Epic Cards (Fantasy) ===
     "Dragon Lord": {"power": 9, "emoji": "🐉", "rarity": "epic", "rank": "A"},
     "Storm Giant": {"power": 9, "emoji": "🌩️", "rarity": "epic", "rank": "A"},
     "War Golem": {"power": 8, "emoji": "🗿", "rarity": "epic", "rank": "A"},
     "Shadow Assassin": {"power": 8, "emoji": "🗡️", "rarity": "epic", "rank": "A"},
     "Demon Prince": {"power": 8, "emoji": "👿", "rarity": "epic", "rank": "A"},
-    
-    # Rare Cards (Power 6-7)
+    "Frost Lich": {"power": 9, "emoji": "❄️", "rarity": "epic", "rank": "A"},
+    "Volcanic Behemoth": {"power": 8, "emoji": "🌋", "rarity": "epic", "rank": "A"},
+
+    # === Epic Cards (Sci-fi) ===
+    "Mecha Warrior": {"power": 9, "emoji": "🤖", "rarity": "epic", "rank": "A"},
+    "Plasma Sniper": {"power": 8, "emoji": "🔫", "rarity": "epic", "rank": "A"},
+    "Cyber Witch": {"power": 8, "emoji": "💻🧙", "rarity": "epic", "rank": "A"},
+    "Gravity Bender": {"power": 9, "emoji": "🌌➡️🌍", "rarity": "epic", "rank": "A"},
+
+    # === Rare Cards (Fantasy) ===
     "Battle Mage": {"power": 7, "emoji": "🔮", "rarity": "rare", "rank": "B"},
     "Holy Knight": {"power": 7, "emoji": "⚔️", "rarity": "rare", "rank": "B"},
     "Forest Ranger": {"power": 6, "emoji": "🏹", "rarity": "rare", "rank": "B"},
     "Mystic Healer": {"power": 6, "emoji": "💚", "rarity": "rare", "rank": "B"},
-    "Fire Wizard": {"power": 6, "emoji": "🔥", "rarity": "rare", "rank": "B"}
+    "Fire Wizard": {"power": 6, "emoji": "🔥", "rarity": "rare", "rank": "B"},
+    "Ice Archer": {"power": 7, "emoji": "❄️🏹", "rarity": "rare", "rank": "B"},
+    "Sand Guardian": {"power": 6, "emoji": "🏜️", "rarity": "rare", "rank": "B"},
+
+    # === Rare Cards (Sci-fi) ===
+    "Drone Swarm": {"power": 7, "emoji": "🛸", "rarity": "rare", "rank": "B"},
+    "Nanobot Surgeon": {"power": 6, "emoji": "🔧", "rarity": "rare", "rank": "B"},
+    "Asteroid Miner": {"power": 6, "emoji": "⛏️", "rarity": "rare", "rank": "B"},
+
+    # === Common Cards (Fantasy) ===
+    "Sword Apprentice": {"power": 5, "emoji": "🗡️", "rarity": "common", "rank": "C"},
+    "Apprentice Mage": {"power": 4, "emoji": "🧙", "rarity": "common", "rank": "C"},
+    "Forest Wolf": {"power": 4, "emoji": "🐺", "rarity": "common", "rank": "C"},
+    "Goblin Thief": {"power": 3, "emoji": "🪙", "rarity": "common", "rank": "D"},
+    "Skeleton Warrior": {"power": 2, "emoji": "💀", "rarity": "common", "rank": "D"},
+    "Village Archer": {"power": 2, "emoji": "🏹", "rarity": "common", "rank": "D"},
+    "Tiny Slime": {"power": 1, "emoji": "🟢", "rarity": "common", "rank": "E"},
+    "Cave Bat": {"power": 1, "emoji": "🦇", "rarity": "common", "rank": "E"},
+
+    # === Common Cards (Sci-fi) ===
+    "Service Droid": {"power": 5, "emoji": "🛠️", "rarity": "common", "rank": "C"},
+    "Holo Soldier": {"power": 4, "emoji": "📡", "rarity": "common", "rank": "C"},
+    "Space Rat": {"power": 3, "emoji": "🐀", "rarity": "common", "rank": "D"},
+    "Security Drone": {"power": 2, "emoji": "🚨", "rarity": "common", "rank": "D"},
+    "Circuit Bug": {"power": 1, "emoji": "🐞", "rarity": "common", "rank": "E"},
+
+    # === Real Life Cards ===
+    "Firefighter": {"power": 5, "emoji": "🚒", "rarity": "common", "rank": "C"},
+    "Police Officer": {"power": 5, "emoji": "👮", "rarity": "common", "rank": "C"},
+    "Chef": {"power": 4, "emoji": "👨‍🍳", "rarity": "common", "rank": "C"},
+    "Doctor": {"power": 6, "emoji": "🩺", "rarity": "rare", "rank": "B"},
+    "Scientist": {"power": 7, "emoji": "🔬", "rarity": "rare", "rank": "B"},
+    "Athlete": {"power": 6, "emoji": "🏃", "rarity": "rare", "rank": "B"},
+    "Delivery Driver": {"power": 3, "emoji": "🚚", "rarity": "common", "rank": "D"},
+    "Construction Worker": {"power": 4, "emoji": "👷", "rarity": "common", "rank": "C"},
+
+    # === Z Survival Cards ===
+    "Zombie Brute": {"power": 6, "emoji": "🧟", "rarity": "rare", "rank": "B"},
+    "Apocalypse Survivor": {"power": 7, "emoji": "🪓", "rarity": "rare", "rank": "B"},
+    "Radioactive Ghoul": {"power": 8, "emoji": "☢️", "rarity": "epic", "rank": "A"},
+    "Barricade Builder": {"power": 4, "emoji": "🧱", "rarity": "common", "rank": "C"},
+
+    # === Liminal Spaces Cards ===
+    "Backrooms Wanderer": {"power": 5, "emoji": "🚪", "rarity": "common", "rank": "C"},
+    "Threshold Entity": {"power": 9, "emoji": "🌀", "rarity": "epic", "rank": "A"},
+    "Endless Hallway": {"power": 7, "emoji": "📏", "rarity": "rare", "rank": "B"},
+    "Neon Void": {"power": 11, "emoji": "🌃", "rarity": "legendary", "rank": "SS"}
 }
+
 
 # Generate remaining cards programmatically
 elements = ["Fire", "Water", "Earth", "Air", "Light", "Dark", "Nature", "Metal", "Ice", "Lightning"]
@@ -1343,7 +1429,37 @@ def build_deck():
 
 def show_card_tutorial():
     clear()
-    print(Fore.CYAN + "🎴 Card Battle Tutorial")
+    print(Fore.CYAN + "🌌 ChronoSpace TCG Tutorial")
+    print("""
+Welcome to ChronoSpace TCG - Where Time and Space Collide!
+
+Game Features:
+1. Four Unique Factions:
+   - Time Keepers: Masters of temporal magic
+   - Void Walkers: Controllers of space
+   - Cosmic Beasts: Powerful creatures of the cosmos
+   - Dimensional Weavers: Shapers of reality
+
+2. Card Ranks:
+   SSS - Mythic (Power 13-15)
+   SS  - Legendary (Power 11-12)
+   S   - Elite (Power 10)
+   A   - Epic (Power 8-9)
+   B   - Rare (Power 6-7)
+   C   - Uncommon (Power 4-5)
+   D   - Common (Power 2-3)
+
+3. Deck Building:
+   - 30-50 cards per deck
+   - Strategic faction combinations
+   - Unique card synergies
+
+4. Battle System:
+   - Draw 3 cards per round
+   - Faction bonuses apply
+   - Best of 3 rounds
+   - Special abilities activate based on combinations
+""")
     print("""
 Welcome to the Card Battle System! Here are the key rules:
 
@@ -1381,7 +1497,25 @@ Tips:
 
 def card_battle():
     if len(player["current_deck"]) < 30:
-        print(Fore.RED + "You need a deck of at least 30 cards to play!")
+        print(Fore.RED + "⚠️ You need a deck of at least 30 cards to play ChronoSpace TCG!")
+        print(Fore.YELLOW + "Would you like to see the tutorial? (y/n)")
+        if input().lower() == 'y':
+            show_card_tutorial()
+        return
+
+    clear()
+    print(Fore.CYAN + "🌌 Welcome to ChronoSpace TCG!")
+    print(Fore.YELLOW + "\nChoose your opponent:")
+    
+    npcs = {
+        "Apprentice Time Keeper": {"difficulty": 1, "deck_size": 30, "faction": "Time Keepers"},
+        "Void Walker Initiate": {"difficulty": 2, "deck_size": 35, "faction": "Void Walkers"},
+        "Beast Master": {"difficulty": 3, "deck_size": 40, "faction": "Cosmic Beasts"},
+        "Reality Architect": {"difficulty": 4, "deck_size": 45, "faction": "Dimensional Weavers"}
+    }
+    
+    for i, (npc, data) in enumerate(npcs.items(), 1):
+        print(f"[{i}] {npc} ({data['faction']})")
         print(Fore.YELLOW + "Type 'tutorial' to learn the rules, or press Enter to exit.")
         if input().lower() == 'tutorial':
             show_card_tutorial()
