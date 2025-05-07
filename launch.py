@@ -139,7 +139,8 @@ def games_menu(data):
 def shop_menu(data):
     """Display token shop"""
     purchasable_games = [
-        {"name": "Shipwrecked", "file": "shipwrecked.py", "cost": 30}
+        {"name": "Shipwrecked", "file": "shipwrecked.py", "cost": 30},
+        {"name": "Carnival", "file": "Carnival.py", "cost": 30}
     ]
     
     while True:
