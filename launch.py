@@ -9,7 +9,7 @@ from colorama import init, Fore, Style
 init(autoreset=True)
 
 # Constants
-VERSION = "1.1.0"
+VERSION = "1.1.5"
 
 # Game data persistence
 def load_game_data():
