@@ -1,14 +1,86 @@
 import os
-import sys
 import time
 import json
 import random
 import colorama
-from colorama import Fore, Back, Style
-from typing import Dict, List, Tuple, Optional
+import glob
+from colorama import Fore, Style
 
 # Initialize colorama
 colorama.init(autoreset=True)
+
+# Modding system
+def load_mods():
+    """Load all available mods from the mods directory"""
+    mods_data = {
+        "locations": {},
+        "items": {},
+        "recipes": {},
+        "enemies": {},
+        "events": {}
+    }
+    
+    # Get all mod directories
+    mod_dirs = [d for d in glob.glob("mods/*/") if os.path.isdir(d)]
+    
+    for mod_dir in mod_dirs:
+        mod_info_path = os.path.join(mod_dir, "mod_info.json")
+        
+        # Skip if mod_info.json doesn't exist
+        if not os.path.exists(mod_info_path):
+            continue
+            
+        try:
+            # Load mod info
+            with open(mod_info_path, 'r') as f:
+                mod_info = json.load(f)
+                
+            print(f"{Fore.GREEN}Loading mod: {mod_info.get('name', 'Unknown')}{Style.RESET_ALL}")
+            
+            # Load locations
+            locations_path = os.path.join(mod_dir, "locations.json")
+            if os.path.exists(locations_path):
+                with open(locations_path, 'r') as f:
+                    locations_data = json.load(f)
+                    if "new_locations" in locations_data:
+                        mods_data["locations"].update(locations_data["new_locations"])
+            
+            # Load items
+            items_path = os.path.join(mod_dir, "items.json")
+            if os.path.exists(items_path):
+                with open(items_path, 'r') as f:
+                    items_data = json.load(f)
+                    if "new_items" in items_data:
+                        mods_data["items"].update(items_data["new_items"])
+            
+            # Load recipes
+            recipes_path = os.path.join(mod_dir, "recipes.json")
+            if os.path.exists(recipes_path):
+                with open(recipes_path, 'r') as f:
+                    recipes_data = json.load(f)
+                    if "new_recipes" in recipes_data:
+                        mods_data["recipes"].update(recipes_data["new_recipes"])
+                        
+            # Load enemies
+            enemies_path = os.path.join(mod_dir, "enemies.json")
+            if os.path.exists(enemies_path):
+                with open(enemies_path, 'r') as f:
+                    enemies_data = json.load(f)
+                    if "new_enemies" in enemies_data:
+                        mods_data["enemies"].update(enemies_data["new_enemies"])
+                        
+            # Load events
+            events_path = os.path.join(mod_dir, "events.json")
+            if os.path.exists(events_path):
+                with open(events_path, 'r') as f:
+                    events_data = json.load(f)
+                    if "new_events" in events_data:
+                        mods_data["events"].update(events_data["new_events"])
+                
+        except Exception as e:
+            print(f"{Fore.RED}Error loading mod from {mod_dir}: {str(e)}{Style.RESET_ALL}")
+            
+    return mods_data
 
 class GameState:
     def __init__(self) -> None:
@@ -26,10 +98,27 @@ class GameState:
         self.has_shelter = False
         self.raft_type = "None"  # None, Standard Raft, Improved Raft, Advanced Raft, Ultimate Raft
         self.has_fire = False
+        
+        # Stronghold attributes
+        self.stronghold_followers = 0
+        self.available_recruits = []
+        self.follower_tasks = {
+            "Gathering": 0,
+            "Hunting": 0,
+            "Defense": 0,
+            "Building": 0
+        }
+        self.stronghold_upgrades = {
+            "walls": False,
+            "watchtower": False,
+            "farm": False,
+            "workshop": False
+        }
+        self.daily_food_production = 0
+        self.crafting_efficiency = 0.0
         self.fire_remaining_time = 0
         self.has_raft = False
         self.raft_progress = 0
-        self.raft_type = ""  # Will store "Standard", "Bamboo", "Ship Parts", or "Bamboo and Ship Parts"
         self.signal_fire_progress = 0
         self.has_signal_fire = False
         self.has_signal_mirror = False
@@ -38,6 +127,16 @@ class GameState:
         self.message = ""
         self.last_enemy_encounter = ""
         self.defeated_enemies = []
+        self.loaded_mods = []  # Track loaded mods
+        self.mods_enabled = False  # Mods disabled by default
+        
+        # Quest system
+        self.active_quests = {}
+        self.completed_quests = {}
+        self.failed_quests = {}
+        self.story_flags = {}
+        self.story_path = "survivor"  # Default story path: survivor, explorer, or conqueror
+        self.quest_log = []
         
         # Weather system
         self.weather = "Clear"  # Clear, Rainy, Stormy, Foggy, Hot
@@ -107,8 +206,11 @@ class GameState:
         
         # Available locations and their unlock status
         self.locations = {
+            # Starting locations
             "Beach": True,
             "Forest": True,
+            
+            # Original locations
             "Mountain": False,
             "Cave": False,
             "Waterfall": False,
@@ -131,7 +233,25 @@ class GameState:
             "Quicksand Pit": False,
             "Hidden Cove": False,
             "Island Summit": False,
-            "Abandoned Mine": False
+            "Abandoned Mine": False,
+            
+            # New locations
+            "Tidal Pools": False,
+            "Coconut Grove": False,
+            "Volcanic Hot Springs": False,
+            "Ancient Temple": False,
+            "Mysterious Lighthouse": False,
+            "Coral Gardens": False,
+            "Native Village": False,
+            "Dense Rainforest": False,
+            "Rocky Cliffs": False,
+            "Whale Graveyard": False,
+            "Lava Tubes": False,
+            "Misty Peaks": False,
+            "Abandoned Research Station": False,
+            "Haunted Shipwreck": False,
+            "Sunken Vessel": False,
+            "Stronghold": False,
         }
         
         # Island map with connections (will be randomized before saving)
@@ -218,6 +338,495 @@ class GameState:
             "Raft": {"Wood": 15, "Vine": 8},
             "Signal Fire": {"Wood": 10, "Leaf": 5},
             "Bamboo Raft": {"Bamboo": 10, "Vine": 5},
+            "Strong Shelter": {"Wood": 8, "Stone": 5, "Vine": 4, "Leaf": 15},
+            "Stronghold": {"Wood": 30, "Stone": 20, "Metal": 10, "Vine": 15},
+            
+            # Special items
+            "Signal Mirror": {"Metal": 1, "Sand": 2},
+            "Obsidian Spear": {"Wood": 1, "Obsidian": 2, "Vine": 2},
+            "Metal Tools": {"Metal": 3, "Wood": 2, "Stone": 1}
+        }
+
+        # Random events
+        self.events = [
+            {"name": "Storm", "description": "A violent storm hits the island. ", "effect": self.event_storm},
+            {"name": "Wild Animal", "description": "A wild animal approaches your camp. ", "effect": self.event_wild_animal},
+            {"name": "Food Spoilage", "description": "Some of your food has spoiled. ", "effect": self.event_food_spoilage},
+            {"name": "Ship Sighting", "description": "You see a ship in the distance! ", "effect": self.event_ship_sighting},
+            {"name": "Illness", "description": "You don't feel well. You might be getting sick. ", "effect": self.event_illness},
+            {"name": "Good Weather", "description": "The weather is perfect today. ", "effect": self.event_good_weather},
+            {"name": "Discovery", "description": "You found something interesting! ", "effect": self.event_discovery}
+        ]
+        
+    def add_quest(self, quest_id, title, description, objectives, rewards=None, story_path=None):
+        """Add a new quest to the active quests list
+        
+        Args:
+            quest_id (str): Unique identifier for the quest
+            title (str): Quest title
+            description (str): Quest description and background
+            objectives (dict): Dictionary of objectives with their completion status
+            rewards (dict, optional): Rewards for completing the quest
+            story_path (str, optional): Story path this quest belongs to
+        """
+        if quest_id in self.active_quests or quest_id in self.completed_quests:
+            return False  # Quest already exists
+            
+        # Create the quest structure
+        quest = {
+            "id": quest_id,
+            "title": title,
+            "description": description,
+            "objectives": objectives,
+            "progress": 0,  # Percentage of completion
+            "rewards": rewards or {},
+            "story_path": story_path or "any",
+            "date_started": self.days_survived,
+            "location_started": self.current_location
+        }
+        
+        # Add to active quests
+        self.active_quests[quest_id] = quest
+        
+        # Add to quest log
+        log_entry = f"Day {self.days_survived}: Started quest '{title}'"
+        self.quest_log.append(log_entry)
+        
+        return True
+        
+    def update_quest_objective(self, quest_id, objective_id, value=True):
+        """Update a quest objective status
+        
+        Args:
+            quest_id (str): The quest identifier
+            objective_id (str): The objective identifier
+            value: The value to set (True for completion, or numeric progress for float objectives)
+        
+        Returns:
+            bool: True if quest was completed as a result, False otherwise
+        """
+        if quest_id not in self.active_quests:
+            return False
+            
+        quest = self.active_quests[quest_id]
+        if objective_id not in quest["objectives"]:
+            return False
+            
+        # Update the objective
+        quest["objectives"][objective_id] = value
+        
+        # Check if all objectives are complete
+        all_complete = True
+        for obj_value in quest["objectives"].values():
+            if isinstance(obj_value, bool) and not obj_value:
+                all_complete = False
+                break
+            elif isinstance(obj_value, (int, float)) and obj_value < 1.0:
+                all_complete = False
+                break
+                
+        # Calculate progress percentage
+        total_objectives = len(quest["objectives"])
+        completed = sum(1 for v in quest["objectives"].values() if v is True or v >= 1.0)
+        quest["progress"] = int((completed / total_objectives) * 100)
+        
+        # If all objectives are complete, complete the quest
+        if all_complete:
+            self.complete_quest(quest_id)
+            return True
+            
+        return False
+        
+    def complete_quest(self, quest_id):
+        """Mark a quest as completed and give rewards
+        
+        Args:
+            quest_id (str): The quest identifier
+        """
+        if quest_id not in self.active_quests:
+            return False
+            
+        quest = self.active_quests[quest_id]
+        quest["date_completed"] = self.days_survived
+        
+        # Add to completed quests
+        self.completed_quests[quest_id] = quest
+        
+        # Remove from active quests
+        del self.active_quests[quest_id]
+        
+        # Add to quest log
+        log_entry = f"Day {self.days_survived}: Completed quest '{quest['title']}'"
+        self.quest_log.append(log_entry)
+        
+        # Apply rewards
+        rewards_text = []
+        for reward_type, reward_value in quest["rewards"].items():
+            if reward_type == "items":
+                for item, amount in reward_value.items():
+                    if item in self.inventory:
+                        self.inventory[item] += amount
+                        rewards_text.append(f"{amount} {item}")
+            elif reward_type == "story_flag":
+                self.story_flags[reward_value] = True
+            elif reward_type == "story_path":
+                self.story_path = reward_value
+            elif reward_type == "location":
+                self.locations[reward_value] = True
+                rewards_text.append(f"Discovered {reward_value}")
+        
+        # Return a message about quest completion
+        if rewards_text:
+            return f"Quest completed: {quest['title']}! Rewards: {', '.join(rewards_text)}"
+        else:
+            return f"Quest completed: {quest['title']}!"
+        
+    def fail_quest(self, quest_id, reason):
+        """Mark a quest as failed
+        
+        Args:
+            quest_id (str): The quest identifier
+            reason (str): The reason for failure
+        """
+        if quest_id not in self.active_quests:
+            return False
+            
+        quest = self.active_quests[quest_id]
+        quest["date_failed"] = self.days_survived
+        quest["failure_reason"] = reason
+        
+        # Add to failed quests
+        self.failed_quests[quest_id] = quest
+        
+        # Remove from active quests
+        del self.active_quests[quest_id]
+        
+        # Add to quest log
+        log_entry = f"Day {self.days_survived}: Failed quest '{quest['title']}' - {reason}"
+        self.quest_log.append(log_entry)
+        
+        return f"Quest failed: {quest['title']} - {reason}"
+    
+    def get_available_quests(self):
+        """Check for new quests that should be triggered based on current game state"""
+        # This will be implemented with specific quest triggers
+        new_quests = []
+        
+        # Check story flags and conditions for new quests
+        if self.days_survived == 3 and "started_main_quest" not in self.story_flags:
+            # Start the island mystery main quest line after 3 days
+            self.story_flags["started_main_quest"] = True
+            self.add_quest(
+                "island_mystery", 
+                "The Island's Secret", 
+                "While exploring, you've noticed unusual structures and artifacts. This island seems to hide ancient secrets waiting to be uncovered.",
+                {"discover_ruins": False, "find_artifact": False, "translate_markings": False},
+                {"items": {"Ancient Artifact": 1}, "story_flag": "ruins_discovered"}
+            )
+            new_quests.append("The Island's Secret")
+            
+        # Pirate storyline
+        if "Pirate Camp" in self.explored_locations and "pirate_threat" not in self.story_flags:
+            self.story_flags["pirate_threat"] = True
+            self.add_quest(
+                "pirate_threat",
+                "Pirate Problem",
+                "You've discovered pirates are active on the island. They're looking for something valuable and won't let anyone get in their way.",
+                {"spy_on_pirates": False, "find_treasure_map": False, "locate_treasure": False},
+                {"items": {"Pirate Treasure": 1}, "story_flag": "pirates_defeated"}
+            )
+            new_quests.append("Pirate Problem")
+            
+        # Conqueror storyline - unlocked after defeating pirates
+        if "pirates_defeated" in self.story_flags and "conqueror_path" not in self.story_flags:
+            self.story_flags["conqueror_path"] = True
+            self.add_quest(
+                "island_ruler",
+                "Island Ruler",
+                "With the pirates defeated, you could establish yourself as the ruler of this island. Control the resources and any who may arrive here.",
+                {"build_stronghold": False, "collect_resources": False, "defeat_challengers": False},
+                {"story_flag": "pirate_king", "story_path": "conqueror"}
+            )
+            new_quests.append("Island Ruler")
+            
+        # Ancient temple quest - more explorer/adventure oriented path
+        if "Ancient Ruins" in self.explored_locations and "temple_discovery" not in self.story_flags:
+            self.story_flags["temple_discovery"] = True
+            self.add_quest(
+                "temple_mystery",
+                "Temple of the Ancients",
+                "The ancient ruins contain references to a hidden temple deep in the island. Discovering it could reveal the island's history.",
+                {"find_temple_clues": False, "locate_temple": False, "solve_temple_puzzle": False},
+                {"items": {"Crystal": 3, "Obsidian": 2}, "story_flag": "temple_secrets", "location": "Ancient Temple"}
+            )
+            new_quests.append("Temple of the Ancients")
+        
+        # Rescue/escape quest line - standard survival path
+        if self.days_survived >= 5 and "escape_plan" not in self.story_flags:
+            self.story_flags["escape_plan"] = True
+            self.add_quest(
+                "island_escape",
+                "Escape Plan",
+                "You need to find a way off this island. Building a seaworthy raft or signaling for rescue are your best options.",
+                {"build_raft": False, "create_signal": False, "prepare_supplies": False},
+                {"story_flag": "ready_for_escape", "story_path": "survivor"}
+            )
+            new_quests.append("Escape Plan")
+        
+        return new_quests
+        
+    def check_story_progress(self):
+        """Check for story progression based on completed quests and make world changes"""
+        story_updates = []
+        
+        # Handle main storyline progression
+        if "ruins_discovered" in self.story_flags and "temple_secrets" in self.story_flags and "island_mystery_resolved" not in self.story_flags:
+            self.story_flags["island_mystery_resolved"] = True
+            story_updates.append("You've learned the island was once home to an advanced ancient civilization.")
+            
+            # Add a follow-up quest
+            self.add_quest(
+                "ancient_technology",
+                "Lost Technology",
+                "The ancients left behind powerful technology. Finding it could completely change your situation.",
+                {"find_power_source": False, "activate_device": False, "master_technology": False},
+                {"story_flag": "ancient_tech_mastered", "story_path": "explorer"}
+            )
+            story_updates.append("New quest available: Lost Technology")
+            
+        # Handle pirate storyline
+        if "pirates_defeated" in self.story_flags and "pirate_aftermath" not in self.story_flags:
+            self.story_flags["pirate_aftermath"] = True
+            story_updates.append("With the pirates gone, the island feels safer. You've found their hidden stash of supplies.")
+            
+            # Add some rewards
+            self.inventory["Metal"] += 5
+            self.inventory["Rope"] += 3
+            self.inventory["Medicinal Potion"] += 2
+            
+        # Check for story path specialization
+        path_changed = False
+        if "ancient_tech_mastered" in self.story_flags and self.story_path != "explorer":
+            self.story_path = "explorer"
+            story_updates.append("You've embraced the path of an explorer, mastering the secrets of the island.")
+            path_changed = True
+            
+        if "pirate_king" in self.story_flags and self.story_path != "conqueror":
+            self.story_path = "conqueror"
+            story_updates.append("You've become a leader on the island, commanding respect even from the pirates.")
+            path_changed = True
+            
+        if "ready_for_escape" in self.story_flags and self.story_path == "survivor" and not path_changed:
+            story_updates.append("You remain focused on survival and escape, taking a practical approach to island life.")
+            
+        return story_updates
+    
+    def integrate_mods(self):
+        """Load and integrate all available mods"""
+        # Check if mods are enabled
+        if not self.mods_enabled:
+            print(f"{Fore.YELLOW}Mods are currently disabled. Use '/mods enable' to enable them.{Style.RESET_ALL}")
+            return
+            
+        # Load mods from files
+        mods_data = load_mods()
+        
+        # If no mods found, return early
+        if not any(mods_data.values()):
+            return
+            
+        print(f"{Fore.GREEN}Integrating mods into game...{Style.RESET_ALL}")
+        
+        # Add new locations from mods
+        for location_name, location_data in mods_data["locations"].items():
+            # Add to locations dictionary if not already present
+            if location_name not in self.locations:
+                self.locations[location_name] = False
+                print(f"{Fore.BLUE}Added new location: {location_name}{Style.RESET_ALL}")
+                
+            # Add location connections to island map
+            if "connections" in location_data:
+                connections = location_data["connections"]
+                if location_name not in self.island_map:
+                    self.island_map[location_name] = []
+                
+                # Add the connections
+                for connection in connections:
+                    if connection in self.locations:
+                        if connection not in self.island_map[location_name]:
+                            self.island_map[location_name].append(connection)
+                        
+                        # Add reverse connection if it exists
+                        if connection in self.island_map:
+                            if location_name not in self.island_map[connection]:
+                                self.island_map[connection].append(location_name)
+                
+            # Add location enemies
+            if "enemies" in location_data:
+                enemies = location_data["enemies"]
+                if location_name not in self.location_enemies:
+                    self.location_enemies[location_name] = []
+                    
+                # Add enemies to location
+                for enemy in enemies:
+                    if enemy not in self.location_enemies[location_name]:
+                        self.location_enemies[location_name].append(enemy)
+        
+        # Add new items to inventory
+        for item_name in mods_data["items"]:
+            if item_name not in self.inventory:
+                self.inventory[item_name] = 0
+                print(f"{Fore.BLUE}Added new item: {item_name}{Style.RESET_ALL}")
+        
+        # Add new recipes
+        for recipe_name, recipe_ingredients in mods_data["recipes"].items():
+            if recipe_name not in self.crafting_recipes:
+                self.crafting_recipes[recipe_name] = recipe_ingredients
+                print(f"{Fore.BLUE}Added new recipe: {recipe_name}{Style.RESET_ALL}")
+                
+        # Add mods to loaded mods list
+        for mod_dir in glob.glob("mods/*/"):
+            mod_name = os.path.basename(os.path.dirname(mod_dir))
+            if mod_name not in self.loaded_mods:
+                self.loaded_mods.append(mod_name)
+                
+        print(f"{Fore.GREEN}Mods integration complete!{Style.RESET_ALL}")
+        
+        # Available locations and their unlock status
+        self.locations = {
+            # Starting locations
+            "Beach": True,
+            "Forest": True,
+            
+            # Original locations
+            "Mountain": False,
+            "Cave": False,
+            "Waterfall": False,
+            "Abandoned Hut": False,
+            "Shipwreck": False,
+            "Shelter": False,
+            "Jungle": False,
+            "Cliff Side": False,
+            "Ancient Ruins": False,
+            "Swamp": False,
+            "Coral Reef": False,
+            "Volcanic Area": False,
+            "Hidden Valley": False,
+            "Lagoon": False,
+            "Underground Lake": False,
+            "Pirate Camp": False,
+            "Bamboo Grove": False,
+            "Crystal Cave": False,
+            "Mangrove Shore": False,
+            "Quicksand Pit": False,
+            "Hidden Cove": False,
+            "Island Summit": False,
+            "Abandoned Mine": False,
+            
+            # New locations
+            "Tidal Pools": False,
+            "Coconut Grove": False,
+            "Volcanic Hot Springs": False,
+            "Ancient Temple": False,
+            "Mysterious Lighthouse": False,
+            "Coral Gardens": False,
+            "Native Village": False,
+            "Dense Rainforest": False,
+            "Rocky Cliffs": False,
+            "Whale Graveyard": False,
+            "Lava Tubes": False,
+            "Stronghold": False,
+            "Misty Peaks": False,
+            "Abandoned Research Station": False,
+            "Haunted Shipwreck": False,
+            "Sunken Vessel": False
+        }
+        
+        # Island map with connections (will be randomized before saving)
+        self.island_map = {
+            # Default starting locations
+            "Beach": ["Forest", "Coral Reef", "Shipwreck", "Mangrove Shore"],
+            "Forest": ["Beach", "Mountain", "Waterfall", "Jungle", "Bamboo Grove"],
+            "Mountain": ["Forest", "Cave", "Cliff Side", "Volcanic Area", "Island Summit"],
+            "Cave": ["Mountain", "Underground Lake", "Abandoned Mine", "Crystal Cave"],
+            "Waterfall": ["Forest", "Abandoned Hut", "Lagoon"],
+            "Abandoned Hut": ["Waterfall", "Pirate Camp"],
+            "Shipwreck": ["Beach", "Hidden Cove"],
+            "Jungle": ["Forest", "Swamp", "Ancient Ruins", "Hidden Valley", "Bamboo Grove"],
+            "Cliff Side": ["Mountain", "Island Summit"],
+            "Ancient Ruins": ["Jungle", "Hidden Valley", "Pirate Camp"],
+            "Swamp": ["Jungle", "Quicksand Pit", "Mangrove Shore"],
+            "Coral Reef": ["Beach", "Lagoon", "Hidden Cove"],
+            "Volcanic Area": ["Mountain", "Island Summit"],
+            "Hidden Valley": ["Jungle", "Ancient Ruins"],
+            "Lagoon": ["Waterfall", "Coral Reef"],
+            "Underground Lake": ["Cave", "Crystal Cave"],
+            "Pirate Camp": ["Abandoned Hut", "Ancient Ruins"],
+            "Bamboo Grove": ["Forest", "Jungle"],
+            "Crystal Cave": ["Cave", "Underground Lake"],
+            "Mangrove Shore": ["Beach", "Swamp"],
+            "Quicksand Pit": ["Swamp"],
+            "Hidden Cove": ["Shipwreck", "Coral Reef"],
+            "Island Summit": ["Mountain", "Cliff Side", "Volcanic Area"],
+            "Abandoned Mine": ["Cave"]
+            # Shelter is not part of the map as it's a craftable location
+        }
+        
+        # Enemies that can be encountered in each location
+        self.location_enemies = {
+            "Beach": ["Crab", "Seagull"],
+            "Forest": ["Wild Boar", "Snake"],
+            "Mountain": ["Wolf", "Eagle"],
+            "Cave": ["Bear", "Bat Colony"],
+            "Waterfall": ["Snake", "Crocodile"],
+            "Abandoned Hut": ["Pirate Scout", "Rat Swarm"],
+            "Shipwreck": ["Pirate", "Shark"],
+            "Jungle": ["Jaguar", "Monkey Tribe", "Wild Boar"],
+            "Cliff Side": ["Eagle", "Wolf"],
+            "Ancient Ruins": ["Pirate Captain", "Snake"],
+            "Swamp": ["Crocodile", "Poisonous Frog"],
+            "Coral Reef": ["Shark", "Jellyfish"],
+            "Volcanic Area": ["Wild Boar", "Fire Snake"],
+            "Hidden Valley": ["Wolf Pack", "Wild Boar"],
+            "Lagoon": ["Jellyfish", "Crab"],
+            "Underground Lake": ["Bat Colony", "Snake"],
+            "Pirate Camp": ["Pirate", "Pirate Captain", "Pirate Scout"],
+            "Bamboo Grove": ["Monkey Tribe", "Wild Boar"],
+            "Crystal Cave": ["Snake", "Bat Colony"],
+            "Mangrove Shore": ["Crocodile", "Crab"], 
+            "Quicksand Pit": ["Snake", "Poisonous Frog"],
+            "Hidden Cove": ["Pirate", "Shark"],
+            "Island Summit": ["Eagle", "Wolf Pack"],
+            "Abandoned Mine": ["Rat Swarm", "Snake"]
+        }
+
+        # Crafting recipes
+        self.crafting_recipes = {
+            # Basic tools
+            "Spear": {"Wood": 1, "Stone": 1, "Vine": 1},
+            "Fishing Rod": {"Wood": 2, "Vine": 2},
+            "Water Container": {"Coconut": 1},
+            "Torch": {"Wood": 1, "Leaf": 3},
+            "Bandage": {"Leaf": 3},
+            "Map": {"Wood": 1, "Berry": 2},  # Use berry juice as ink
+            
+            # Advanced tools
+            "Axe": {"Wood": 1, "Stone": 2, "Vine": 1},
+            "Pickaxe": {"Wood": 1, "Stone": 3, "Vine": 1},
+            "Bow and Arrow": {"Wood": 2, "Vine": 3, "Leaf": 2},
+            "Slingshot": {"Wood": 1, "Vine": 2},
+            "Rope": {"Vine": 4},
+            "Waterskin": {"Leaf": 5, "Vine": 2},
+            "Compass": {"Metal": 2, "Stone": 1, "Sand": 1},
+            "Medicinal Potion": {"Leaf": 3, "Mushroom": 2, "Berry": 1},
+            
+            # Constructions
+            "Shelter": {"Wood": 5, "Leaf": 10, "Vine": 3},
+            "Fire": {"Wood": 3, "Stone": 2},
+            "Raft": {"Wood": 15, "Vine": 8},
+            "Signal Fire": {"Wood": 10, "Leaf": 5},
+            "Bamboo Raft": {"Bamboo": 10, "Vine": 5},
+            "Stronghold": {"Wood": 30, "Stone": 20, "Metal": 10, "Vine": 15},
             "Strong Shelter": {"Wood": 8, "Stone": 5, "Vine": 4, "Leaf": 15},
             
             # Special items
@@ -416,6 +1025,88 @@ class GameState:
             # Update weather
             self.update_weather()
             
+            # Stronghold resource generation (for conqueror path)
+            if self.locations.get("Stronghold", False) and self.locations["Stronghold"]:
+                # Initialize followers if not exists
+                if not hasattr(self, 'stronghold_followers'):
+                    self.stronghold_followers = 0
+                
+                # Generate resources at the start of each day
+                # Base resources
+                base_wood = 3
+                base_stone = 2
+                base_metal = 1
+                
+                # Initialize follower tasks if needed
+                if not hasattr(self, 'follower_tasks'):
+                    self.follower_tasks = {
+                        "Gathering": 0,
+                        "Hunting": 0,
+                        "Defense": 0,
+                        "Building": 0
+                    }
+                
+                # Extra resources from followers based on their assigned tasks
+                gathering_multiplier = 1.0 + (self.follower_tasks.get("Gathering", 0) * 0.2)
+                
+                # Calculate resources from followers
+                follower_wood = self.stronghold_followers * random.randint(1, 2) * gathering_multiplier
+                follower_stone = self.stronghold_followers * random.randint(0, 1) * gathering_multiplier
+                follower_metal = int(self.stronghold_followers * 0.5 * gathering_multiplier) if self.stronghold_followers > 0 else 0
+                
+                # Calculate total resources (rounded to integers)
+                wood_gained = int(base_wood + follower_wood + random.randint(0, 2))
+                stone_gained = int(base_stone + follower_stone + random.randint(0, 1))
+                metal_gained = int(base_metal + follower_metal)
+                
+                # Food from hunting followers
+                hunters = self.follower_tasks.get("Hunting", 0)
+                if hunters > 0:
+                    food_gained = hunters * random.randint(1, 3)
+                    self.inventory["Food"] += food_gained
+                
+                # Check for farm upgrade
+                if hasattr(self, 'stronghold_upgrades') and self.stronghold_upgrades.get("farm", False):
+                    farm_food = self.daily_food_production if hasattr(self, 'daily_food_production') else 3
+                    self.inventory["Food"] += farm_food
+                
+                # Add to inventory
+                self.inventory["Wood"] += wood_gained
+                self.inventory["Stone"] += stone_gained
+                self.inventory["Metal"] += metal_gained
+                
+                # Create message based on followers and resources gathered
+                food_message = ""
+                
+                # Add information about food if any was produced
+                hunters = self.follower_tasks.get("Hunting", 0)
+                if hunters > 0:
+                    food_gained = hunters * random.randint(1, 3)
+                    food_message = f" and {food_gained} food from hunting"
+                
+                # Add information about farm food
+                farm_food_message = ""
+                if hasattr(self, 'stronghold_upgrades') and self.stronghold_upgrades.get("farm", False):
+                    farm_food = self.daily_food_production if hasattr(self, 'daily_food_production') else 3
+                    farm_food_message = f" Your farm produced {farm_food} food."
+                
+                # Create the full message
+                if self.stronghold_followers > 0:
+                    stronghold_message = f"Your stronghold workers ({self.stronghold_followers} followers) have gathered {wood_gained} wood, {stone_gained} stone, and {metal_gained} metal{food_message} overnight.{farm_food_message}"
+                else:
+                    stronghold_message = f"Your stronghold has generated {wood_gained} wood, {stone_gained} stone, and {metal_gained} metal overnight.{farm_food_message}"
+                
+                # Set the message
+                if not hasattr(self, 'stronghold_message'):
+                    self.stronghold_message = stronghold_message
+                else:
+                    self.stronghold_message = stronghold_message
+                    
+                # Random chance to gain a new follower if on conqueror path
+                if self.story_path == "conqueror" and random.random() < 0.05:  # 5% chance per day
+                    self.stronghold_followers += 1
+                    self.stronghold_message += f" A new follower has joined your stronghold! (Total: {self.stronghold_followers})"
+            
             # Random events happen at the start of a new day
             self.message = self.trigger_random_event()
         
@@ -543,8 +1234,9 @@ class GameManager:
         self.save_file_template = "shipwrecked_save_{}.json"  # Template for save file names
         self.save_file = self.save_file_template.format(self.current_slot)  # Current save file
         self.map_file = "island_map.json"
+        self.mods_loaded = False  # Track if mods have been loaded
         
-        # Define the ASCII art for the game
+        # Define the ASCII art for the game title
         self.ascii_title = """
   ███████ ██   ██ ██ ██████  ██     ██ ██████  ███████  ██████ ██   ██ ███████ ██████  
   ██      ██   ██ ██ ██   ██ ██     ██ ██   ██ ██      ██      ██  ██  ██      ██   ██ 
@@ -553,198 +1245,65 @@ class GameManager:
   ███████ ██   ██ ██ ██       ███ ███  ██   ██ ███████  ██████ ██   ██ ███████ ██████  
 """
         
-        # ASCII art for enemies
+        # Simple text descriptors for enemies instead of ASCII art
         self.ascii_enemies = {
-            "Pirate": """
-        /|\\
-        _|_
-       / | \\
-        / \\
-       /   \\
-    """,
-            "Pirate Scout": """
-       \\|/
-        |
-       /|\\
-        / \\
-    """,
-            "Pirate Captain": """
-        <|>
-        _|_
-       / | \\
-      <  |  >
-        / \\
-       /   \\
-    """,
-            "Wolf": """
-       ^___^
-      / o o \\
-      \\  v  /
-       \\___/
-    """,
-            "Wolf Pack": """
-       ^___^    ^___^
-      / o o \\  / o o \\
-      \\  v  /  \\  v  /
-       \\___/    \\___/
-    """,
-            "Bear": """
-        ^__^
-       / oo \\
-      |  vv  |
-       \\____/
-    """,
-            "Snake": """
-       _____
-      / o o \\
-      \\_____/~~~
-    """,
-            "Fire Snake": """
-       _____
-      / ^ ^ \\
-      \\_____/~~~
-         🔥
-    """,
-            "Wild Boar": """
-        ^,,^
-       ( oo )
-       /''\\/
-    """,
-            "Crab": """
-      /\\___/\\
-      (> ~ <)
-      (>   <)
-    """,
-            "Seagull": """
-       /\\___/\\
-      (> v <)
-        ^ ^
-    """,
-            "Eagle": """
-        /\\
-       /  \\
-      <    >
-       \\__/
-    """,
-            "Bat Colony": """
-       ^   ^   ^
-      /|\\ /|\\ /|\\
-    """,
-            "Crocodile": """
-       _____,.,____
-      /____________>
-       
-    """,
-            "Rat Swarm": """
-      <:3 )~~~ <:3 )~~~
-      <:3 )~~~ <:3 )~~~
-    """,
-            "Shark": """
-          /\\       
-         /  \\      
-        /    \\     
-       <      >    
-        \\____/     
-    """,
-            "Jaguar": """
-       ^___^
-      / o o \\
-      \\  v  /
-       \\___/
-        :::
-    """,
-            "Monkey Tribe": """
-       ^   ^   ^
-      (o) (o) (o)
-       UUU UUU UUU
-    """,
-            "Poisonous Frog": """
-       _____
-      / o o \\
-     <   0   >
-      \\_____/
-    """,
-            "Jellyfish": """
-        .--.
-       /    \\
-       \\    /
-        `--´
-         ||
-         ||
-    """
+            "Pirate": "[Pirate: Armed and dangerous]",
+            "Pirate Scout": "[Pirate Scout: Quick and agile]",
+            "Pirate Captain": "[Pirate Captain: Heavily armed leader]",
+            "Wolf": "[Wolf: Sharp teeth and keen senses]",
+            "Wolf Pack": "[Wolf Pack: Multiple wolves hunting together]",
+            "Bear": "[Bear: Large and powerful]",
+            "Snake": "[Snake: Slithering predator]",
+            "Fire Snake": "[Fire Snake: Venomous with red markings]",
+            "Wild Boar": "[Wild Boar: Aggressive with tusks]",
+            "Crab": "[Crab: Hard shell with pincers]",
+            "Seagull": "[Seagull: Flying coastal bird]",
+            "Eagle": "[Eagle: Sharp-eyed predatory bird]",
+            "Bat Colony": "[Bat Colony: Group of flying mammals]",
+            "Crocodile": "[Crocodile: Powerful reptile with deadly bite]",
+            "Rat Swarm": "[Rat Swarm: Many small rodents]",
+            "Shark": "[Shark: Ocean predator with many teeth]",
+            "Jaguar": "[Jaguar: Spotted jungle hunter]",
+            "Monkey Tribe": "[Monkey Tribe: Group of primates]",
+            "Poisonous Frog": "[Poisonous Frog: Small but deadly amphibian]",
+            "Jellyfish": "[Jellyfish: Translucent with stinging tentacles]"
         }
         
-        self.ascii_victory = """
- ██    ██  ██████  ██    ██     ███████ ██    ██ ██████  ██    ██ ██ ██    ██ ███████ ██████  ██ 
-  ██  ██  ██    ██ ██    ██     ██      ██    ██ ██   ██ ██    ██ ██ ██    ██ ██      ██   ██ ██ 
-   ████   ██    ██ ██    ██     ███████ ██    ██ ██████  ██    ██ ██ ██    ██ █████   ██   ██ ██ 
-    ██    ██    ██ ██    ██          ██ ██    ██ ██   ██  ██  ██  ██  ██  ██  ██      ██   ██    
-    ██     ██████   ██████      ███████  ██████  ██   ██   ████   ██   ████   ███████ ██████  ██ 
-"""
+        # Simple text representation of the island map
+        self.ascii_island = """
+            ~~~~~~~~~~ ISLAND MAP ~~~~~~~~~~
+            
+              /\\     ~         /\\
+             /  \\~~~~         /  \\
+            /    \\    /\\     /    \\
+           /      \\  /  \\   /      \\
+          /        \\/    \\ /        \\
+          \\                          /
+           \\   o                    /
+            \\    ☼                 /
+             \\        ^           /
+              \\       ^          /
+               \\~~~~~~~         /
+                ~~~~~~~~~~~~~~~~~
+                
+            Legend:
+            ~ : Ocean    /\\ : Mountains
+            o : Beach    ☼  : Ruins
+            ^ : Forest
+        """
         
-        self.ascii_game_over = """
-   ██████   █████  ███    ███ ███████      ██████  ██    ██ ███████ ██████  
-  ██       ██   ██ ████  ████ ██          ██    ██ ██    ██ ██      ██   ██ 
-  ██   ███ ███████ ██ ████ ██ █████       ██    ██ ██    ██ █████   ██████  
-  ██    ██ ██   ██ ██  ██  ██ ██          ██    ██  ██  ██  ██      ██   ██ 
-   ██████  ██   ██ ██      ██ ███████      ██████    ████   ███████ ██   ██ 
-"""
+        self.ascii_victory = "*** VICTORY: YOU SURVIVED! ***"
+        
+        self.ascii_game_over = "*** GAME OVER ***"
         
         # Additional ASCII art for special events and locations
-        self.ascii_ship = """
-            |    |    |
-            )_)  )_)  )_)
-           )___))___))___)
-          )____)____)_____)
-        _____|____|____|______
-       /                     \\
-     /    ___           ___    \\
-    /    /   \\         /   \\    \\
-   (    (     )       (     )    )
-    \\    \\___/         \\___/    /
-     \\                         /
-      \\_______________________/
-         __|   |   |   |__
-        (___|   |   |___)
-"""
+        # Ship ASCII art removed, keeping only title ASCII art
 
-        self.ascii_island = """
-              _
-             /_\\     
-            /___\\     
-           /_____\\
-         _|[]_[]|_
-        |_________|
-"""
+        # Island ASCII art removed
 
-        self.ascii_shelter = """
-          /\\
-         /  \\
-        /    \\
-       /      \\
-      /        \\
-     /__________\\
-    |   _    _   |
-    |  |_|  |_|  |
-    |   _    _   |
-    |  |_|  |_|  |
-    |____________|
-"""
+        # Shelter ASCII art removed
 
-        self.ascii_fire = """
-               )
-              ) \\
-             / ) (
-            ( (   )
-             \\ )  /
-         /\\  |   /
-        /)(\\ |  /
-       (()())| /
-       (()()))/
-       (()())/
-      /------\\
-     '--------'
-"""
+        # Fire ASCII art removed
         
         # Randomize the island map on first run
         self.randomize_island_map()
@@ -757,6 +1316,23 @@ class GameManager:
         print("You wake up washed ashore on a mysterious island with nothing but")
         print("the clothes on your back. You must survive until rescue arrives,")
         print("or find a way to escape on your own.\n")
+        
+        # Check for mods without loading them
+        if not self.mods_loaded:
+            print(Fore.CYAN + "Checking for mods...")
+            
+            # Count available mods without integrating them
+            mod_dirs = [d for d in glob.glob("mods/*/") if os.path.isdir(d) and os.path.exists(os.path.join(d, "mod_info.json"))]
+            mod_count = len(mod_dirs)
+            
+            if mod_count > 0:
+                print(Fore.YELLOW + f"Found {mod_count} mod(s). Mods are disabled by default.")
+                print(Fore.GREEN + "Use '/mods enable' to enable mods and '/mods info' to see details." + Style.RESET_ALL)
+            else:
+                print(Fore.YELLOW + "No mods found. You can add mods to the 'mods' folder.\n" + Style.RESET_ALL)
+            
+            self.mods_loaded = True
+        
         print(Fore.GREEN + "Your journey begins now. Good luck!\n")
         input(Fore.BLUE + "Press Enter to start..." + Style.RESET_ALL)
     
@@ -808,6 +1384,8 @@ class GameManager:
                 raft_indicator += f" - {gs.raft_type}"
             raft_indicator += "]"
             status_indicators.append(raft_indicator)
+        if gs.locations.get("Stronghold", False) and gs.locations["Stronghold"]:
+            status_indicators.append(f"{Fore.GREEN}[Stronghold Built]")
             
         if status_indicators:
             print(f"\nStatus: {' '.join(status_indicators)}{Style.RESET_ALL}")
@@ -817,6 +1395,11 @@ class GameManager:
             print(f"\n{Fore.MAGENTA}{gs.message}{Style.RESET_ALL}")
             gs.message = ""  # Clear the message after displaying
             
+        # Display Stronghold resource generation message if it exists
+        if hasattr(gs, 'stronghold_message') and gs.stronghold_message:
+            print(f"\n{Fore.GREEN}{gs.stronghold_message}{Style.RESET_ALL}")
+            gs.stronghold_message = ""  # Clear the message after displaying
+            
     def create_bar(self, value: int) -> str:
         bar_length = 20
         filled_length = int(value / 100 * bar_length)
@@ -825,6 +1408,22 @@ class GameManager:
         
     def display_main_menu(self) -> str:
         gs = self.game_state
+        
+        # Check for new available quests
+        new_quests = gs.get_available_quests()
+        if new_quests:
+            quest_notification = ", ".join(new_quests)
+            print(f"\n{Fore.GREEN}New quests available: {quest_notification}{Style.RESET_ALL}")
+        
+        # Check for story progress
+        story_updates = gs.check_story_progress()
+        if story_updates:
+            for update in story_updates:
+                print(f"\n{Fore.MAGENTA}{update}{Style.RESET_ALL}")
+        
+        # Show active quests notification if any are available
+        if gs.active_quests:
+            print(f"\n{Fore.CYAN}You have {len(gs.active_quests)} active quest(s). Type {Fore.YELLOW}/quests{Fore.CYAN} to view them.{Style.RESET_ALL}")
         
         # Show the current location with the menu
         print(f"\n{Fore.WHITE}Location: {Fore.YELLOW}{gs.current_location}{Style.RESET_ALL} | Weather: {Fore.CYAN}{gs.weather}{Style.RESET_ALL}")
@@ -842,6 +1441,14 @@ class GameManager:
         print(f"{Fore.YELLOW}/raft {Fore.WHITE}- Build or check your rescue raft")
         print(f"{Fore.YELLOW}/weather {Fore.WHITE}- Detailed weather forecast")
         print(f"{Fore.YELLOW}/stats {Fore.WHITE}- View detailed player statistics")
+        print(f"{Fore.YELLOW}/quests {Fore.WHITE}- View your quest log and current quests")
+        print(f"{Fore.YELLOW}/story {Fore.WHITE}- View your story progress and path")
+        
+        # Show stronghold command if player has a stronghold
+        if gs.locations.get("Stronghold", False):
+            print(f"{Fore.YELLOW}/stronghold {Fore.WHITE}- Manage your stronghold and followers")
+        
+        print(f"{Fore.YELLOW}/mods {Fore.WHITE}- View information about installed mods")
         print(f"{Fore.YELLOW}/save {Fore.WHITE}- Save game")
         print(f"{Fore.YELLOW}/load {Fore.WHITE}- Load game")
         print(f"{Fore.YELLOW}/quit {Fore.WHITE}- Quit game")
@@ -887,13 +1494,692 @@ class GameManager:
                     self.weather_forecast()
                 elif command == 'stats':
                     self.display_detailed_stats()
+                elif command == 'quests':
+                    self.display_quests()
+                elif command == 'story':
+                    self.display_story_progress()
+                elif command == 'stronghold' and self.game_state.locations.get("Stronghold", False):
+                    self.stronghold_menu()
+                elif command.startswith('mods'):
+                    parts = command.split()
+                    if len(parts) == 1:
+                        # Just '/mods' - show info
+                        self.display_mods_info()
+                    elif len(parts) > 1:
+                        subcommand = parts[1].lower()
+                        if subcommand == 'enable':
+                            self.enable_mods()
+                        elif subcommand == 'disable':
+                            self.disable_mods()
+                        elif subcommand == 'info':
+                            self.display_mods_info()
+                        else:
+                            print(f"{Fore.RED}Unknown mods subcommand. Use 'enable', 'disable', or 'info'.{Style.RESET_ALL}")
                 else:
                     print(f"{Fore.RED}Unknown command. Type /help for a list of commands.{Style.RESET_ALL}")
             else:
                 print(f"{Fore.RED}Commands start with '/'. Type /help for a list of commands.{Style.RESET_ALL}")
     
+    def display_quests(self) -> None:
+        """Display active quests and quest log"""
+        gs = self.game_state
+        
+        print(f"\n{Fore.CYAN}===== QUEST LOG ====={Style.RESET_ALL}")
+        
+        # Display active quests
+        if gs.active_quests:
+            print(f"\n{Fore.GREEN}Active Quests: {len(gs.active_quests)}{Style.RESET_ALL}")
+            
+            for quest_id, quest in gs.active_quests.items():
+                print(f"\n{Fore.YELLOW}{quest['title']} [{quest['progress']}%]{Style.RESET_ALL}")
+                print(f"{Fore.WHITE}{quest['description']}{Style.RESET_ALL}")
+                
+                print(f"\n{Fore.CYAN}Objectives:{Style.RESET_ALL}")
+                for obj_id, status in quest['objectives'].items():
+                    # Format the objective ID to be more readable
+                    readable_obj = obj_id.replace('_', ' ').capitalize()
+                    
+                    if isinstance(status, bool):
+                        if status:
+                            print(f"{Fore.GREEN}✓ {readable_obj}{Style.RESET_ALL}")
+                        else:
+                            print(f"{Fore.RED}✗ {readable_obj}{Style.RESET_ALL}")
+                    elif isinstance(status, (int, float)):
+                        print(f"{Fore.YELLOW}{readable_obj}: {status*100:.0f}%{Style.RESET_ALL}")
+                        
+                # Show rewards if any
+                if quest['rewards']:
+                    print(f"\n{Fore.MAGENTA}Rewards:{Style.RESET_ALL}")
+                    for reward_type, reward_value in quest['rewards'].items():
+                        if reward_type == "items":
+                            items_list = [f"{amount} {item}" for item, amount in reward_value.items()]
+                            print(f"{Fore.WHITE}• Items: {', '.join(items_list)}{Style.RESET_ALL}")
+                        elif reward_type == "story_flag":
+                            print(f"{Fore.WHITE}• Story Progress{Style.RESET_ALL}")
+                        elif reward_type == "story_path":
+                            print(f"{Fore.WHITE}• Path: {reward_value.capitalize()}{Style.RESET_ALL}")
+                        elif reward_type == "location":
+                            print(f"{Fore.WHITE}• Discover: {reward_value}{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.YELLOW}You don't have any active quests.{Style.RESET_ALL}")
+        
+        # Display completed quests
+        if gs.completed_quests:
+            print(f"\n{Fore.GREEN}Completed Quests: {len(gs.completed_quests)}{Style.RESET_ALL}")
+            
+            for quest_id, quest in gs.completed_quests.items():
+                print(f"{Fore.GREEN}✓ {quest['title']} (Day {quest['date_completed']}){Style.RESET_ALL}")
+        
+        # Display failed quests
+        if gs.failed_quests:
+            print(f"\n{Fore.RED}Failed Quests: {len(gs.failed_quests)}{Style.RESET_ALL}")
+            
+            for quest_id, quest in gs.failed_quests.items():
+                print(f"{Fore.RED}✗ {quest['title']} - {quest['failure_reason']} (Day {quest['date_failed']}){Style.RESET_ALL}")
+        
+        # Display recent quest log entries
+        if gs.quest_log:
+            print(f"\n{Fore.CYAN}Recent Quest Activity:{Style.RESET_ALL}")
+            
+            # Show the last 5 log entries
+            recent_log = gs.quest_log[-5:] if len(gs.quest_log) > 5 else gs.quest_log
+            for entry in recent_log:
+                print(f"{Fore.WHITE}• {entry}{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+    
+    def display_story_progress(self) -> None:
+        """Display story progress and current path"""
+        gs = self.game_state
+        
+        print(f"\n{Fore.CYAN}===== STORY PROGRESS ====={Style.RESET_ALL}")
+        
+        # Show current story path
+        story_path_descriptions = {
+            "survivor": "You are focused on survival and escape, using practical approaches to overcome the island's challenges.",
+            "explorer": "You are drawn to the island's mysteries, uncovering its ancient secrets and forgotten history.",
+            "conqueror": "You seek to master and control the island, building a new life and possibly ruling over those you encounter."
+        }
+        
+        print(f"\n{Fore.YELLOW}Current Path: {gs.story_path.capitalize()}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}{story_path_descriptions.get(gs.story_path, 'You are still finding your way.')}{Style.RESET_ALL}")
+        
+        # Show story milestones based on story flags
+        print(f"\n{Fore.CYAN}Story Milestones:{Style.RESET_ALL}")
+        
+        story_milestones = []
+        
+        # Add milestones based on story flags
+        if "started_main_quest" in gs.story_flags:
+            story_milestones.append("You've begun to suspect there's more to this island than meets the eye.")
+            
+        if "ruins_discovered" in gs.story_flags:
+            story_milestones.append("You've discovered ancient ruins that hint at a previous civilization on the island.")
+            
+        if "pirate_threat" in gs.story_flags:
+            story_milestones.append("Pirates are active on the island and pose a threat to your survival.")
+            
+        if "pirates_defeated" in gs.story_flags:
+            story_milestones.append("You've dealt with the pirate threat and secured their treasure.")
+            
+        if "temple_discovery" in gs.story_flags:
+            story_milestones.append("You've learned of a hidden temple somewhere on the island.")
+            
+        if "temple_secrets" in gs.story_flags:
+            story_milestones.append("You've uncovered the secrets of the ancient temple.")
+            
+        if "island_mystery_resolved" in gs.story_flags:
+            story_milestones.append("You've learned that an advanced civilization once inhabited this island.")
+            
+        if "ancient_tech_mastered" in gs.story_flags:
+            story_milestones.append("You've mastered ancient technology that gives you control over aspects of the island.")
+            
+        if "pirate_king" in gs.story_flags:
+            story_milestones.append("You've established yourself as the leader of the island, even commanding respect from pirates.")
+            
+        if "ready_for_escape" in gs.story_flags:
+            story_milestones.append("You're prepared to escape the island and return to civilization.")
+            
+        # Display milestones or a message if none yet
+        if story_milestones:
+            for milestone in story_milestones:
+                print(f"{Fore.WHITE}• {milestone}{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.YELLOW}You're just beginning your journey on the island.{Style.RESET_ALL}")
+            
+        # Show potential story paths/endings based on current progress
+        print(f"\n{Fore.CYAN}Possible Endings:{Style.RESET_ALL}")
+        possible_endings = []
+        
+        # Always show the basic rescue ending
+        possible_endings.append("Rescue: Build a signal fire or reliable raft to escape the island.")
+        
+        # Show special endings based on story progress
+        if "temple_discovery" in gs.story_flags or "ruins_discovered" in gs.story_flags:
+            possible_endings.append("Island Secret: Uncover the full mystery of the island's ancient civilization.")
+            
+        if "pirate_threat" in gs.story_flags:
+            possible_endings.append("Island Ruler: Defeat the pirates and establish your dominance over the island.")
+            
+        if "temple_secrets" in gs.story_flags:
+            possible_endings.append("Ancient Power: Master the lost technology of the ancients.")
+            
+        for ending in possible_endings:
+            print(f"{Fore.WHITE}• {ending}{Style.RESET_ALL}")
+            
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+    
+    def stronghold_menu(self) -> None:
+        """Display options for managing the stronghold and followers"""
+        gs = self.game_state
+        
+        # Initialize followers attribute if it doesn't exist
+        if not hasattr(gs, 'stronghold_followers'):
+            gs.stronghold_followers = 0
+            
+        # Generate a list of available recruits if it doesn't exist
+        if not hasattr(gs, 'available_recruits'):
+            gs.available_recruits = []
+            
+            # Generate 1-3 random recruits that can be found
+            num_recruits = random.randint(1, 3)
+            recruit_types = ["Survivor", "Native Islander", "Ex-Pirate", "Castaway"]
+            recruit_skills = ["Gathering", "Building", "Hunting", "Fishing", "Crafting", "Defense"]
+            
+            for _ in range(num_recruits):
+                recruit_type = random.choice(recruit_types)
+                skill = random.choice(recruit_skills)
+                gs.available_recruits.append({
+                    "type": recruit_type,
+                    "skill": skill,
+                    "cost": {
+                        "Food": random.randint(3, 5),
+                        "Water": random.randint(2, 4)
+                    }
+                })
+        
+        while True:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f"\n{Fore.CYAN}===== STRONGHOLD MANAGEMENT ====={Style.RESET_ALL}")
+            
+            # Display stronghold status
+            print(f"\n{Fore.WHITE}Your stronghold status:{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Location: {Fore.CYAN}Stronghold{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Current followers: {Fore.GREEN}{gs.stronghold_followers}{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Daily resource production:{Style.RESET_ALL}")
+            print(f"{Fore.WHITE}• Wood: {3 + gs.stronghold_followers * 1}-{8 + gs.stronghold_followers * 2}")
+            print(f"{Fore.WHITE}• Stone: {2 + gs.stronghold_followers * 0}-{5 + gs.stronghold_followers * 1}")
+            print(f"{Fore.WHITE}• Metal: {1 + int(gs.stronghold_followers * 0.5)}")
+            
+            # Show options
+            print(f"\n{Fore.WHITE}Options:{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}1. {Fore.WHITE}Recruit new followers")
+            print(f"{Fore.YELLOW}2. {Fore.WHITE}Assign tasks to followers")
+            print(f"{Fore.YELLOW}3. {Fore.WHITE}Construct upgrades")
+            print(f"{Fore.YELLOW}0. {Fore.WHITE}Back to main menu")
+            
+            choice = input(f"\n{Fore.GREEN}Enter your choice: {Style.RESET_ALL}")
+            
+            if choice == "1":
+                self.recruit_followers()
+            elif choice == "2":
+                self.assign_follower_tasks()
+            elif choice == "3":
+                self.construct_stronghold_upgrades()
+            elif choice == "0":
+                break
+            else:
+                print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+                input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+    
+    def recruit_followers(self) -> None:
+        """Recruit new followers for the stronghold"""
+        gs = self.game_state
+        
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"\n{Fore.CYAN}===== RECRUIT FOLLOWERS ====={Style.RESET_ALL}")
+        print(f"{Fore.WHITE}Potential recruits who could join your stronghold:{Style.RESET_ALL}")
+        
+        # Display available recruits
+        if gs.available_recruits:
+            for i, recruit in enumerate(gs.available_recruits, 1):
+                print(f"\n{Fore.YELLOW}{i}. {recruit['type']} - Skilled in {recruit['skill']}{Style.RESET_ALL}")
+                cost_str = ", ".join([f"{amount} {item}" for item, amount in recruit["cost"].items()])
+                print(f"{Fore.WHITE}   Cost: {cost_str}{Style.RESET_ALL}")
+                
+            print(f"\n{Fore.YELLOW}0. {Fore.WHITE}Back to stronghold menu")
+            
+            choice = input(f"\n{Fore.GREEN}Enter your choice (or search for more recruits): {Style.RESET_ALL}")
+            
+            try:
+                choice_num = int(choice)
+                if 1 <= choice_num <= len(gs.available_recruits):
+                    # Try to recruit the selected follower
+                    recruit = gs.available_recruits[choice_num - 1]
+                    
+                    # Check if player has required resources
+                    can_recruit = True
+                    for item, amount in recruit["cost"].items():
+                        if gs.inventory.get(item, 0) < amount:
+                            can_recruit = False
+                            print(f"{Fore.RED}You don't have enough {item} to recruit this follower.{Style.RESET_ALL}")
+                            break
+                    
+                    if can_recruit:
+                        # Consume resources
+                        for item, amount in recruit["cost"].items():
+                            gs.inventory[item] -= amount
+                        
+                        # Add follower
+                        gs.stronghold_followers += 1
+                        print(f"\n{Fore.GREEN}The {recruit['type']} has joined your stronghold!{Style.RESET_ALL}")
+                        print(f"{Fore.WHITE}Your stronghold now has {gs.stronghold_followers} followers.{Style.RESET_ALL}")
+                        
+                        # Remove from available recruits
+                        gs.available_recruits.pop(choice_num - 1)
+                        
+                        # Update quest objective if active
+                        if "island_ruler" in gs.active_quests:
+                            # Check if resources are already collected
+                            if not gs.active_quests["island_ruler"]["objectives"]["collect_resources"]:
+                                # Mark resources as collected (set to True since the objective is boolean)
+                                gs.update_quest_objective("island_ruler", "collect_resources", True)
+                                print(f"\n{Fore.MAGENTA}Quest updated: Island Ruler - Resources collected!{Style.RESET_ALL}")
+                elif choice_num == 0:
+                    return
+                else:
+                    print(f"{Fore.RED}Invalid choice. Please select a number between 0 and {len(gs.available_recruits)}.{Style.RESET_ALL}")
+            except ValueError:
+                if choice.lower() == "search":
+                    # Generate new potential recruits
+                    gs.available_recruits = []
+                    num_recruits = random.randint(1, 3)
+                    recruit_types = ["Survivor", "Native Islander", "Ex-Pirate", "Castaway"]
+                    recruit_skills = ["Gathering", "Building", "Hunting", "Fishing", "Crafting", "Defense"]
+                    
+                    for _ in range(num_recruits):
+                        recruit_type = random.choice(recruit_types)
+                        skill = random.choice(recruit_skills)
+                        gs.available_recruits.append({
+                            "type": recruit_type,
+                            "skill": skill,
+                            "cost": {
+                                "Food": random.randint(3, 5),
+                                "Water": random.randint(2, 4)
+                            }
+                        })
+                    print(f"{Fore.GREEN}You searched for new potential recruits!{Style.RESET_ALL}")
+                else:
+                    print(f"{Fore.RED}Invalid input. Please enter a number or 'search'.{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.YELLOW}There are currently no available recruits. Search for more?{Style.RESET_ALL}")
+            print(f"\n{Fore.YELLOW}1. {Fore.WHITE}Search for recruits")
+            print(f"{Fore.YELLOW}0. {Fore.WHITE}Back to stronghold menu")
+            
+            choice = input(f"\n{Fore.GREEN}Enter your choice: {Style.RESET_ALL}")
+            
+            if choice == "1":
+                # Generate new potential recruits
+                gs.available_recruits = []
+                num_recruits = random.randint(1, 3)
+                recruit_types = ["Survivor", "Native Islander", "Ex-Pirate", "Castaway"]
+                recruit_skills = ["Gathering", "Building", "Hunting", "Fishing", "Crafting", "Defense"]
+                
+                for _ in range(num_recruits):
+                    recruit_type = random.choice(recruit_types)
+                    skill = random.choice(recruit_skills)
+                    gs.available_recruits.append({
+                        "type": recruit_type,
+                        "skill": skill,
+                        "cost": {
+                            "Food": random.randint(3, 5),
+                            "Water": random.randint(2, 4)
+                        }
+                    })
+                print(f"{Fore.GREEN}You searched for new potential recruits!{Style.RESET_ALL}")
+            elif choice != "0":
+                print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+                
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+    
+    def assign_follower_tasks(self) -> None:
+        """Assign tasks to stronghold followers"""
+        gs = self.game_state
+        
+        if gs.stronghold_followers <= 0:
+            print(f"\n{Fore.YELLOW}You don't have any followers to assign tasks to.{Style.RESET_ALL}")
+            input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+            return
+            
+        # Initialize task assignments if they don't exist
+        if not hasattr(gs, 'follower_tasks'):
+            gs.follower_tasks = {
+                "Gathering": 0,
+                "Hunting": 0,
+                "Defense": 0,
+                "Building": 0
+            }
+            
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"\n{Fore.CYAN}===== ASSIGN TASKS ====={Style.RESET_ALL}")
+        print(f"{Fore.WHITE}You have {gs.stronghold_followers} followers to assign to tasks.{Style.RESET_ALL}")
+        print(f"\n{Fore.WHITE}Current assignments:{Style.RESET_ALL}")
+        
+        for task, count in gs.follower_tasks.items():
+            print(f"{Fore.YELLOW}{task}: {Fore.WHITE}{count} followers")
+            
+        print(f"\n{Fore.WHITE}Available tasks:{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}1. {Fore.WHITE}Gathering - Increases resource collection")
+        print(f"{Fore.YELLOW}2. {Fore.WHITE}Hunting - Collects food automatically")
+        print(f"{Fore.YELLOW}3. {Fore.WHITE}Defense - Reduces chance of attacks")
+        print(f"{Fore.YELLOW}4. {Fore.WHITE}Building - Helps with construction projects")
+        print(f"{Fore.YELLOW}0. {Fore.WHITE}Back to stronghold menu")
+        
+        choice = input(f"\n{Fore.GREEN}Choose a task to assign followers to: {Style.RESET_ALL}")
+        
+        if choice == "1":
+            task = "Gathering"
+        elif choice == "2":
+            task = "Hunting"
+        elif choice == "3":
+            task = "Defense"
+        elif choice == "4":
+            task = "Building"
+        elif choice == "0":
+            return
+        else:
+            print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+            input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+            return
+            
+        # Get number of followers to assign
+        assigned_followers = sum(gs.follower_tasks.values())
+        available_followers = gs.stronghold_followers - assigned_followers
+        
+        print(f"\n{Fore.WHITE}You have {available_followers} unassigned followers.{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}Current {task} assignment: {gs.follower_tasks[task]} followers{Style.RESET_ALL}")
+        
+        try:
+            count = int(input(f"\n{Fore.GREEN}How many followers to assign to {task} (0-{gs.stronghold_followers}): {Style.RESET_ALL}"))
+            
+            if 0 <= count <= gs.stronghold_followers:
+                # Calculate how many need to be unassigned from other tasks
+                current_total = sum(gs.follower_tasks.values())
+                new_total = current_total - gs.follower_tasks[task] + count
+                
+                if new_total > gs.stronghold_followers:
+                    over_assigned = new_total - gs.stronghold_followers
+                    print(f"{Fore.YELLOW}Warning: You need to unassign {over_assigned} followers from other tasks first.{Style.RESET_ALL}")
+                else:
+                    gs.follower_tasks[task] = count
+                    print(f"\n{Fore.GREEN}Successfully assigned {count} followers to {task}.{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.RED}Invalid number. Please enter a number between 0 and {gs.stronghold_followers}.{Style.RESET_ALL}")
+        except ValueError:
+            print(f"{Fore.RED}Please enter a valid number.{Style.RESET_ALL}")
+            
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+    
+    def construct_stronghold_upgrades(self) -> None:
+        """Build upgrades for the stronghold"""
+        gs = self.game_state
+        
+        # Initialize upgrades if they don't exist
+        if not hasattr(gs, 'stronghold_upgrades'):
+            gs.stronghold_upgrades = {
+                "walls": False,
+                "watchtower": False,
+                "farm": False,
+                "workshop": False
+            }
+            
+        # Define upgrade costs
+        upgrade_costs = {
+            "walls": {"Wood": 15, "Stone": 25},
+            "watchtower": {"Wood": 20, "Stone": 10},
+            "farm": {"Wood": 10, "Seed": 5, "Water": 10},
+            "workshop": {"Wood": 15, "Metal": 5, "Tool": 2}
+        }
+        
+        # Define upgrade benefits
+        upgrade_benefits = {
+            "walls": "Improved defense against attacks and bad weather",
+            "watchtower": "Early warning of dangers and better chance to spot passing ships",
+            "farm": "Steady food supply that doesn't deplete",
+            "workshop": "More efficient crafting and resource processing"
+        }
+        
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"\n{Fore.CYAN}===== STRONGHOLD UPGRADES ====={Style.RESET_ALL}")
+        
+        # Show current upgrades
+        print(f"\n{Fore.WHITE}Current upgrades:{Style.RESET_ALL}")
+        for upgrade, built in gs.stronghold_upgrades.items():
+            status = f"{Fore.GREEN}Built" if built else f"{Fore.RED}Not Built"
+            print(f"{Fore.YELLOW}{upgrade.capitalize()}: {status}{Style.RESET_ALL}")
+            
+        # Show available upgrades
+        print(f"\n{Fore.WHITE}Available upgrades:{Style.RESET_ALL}")
+        
+        available_upgrades = [upgrade for upgrade, built in gs.stronghold_upgrades.items() if not built]
+        
+        if available_upgrades:
+            for i, upgrade in enumerate(available_upgrades, 1):
+                print(f"\n{Fore.YELLOW}{i}. {upgrade.capitalize()}{Style.RESET_ALL}")
+                print(f"{Fore.WHITE}   Benefit: {upgrade_benefits[upgrade]}")
+                
+                cost_str = ", ".join([f"{amount} {item}" for item, amount in upgrade_costs[upgrade].items()])
+                print(f"{Fore.WHITE}   Cost: {cost_str}{Style.RESET_ALL}")
+                
+            print(f"\n{Fore.YELLOW}0. {Fore.WHITE}Back to stronghold menu")
+            
+            choice = input(f"\n{Fore.GREEN}Enter your choice: {Style.RESET_ALL}")
+            
+            try:
+                choice_num = int(choice)
+                if 1 <= choice_num <= len(available_upgrades):
+                    # Try to build the selected upgrade
+                    upgrade = available_upgrades[choice_num - 1]
+                    cost = upgrade_costs[upgrade]
+                    
+                    # Check if player has required resources
+                    can_build = True
+                    for item, amount in cost.items():
+                        if gs.inventory.get(item, 0) < amount:
+                            can_build = False
+                            print(f"{Fore.RED}You don't have enough {item} to build this upgrade.{Style.RESET_ALL}")
+                            break
+                    
+                    if can_build:
+                        # Consume resources
+                        for item, amount in cost.items():
+                            gs.inventory[item] -= amount
+                        
+                        # Build upgrade
+                        gs.stronghold_upgrades[upgrade] = True
+                        print(f"\n{Fore.GREEN}You've built the {upgrade.capitalize()}!{Style.RESET_ALL}")
+                        print(f"{Fore.WHITE}Benefit: {upgrade_benefits[upgrade]}{Style.RESET_ALL}")
+                        
+                        # Apply special effects based on the upgrade
+                        if upgrade == "farm":
+                            if not hasattr(gs, 'daily_food_production'):
+                                gs.daily_food_production = 3
+                            else:
+                                gs.daily_food_production += 3
+                            print(f"{Fore.GREEN}Your stronghold will now produce 3 Food daily.{Style.RESET_ALL}")
+                            
+                        elif upgrade == "workshop":
+                            # Could reduce crafting costs by 25%
+                            if not hasattr(gs, 'crafting_efficiency'):
+                                gs.crafting_efficiency = 0.25
+                            else:
+                                gs.crafting_efficiency += 0.25
+                            print(f"{Fore.GREEN}Crafting at your stronghold is now 25% more efficient.{Style.RESET_ALL}")
+                        
+                        # Update quest objective if active
+                        if "island_ruler" in gs.active_quests:
+                            # Check if all upgrades are built for quest completion
+                            if all(gs.stronghold_upgrades.values()):
+                                gs.update_quest_objective("island_ruler", "defeat_challengers", True)
+                                print(f"\n{Fore.MAGENTA}Quest updated: Island Ruler - You've established complete control!{Style.RESET_ALL}")
+                elif choice_num != 0:
+                    print(f"{Fore.RED}Invalid choice. Please select a number between 0 and {len(available_upgrades)}.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED}Please enter a valid number.{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.YELLOW}You've built all available upgrades for your stronghold!{Style.RESET_ALL}")
+            
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+        
+    def enable_mods(self) -> None:
+        """Enable mods in the game"""
+        gs = self.game_state
+        
+        if gs.mods_enabled:
+            print(f"\n{Fore.YELLOW}Mods are already enabled.{Style.RESET_ALL}")
+            input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+            return
+            
+        # Count available mods
+        mod_dirs = [d for d in glob.glob("mods/*/") if os.path.isdir(d) and os.path.exists(os.path.join(d, "mod_info.json"))]
+        mod_count = len(mod_dirs)
+        
+        if mod_count == 0:
+            print(f"\n{Fore.YELLOW}No mods found in the mods directory.{Style.RESET_ALL}")
+            print(f"{Fore.WHITE}To add mods to the game:{Style.RESET_ALL}")
+            print(f"{Fore.WHITE}1. Create a directory in the 'mods' folder with your mod name.")
+            print(f"{Fore.WHITE}2. Add a 'mod_info.json' file with metadata about your mod.")
+            print(f"{Fore.WHITE}3. Add content files (locations.json, items.json, recipes.json, etc.)")
+            input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+            return
+            
+        print(f"\n{Fore.CYAN}===== ENABLE MODS ====={Style.RESET_ALL}")
+        print(f"\n{Fore.YELLOW}Found {mod_count} mod(s) available.{Style.RESET_ALL}")
+        print(f"{Fore.RED}Warning: Enabling mods may change game mechanics and balance.{Style.RESET_ALL}")
+        print(f"{Fore.RED}You will need to restart the game for mods to take full effect.{Style.RESET_ALL}")
+        
+        confirm = input(f"\n{Fore.GREEN}Do you want to enable mods? (y/n): {Style.RESET_ALL}").lower()
+        
+        if confirm == 'y' or confirm == 'yes':
+            gs.mods_enabled = True
+            print(f"\n{Fore.GREEN}Mods enabled! Integrating mods now...{Style.RESET_ALL}")
+            
+            # Clear existing loaded mods list
+            gs.loaded_mods = []
+            
+            # Integrate mods immediately
+            gs.integrate_mods()
+            
+            # Let player know that a restart may be needed for all features
+            print(f"\n{Fore.YELLOW}Some mod features may require a new game to fully integrate.{Style.RESET_ALL}")
+        else:
+            print(f"\n{Fore.YELLOW}Mods remain disabled.{Style.RESET_ALL}")
+            
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+    
+    def disable_mods(self) -> None:
+        """Disable mods in the game"""
+        gs = self.game_state
+        
+        if not gs.mods_enabled:
+            print(f"\n{Fore.YELLOW}Mods are already disabled.{Style.RESET_ALL}")
+            input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+            return
+            
+        print(f"\n{Fore.CYAN}===== DISABLE MODS ====={Style.RESET_ALL}")
+        print(f"\n{Fore.YELLOW}You currently have {len(gs.loaded_mods)} mod(s) loaded.{Style.RESET_ALL}")
+        print(f"{Fore.RED}Warning: Disabling mods may affect your current game.{Style.RESET_ALL}")
+        print(f"{Fore.RED}You will need to restart the game for changes to take full effect.{Style.RESET_ALL}")
+        
+        confirm = input(f"\n{Fore.GREEN}Do you want to disable mods? (y/n): {Style.RESET_ALL}").lower()
+        
+        if confirm == 'y' or confirm == 'yes':
+            gs.mods_enabled = False
+            print(f"\n{Fore.YELLOW}Mods disabled. Changes will take effect on restart.{Style.RESET_ALL}")
+        else:
+            print(f"\n{Fore.GREEN}Mods remain enabled.{Style.RESET_ALL}")
+            
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+    
+    def display_mods_info(self) -> None:
+        """Display information about loaded mods"""
+        gs = self.game_state
+        
+        print(f"\n{Fore.CYAN}===== MODS INFORMATION ====={Style.RESET_ALL}")
+        
+        # Count available mods
+        mod_dirs = [d for d in glob.glob("mods/*/") if os.path.isdir(d) and os.path.exists(os.path.join(d, "mod_info.json"))]
+        mod_count = len(mod_dirs)
+        
+        # Display mods status
+        status_color = Fore.GREEN if gs.mods_enabled else Fore.RED
+        status_text = "Enabled" if gs.mods_enabled else "Disabled"
+        print(f"{Fore.WHITE}Mods Status: {status_color}{status_text}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}Available Mods: {Fore.YELLOW}{mod_count}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}Loaded Mods: {Fore.YELLOW}{len(gs.loaded_mods)}{Style.RESET_ALL}")
+        
+        # Command reminder
+        print(f"\n{Fore.CYAN}Commands:{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}/mods enable - Enable all mods")
+        print(f"{Fore.WHITE}/mods disable - Disable all mods")
+        print(f"{Fore.WHITE}/mods info - Show mod information{Style.RESET_ALL}")
+        
+        if not gs.loaded_mods:
+            if not gs.mods_enabled and mod_count > 0:
+                print(f"\n{Fore.YELLOW}Mods are available but currently disabled.{Style.RESET_ALL}")
+                print(f"{Fore.WHITE}Use {Fore.GREEN}/mods enable{Fore.WHITE} to enable mods.{Style.RESET_ALL}")
+            else:
+                print(f"\n{Fore.YELLOW}No mods are currently loaded.{Style.RESET_ALL}")
+                print(f"\n{Fore.WHITE}To add mods to the game:{Style.RESET_ALL}")
+                print(f"{Fore.WHITE}1. Create a directory in the 'mods' folder with your mod name.")
+                print(f"{Fore.WHITE}2. Add a 'mod_info.json' file with metadata about your mod.")
+                print(f"{Fore.WHITE}3. Add content files (locations.json, items.json, recipes.json, etc.)")
+        else:
+            print(f"\n{Fore.GREEN}Loaded mods: {len(gs.loaded_mods)}{Style.RESET_ALL}")
+            
+            for mod_name in gs.loaded_mods:
+                mod_info_path = os.path.join("mods", mod_name, "mod_info.json")
+                
+                if os.path.exists(mod_info_path):
+                    try:
+                        with open(mod_info_path, 'r') as f:
+                            mod_info = json.load(f)
+                            
+                        print(f"\n{Fore.YELLOW}{mod_info.get('name', mod_name)}{Style.RESET_ALL}")
+                        print(f"{Fore.WHITE}Description: {mod_info.get('description', 'No description provided')}")
+                        print(f"{Fore.WHITE}Author: {mod_info.get('author', 'Unknown')}")
+                        print(f"{Fore.WHITE}Version: {mod_info.get('version', '1.0.0')}")
+                        
+                        # Check what content files are included
+                        content_types = []
+                        if os.path.exists(os.path.join("mods", mod_name, "locations.json")):
+                            content_types.append("Locations")
+                        if os.path.exists(os.path.join("mods", mod_name, "items.json")):
+                            content_types.append("Items")
+                        if os.path.exists(os.path.join("mods", mod_name, "recipes.json")):
+                            content_types.append("Recipes")
+                        if os.path.exists(os.path.join("mods", mod_name, "enemies.json")):
+                            content_types.append("Enemies")
+                        if os.path.exists(os.path.join("mods", mod_name, "events.json")):
+                            content_types.append("Events")
+                            
+                        print(f"{Fore.WHITE}Content: {', '.join(content_types) if content_types else 'None'}")
+                    except Exception as e:
+                        print(f"{Fore.RED}Error loading mod info for {mod_name}: {str(e)}{Style.RESET_ALL}")
+                else:
+                    print(f"\n{Fore.YELLOW}{mod_name}{Style.RESET_ALL}")
+                    print(f"{Fore.RED}No mod_info.json found!{Style.RESET_ALL}")
+        
+        print(f"\n{Fore.CYAN}===== MOD CREATION GUIDE ====={Style.RESET_ALL}")
+        print(f"{Fore.WHITE}See the README.md file in the 'mods' directory for detailed instructions")
+        print(f"{Fore.WHITE}on creating your own mods for Shipwrecked.{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
+        
     def display_help(self) -> None:
         """Display a help screen with all available commands."""
+        gs = self.game_state
+        
         print(f"\n{Fore.CYAN}===== AVAILABLE COMMANDS ====={Style.RESET_ALL}")
         print(f"{Fore.YELLOW}/explore {Fore.WHITE}- Search your location for resources and battle enemies")
         print(f"{Fore.YELLOW}/inventory {Fore.WHITE}- View what items you currently have (aliases: /inv, /i)")
@@ -908,6 +2194,14 @@ class GameManager:
         print(f"{Fore.YELLOW}/raft {Fore.WHITE}- Build or check your escape raft")
         print(f"{Fore.YELLOW}/weather {Fore.WHITE}- Check detailed weather forecast and predictions")
         print(f"{Fore.YELLOW}/stats {Fore.WHITE}- View detailed player statistics and achievements")
+        print(f"{Fore.YELLOW}/quests {Fore.WHITE}- View your active quests and quest log")
+        print(f"{Fore.YELLOW}/story {Fore.WHITE}- View your story progress and current path")
+        
+        # Only show stronghold command if player has a stronghold
+        if gs.locations.get("Stronghold", False):
+            print(f"{Fore.YELLOW}/stronghold {Fore.WHITE}- Manage your stronghold, followers, and upgrades")
+            
+        print(f"{Fore.YELLOW}/mods {Fore.WHITE}- View information about installed mods")
         print(f"{Fore.YELLOW}/save {Fore.WHITE}- Save your current game progress")
         print(f"{Fore.YELLOW}/load {Fore.WHITE}- Load a previously saved game")
         print(f"{Fore.YELLOW}/quit {Fore.WHITE}- Exit the game (aliases: /exit, /q)")
@@ -919,6 +2213,15 @@ class GameManager:
         print(f"{Fore.WHITE}- Craft a {Fore.YELLOW}map{Fore.WHITE} to see the island layout and plan your exploration")
         print(f"{Fore.WHITE}- Keep an eye on your {Fore.YELLOW}hunger{Fore.WHITE} and {Fore.YELLOW}thirst{Fore.WHITE} levels")
         print(f"{Fore.WHITE}- Undiscovered locations show as {Fore.RED}??????{Fore.WHITE} until you find them")
+        
+        # Additional tips for players with a stronghold
+        if gs.locations.get("Stronghold", False):
+            print(f"\n{Fore.CYAN}===== STRONGHOLD TIPS ====={Style.RESET_ALL}")
+            print(f"{Fore.WHITE}- Recruit {Fore.YELLOW}followers{Fore.WHITE} to help gather resources and defend your stronghold")
+            print(f"{Fore.WHITE}- Assign followers to {Fore.YELLOW}tasks{Fore.WHITE} like gathering, hunting, and defense")
+            print(f"{Fore.WHITE}- Build {Fore.YELLOW}upgrades{Fore.WHITE} like walls, a farm, and a workshop")
+            print(f"{Fore.WHITE}- The {Fore.YELLOW}farm upgrade{Fore.WHITE} provides a daily supply of food")
+            print(f"{Fore.WHITE}- Progress on the {Fore.YELLOW}conqueror path{Fore.WHITE} by building a powerful stronghold")
         
         input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
     
@@ -1124,6 +2427,18 @@ class GameManager:
                 gs.inventory["Ancient Artifact"] += 1
                 print(f"{Fore.GREEN}You found an {Fore.CYAN}Ancient Artifact{Fore.GREEN}!{Style.RESET_ALL}")
                 
+                # Update quest objective if active
+                if "island_mystery" in gs.active_quests:
+                    gs.update_quest_objective("island_mystery", "discover_ruins", True)
+                    gs.update_quest_objective("island_mystery", "find_artifact", True)
+                    print(f"{Fore.MAGENTA}Quest updated: The Island's Secret{Style.RESET_ALL}")
+                    
+            # Chance to find temple clues for temple quest
+            if "temple_mystery" in gs.active_quests and random.random() < 0.25:
+                print(f"{Fore.YELLOW}You notice strange markings on a stone tablet that seem to indicate a temple location!{Style.RESET_ALL}")
+                gs.update_quest_objective("temple_mystery", "find_temple_clues", True)
+                print(f"{Fore.MAGENTA}Quest updated: Temple of the Ancients{Style.RESET_ALL}")
+                
         elif location == "Swamp":
             items = {
                 "Wood": (1, 2),
@@ -1208,6 +2523,24 @@ class GameManager:
                 gs.inventory["Pirate Treasure"] += 1
                 print(f"{Fore.GREEN}You found {Fore.CYAN}Pirate Treasure{Fore.GREEN}!{Style.RESET_ALL}")
                 
+                # Update pirate quest objectives if active
+                if "pirate_threat" in gs.active_quests:
+                    gs.update_quest_objective("pirate_threat", "locate_treasure", True)
+                    print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
+            
+            # Chance to spy on pirates for the quest
+            if "pirate_threat" in gs.active_quests and not gs.active_quests["pirate_threat"]["objectives"]["spy_on_pirates"]:
+                print(f"{Fore.YELLOW}You overhear pirates discussing their plans. They seem to be searching for something valuable.{Style.RESET_ALL}")
+                gs.update_quest_objective("pirate_threat", "spy_on_pirates", True)
+                print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
+                
+            # Chance to find a treasure map
+            if "pirate_threat" in gs.active_quests and not gs.active_quests["pirate_threat"]["objectives"]["find_treasure_map"]:
+                if random.random() < 0.3:
+                    print(f"{Fore.YELLOW}Among the pirate belongings, you discover a tattered map with markings that could lead to treasure!{Style.RESET_ALL}")
+                    gs.update_quest_objective("pirate_threat", "find_treasure_map", True)
+                    print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
+                
         elif location == "Bamboo Grove":
             items = {
                 "Bamboo": (3, 6),
@@ -1227,6 +2560,44 @@ class GameManager:
             energy_gain = random.randint(5, 10)
             gs.energy = min(100, gs.energy + energy_gain)
             print(f"{Fore.GREEN}The beautiful crystal formations boost your spirits! You gain {energy_gain} energy.{Style.RESET_ALL}")
+            
+        elif location == "Ancient Temple":
+            items = {
+                "Stone": (1, 2),
+                "Crystal": (1, 2),
+                "Obsidian": (0, 2)
+            }
+            
+            # Chance to find special items
+            if random.random() < 0.3:
+                print(f"{Fore.YELLOW}Deep within the temple, you discover an ancient device!{Style.RESET_ALL}")
+                print(f"{Fore.GREEN}This technology seems far more advanced than expected!{Style.RESET_ALL}")
+                
+                # Update quest objectives if active
+                if "temple_mystery" in gs.active_quests:
+                    gs.update_quest_objective("temple_mystery", "solve_temple_puzzle", True)
+                    print(f"{Fore.MAGENTA}Quest updated: Temple of the Ancients{Style.RESET_ALL}")
+                    
+                if "ancient_technology" in gs.active_quests:
+                    # Update power source objective
+                    if not gs.active_quests["ancient_technology"]["objectives"]["find_power_source"]:
+                        print(f"{Fore.YELLOW}You find a strange crystal that seems to power the ancient device!{Style.RESET_ALL}")
+                        gs.update_quest_objective("ancient_technology", "find_power_source", True)
+                        gs.inventory["Power Crystal"] = gs.inventory.get("Power Crystal", 0) + 1
+                        print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
+                    
+                    # Update activate device objective
+                    elif not gs.active_quests["ancient_technology"]["objectives"]["activate_device"]:
+                        print(f"{Fore.YELLOW}After studying the markings, you manage to activate the ancient device!{Style.RESET_ALL}")
+                        gs.update_quest_objective("ancient_technology", "activate_device", True)
+                        print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
+                        
+                    # Update master technology objective
+                    elif not gs.active_quests["ancient_technology"]["objectives"]["master_technology"]:
+                        print(f"{Fore.YELLOW}With your continued study, you've finally mastered the ancient technology!{Style.RESET_ALL}")
+                        print(f"{Fore.GREEN}This knowledge could revolutionize modern science!{Style.RESET_ALL}")
+                        gs.update_quest_objective("ancient_technology", "master_technology", True)
+                        print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
             
         elif location == "Mangrove Shore":
             items = {
@@ -1417,6 +2788,15 @@ class GameManager:
         if empty_inventory:
             print(f"\n{Fore.RED}Your inventory is empty.{Style.RESET_ALL}")
             
+        # Check for quest resources for conqueror path
+        if "island_ruler" in gs.active_quests and not gs.active_quests["island_ruler"]["objectives"]["collect_resources"]:
+            if (gs.inventory.get("Wood", 0) >= 30 and 
+                gs.inventory.get("Stone", 0) >= 20 and 
+                gs.inventory.get("Metal", 0) >= 10):
+                print(f"\n{Fore.MAGENTA}You now have enough resources to build a stronghold!{Style.RESET_ALL}")
+                gs.update_quest_objective("island_ruler", "collect_resources", True)
+                print(f"{Fore.MAGENTA}Quest updated: Island Ruler{Style.RESET_ALL}")
+            
         input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
     
     def display_crafting_menu(self) -> None:
@@ -1491,24 +2871,36 @@ class GameManager:
                 gs.has_shelter = True
                 gs.locations["Shelter"] = True
                 print(f"\n{Fore.GREEN}You've built a shelter! It will protect you from the elements.{Style.RESET_ALL}")
-                print(Fore.YELLOW + self.ascii_shelter + Style.RESET_ALL)
+                print(Fore.YELLOW + "[Shelter constructed]" + Style.RESET_ALL)
             
             elif item == "Strong Shelter":
                 gs.has_shelter = True
                 gs.locations["Shelter"] = True
                 print(f"\n{Fore.GREEN}You've built a strong shelter! It will provide excellent protection in all weather conditions.{Style.RESET_ALL}")
-                print(Fore.YELLOW + self.ascii_shelter + Style.RESET_ALL)
+                print(Fore.YELLOW + "[Strong shelter constructed]" + Style.RESET_ALL)
+            
+            elif item == "Stronghold":
+                gs.has_shelter = True
+                gs.locations["Shelter"] = True
+                gs.locations["Stronghold"] = True  # Add a new location
+                print(f"\n{Fore.GREEN}You've built a formidable stronghold! This will be your base of operations.{Style.RESET_ALL}")
+                print(Fore.YELLOW + "[Stronghold constructed]" + Style.RESET_ALL)
+                
+                # Update quest objective if active
+                if "island_ruler" in gs.active_quests:
+                    gs.update_quest_objective("island_ruler", "build_stronghold", True)
+                    print(f"{Fore.MAGENTA}Quest updated: Island Ruler{Style.RESET_ALL}")
             
             elif item == "Fire":
                 gs.has_fire = True
                 gs.fire_remaining_time = 6  # Lasts for 6 time periods
                 print(f"\n{Fore.GREEN}You've started a fire! It will keep you warm for a while.{Style.RESET_ALL}")
-                print(Fore.RED + self.ascii_fire + Style.RESET_ALL)
+                print(Fore.RED + "[Fire has been started]" + Style.RESET_ALL)
             
             elif item == "Signal Fire":
                 gs.has_signal_fire = True
                 print(f"\n{Fore.GREEN}You've built a signal fire! It's ready to be lit if you see a ship.{Style.RESET_ALL}")
-                print(Fore.RED + self.ascii_fire + Style.RESET_ALL)
+                print(Fore.RED + "[Signal fire prepared]" + Style.RESET_ALL)
             
             elif item == "Raft":
                 # Check if player has Ship Parts to enhance the raft
@@ -1522,7 +2914,7 @@ class GameManager:
                     gs.raft_progress = 35  # Standard progress without ship parts
                     gs.raft_type = "Standard"
                     print(f"\n{Fore.GREEN}You've started building a raft! Continue gathering materials to complete it.{Style.RESET_ALL}")
-                print(Fore.BLUE + self.ascii_ship + Style.RESET_ALL)
+                print(Fore.BLUE + "[Building standard raft...]" + Style.RESET_ALL)
                 
             elif item == "Bamboo Raft":
                 # Check if player has Ship Parts to enhance the raft
@@ -1536,7 +2928,7 @@ class GameManager:
                     gs.raft_progress = 50  # Better progress with just bamboo
                     gs.raft_type = "Bamboo"
                     print(f"\n{Fore.GREEN}You've started building a bamboo raft! The bamboo makes it easier to build and more buoyant.{Style.RESET_ALL}")
-                print(Fore.BLUE + self.ascii_ship + Style.RESET_ALL)
+                print(Fore.BLUE + "[Building bamboo raft...]" + Style.RESET_ALL)
             
             elif item == "Signal Mirror":
                 gs.inventory[item] += 1
@@ -1854,7 +3246,10 @@ class GameManager:
                         print(weather_msg)
                         
                     # Cap escape chance between 10% and 95%
-                    escape_chance = max(0.1, min(0.95, escape_chance))
+                    if escape_chance < 0.1:
+                        escape_chance = 0.1
+                    elif escape_chance > 0.95:
+                        escape_chance = 0.95
                     
                     # Show escape chance (rounded to nearest 5%)
                     displayed_chance = round(escape_chance * 100 / 5) * 5
@@ -2206,6 +3601,11 @@ class GameManager:
             print(f"{Fore.GREEN}This elevated position improves your chances of being seen.{Style.RESET_ALL}")
             success_chance += 0.1
             
+        # Update quest objective for escape quest
+        if "island_escape" in gs.active_quests:
+            gs.update_quest_objective("island_escape", "create_signal", True)
+            print(f"{Fore.MAGENTA}Quest updated: Escape Plan{Style.RESET_ALL}")
+            
         time.sleep(1)
         
         # Random chance for successful rescue
@@ -2216,7 +3616,20 @@ class GameManager:
             time.sleep(2)
             
             gs.rescued = True
-            gs.message = "You were rescued after signaling a passing ship with your mirror!"
+            
+            # Set ending message based on story path
+            if gs.story_path == "survivor":
+                gs.message = "You were rescued after signaling a passing ship with your mirror! (Survivor Ending)"
+            elif gs.story_path == "explorer" and "ancient_tech_mastered" in gs.story_flags:
+                gs.message = "You escaped the island with ancient knowledge that will revolutionize modern technology! (Explorer Ending)"
+            elif gs.story_path == "conqueror" and "pirate_king" in gs.story_flags:
+                gs.message = "You left the island with pirate treasures and tales of conquest! (Conqueror Ending)"
+            else:
+                gs.message = "You were rescued after signaling a passing ship with your mirror!"
+                
+            # Complete the escape quest if active
+            if "island_escape" in gs.active_quests:
+                gs.complete_quest("island_escape")
             
             # Game will end in the next update loop
         else:
@@ -2264,7 +3677,12 @@ class GameManager:
                 elif gs.weather == "Foggy":
                     weather_mod = -15
                     
-                final_chance = max(5, min(95, base_chance + weather_mod))
+                # Ensure final chance is between 5% and 95%
+                final_chance = base_chance + weather_mod
+                if final_chance < 5:
+                    final_chance = 5
+                elif final_chance > 95:
+                    final_chance = 95
                 print(f"{Fore.YELLOW}Estimated escape success chance: {final_chance}%{Style.RESET_ALL}")
                 print(f"{Fore.YELLOW}(Weather conditions affect success chance){Style.RESET_ALL}")
             
@@ -2319,6 +3737,11 @@ class GameManager:
             
             print(f"{Fore.GREEN}You've successfully built a {raft_type}!{Style.RESET_ALL}")
             
+            # Update quest objective if the escape quest is active
+            if "island_escape" in gs.active_quests:
+                gs.update_quest_objective("island_escape", "build_raft", True)
+                print(f"{Fore.MAGENTA}Quest updated: Escape Plan{Style.RESET_ALL}")
+            
             # Energy cost
             energy_cost = random.randint(20, 30)
             gs.energy -= energy_cost
@@ -2366,7 +3789,12 @@ class GameManager:
             weather_mod = -15
             print(f"{Fore.WHITE}The fog will make it hard to navigate.{Style.RESET_ALL}")
             
-        final_chance = max(5, min(95, base_chance + weather_mod))
+        # Ensure final chance is between 5% and 95%
+        final_chance = base_chance + weather_mod
+        if final_chance < 5:
+            final_chance = 5
+        elif final_chance > 95:
+            final_chance = 95
         
         print(f"\n{Fore.CYAN}You push your {gs.raft_type} into the water and begin rowing away from the island...{Style.RESET_ALL}")
         time.sleep(2)
@@ -2379,7 +3807,20 @@ class GameManager:
             time.sleep(1)
             
             gs.rescued = True
-            gs.message = f"You successfully escaped the island on your {gs.raft_type}!"
+            
+            # Set ending message based on story path
+            if gs.story_path == "survivor":
+                gs.message = f"You successfully escaped the island on your {gs.raft_type} and returned to civilization. (Survivor Ending)"
+            elif gs.story_path == "explorer" and "ancient_tech_mastered" in gs.story_flags:
+                gs.message = "You escaped the island with ancient knowledge that will revolutionize modern technology. (Explorer Ending)"
+            elif gs.story_path == "conqueror" and "pirate_king" in gs.story_flags:
+                gs.message = "You left the island with pirate treasures and tales of conquest. (Conqueror Ending)"
+            else:
+                gs.message = f"You successfully escaped the island on your {gs.raft_type}!"
+                
+            # Complete the escape quest if active
+            if "island_escape" in gs.active_quests:
+                gs.complete_quest("island_escape")
             
             # Game will end in the next update loop
         else:
@@ -2653,6 +4094,19 @@ class GameManager:
             # Add to defeated enemies list
             if enemy not in gs.defeated_enemies:
                 gs.defeated_enemies.append(enemy)
+                
+            # Update quest objectives for conqueror path
+            if "island_ruler" in gs.active_quests and enemy.startswith("Pirate"):
+                gs.update_quest_objective("island_ruler", "defeat_challengers", True)
+                print(f"{Fore.MAGENTA}Quest updated: Island Ruler{Style.RESET_ALL}")
+                
+            # Update quest objectives for pirate quest
+            if "pirate_threat" in gs.active_quests and enemy.startswith("Pirate") and not gs.active_quests["pirate_threat"]["objectives"]["locate_treasure"]:
+                # Small chance to find treasure map when defeating pirates
+                if random.random() < 0.3:
+                    print(f"{Fore.YELLOW}The defeated pirate drops a crumpled treasure map!{Style.RESET_ALL}")
+                    gs.update_quest_objective("pirate_threat", "find_treasure_map", True)
+                    print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
         else:
             # Defeat
             damage = random.randint(5, 15)
