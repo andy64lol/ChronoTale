@@ -1565,4 +1565,11 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    main()
+    import os
+    # Check if game was launched from the launcher
+    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
+        main()
+    else:
+        print("\033[91mThis game should be launched through the launch.py launcher.")
+        print("\033[93mPlease run 'python launch.py' to access all games.")
+        input("Press Enter to exit...")
