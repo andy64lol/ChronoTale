@@ -1937,7 +1937,7 @@ class GameState:
                             'location': save_data.get('location', 'Unknown'),
                             'saved_date': os.path.getmtime(slot_file)
                         })
-                except (FileNotFoundError, json.JSONDecodeError) as e:
+                except (FileNotFoundError, json.JSONDecodeError):
                     # If there's an error reading the save file, just skip it
                     pass
         return save_slots
