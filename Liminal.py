@@ -7,6 +7,17 @@ from colorama import init, Fore, Back, Style
 
 init(autoreset=True)
 
+def check_python_command():
+    """Check if script was called with 'python3' command and exit if it was"""
+    # Get the command used to run this script
+    command = sys.argv[0]
+    program_name = os.path.basename(sys.executable)
+    
+    if program_name == "python3" or "python3" in command:
+        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
+        print(f"{Fore.YELLOW}Run: python launch.py")
+        sys.exit(0)
+
 # Game settings
 X_MIN, X_MAX = -50, 50
 Y_MIN, Y_MAX = -50, 50
@@ -1565,11 +1576,14 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    import os
-    # Check if game was launched from the launcher
+    # First check if using python3 command
+    check_python_command()
+    
+    # Then check if launched through launcher
     if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
         main()
     else:
-        print("\033[91mThis game should be launched through the launch.py launcher.")
-        print("\033[93mPlease run 'python launch.py' to access all games.")
+        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
         input("Press Enter to exit...")
+        sys.exit(0)
