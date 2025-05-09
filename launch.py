@@ -70,8 +70,16 @@ def launch_game(file_name):
         for frame in frames:
             print(color_text(f"█ Loading {frame}", Fore.BLUE), end='\r')
             time.sleep(0.2)
-
+        
+        # Set environment variable to indicate the game was launched from launcher
+        os.environ["LAUNCHED_FROM_LAUNCHER"] = "1"
+        
+        # Run the game
         subprocess.run([sys.executable, file_name], check=True)
+        
+        # Clear the environment variable when game exits
+        if "LAUNCHED_FROM_LAUNCHER" in os.environ:
+            del os.environ["LAUNCHED_FROM_LAUNCHER"]
     except subprocess.CalledProcessError as e:
         print(color_text(f"█ Crash: Game exited with error {e.returncode}", Fore.RED))
     except Exception as e:
@@ -96,11 +104,11 @@ def games_menu(data):
         print(color_text(f"█ Total Plays: {data['plays']} | Tokens: {data['tokens']}", Fore.CYAN))
         print("\n" + "═" * 50 + "\n")
         print(color_text("█ Available Games:\n", Fore.MAGENTA))
-        
+
         # Display games with numbering
         for idx, (name, file) in enumerate(all_games, 1):
             print(color_text(f"█ [{idx}] {name}", Fore.CYAN))
-        
+
         back_number = len(all_games) + 1
         print(color_text(f"█ [{back_number}] Back to Main Menu", Fore.RED))
 
@@ -115,17 +123,17 @@ def games_menu(data):
                     start_time = time.time()
                     launch_game(game_file)
                     end_time = time.time()
-                    
+
                     # Calculate playtime tokens
                     elapsed = end_time - start_time
                     elapsed_minutes = elapsed // 60
                     time_tokens = (elapsed_minutes // 5) * 10
-                    
+
                     # Update game data
                     data['plays'] += 1
                     data['tokens'] += 5 + int(time_tokens)
                     save_game_data(data)
-                    
+
                     input(color_text("\n█ Press Enter to continue...", Fore.YELLOW) + Style.RESET_ALL)
             elif choice_int == back_number:
                 return
@@ -143,24 +151,24 @@ def shop_menu(data):
         {"name": "Carnival", "file": "Carnival.py", "cost": 30},
         {"name": "World Of Monsters", "file": "WOM.py", "cost": 30}
     ]
-    
+
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         display_banner()
         print(color_text("█ Welcome to the Token Shop!", Fore.CYAN))
         print(color_text("█ Available Items:\n", Fore.YELLOW))
-        
+
         # Display purchasable games
         for idx, game in enumerate(purchasable_games, 1):
             purchased = any(g[0] == game["name"] and g[1] == game["file"] for g in data['purchased_games'])
             status = color_text("Purchased", Fore.GREEN) if purchased else color_text(f"Cost: {game['cost']} Tokens", Fore.YELLOW)
             print(color_text(f"█ [{idx}] {game['name']} - {status}", Fore.CYAN))
-        
+
         print(color_text(f"█ [{len(purchasable_games)+1}] Back to Main Menu", Fore.RED))
         print(color_text(f"\n█ Your current balance: {data['tokens']} Tokens", Fore.CYAN))
-        
+
         choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
-        
+
         try:
             choice_int = int(choice)
             if 1 <= choice_int <= len(purchasable_games):
@@ -207,9 +215,9 @@ def settings_menu(data):
         print(color_text(f"█ [1] Toggle Colors: {'ON' if data['settings']['colors_enabled'] else 'OFF'}", Fore.CYAN))
         print(color_text("█ [2] Back to Main Menu", Fore.RED))
         print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
-        
+
         choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
-        
+
         if choice == '1':
             data['settings']['colors_enabled'] = not data['settings']['colors_enabled']
             save_game_data(data)
