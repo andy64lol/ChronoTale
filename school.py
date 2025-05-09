@@ -18783,25 +18783,9 @@ def apply_graduate_template(template_name):
 
 # No longer auto-execute main() when imported
 # This allows the runner scripts to explicitly call main() instead
-# Launcher verification
-def is_launched_from_launcher():
-    import inspect
-    import os
-    
-    # Get the call stack
-    stack = inspect.stack()
-    
-    # Check if any calling file is launch.py
-    for frame in stack:
-        calling_file = os.path.basename(frame.filename)
-        if calling_file == "launch.py":
-            return True
-    
-    return False
-
 if __name__ == "__main__":
     # Check if game was launched from the launcher
-    if is_launched_from_launcher():
+    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
         try:
             main()
         except Exception as e:
