@@ -1,17 +1,34 @@
-#!/usr/bin/env python3
-# World of Monsters - A Pokémon-inspired text adventure
-# A command-based monster collecting and battling game
-
 import random
 import time
 import os
 import pickle
-import psycopg2
+import sys
 from typing import List, Dict, Optional, Tuple
 from colorama import Fore, Style, init
 
 # Initialize colorama
 init(autoreset=True)
+
+# Check if script is being run directly or through the launcher
+if __name__ == "__main__":
+    launcher_env = os.environ.get("LAUNCHER_ACTIVE")
+    if not launcher_env:
+        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+        input("Press Enter to exit...")
+        print(f"{Fore.BLUE}Made by andy64lol{Style.RESET_ALL}")
+        sys.exit(0)
+
+# Check if called with python3 command
+def check_python_command():
+    """Check if script was called with 'python3' command and exit if it was"""
+    program_name = os.path.basename(sys.executable)
+    command = sys.argv[0]
+    
+    if program_name == "python3" or "python3" in command:
+        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
+        print(f"{Fore.YELLOW}Run: python launch.py")
+        sys.exit(0)
 
 # Add GOLD color for trophy/medal display
 if not hasattr(Fore, 'GOLD'):
@@ -21,57 +38,31 @@ if not hasattr(Fore, 'GOLD'):
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# Database connection
-def get_db_connection():
-    """Get a connection to the PostgreSQL database"""
-    try:
-        conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
-        return conn
-    except Exception as e:
-        print(f"Database connection error: {e}")
-        return None
+# File-based save system
+SAVE_DIR = "wom_saves"
+CHAMPIONS_FILE = os.path.join(SAVE_DIR, "champions.pickle")
 
-# Initialize database
+# Initialize save directory
 def init_database():
-    """Initialize database tables if they don't exist"""
-    conn = get_db_connection()
-    if not conn:
-        print("Warning: Database connection failed. Save/load functionality will be disabled.")
-        return False
-    
+    """Initialize the save directory and files"""
     try:
-        cursor = conn.cursor()
+        # Create save directory if it doesn't exist
+        os.makedirs(SAVE_DIR, exist_ok=True)
         
-        # Create save_games table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS save_games (
-                id SERIAL PRIMARY KEY,
-                player_name TEXT NOT NULL,
-                save_name TEXT NOT NULL,
-                game_data BYTEA NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(player_name, save_name)
-            )
-        ''')
+        # Create empty champions file if it doesn't exist
+        if not os.path.exists(CHAMPIONS_FILE):
+            with open(CHAMPIONS_FILE, 'wb') as f:
+                pickle.dump([], f)
         
-        # Create champions table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS champions (
-                id SERIAL PRIMARY KEY,
-                player_name TEXT NOT NULL,
-                monster_data BYTEA NOT NULL,
-                win_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        conn.commit()
         return True
     except Exception as e:
-        print(f"Database initialization error: {e}")
+        print(f"{Fore.RED}Error initializing save system: {e}{Style.RESET_ALL}")
         return False
-    finally:
-        if conn:
-            conn.close()
+
+# Get save file path for a player
+def get_save_path(player_name, save_name):
+    """Get the file path for a save file"""
+    return os.path.join(SAVE_DIR, f"{player_name}_{save_name}.pickle")
 
 # Game constants
 MAX_MONSTER_LEVEL = 50
@@ -88,7 +79,7 @@ class Move:
         self.power = power
         self.accuracy = accuracy
         self.description = description
-    
+
     def __str__(self) -> str:
         return f"{self.name} ({self.type}) - Power: {self.power}, Accuracy: {int(self.accuracy*100)}%"
 
@@ -100,7 +91,7 @@ class Item:
         self.description = description
         self.effect = effect
         self.value = value
-    
+
     def __str__(self) -> str:
         return f"{self.name} - {self.description}"
 
@@ -124,24 +115,24 @@ class Monster:
         self.exp_to_level = level * 20
         self.is_fusion = is_fusion
         self.fusion_components = fusion_components or []
-        
+
         # Variant attributes (Omega, Alpha, Corrupted, Crystal, Dominant)
         self.variant = variant
         self.can_evolve = variant is None  # Variants cannot evolve
-        
+
         # Apply variant stat adjustments if needed
         if variant:
             self.apply_variant_bonuses()
-        
+
         # Calculated stats
         self.calculate_stats()
         self.current_hp = self.max_hp
-        
+
     def apply_variant_bonuses(self):
         """Apply stat bonuses based on monster variant"""
         variant_name = self.variant
         original_name = self.name
-        
+
         if variant_name == "Omega":
             # Omega variants have better overall stats
             self.base_hp = int(self.base_hp * 1.3)
@@ -150,7 +141,7 @@ class Monster:
             self.base_speed = int(self.base_speed * 1.3)
             self.name = f"Omega {original_name}"
             self.description = f"An Omega variant of {original_name}. It has superior stats in all categories."
-            
+
         elif variant_name == "Alpha":
             # Alpha variants are leaders with balanced but higher stats
             self.base_hp = int(self.base_hp * 1.2)
@@ -159,7 +150,7 @@ class Monster:
             self.base_speed = int(self.base_speed * 1.2)
             self.name = f"Alpha {original_name}"
             self.description = f"An Alpha variant of {original_name}. As the leader of its species, it has well-balanced and enhanced abilities."
-            
+
         elif variant_name == "Corrupted":
             # Corrupted variants have more attack but less defense
             self.base_hp = int(self.base_hp * 1.1)
@@ -168,7 +159,7 @@ class Monster:
             self.base_speed = int(self.base_speed * 1.2)
             self.name = f"Corrupted {original_name}"
             self.description = f"A Corrupted variant of {original_name}. It has been tainted by dark energy, giving it tremendous offensive power but weakening its defenses."
-            
+
         elif variant_name == "Crystal":
             # Crystal variants have much higher defense but less attack
             self.base_hp = int(self.base_hp * 1.1)
@@ -177,7 +168,7 @@ class Monster:
             self.base_speed = int(self.base_speed * 0.8)
             self.name = f"Crystal {original_name}"
             self.description = f"A Crystal variant of {original_name}. Its body is encased in nearly impenetrable crystalline structures, greatly enhancing its defensive capabilities."
-            
+
         elif variant_name == "Dominant":
             # Dominant variants have double stats but are extremely rare
             self.base_hp = int(self.base_hp * 2.0)
@@ -186,7 +177,7 @@ class Monster:
             self.base_speed = int(self.base_speed * 2.0)
             self.name = f"Dominant {original_name}"
             self.description = f"A Dominant variant of {original_name}. This colossal specimen dwarfs others of its kind, possessing truly extraordinary power."
-    
+
     def calculate_stats(self):
         """Calculate stats based on monster level and base stats"""
         level_factor = 1 + (self.level / 50)
@@ -194,7 +185,7 @@ class Monster:
         self.attack = int(self.base_attack * level_factor)
         self.defense = int(self.base_defense * level_factor)
         self.speed = int(self.base_speed * level_factor)
-    
+
     def gain_exp(self, amount: int) -> bool:
         """Give exp to monster, return True if leveled up"""
         self.exp += amount
@@ -202,7 +193,7 @@ class Monster:
             self.level_up()
             return True
         return False
-    
+
     def level_up(self):
         """Level up the monster and calculate new stats"""
         # Check if player has this monster in their collection (to get trainer level)
@@ -215,7 +206,7 @@ class Monster:
                         if monster is self:  # Check if this is the same object
                             # Found the player that owns this monster
                             break
-        
+
         # Apply trainer level cap if applicable
         if player and hasattr(player, 'trainer_level'):
             if self.level >= player.trainer_level:
@@ -223,22 +214,22 @@ class Monster:
                 print(f"{Fore.YELLOW}Warning: {self.name} cannot level up beyond your trainer level ({player.trainer_level}).{Style.RESET_ALL}")
                 self.exp = self.exp_to_level - 1  # Cap exp just below next level
                 return
-        
+
         self.level += 1
         if self.level > MAX_MONSTER_LEVEL:
             self.level = MAX_MONSTER_LEVEL
             return
-        
+
         self.exp = self.exp - self.exp_to_level
         self.exp_to_level = self.level * 20
         old_max_hp = self.max_hp
-        
+
         self.calculate_stats()
-        
+
         # Heal some HP on level up (the difference plus a bit more)
         hp_gain = self.max_hp - old_max_hp + int(self.max_hp * 0.1)
         self.current_hp = min(self.max_hp, self.current_hp + hp_gain)
-    
+
     def get_colored_name(self) -> str:
         """Return the name with appropriate color based on type"""
         # Dictionary of colors for each type
@@ -265,36 +256,36 @@ class Monster:
             "Life": Fore.LIGHTGREEN_EX + Fore.WHITE,
             "Ghost": Fore.WHITE + Fore.LIGHTBLACK_EX
         }
-        
+
         if self.type in type_colors:
             return f"{type_colors[self.type]}{self.name}{Style.RESET_ALL}"
         else:
             return self.name
-    
+
     def is_fainted(self) -> bool:
         """Check if monster has fainted (HP <= 0)"""
         return self.current_hp <= 0
-    
+
     def heal(self, amount: int):
         """Heal the monster by a specific amount"""
         self.current_hp = min(self.max_hp, self.current_hp + amount)
-    
+
     def full_heal(self):
         """Fully heal the monster"""
         self.current_hp = self.max_hp
-    
+
     def __str__(self) -> str:
         """String representation of a monster"""
         hp_percentage = self.current_hp / self.max_hp
         hp_bar = "█" * int(hp_percentage * 10) + "░" * (10 - int(hp_percentage * 10))
-        
+
         if hp_percentage > 0.5:
             hp_color = Fore.GREEN
         elif hp_percentage > 0.2:
             hp_color = Fore.YELLOW
         else:
             hp_color = Fore.RED
-        
+
         # Variant indicator with special color
         variant_text = ""
         if self.variant:
@@ -307,12 +298,12 @@ class Monster:
             }
             color = variant_colors.get(self.variant, Fore.WHITE)
             variant_text = f" [{color}{self.variant}{Style.RESET_ALL}]"
-            
+
         return (f"{self.get_colored_name()}{variant_text} (Lv.{self.level}) - {self.type} Type\n"
                 f"HP: {hp_color}{self.current_hp}/{self.max_hp} [{hp_bar}]{Style.RESET_ALL}\n"
                 f"Attack: {self.attack}, Defense: {self.defense}, Speed: {self.speed}\n"
                 f"EXP: {self.exp}/{self.exp_to_level}")
-    
+
     def clone(self):
         """Create a copy of this monster"""
         copy = Monster(
@@ -323,54 +314,54 @@ class Monster:
             self.variant
         )
         return copy
-        
+
     @staticmethod
     def fuse(monster1: 'Monster', monster2: 'Monster') -> Optional['Monster']:
         """Fuse two monsters to create a new, more powerful monster"""
         # Check if both monsters meet the level requirement
         if monster1.level < FUSION_LEVEL_REQUIREMENT or monster2.level < FUSION_LEVEL_REQUIREMENT:
             return None
-            
+
         # Create fusion name (combine parts of both names)
         if len(monster1.name) > len(monster2.name):
             name_parts = [monster1.name[:len(monster1.name)//2], monster2.name[len(monster2.name)//2:]]
         else:
             name_parts = [monster1.name[:len(monster1.name)//2], monster2.name[len(monster2.name)//2:]]
         fusion_name = ''.join(name_parts)
-        
+
         # Determine fusion type (primary monster's type with influence from secondary)
         fusion_type = monster1.type
-        
+
         # Combine stats (primary stats with a boost from secondary)
         base_hp = int(monster1.base_hp * 1.2 + monster2.base_hp * 0.3)
         base_attack = int(monster1.base_attack * 1.2 + monster2.base_attack * 0.3)
         base_defense = int(monster1.base_defense * 1.2 + monster2.base_defense * 0.3)
         base_speed = int(monster1.base_speed * 1.2 + monster2.base_speed * 0.3)
-        
+
         # Get best moves from both monsters
         # Sort moves by power and take the top 4
         combined_moves = monster1.moves + monster2.moves
         unique_moves = []
         move_names = set()
-        
+
         for move in sorted(combined_moves, key=lambda m: m.power, reverse=True):
             if move.name not in move_names and len(unique_moves) < 4:
                 unique_moves.append(move)
                 move_names.add(move.name)
-        
+
         # Create fusion description
         fusion_desc = f"A powerful fusion of {monster1.name} and {monster2.name}."
-        
+
         # Set fusion level (average of both parents, minimum 25)
         fusion_level = max(FUSION_LEVEL_REQUIREMENT, (monster1.level + monster2.level) // 2)
-        
+
         # Create fusion components list
         fusion_components = [monster1.name, monster2.name]
         if monster1.is_fusion:
             fusion_components.extend(monster1.fusion_components)
         if monster2.is_fusion:
             fusion_components.extend(monster2.fusion_components)
-        
+
         # Create the fusion monster
         fusion = Monster(
             fusion_name, fusion_type, base_hp, base_attack,
@@ -378,7 +369,7 @@ class Monster:
             fusion_desc, fusion_level, is_fusion=True,
             fusion_components=list(set(fusion_components))  # Remove duplicates
         )
-        
+
         return fusion
 
 
@@ -394,49 +385,49 @@ class Player:
         self.trainer_level = 5  # Starting level
         self.exp = 0
         self.exp_to_level = 100  # Initial exp needed to level up
-        
+
         # Initialize story progress tracking
         self.story_progress = {}
-        
+
         # Initialize quest items
         self.quest_items = []
-    
+
     @property
     def active_monster(self) -> Optional[Monster]:
         """Get the currently active monster"""
         if not self.monsters or self.active_monster_index >= len(self.monsters):
             return None
         return self.monsters[self.active_monster_index]
-    
+
     def has_usable_monster(self) -> bool:
         """Check if the player has at least one monster that can fight"""
         return any(not monster.is_fainted() for monster in self.monsters)
-    
+
     def get_first_usable_monster_index(self) -> int:
         """Get the index of the first usable (non-fainted) monster"""
         for i, monster in enumerate(self.monsters):
             if not monster.is_fainted():
                 return i
         return -1
-    
+
     def switch_active_monster(self, index: int) -> bool:
         """Switch active monster to the one at the given index"""
         if 0 <= index < len(self.monsters):
             self.active_monster_index = index
             return True
         return False
-    
+
     def add_monster(self, monster: Monster):
         """Add a monster to the player's collection"""
         self.monsters.append(monster)
-    
+
     def add_item(self, item: Item, quantity: int = 1):
         """Add an item to the inventory"""
         if item in self.inventory:
             self.inventory[item] += quantity
         else:
             self.inventory[item] = quantity
-    
+
     def gain_trainer_exp(self, amount: int) -> bool:
         """Give experience to the trainer, return True if leveled up"""
         self.exp += amount
@@ -444,41 +435,41 @@ class Player:
             self.level_up_trainer()
             return True
         return False
-    
+
     def level_up_trainer(self):
         """Level up the trainer"""
         self.trainer_level += 1
         self.exp = 0
         self.exp_to_level = int(self.exp_to_level * 1.2)  # Each level requires more exp
-        
+
         print(f"{Fore.GREEN}You leveled up! You are now a level {self.trainer_level} trainer!{Style.RESET_ALL}")
         print("Your monsters' maximum level is now capped at your trainer level.")
-        
+
         # Check if any monsters need level adjustment
         for monster in self.monsters:
             if monster.level > self.trainer_level:
                 # Don't actually decrease levels, just cap future growth
                 print(f"{monster.get_colored_name()} will not grow beyond level {self.trainer_level} until you level up more.")
-    
+
     def use_item(self, item_index: int, target_monster_index: Optional[int] = None) -> str:
         """Use an item from the inventory"""
         if target_monster_index is None:
             target_monster_index = self.active_monster_index
-            
+
         items = list(self.inventory.keys())
         if 0 <= item_index < len(items):
             item = items[item_index]
-            
+
             # Check if we have this item
             if self.inventory[item] <= 0:
                 return f"You don't have any {item.name} left."
-            
+
             # Check if target monster exists
             if target_monster_index >= len(self.monsters):
                 return "Invalid monster selected."
-                
+
             target_monster = self.monsters[target_monster_index]
-            
+
             # Apply item effect
             result = ""
             if item.effect == "heal":
@@ -498,14 +489,14 @@ class Player:
                 return result
             else:
                 result = f"Used {item.name} on {target_monster.get_colored_name()}."
-            
+
             # Consume the item
             self.inventory[item] -= 1
             if self.inventory[item] <= 0:
                 self.inventory.pop(item)
-                
+
             return result
-        
+
         return "Invalid item selected."
 
 
@@ -519,29 +510,29 @@ class Battle:
         self.can_catch = True
         self.is_finished = False
         self.result = None  # 'win', 'lose', 'run', 'catch'
-    
+
     def calculate_damage(self, attacker: Monster, defender: Monster, move: Move) -> Tuple[int, float]:
         """Calculate damage and type effectiveness for a move"""
         # Check for accuracy
         if random.random() > move.accuracy:
             return 0, 1.0  # Miss
-        
+
         # Base damage formula
         damage = (2 * attacker.level / 5 + 2) * move.power * (attacker.attack / defender.defense) / 50 + 2
-        
+
         # Critical hit (1/16 chance)
         critical = 1.5 if random.random() < 0.0625 else 1.0
-        
+
         # Type effectiveness
         effectiveness = self.calculate_type_effectiveness(move.type, defender.type)
-        
+
         # Random factor (0.85 to 1.0)
         random_factor = random.uniform(0.85, 1.0)
-        
+
         # Final damage calculation
         final_damage = int(damage * critical * effectiveness * random_factor)
         return max(1, final_damage), effectiveness
-    
+
     def calculate_type_effectiveness(self, move_type: str, defender_type: str) -> float:
         """Calculate type effectiveness multiplier"""
         # Type effectiveness chart
@@ -628,38 +619,38 @@ class Battle:
                 "Fire": 0.5, "Poison": 0.5
             }
         }
-        
+
         # If attacker type is in the chart
         if move_type in effectiveness_chart:
             # If defender type is in the attackers chart
             if defender_type in effectiveness_chart[move_type]:
                 return effectiveness_chart[move_type][defender_type]
-        
+
         # Same type is not very effective
         if move_type == defender_type:
             return 0.75
-        
+
         # Default effectiveness
         return 1.0
-    
+
     def player_turn(self, command: str, argument: Optional[str] = None) -> str:
         """Handle player's turn in battle"""
         if self.is_finished:
             return "Battle is already over."
-            
+
         if not self.player:
             self.is_finished = True
             self.result = "lose"
             return "No active player found!"
-        
+
         player_monster = self.player.active_monster
         if player_monster is None:
             self.is_finished = True
             self.result = "lose"
             return "You have no monsters left to battle!"
-        
+
         result = ""
-        
+
         if command == "fight":
             # Use a move to attack
             try:
@@ -671,13 +662,13 @@ class Battle:
                 if 0 <= move_index < len(player_monster.moves):
                     move = player_monster.moves[move_index]
                     damage, effectiveness = self.calculate_damage(player_monster, self.wild_monster, move)
-                    
+
                     # Apply damage
                     self.wild_monster.current_hp = max(0, self.wild_monster.current_hp - damage)
-                    
+
                     # Generate result message
                     result = f"{player_monster.get_colored_name()} used {move.name}!\n"
-                    
+
                     if damage == 0:
                         result += "But it missed!"
                     else:
@@ -685,20 +676,20 @@ class Battle:
                             result += "It's super effective! "
                         elif effectiveness < 0.75:
                             result += "It's not very effective... "
-                            
+
                         result += f"Dealt {damage} damage to {self.wild_monster.get_colored_name()}."
-                        
+
                         # Check if wild monster fainted
                         if self.wild_monster.is_fainted():
                             exp_gained = self.wild_monster.level * 5
                             level_up = player_monster.gain_exp(exp_gained)
-                            
+
                             result += f"\n{self.wild_monster.get_colored_name()} fainted!"
                             result += f"\n{player_monster.get_colored_name()} gained {exp_gained} EXP."
-                            
+
                             if level_up:
                                 result += f"\n{player_monster.get_colored_name()} grew to level {player_monster.level}!"
-                                
+
                             self.is_finished = True
                             self.result = "win"
                             return result
@@ -706,115 +697,115 @@ class Battle:
                     return f"Invalid move number. Choose between 1 and {len(player_monster.moves)}."
             except ValueError:
                 return "Please enter a valid move number."
-                
+
         elif command == "catch":
             if not self.can_catch:
                 return "You can't catch this monster!"
-            
+
             # Find monster ball in inventory
             monster_ball = None
             for item in self.player.inventory:
                 if item.effect == "catch":
                     monster_ball = item
                     break
-            
+
             if monster_ball is None or self.player.inventory[monster_ball] <= 0:
                 return "You don't have any Monster Balls!"
-            
+
             # Consume the ball
             self.player.inventory[monster_ball] -= 1
             if self.player.inventory[monster_ball] <= 0:
                 self.player.inventory.pop(monster_ball)
-            
+
             # Calculate catch probability
             hp_factor = 1 - (self.wild_monster.current_hp / self.wild_monster.max_hp)
             level_factor = 1 - (self.wild_monster.level / MAX_MONSTER_LEVEL)
             catch_rate = CATCH_BASE_RATE + (hp_factor * 0.3) + (level_factor * 0.2)
-            
+
             result = f"You threw a {monster_ball.name} at {self.wild_monster.get_colored_name()}!"
-            
+
             # Animated dots for suspense
             print(result, end="")
             for _ in range(3):
                 time.sleep(0.5)
                 print(".", end="", flush=True)
             print()
-            
+
             if random.random() < catch_rate:
                 # Successful catch
                 result = f"Gotcha! {self.wild_monster.get_colored_name()} was caught!"
-                
+
                 # Add to player's monsters
                 caught_monster = self.wild_monster.clone()  # Clone to avoid sharing state
                 caught_monster.full_heal()  # Heal it up
                 self.player.add_monster(caught_monster)
-                
+
                 self.is_finished = True
                 self.result = "catch"
             else:
                 # Failed catch
                 result = f"Oh no! {self.wild_monster.get_colored_name()} broke free!"
-                
+
         elif command == "switch":
             try:
                 if not argument:
                     return "Please specify a monster number to switch to."
-                
+
                 monster_index = int(argument) - 1
-                
+
                 if not self.player:
                     return "Error: Player not available."
-                
+
                 if not self.player.monsters:
                     return "You don't have any monsters to switch to."
-                
+
                 if 0 <= monster_index < len(self.player.monsters):
                     if monster_index == self.player.active_monster_index:
                         return f"{self.player.monsters[monster_index].get_colored_name()} is already in battle!"
-                    
+
                     if self.player.monsters[monster_index].is_fainted():
                         return f"{self.player.monsters[monster_index].get_colored_name()} has fainted and can't battle!"
-                    
+
                     old_monster = self.player.active_monster
                     if not old_monster:
                         return "No active monster to switch from."
-                        
+
                     self.player.switch_active_monster(monster_index)
-                    
+
                     if not self.player.active_monster:
                         return "Failed to switch monsters."
-                        
+
                     result = f"You withdrew {old_monster.get_colored_name()} and sent out {self.player.active_monster.get_colored_name()}!"
                 else:
                     return f"Invalid monster number. Choose between 1 and {len(self.player.monsters)}."
             except ValueError:
                 return "Please enter a valid monster number."
-        
+
         elif command == "item":
             try:
                 if not argument:
                     return "Please specify an item number to use."
-                    
+
                 if not self.player:
                     return "Error: Player not available."
-                    
+
                 if not hasattr(self.player, 'inventory') or not self.player.inventory:
                     return "You don't have any items to use."
-                    
+
                 item_index = int(argument) - 1
                 items = list(self.player.inventory.keys())
-                
+
                 if 0 <= item_index < len(items):
                     item = items[item_index]
                     if item.effect == "catch":
                         return "Use the 'catch' command to throw a Monster Ball."
-                    
+
                     result = self.player.use_item(item_index)
                 else:
                     return f"Invalid item number. Choose between 1 and {len(items)}."
             except ValueError:
                 return "Please enter a valid item number."
-        
+
         elif command == "run":
             # 80% chance to run from wild battles
             if self.is_wild:
@@ -826,47 +817,47 @@ class Battle:
                     result = "Couldn't escape!"
             else:
                 return "You can't run from this battle!"
-                
+
         else:
             return "Invalid command. Try 'fight', 'catch', 'switch', 'item', or 'run'."
-        
+
         # If we get here, it's the wild monster's turn (unless battle ended)
         if not self.is_finished:
             wild_result = self.wild_monster_turn()
             result += "\n\n" + wild_result
-        
+
         return result
-    
+
     def wild_monster_turn(self) -> str:
         """Handle wild monster's turn in battle"""
         if not self.wild_monster:
             self.is_finished = True
             self.result = "win"
             return "No wild monster found!"
-            
+
         if self.wild_monster.is_fainted():
             self.is_finished = True
             self.result = "win"
             return f"{self.wild_monster.get_colored_name()} fainted!"
-        
+
         if not self.player:
             self.is_finished = True
             self.result = "lose"
             return "No active player found!"
-            
+
         player_monster = self.player.active_monster
         if not player_monster:
             self.is_finished = True
             self.result = "lose"
             return "You have no active monster!"
-            
+
         if player_monster.is_fainted():
             # Check if player has any usable monsters left
             if not self.player.has_usable_monster():
                 self.is_finished = True
                 self.result = "lose"
                 return "All your monsters have fainted! You rush to the nearest healing center..."
-            
+
             # Auto-switch to next usable monster
             next_index = self.player.get_first_usable_monster_index()
             old_monster = player_monster
@@ -874,17 +865,17 @@ class Battle:
             if not self.player.active_monster:
                 return f"{old_monster.get_colored_name()} fainted! No other monsters available!"
             return f"{old_monster.get_colored_name()} fainted! You sent out {self.player.active_monster.get_colored_name()}!"
-        
+
         # Choose a random move for the wild monster
         move = random.choice(self.wild_monster.moves)
         damage, effectiveness = self.calculate_damage(self.wild_monster, player_monster, move)
-        
+
         # Apply damage
         player_monster.current_hp = max(0, player_monster.current_hp - damage)
-        
+
         # Generate result message
         result = f"Wild {self.wild_monster.get_colored_name()} used {move.name}!\n"
-        
+
         if damage == 0:
             result += "But it missed!"
         else:
@@ -892,13 +883,13 @@ class Battle:
                 result += "It's super effective! "
             elif effectiveness < 0.75:
                 result += "It's not very effective... "
-                
+
             result += f"Dealt {damage} damage to {player_monster.get_colored_name()}."
-            
+
             # Check if player monster fainted
             if player_monster.is_fainted():
                 result += f"\n{player_monster.get_colored_name()} fainted!"
-                
+
                 # Check if player has any usable monsters left
                 if not self.player.has_usable_monster():
                     self.is_finished = True
@@ -906,7 +897,7 @@ class Battle:
                     result += "\nAll your monsters have fainted! You rush to the nearest healing center..."
                 else:
                     result += "\nChoose another monster with 'switch <number>'."
-        
+
         return result
 
 
@@ -923,7 +914,7 @@ class Game:
         self.db_available = init_database()
         self.champion_battles_available = True
         self.champion_battles_completed = 0
-    
+
     def create_all_monsters(self) -> Dict[str, Monster]:
         """Create all monster templates for the game"""
         # Create moves
@@ -932,53 +923,53 @@ class Game:
         vine_whip = Move("Vine Whip", "Grass", 35, 1.0, "Whips the enemy with vines")
         seed_bomb = Move("Seed Bomb", "Grass", 55, 0.9, "Launches explosive seeds")
         leaf_storm = Move("Leaf Storm", "Grass", 70, 0.8, "Creates a storm of sharp leaves")
-        
+
         # Fire moves
         ember = Move("Ember", "Fire", 40, 1.0, "A weak fire attack")
         fire_fang = Move("Fire Fang", "Fire", 45, 0.95, "Bites with flaming fangs")
         flame_thrower = Move("Flame Thrower", "Fire", 60, 0.85, "Shoots a stream of fire")
         fire_blast = Move("Fire Blast", "Fire", 75, 0.8, "A powerful blast of fire")
-        
+
         # Water moves
         water_gun = Move("Water Gun", "Water", 40, 1.0, "Shoots a jet of water")
         bubble_beam = Move("Bubble Beam", "Water", 45, 0.95, "Fires bubbles at the opponent")
         hydro_pump = Move("Hydro Pump", "Water", 65, 0.8, "Blasts water at high pressure")
         surf = Move("Surf", "Water", 60, 0.9, "Creates a huge wave")
-        
+
         # Normal moves
         tackle = Move("Tackle", "Normal", 35, 1.0, "A basic tackle attack")
         scratch = Move("Scratch", "Normal", 30, 1.0, "Scratches with sharp claws")
         body_slam = Move("Body Slam", "Normal", 50, 0.9, "Slams body into opponent")
         swift = Move("Swift", "Normal", 40, 1.0, "Fires star-shaped rays that never miss")
-        
+
         # Electric moves
         spark = Move("Spark", "Electric", 40, 1.0, "A small electric shock")
         thunder_shock = Move("Thunder Shock", "Electric", 50, 0.9, "A mild electric attack")
         thunderbolt = Move("Thunderbolt", "Electric", 65, 0.85, "A strong electric attack")
         thunder = Move("Thunder", "Electric", 75, 0.8, "A massive lightning strike")
-        
+
         # Rock/Ground moves
         rock_throw = Move("Rock Throw", "Rock", 50, 0.9, "Throws rocks at the target")
         rock_slide = Move("Rock Slide", "Rock", 65, 0.85, "Causes rocks to slide down")
         earthquake = Move("Earthquake", "Ground", 70, 0.8, "Creates a powerful earthquake")
         sand_tomb = Move("Sand Tomb", "Ground", 55, 0.9, "Traps opponent in quicksand")
         earth_power = Move("Earth Power", "Ground", 75, 0.85, "Releases energy from the earth")
-        
+
         # Ice moves
         ice_shard = Move("Ice Shard", "Ice", 45, 0.95, "Shoots sharp ice shards")
         ice_beam = Move("Ice Beam", "Ice", 65, 0.85, "Fires a freezing beam")
         blizzard = Move("Blizzard", "Ice", 75, 0.8, "Creates a freezing snowstorm")
-        
+
         # Psychic moves
         psybeam = Move("Psybeam", "Psychic", 55, 0.9, "Fires a strange beam")
         psychic_blast = Move("Psychic Blast", "Psychic", 65, 0.85, "Strikes with psychic power")
         dream_eater = Move("Dream Eater", "Psychic", 75, 0.8, "Absorbs energy from the opponent's mind")
-        
+
         # Dragon moves
         dragon_rage = Move("Dragon Rage", "Dragon", 55, 0.9, "Releases dragon energy")
         dragon_claw = Move("Dragon Claw", "Dragon", 65, 0.85, "Slashes with dragon claws")
         draco_meteor = Move("Draco Meteor", "Dragon", 90, 0.75, "Summons meteors from the sky")
-        
+
         # Legendary specific moves
         time_warp = Move("Time Warp", "Time", 85, 0.8, "Manipulates the flow of time to strike")
         chronoblast = Move("Chronoblast", "Time", 95, 0.7, "A blast of temporal energy")
@@ -990,7 +981,7 @@ class Game:
         diamond_drill = Move("Diamond Drill", "Rock", 90, 0.7, "Drills through anything with diamond strength")
         dark_void = Move("Dark Void", "Dark", 80, 0.8, "Creates a void of darkness")
         shadow_force = Move("Shadow Force", "Dark", 90, 0.7, "Strikes with the power of shadows")
-        
+
         # New exclusive type moves
         temporal_shift = Move("Temporal Shift", "Time", 100, 0.8, "Shifts through time to deliver a devastating blow")
         time_stop = Move("Time Stop", "Time", 110, 0.7, "Briefly stops time to strike with impunity")
@@ -1004,47 +995,47 @@ class Game:
         life_force = Move("Life Force", "Life", 110, 0.7, "Channels the fundamental force of life")
         spectral_grasp = Move("Spectral Grasp", "Ghost", 100, 0.8, "Grasps the opponent with spectral hands")
         soul_steal = Move("Soul Steal", "Ghost", 110, 0.7, "Temporarily steals a portion of the opponent's soul")
-        
+
         # Fighting moves
         karate_chop = Move("Karate Chop", "Fighting", 50, 0.95, "Strikes with the edge of hand")
         brick_break = Move("Brick Break", "Fighting", 60, 0.9, "Breaks barriers with a punch")
-        
+
         # Fairy moves
         fairy_wind = Move("Fairy Wind", "Fairy", 45, 0.95, "Stirs up a fairy wind")
         dazzling_gleam = Move("Dazzling Gleam", "Fairy", 65, 0.85, "Emits a powerful flash")
-        
+
         # Dark moves
         bite = Move("Bite", "Dark", 50, 0.95, "Bites with sharp teeth")
         crunch = Move("Crunch", "Dark", 65, 0.85, "Crunches with sharp fangs")
         shadow_ball = Move("Shadow Ball", "Dark", 65, 0.85, "Hurls a shadowy blob")
-        
+
         # Flying moves
         gust = Move("Gust", "Flying", 45, 0.95, "Creates a damaging gust")
         wing_attack = Move("Wing Attack", "Flying", 55, 0.9, "Strikes with wings")
-        
+
         # Poison moves
         poison_sting = Move("Poison Sting", "Poison", 45, 0.95, "Stings with poison")
         sludge_bomb = Move("Sludge Bomb", "Poison", 65, 0.85, "Hurls filthy sludge")
-        
+
         # Create starter monsters
         springraze = Monster(
             "Springraze", "Grass", 45, 45, 40, 60,
             [leaf_attack, tackle, vine_whip, seed_bomb],
             "A small, energetic grass-type monster with leaf-like appendages."
         )
-        
+
         ignolf = Monster(
             "Ignolf", "Fire", 40, 55, 35, 55,
             [ember, scratch, fire_fang, flame_thrower],
             "A fiery wolf-like monster with flames around its body."
         )
-        
+
         aquartle = Monster(
             "Aquartle", "Water", 50, 40, 50, 45,
             [water_gun, tackle, bubble_beam, hydro_pump],
             "A turtle-like water monster with a hard shell and water jets."
         )
-        
+
         # Create additional monsters for encounters
         leaflet = Monster(
             "Leaflet", "Grass", 35, 30, 30, 40,
@@ -1052,70 +1043,70 @@ class Game:
             "A small leaf-like creature that flutters in the wind.",
             level=3
         )
-        
+
         flamouse = Monster(
             "Flamouse", "Fire", 30, 40, 25, 45,
             [ember, scratch, fire_blast],  # Using fire_blast move to fix unused variable
             "A tiny mouse with a flame-tipped tail.",
             level=3
         )
-        
+
         puddlet = Monster(
             "Puddlet", "Water", 40, 30, 35, 30,
             [water_gun, tackle],
             "A small puddle-like creature that can form a simple body.",
             level=3
         )
-        
+
         buzzer = Monster(
             "Buzzer", "Electric", 35, 45, 30, 50,
             [spark, swift, thunder],  # Using thunder move to fix unused variable
             "A fast-moving insect-like monster that generates electricity.",
             level=4
         )
-        
+
         rockling = Monster(
             "Rockling", "Rock", 50, 40, 60, 20,
             [tackle, body_slam, rock_throw, earthquake],  # Using earthquake move to fix unused variable
             "A small rock monster with stubby limbs.",
             level=4
         )
-        
+
         floracat = Monster(
             "Floracat", "Grass", 45, 50, 40, 55,
             [vine_whip, scratch, leaf_storm],
             "A cat-like monster with flower petals around its neck.",
             level=7
         )
-        
+
         emberbear = Monster(
             "Emberbear", "Fire", 60, 55, 45, 40,
             [fire_fang, body_slam, flame_thrower],
             "A bear cub with ember-colored fur and fiery paws.",
             level=7
         )
-        
+
         coralfish = Monster(
             "Coralfish", "Water", 50, 45, 55, 50,
             [bubble_beam, swift, surf],
             "A fish-like monster with coral-like growths on its body.",
             level=7
         )
-        
+
         boltfox = Monster(
             "Boltfox", "Electric", 45, 50, 40, 60,
             [thunder_shock, scratch, thunderbolt],
             "A fox-like monster with static-charged fur.",
             level=8
         )
-        
+
         rockbehemoth = Monster(
             "Rockbehemoth", "Rock", 70, 60, 75, 30,
             [body_slam, tackle, rock_slide],
             "A large rock monster with powerful arms.",
             level=10
         )
-        
+
         # Adding new monster types with new type advantages
         frostbite = Monster(
             "Frostbite", "Ice", 45, 55, 50, 40,
@@ -1123,56 +1114,56 @@ class Game:
             "A small arctic fox with crystalline fur that sparkles with frost.",
             level=8
         )
-        
+
         psyowl = Monster(
             "Psyowl", "Psychic", 40, 60, 40, 55,
             [psybeam, swift, psychic_blast, dream_eater],
             "A wise owl with glowing eyes that can see into your thoughts.",
             level=9
         )
-        
+
         drakeling = Monster(
             "Drakeling", "Dragon", 55, 65, 55, 40,
             [dragon_rage, scratch, dragon_claw],
             "A small dragon with shimmering scales and growing wings.",
             level=12
         )
-        
+
         shadowpaw = Monster(
             "Shadowpaw", "Dark", 50, 60, 45, 55,
             [bite, scratch, shadow_ball, crunch],  # Using crunch to fix unused variable
             "A mysterious cat-like creature that blends with shadows.",
             level=9
         )
-        
+
         brawlcub = Monster(
             "Brawlcub", "Fighting", 60, 65, 40, 45,
             [karate_chop, tackle, brick_break],
             "A small bear cub that practices martial arts.",
             level=8
         )
-        
+
         flutterwing = Monster(
             "Flutterwing", "Flying", 40, 45, 35, 70,
             [gust, swift, wing_attack],
             "A graceful bird-like creature with rainbow-colored wings.",
             level=7
         )
-        
+
         toxifrog = Monster(
             "Toxifrog", "Poison", 50, 55, 40, 50,
             [poison_sting, water_gun, sludge_bomb, sand_tomb],  # Using sand_tomb to fix unused variable
             "A purple frog that secretes toxic slime from its skin.",
             level=8
         )
-        
+
         fairybell = Monster(
             "Fairybell", "Fairy", 45, 50, 50, 45,
             [fairy_wind, swift, dazzling_gleam],
             "A small bell-shaped creature that emits a soothing chime.",
             level=9
         )
-        
+
         # Create legendary monsters
         chronodrake = Monster(
             "Chronodrake", "Dragon", 95, 100, 90, 85,
@@ -1180,35 +1171,35 @@ class Game:
             "An ancient dragon that has existed since the beginning of time. It can manipulate the flow of time itself.",
             level=40
         )
-        
+
         celestius = Monster(
             "Celestius", "Fairy", 90, 95, 95, 85,
             [cosmic_power, celestial_beam, dazzling_gleam, psychic_blast],
             "A celestial monster that descended from the stars. Its body shimmers with cosmic energy.",
             level=40
         )
-        
+
         pyrovern = Monster(
             "Pyrovern", "Fire", 95, 110, 80, 85,
             [inferno, magma_burst, flame_thrower, fire_blast],
             "A volcanic monster born from the heart of an ancient volcano. Its body burns with eternal flame.",
             level=40
         )
-        
+
         gemdrill = Monster(
             "Gemdrill", "Rock", 105, 90, 110, 70,
             [rock_slide, diamond_drill, crystal_charge, earthquake],
             "A crystalline monster with a drill-like horn that can pierce any substance.",
             level=40
         )
-        
+
         shadowclaw = Monster(
             "Shadowclaw", "Dark", 90, 105, 85, 95,
             [shadow_force, dark_void, shadow_ball, crunch],
             "A mysterious monster that dwells in darkness. It can merge with shadows and strike without warning.",
             level=40
         )
-        
+
         # Additional legendary monsters for more variety
         tempestus = Monster(
             "Tempestus", "Electric", 85, 95, 80, 120,
@@ -1216,21 +1207,21 @@ class Game:
             "A legendary storm spirit that rides the lightning. It appears during the fiercest thunderstorms.",
             level=45
         )
-        
+
         terraquake = Monster(
             "Terraquake", "Ground", 110, 100, 95, 75,
             [earthquake, earth_power, rock_slide, body_slam],
             "A colossal earth elemental said to cause earthquakes when it stirs from its slumber.",
             level=45
         )
-        
+
         luminary = Monster(
             "Luminary", "Psychic", 90, 115, 85, 90,
             [psychic_blast, cosmic_power, celestial_beam, time_warp],
             "A being of pure mental energy that illuminates the darkest minds with wisdom.",
             level=45
         )
-        
+
         # New special type legendary monsters
         chronos = Monster(
             "Chronos", "Time", 100, 120, 90, 110,
@@ -1238,42 +1229,42 @@ class Game:
             "The embodiment of time itself, capable of accelerating, slowing, or stopping time at will.",
             level=50
         )
-        
+
         spatium = Monster(
             "Spatium", "Space", 100, 90, 120, 110,
             [dimensional_rift, gravity_crush, psychic_blast, shadow_force],
             "The embodiment of space, able to bend and fold dimensions as easily as paper.",
             level=50
         )
-        
+
         cosmix = Monster(
             "Cosmix", "Cosmic", 110, 130, 90, 90,
             [celestial_beam, cosmic_power, star_burst, galaxy_spiral],
             "A being born from the coalescence of cosmic rays and stardust, containing the power of distant galaxies.",
             level=50
         )
-        
+
         darkrai = Monster(
             "Darkrai", "Dread", 90, 130, 90, 110,
             [dark_void, shadow_force, nightmare_feast, terror_claw],
             "A creature that embodies the essence of nightmares and primal fear. It feeds on terror and despair.",
             level=50
         )
-        
+
         vitalia = Monster(
             "Vitalia", "Life", 130, 90, 110, 90, 
             [vine_whip, seed_bomb, nature_bloom, life_force],
             "The embodiment of life energy, capable of accelerating growth and healing at a touch.",
             level=50
         )
-        
+
         phantomos = Monster(
             "Phantomos", "Ghost", 90, 120, 90, 120,
             [shadow_ball, spectral_grasp, soul_steal, dark_void],
             "An ancient spirit that has existed for millennia, able to pass through solid matter and sap the life force of the living.",
             level=50
         )
-        
+
         # The special dimension of hell legendary monster
         abaddon = Monster(
             "Abaddon", "Dread", 120, 150, 120, 90,
@@ -1281,7 +1272,7 @@ class Game:
             "The lord of the abyss, ruler of the dimension of hell. It brings eternal torment to those who cross its path.",
             level=60
         )
-        
+
         # Dual-type legendary monsters
         cosmicshade = Monster(
             "Cosmicshade", "Cosmic", 110, 140, 100, 100,
@@ -1289,28 +1280,28 @@ class Game:
             "A creature born from the darkness between stars. Its body absorbs light yet shines with cosmic radiance.",
             level=55
         )
-        
+
         darkmatter = Monster(
             "Darkmatter", "Dark", 100, 140, 110, 100,
             [shadow_force, dark_void, cosmic_power, galaxy_spiral],
             "An entity composed of mysterious dark matter. It can manipulate gravity and consumes light.",
             level=55
         )
-        
+
         lifedream = Monster(
             "Lifedream", "Life", 140, 90, 120, 100,
             [nature_bloom, life_force, seed_bomb, vine_whip],
             "A guardian of natural life, its body blooms with eternal flora. It nurtures all living things.",
             level=55
         )
-        
+
         dreadspirit = Monster(
             "Dreadspirit", "Dread", 100, 140, 90, 120,
             [nightmare_feast, terror_claw, spectral_grasp, soul_steal],
             "A terrifying spectral entity that feeds on fear. Its mere presence causes nightmares.",
             level=55
         )
-        
+
         # New elemental dimension legendaries
         infernus = Monster(
             "Infernus", "Fire", 120, 160, 100, 90,
@@ -1318,28 +1309,28 @@ class Game:
             "The emperor of flames from the Molten Core dimension. Its body burns hotter than the core of a star.",
             level=60
         )
-        
+
         aquabyss = Monster(
             "Aquabyss", "Water", 150, 100, 160, 80,
             [hydro_pump, surf, bubble_beam, ice_beam],
             "The sovereign of the Abyssal Depths dimension. Its body holds pressure that could crush mountains.",
             level=60
         )
-        
+
         terravore = Monster(
             "Terravore", "Ground", 160, 130, 120, 60,
             [earthquake, earth_power, rock_slide, sand_tomb],
             "The ruler of the Crystal Caverns dimension. Its body is composed of living stone and precious gems.",
             level=60
         )
-        
+
         stormrage = Monster(
             "Stormrage", "Electric", 130, 140, 90, 130,
             [thunder, thunderbolt, thunder_shock, spark],
             "The lord of the Tempest Realm dimension. Its body crackles with electrical currents that could power cities.",
             level=60
         )
-        
+
         return {
             "Springraze": springraze,
             "Ignolf": ignolf,
@@ -1390,7 +1381,7 @@ class Game:
             "Terravore": terravore,
             "Stormrage": stormrage
         }
-    
+
     def create_all_items(self) -> Dict[str, Item]:
         """Create all items for the game"""
         potion = Item("Potion", "Restores 20 HP to a monster", "heal", 20)
@@ -1398,7 +1389,7 @@ class Game:
         hyper_potion = Item("Hyper Potion", "Restores 100 HP to a monster", "heal", 100)
         revive = Item("Revive", "Revives a fainted monster with 50% HP", "revive", 50)
         monster_ball = Item("Monster Ball", "Used to catch wild monsters", "catch", 1)
-        
+
         return {
             "Potion": potion,
             "Super Potion": super_potion,
@@ -1406,23 +1397,23 @@ class Game:
             "Revive": revive,
             "Monster Ball": monster_ball
         }
-    
+
     def get_wild_monster_for_location(self, location: str) -> Monster:
         """Get a random wild monster appropriate for the current location"""
         # Define monster pools by rarity
         common_monsters = ["Leaflet", "Flamouse", "Puddlet", "Buzzer", "Rockling", "Flutterwing", "Toxifrog", 
                            "Mudcrawl", "Sparktail", "Glowbug", "Pebblite", "Whistleaf", "Marshwiggle", "Frostbite"]
-        
+
         uncommon_monsters = ["Floracat", "Emberbear", "Coralfish", "Boltfox", "Frostbite", "Shadowpaw", "Fairybell", "Brawlcub",
                              "Aquafin", "Blazehound", "Groundmole", "Thunderwing", "Psyowl", "Vinewhip", "Glacierclaw", "Metalbeak"]
-        
+
         # Define rare monsters that appear in special locations
         rare_monsters = ["Rockbehemoth", "Psyowl", "Drakeling", "Tornadash", "Volcanix", "Abyssal", "Spectralord"]
-        
+
         # Define legendary monsters (extremely rare, only found in special puzzles/challenges)
         legendary_monsters = ["Chronodrake", "Celestius", "Pyrovern", "Gemdrill", "Shadowclaw", "Tempestus", 
                              "Terraquake", "Luminary", "Chronos", "Spatium", "Cosmix", "Darkrai", "Vitalia", "Phantomos"]
-        
+
         # These legendaries can only be found in specific dimensions
         hell_dimension_legendaries = ["Abaddon", "Darkrai", "Dreadspirit"]
         molten_core_legendaries = ["Infernus", "Pyrovern"]
@@ -1433,7 +1424,7 @@ class Game:
         timeless_expanse_legendaries = ["Chronos", "Chronodrake"]
         spatial_rift_legendaries = ["Spatium"]
         eternal_garden_legendaries = ["Vitalia", "Lifedream"]
-        
+
         # Create filtered lists for specific locations
         forest_rares = [m for m in rare_monsters if m in ["Rockbehemoth", "Drakeling"]]
         cave_rares = [m for m in rare_monsters if m in ["Rockbehemoth", "Psyowl"]]
@@ -1482,7 +1473,7 @@ class Game:
             "Hometown": (
                 common_monsters[:4], uncommon_monsters[:4], []
             ),  # Limited selection in hometown
-            
+
             # New locations with their own monster pools
             "Volcanic Ridge": (
                 ["Flamouse", "Rockling", "Blazehound"],
@@ -1571,13 +1562,13 @@ class Game:
                 eternal_garden_legendaries
             )
         }
-        
+
         # Default to Forest if location not found
         commons, uncommons, rares = location_monsters.get(location, location_monsters["Forest"])
-        
+
         # Choose a monster based on rarity
         rarity_roll = random.random()
-        
+
         # Extremely rare chance for legendaries (1% chance) in high-level areas
         if rarity_roll < 0.01 and self.player and self.player.trainer_level >= 30 and location in [
             "Dimension of Hell", "Molten Core", "Abyssal Depths", "Crystal Cavern", 
@@ -1611,10 +1602,10 @@ class Game:
             monster_name = random.choice(uncommons)
         else:  # 60% chance for common
             monster_name = random.choice(commons)
-        
+
         # Clone the template monster and set a reasonable level
         monster = self.all_monsters[monster_name].clone()
-        
+
         # Level adjustment (higher levels in some areas)
         base_level = monster.level
         level_ranges = {
@@ -1635,21 +1626,21 @@ class Game:
             "Ancient Labyrinth": (30, 40),
             "Dimension of Hell": (45, 60)
         }
-        
+
         level_range = level_ranges.get(location, (0, 3))
-        
+
         # Adjust level
         level_adjustment = random.randint(level_range[0], level_range[1])
         new_level = max(1, base_level + level_adjustment)
-        
+
         # Set new level
         while monster.level < new_level:
             monster.level_up()
-        
+
         # Chance to generate variant monsters
         # Different variants have different rarity
         variant_roll = random.random()
-        
+
         # Special locations have higher chance for variants
         location_variant_bonus = {
             "Dimension of Hell": 0.15,       # Higher chance for variants in special dimensions
@@ -1669,15 +1660,15 @@ class Game:
             "Ancient Labyrinth": 0.10,
             "Sky Tower": 0.08
         }
-        
+
         # Base chance for variants is 3%
         variant_chance = 0.03 + location_variant_bonus.get(location, 0.0)
-        
+
         # If we roll for a variant
         if variant_roll < variant_chance:
             # Determine which variant
             variant_type_roll = random.random()
-            
+
             # Dominant is the rarest (5% of variants)
             if variant_type_roll < 0.05:
                 monster.variant = "Dominant"
@@ -1698,25 +1689,25 @@ class Game:
             else:
                 monster.variant = "Alpha"
                 monster.apply_variant_bonuses()
-        
+
         return monster
-    
+
     def start_game(self):
         """Initialize and start the game"""
         # Show main menu first
         running = True
-        
+
         while running:
             clear_screen()
             self.print_title()
-            
+
             print(f"{Fore.CYAN}MAIN MENU{Style.RESET_ALL}\n")
             print("1. New Game")
             print("2. Load Game")
             print("3. Quit Game")
-            
+
             choice = input(f"\n{Fore.CYAN}Enter your choice (1-3): {Style.RESET_ALL}")
-            
+
             if choice == "1":
                 # Start new game
                 self.start_new_game()
@@ -1734,19 +1725,19 @@ class Game:
             else:
                 print(f"{Fore.RED}Invalid choice. Please enter 1, 2, or 3.{Style.RESET_ALL}")
                 input("Press Enter to continue...")
-    
+
     def start_new_game(self):
         """Start a new game"""
         clear_screen()
         self.print_title()
-        
+
         # Get player name
         player_name = input(f"{Fore.CYAN}Please enter your name: {Style.RESET_ALL}")
         if not player_name:
             player_name = "Trainer"
-        
+
         self.player = Player(player_name)
-        
+
         # Choose starter monster
         starter_choice = self.choose_starter()
         if starter_choice == "1":
@@ -1758,72 +1749,73 @@ class Game:
         elif starter_choice == "3":
             self.player.add_monster(self.all_monsters["Aquartle"].clone())
             print(f"\n{Fore.BLUE}You chose Aquartle, the Water-type monster!{Style.RESET_ALL}")
-        
+
         # Give starting items
         self.player.add_item(self.all_items["Potion"], 3)
         self.player.add_item(self.all_items["Monster Ball"], 5)
-        
+
         print(f"\nWelcome to the World of Monsters, {player_name}!")
         print("Your journey begins in your Hometown. What awaits you in this world of wonderful creatures?")
         print("Type 'help' at any time to see available commands.")
-        
+
         input("\nPress Enter to continue...")
-        
+
         # Main game loop
         self.game_loop()
-        
+
     def get_save_slots(self):
         """Get save slot information"""
         # Define save slots
         save_slots = ["Slot 1", "Slot 2", "Slot 3"]
-        
+
         # Check which slots have saved games
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT DISTINCT save_name FROM save_games ORDER BY save_name")
-            saved_games = [row[0] for row in cursor.fetchall()]
-            conn.close()
-        else:
-            saved_games = []
-        
+        saved_games = []
+        if os.path.exists(SAVE_DIR):
+            for filename in os.listdir(SAVE_DIR):
+                if filename.endswith('.pickle') and filename != os.path.basename(CHAMPIONS_FILE):
+                    try:
+                        save_name = filename.replace('.pickle', '').split('_', 1)[1] if '_' in filename else filename.replace('.pickle', '')
+                        saved_games.append(save_name)
+                    except (pickle.PickleError, FileNotFoundError, OSError):
+                        continue
+
         return save_slots, saved_games
-        
+
     def show_save_game_menu(self):
         """Show save game menu with save slots"""
         # Get save slot information
         save_slots, saved_games = self.get_save_slots()
-        
+
         while True:
             clear_screen()
             self.print_title()
-            
+
             print(f"{Fore.CYAN}SAVE GAME{Style.RESET_ALL}\n")
-            
+
             # Display save slots
             for i, slot in enumerate(save_slots):
                 if slot in saved_games:
                     print(f"{i+1}. {slot} {Fore.YELLOW}[OVERWRITE]{Style.RESET_ALL}")
                 else:
                     print(f"{i+1}. {slot} {Fore.GREEN}[EMPTY]{Style.RESET_ALL}")
-            
+
             print(f"\n4. {Fore.YELLOW}Back to Game{Style.RESET_ALL}")
-            
+
             choice = input(f"\n{Fore.CYAN}Enter your choice (1-4): {Style.RESET_ALL}")
-            
+
             if choice == "4":
                 return
-            
+
             if choice in ["1", "2", "3"]:
                 slot_idx = int(choice) - 1
                 save_name = save_slots[slot_idx]
-                
+
                 # Confirm overwrite if slot already has a save
                 if save_name in saved_games:
                     confirm = input(f"{Fore.YELLOW}This slot already has a saved game. Overwrite? (y/n): {Style.RESET_ALL}").lower()
                     if confirm != 'y' and confirm != 'yes':
                         continue
-                
+
                 # Save the game
                 if self.save_game(save_name):
                     print(f"{Fore.GREEN}Game saved successfully to {save_name}!{Style.RESET_ALL}")
@@ -1835,36 +1827,36 @@ class Game:
             else:
                 print(f"{Fore.RED}Invalid choice. Please enter 1-4.{Style.RESET_ALL}")
                 input("Press Enter to continue...")
-    
+
     def show_load_game_menu(self):
         """Show load game menu with save slots"""
         # Get save slot information
         save_slots, saved_games = self.get_save_slots()
-        
+
         while True:
             clear_screen()
             self.print_title()
-            
+
             print(f"{Fore.CYAN}LOAD GAME{Style.RESET_ALL}\n")
-            
+
             # Display save slots
             for i, slot in enumerate(save_slots):
                 if slot in saved_games:
                     print(f"{i+1}. {slot} {Fore.GREEN}[SAVED GAME]{Style.RESET_ALL}")
                 else:
                     print(f"{i+1}. {slot} {Fore.RED}[EMPTY]{Style.RESET_ALL}")
-            
+
             print(f"\n4. {Fore.YELLOW}Back to Game{Style.RESET_ALL}")
-            
+
             choice = input(f"\n{Fore.CYAN}Enter your choice (1-4): {Style.RESET_ALL}")
-            
+
             if choice == "4":
                 return False
-            
+
             if choice in ["1", "2", "3"]:
                 slot_idx = int(choice) - 1
                 save_name = save_slots[slot_idx]
-                
+
                 if save_name in saved_games:
                     # Load the game
                     if self.load_game(save_name):
@@ -1882,7 +1874,7 @@ class Game:
             else:
                 print(f"{Fore.RED}Invalid choice. Please enter 1-4.{Style.RESET_ALL}")
                 input("Press Enter to continue...")
-    
+
     def print_title(self):
         """Print game title screen"""
         title = f"""
@@ -1898,47 +1890,47 @@ your monster companions!
 {Fore.CYAN}======================================{Style.RESET_ALL}
 """
         print(title)
-    
+
     def choose_starter(self) -> str:
         """Let the player choose a starter monster"""
         valid_choice = False
         choice = ""
-        
+
         while not valid_choice:
             clear_screen()
             self.print_title()
             print(f"{Fore.CYAN}Professor Oak:{Style.RESET_ALL} Welcome to the world of monsters!")
             print("It's time to choose your first monster companion for your journey.")
             print("\nYou have three choices:")
-            
+
             print(f"\n{Fore.GREEN}1. Springraze (Grass-type){Style.RESET_ALL}")
             print("   A small, energetic grass-type monster with leaf-like appendages.")
             print("   Moves: Leaf Attack, Tackle, Vine Whip, Seed Bomb")
-            
+
             print(f"\n{Fore.RED}2. Ignolf (Fire-type){Style.RESET_ALL}")
             print("   A fiery wolf-like monster with flames around its body.")
             print("   Moves: Ember, Scratch, Fire Fang, Flame Thrower")
-            
+
             print(f"\n{Fore.BLUE}3. Aquartle (Water-type){Style.RESET_ALL}")
             print("   A turtle-like water monster with a hard shell and water jets.")
             print("   Moves: Water Gun, Tackle, Bubble Beam, Hydro Pump")
-            
+
             choice = input(f"\n{Fore.CYAN}Enter your choice (1-3): {Style.RESET_ALL}")
-            
+
             if choice in ["1", "2", "3"]:
                 valid_choice = True
             else:
                 print("Invalid choice! Please enter 1, 2, or 3.")
                 input("Press Enter to try again...")
-        
+
         return choice
-    
+
     def game_loop(self):
         """Main game loop"""
         while self.running:
             # Handle turns and random encounters
             self.turn_count += 1
-            
+
             if not self.current_battle:
                 # Check for random encounter (if not in hometown)
                 if (self.player and self.player.location != "Hometown" and 
@@ -1947,39 +1939,39 @@ your monster companions!
                     wild_monster = self.get_wild_monster_for_location(self.player.location)
                     self.start_battle(wild_monster)
                     continue  # Skip to next iteration to handle battle
-            
+
             # Show game state
             clear_screen()
             self.display_game_state()
-            
+
             # Get and process player command
             command = input(f"\n{Fore.CYAN}What will you do? {Style.RESET_ALL}").strip().lower()
             self.process_command(command)
-    
+
     def display_game_state(self):
         """Display the current game state to the player"""
         player = self.player
-        
+
         # Check if player exists
         if not player:
             print(f"{Fore.RED}No active player. Please start a new game or load a saved game.{Style.RESET_ALL}")
             return
-            
+
         # If in battle, show battle state
         if self.current_battle:
             self.display_battle_state()
             return
-        
+
         # Show location and basic player info
         print(f"{Fore.YELLOW}Location: {player.location}{Style.RESET_ALL}")
         print(f"Trainer: {player.name}")
         print(f"Money: ${player.money}")
-        
+
         # Show active monster
         if player.active_monster:
             print(f"\n{Fore.CYAN}Active Monster:{Style.RESET_ALL}")
             print(player.active_monster)
-        
+
         # Show brief command help
         print(f"\n{Fore.CYAN}Available Commands:{Style.RESET_ALL}")
         print("- explore: Explore the current location")
@@ -1988,26 +1980,26 @@ your monster companions!
         print("- items: View your inventory")
         print("- heal: Rest and heal your monsters (only in Hometown)")
         print("- help: Show detailed help")
-    
+
     def display_battle_state(self):
         """Display the current battle state"""
         battle = self.current_battle
         if not battle or not self.player:
             print(f"{Fore.RED}No active battle.{Style.RESET_ALL}")
             return
-            
+
         player_monster = self.player.active_monster
         wild_monster = battle.wild_monster
-        
+
         if not player_monster or not wild_monster:
             print(f"{Fore.RED}Battle state is invalid.{Style.RESET_ALL}")
             return
-        
+
         print(f"{Fore.RED}=== BATTLE ==={Style.RESET_ALL}")
         print(f"Wild {wild_monster}")
         print("\nVS\n")
         print(f"Your {player_monster}")
-        
+
         print(f"\n{Fore.CYAN}Battle Commands:{Style.RESET_ALL}")
         print("- fight <number>: Use a move to attack")
         if hasattr(player_monster, 'moves') and player_monster.moves:
@@ -2015,23 +2007,23 @@ your monster companions!
                 print(f"  {i+1}. {move}")
         else:
             print("  No moves available")
-        
+
         print("- catch: Try to catch the wild monster")
         print("- switch <number>: Switch to another monster")
         print("- item <number>: Use an item")
         print("- run: Try to run away from battle")
-    
+
     def save_game(self, save_name: Optional[str] = None) -> bool:
-        """Save the current game state to database"""
+        """Save the current game state to file"""
         if not self.db_available or not self.player:
             print(f"{Fore.RED}Save functionality is not available.{Style.RESET_ALL}")
             return False
-        
+
         # Default save name if none provided
         if not save_name:
             player_name = self.player.name if hasattr(self.player, 'name') and self.player.name else "Player"
             save_name = f"{player_name}_save"
-        
+
         try:
             # Prepare game state for saving
             # We can't directly pickle the entire game state because it's too complex
@@ -2043,151 +2035,119 @@ your monster companions!
                 "player_monsters": self.player.monsters,
                 "player_inventory": self.player.inventory,
                 "player_active_monster_index": self.player.active_monster_index,
-                "champion_battles_completed": self.champion_battles_completed
+                "champion_battles_completed": self.champion_battles_completed,
+                "save_time": time.strftime("%Y-%m-%d %H:%M:%S")
             }
-            
-            # Serialize using pickle (handles complex objects)
-            pickled_data = pickle.dumps(save_data)
-            
-            # Connect to database and save
-            conn = get_db_connection()
-            if not conn:
-                print(f"{Fore.RED}Database connection failed. Unable to save.{Style.RESET_ALL}")
-                return False
-            
-            try:
-                cursor = conn.cursor()
-                # Check if save already exists
-                cursor.execute(
-                    "SELECT id FROM save_games WHERE player_name = %s AND save_name = %s",
-                    (self.player.name, save_name)
-                )
-                save_exists = cursor.fetchone()
-                
-                if save_exists:
-                    # Update existing save
-                    cursor.execute(
-                        "UPDATE save_games SET game_data = %s, created_at = CURRENT_TIMESTAMP WHERE player_name = %s AND save_name = %s",
-                        (pickled_data, self.player.name, save_name)
-                    )
-                else:
-                    # Create new save
-                    cursor.execute(
-                        "INSERT INTO save_games (player_name, save_name, game_data) VALUES (%s, %s, %s)",
-                        (self.player.name, save_name, pickled_data)
-                    )
-                
-                conn.commit()
-                print(f"{Fore.GREEN}Game saved successfully as '{save_name}'!{Style.RESET_ALL}")
-                return True
-            
-            except Exception as e:
-                print(f"{Fore.RED}Error saving game: {e}{Style.RESET_ALL}")
-                return False
-            finally:
-                conn.close()
-                
+
+            # Get file path for save
+            save_path = get_save_path(self.player.name, save_name)
+
+            # Save to file
+            with open(save_path, 'wb') as f:
+                pickle.dump(save_data, f)
+
+            print(f"{Fore.GREEN}Game saved successfully as '{save_name}'!{Style.RESET_ALL}")
+            return True
+
         except Exception as e:
-            print(f"{Fore.RED}Error preparing save data: {e}{Style.RESET_ALL}")
+            print(f"{Fore.RED}Error saving game: {e}{Style.RESET_ALL}")
             return False
-    
+
     def load_game(self, save_name: Optional[str] = None) -> bool:
-        """Load a saved game state from database"""
+        """Load a saved game state from file"""
         if not self.db_available:
             print(f"{Fore.RED}Load functionality is not available.{Style.RESET_ALL}")
             return False
-        
+
         try:
-            conn = get_db_connection()
-            if not conn:
-                print(f"{Fore.RED}Database connection failed. Unable to load.{Style.RESET_ALL}")
-                return False
-            
-            try:
-                cursor = conn.cursor()
-                
-                if save_name:
-                    # Load specific save
-                    cursor.execute(
-                        "SELECT game_data FROM save_games WHERE save_name = %s",
-                        (save_name,)
-                    )
-                else:
-                    # Show available saves for selection
-                    cursor.execute("SELECT player_name, save_name, created_at FROM save_games ORDER BY created_at DESC")
-                    saves = cursor.fetchall()
-                    
-                    if not saves:
-                        print(f"{Fore.YELLOW}No saved games found.{Style.RESET_ALL}")
-                        return False
-                    
-                    print(f"\n{Fore.CYAN}Available saved games:{Style.RESET_ALL}")
-                    for i, (player, s_name, created) in enumerate(saves, 1):
-                        print(f"{i}. {s_name} - {player} ({created})")
-                    
-                    choice = input(f"\n{Fore.CYAN}Enter save number to load (or 0 to cancel): {Style.RESET_ALL}")
-                    try:
-                        save_index = int(choice) - 1
-                        if save_index < 0:
-                            print("Loading cancelled.")
-                            return False
-                        selected_save = saves[save_index][1]
-                    except (ValueError, IndexError):
-                        print(f"{Fore.RED}Invalid selection.{Style.RESET_ALL}")
-                        return False
-                    
-                    cursor.execute(
-                        "SELECT game_data FROM save_games WHERE save_name = %s",
-                        (selected_save,)
-                    )
-                
-                save_data_row = cursor.fetchone()
-                if not save_data_row:
-                    print(f"{Fore.RED}Save not found.{Style.RESET_ALL}")
+            if save_name:
+                # Load specific save if name is provided
+                if not self.player or not hasattr(self.player, 'name'):
+                    print(f"{Fore.RED}Cannot load: Player not initialized.{Style.RESET_ALL}")
                     return False
+                    
+                save_path = get_save_path(self.player.name, save_name)
                 
-                # Deserialize the save data
-                save_data = pickle.loads(save_data_row[0])
+                if not os.path.exists(save_path):
+                    print(f"{Fore.RED}Save '{save_name}' not found.{Style.RESET_ALL}")
+                    return False
+                    
+                with open(save_path, 'rb') as f:
+                    save_data = pickle.load(f)
+            else:
+                # Show available saves for selection
+                saves = []
+                if os.path.exists(SAVE_DIR):
+                    for filename in os.listdir(SAVE_DIR):
+                        if filename.endswith('.pickle') and filename != os.path.basename(CHAMPIONS_FILE):
+                            try:
+                                with open(os.path.join(SAVE_DIR, filename), 'rb') as f:
+                                    data = pickle.load(f)
+                                    player_name = data.get("player_name", "Unknown")
+                                    save_time = data.get("save_time", "Unknown")
+                                    saves.append((filename, player_name, save_time))
+                            except Exception:
+                                # Skip corrupted saves
+                                continue
+
+                if not saves:
+                    print(f"{Fore.YELLOW}No saved games found.{Style.RESET_ALL}")
+                    return False
+
+                print(f"\n{Fore.CYAN}Available saved games:{Style.RESET_ALL}")
+                for i, (filename, player, timestamp) in enumerate(saves, 1):
+                    save_name = filename.replace('.pickle', '').split('_', 1)[1] if '_' in filename else filename.replace('.pickle', '')
+                    print(f"{i}. {save_name} - {player} ({timestamp})")
                 
-                # Apply the save data to the current game state
-                player = Player(save_data["player_name"])
-                player.location = save_data["player_location"]
-                player.money = save_data["player_money"]
-                player.monsters = save_data["player_monsters"]
-                player.inventory = save_data["player_inventory"]
-                player.active_monster_index = save_data["player_active_monster_index"]
-                
-                self.player = player
-                self.champion_battles_completed = save_data.get("champion_battles_completed", 0)
-                
-                print(f"{Fore.GREEN}Game loaded successfully!{Style.RESET_ALL}")
-                return True
-                
-            except Exception as e:
-                print(f"{Fore.RED}Error loading game: {e}{Style.RESET_ALL}")
-                return False
-            finally:
-                conn.close()
-                
+                choice = input(f"\n{Fore.CYAN}Enter save number to load (or 0 to cancel): {Style.RESET_ALL}")
+                try:
+                    save_index = int(choice) - 1
+                    if save_index < 0:
+                        print("Loading cancelled.")
+                        return False
+                    selected_filename = saves[save_index][0]
+                    with open(os.path.join(SAVE_DIR, selected_filename), 'rb') as f:
+                        save_data = pickle.load(f)
+                except (ValueError, IndexError, FileNotFoundError):
+                    print(f"{Fore.RED}Invalid selection or file not found.{Style.RESET_ALL}")
+                    return False
+                except Exception as e:
+                    print(f"{Fore.RED}Error loading save: {e}{Style.RESET_ALL}")
+                    return False
+            
+            # Apply the save data to the current game state
+            player = Player(save_data["player_name"])
+            player.location = save_data["player_location"]
+            player.money = save_data["player_money"]
+            player.monsters = save_data["player_monsters"]
+            player.inventory = save_data["player_inventory"]
+            player.active_monster_index = save_data["player_active_monster_index"]
+
+            self.player = player
+            self.champion_battles_completed = save_data.get("champion_battles_completed", 0)
+
+            print(f"{Fore.GREEN}Game loaded successfully!{Style.RESET_ALL}")
+            return True
+
         except Exception as e:
             print(f"{Fore.RED}Error processing save data: {e}{Style.RESET_ALL}")
             return False
-    
+
     def fusion_menu(self):
         """Display fusion menu to combine two monsters"""
         if not self.player or len(self.player.monsters) < 2:
             print(f"{Fore.YELLOW}You need at least two monsters to perform fusion.{Style.RESET_ALL}")
             input("Press Enter to continue...")
             return
-        
+
         # Display available monsters
         clear_screen()
         print(f"{Fore.MAGENTA}===== MONSTER FUSION =====\n{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}Select two monsters to fuse. Both must be at least level {FUSION_LEVEL_REQUIREMENT}.{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}Warning: The selected monsters will be consumed in the fusion process!{Style.RESET_ALL}\n")
-        
+
         self.show_monsters(for_fusion=True)
-        
+
         # Get first monster selection
         try:
             choice1 = int(input(f"\n{Fore.CYAN}Select first monster (0 to cancel): {Style.RESET_ALL}")) - 1
@@ -2195,81 +2155,81 @@ your monster companions!
                 print("Fusion cancelled.")
                 input("Press Enter to continue...")
                 return
-            
+
             monster1 = self.player.monsters[choice1]
             if monster1.level < FUSION_LEVEL_REQUIREMENT:
                 print(f"{Fore.RED}This monster must be at least level {FUSION_LEVEL_REQUIREMENT} for fusion.{Style.RESET_ALL}")
                 input("Press Enter to continue...")
                 return
-            
+
             # Get second monster selection
             choice2 = int(input(f"\n{Fore.CYAN}Select second monster (0 to cancel): {Style.RESET_ALL}")) - 1
             if choice2 < 0 or choice2 >= len(self.player.monsters) or choice1 == choice2:
                 print("Fusion cancelled or invalid selection.")
                 input("Press Enter to continue...")
                 return
-            
+
             monster2 = self.player.monsters[choice2]
             if monster2.level < FUSION_LEVEL_REQUIREMENT:
                 print(f"{Fore.RED}This monster must be at least level {FUSION_LEVEL_REQUIREMENT} for fusion.{Style.RESET_ALL}")
                 input("Press Enter to continue...")
                 return
-            
+
             # Confirm fusion
             print(f"\n{Fore.YELLOW}You are about to fuse {monster1.get_colored_name()} and {monster2.get_colored_name()}.{Style.RESET_ALL}")
             confirm = input(f"{Fore.RED}This cannot be undone! Proceed? (y/n): {Style.RESET_ALL}").lower()
-            
+
             if confirm != 'y':
                 print("Fusion cancelled.")
                 input("Press Enter to continue...")
                 return
-            
+
             # Perform fusion
             fusion_monster = Monster.fuse(monster1, monster2)
             if fusion_monster:
                 # Remove the original monsters
                 self.player.monsters = [m for i, m in enumerate(self.player.monsters) 
                                         if i != choice1 and i != choice2]
-                
+
                 # Add the fusion monster
                 self.player.add_monster(fusion_monster)
-                
+
                 print(f"\n{Fore.MAGENTA}✨ FUSION COMPLETE! ✨{Style.RESET_ALL}")
                 print(f"Created new monster: {fusion_monster.get_colored_name()}")
                 print(str(fusion_monster))
             else:
                 print(f"{Fore.RED}Fusion failed. Both monsters must meet requirements.{Style.RESET_ALL}")
-                
+
         except ValueError:
             print(f"{Fore.RED}Invalid selection.{Style.RESET_ALL}")
-        
+
         input("Press Enter to continue...")
-    
+
     def championship_battle(self):
         """Start a championship battle against powerful trainers"""
         if not self.player or not self.player.has_usable_monster():
             print(f"{Fore.RED}You need at least one healthy monster to challenge the championship.{Style.RESET_ALL}")
             input("Press Enter to continue...")
             return
-        
+
         # Check if player has enough monsters
         if len(self.player.monsters) < 3:
             print(f"{Fore.RED}You need at least 3 monsters to challenge the championship.{Style.RESET_ALL}")
             input("Press Enter to continue...")
             return
-        
+
         # Ensure player's monsters are strong enough
         if all(m.level < 20 for m in self.player.monsters):
             print(f"{Fore.RED}Your monsters are too weak for the championship. Train them to at least level 20.{Style.RESET_ALL}")
             input("Press Enter to continue...")
             return
-        
+
         clear_screen()
         print(f"{Fore.YELLOW}===== MONSTER CHAMPIONSHIP =====\n{Style.RESET_ALL}")
         print(f"Welcome to the Monster Championship, {self.player.name}!")
         print("Here you'll face the toughest trainers and their powerful monsters.")
         print("Emerge victorious to earn the title of Monster Champion!")
-        
+
         # Define championship trainers and their monsters based on progress
         trainers = [
             {
@@ -2301,47 +2261,47 @@ your monster companions!
                 "level_boost": 20 + (self.champion_battles_completed * 3)
             }
         ]
-        
+
         # Allow player to heal before championship
         for monster in self.player.monsters:
             monster.full_heal()
-        
+
         input("\nYour monsters have been fully healed. Press Enter to begin the championship...")
-        
+
         # Battle each trainer in sequence
         for trainer in trainers:
             clear_screen()
             print(f"\n{Fore.CYAN}{trainer['name']} challenges you to a battle!{Style.RESET_ALL}")
-            
+
             # Level up trainer's monsters
             for monster in trainer["monsters"]:
                 target_level = min(MAX_MONSTER_LEVEL, monster.level + trainer["level_boost"])
                 while monster.level < target_level:
                     monster.level_up()
-            
+
             # Create a non-wild battle
             battle = Battle(self.player, trainer["monsters"][0])
             battle.is_wild = False
             battle.can_catch = False
-            
+
             # Custom battle logic for trainers with multiple monsters
             current_trainer_monster_index = 0
             self.current_battle = battle
-            
+
             # Battle loop for this trainer
             while not battle.is_finished:
                 clear_screen()
                 self.display_battle_state()
-                
+
                 # Get player command
                 command = input(f"\n{Fore.CYAN}What will you do? {Style.RESET_ALL}").strip().lower()
                 parts = command.split()
                 cmd = parts[0] if parts else ""
                 arg = " ".join(parts[1:]) if len(parts) > 1 else None
-                
+
                 result = battle.player_turn(cmd, arg)
                 print("\n" + result)
-                
+
                 # If battle finished, check if trainer has more monsters
                 if battle.is_finished:
                     if battle.result == "win" and current_trainer_monster_index < len(trainer["monsters"]) - 1:
@@ -2364,7 +2324,7 @@ your monster companions!
                     wild_result = battle.wild_monster_turn()
                     print("\n" + wild_result)
                     input("Press Enter to continue...")
-                    
+
                     # Check if player's monster fainted
                     if battle.is_finished and battle.result == "lose":
                         if self.player.has_usable_monster():
@@ -2383,54 +2343,62 @@ your monster companions!
                             input("Press Enter to continue...")
                             self.current_battle = None
                             return
-            
+
             # Trainer defeated
             print(f"\n{Fore.GREEN}You defeated {trainer['name']}!{Style.RESET_ALL}")
-            
+
             # Heal player's monsters between trainer battles
             for monster in self.player.monsters:
                 monster.heal(monster.max_hp // 2)  # Heal 50%
-            
+
             print("\nYour monsters recovered some HP for the next battle.")
             input("Press Enter to continue...")
-        
+
         # Championship completed
         clear_screen()
         print(f"\n{Fore.YELLOW}🏆 CONGRATULATIONS! 🏆{Style.RESET_ALL}")
         print(f"You have defeated all trainers and become the {self.champion_battles_completed + 1}-time Monster Champion!")
-        
+
         # Award prize money
         prize_money = 2000 + (self.champion_battles_completed * 500)
         self.player.money += prize_money
         print(f"\nYou received ${prize_money} as prize money!")
-        
+
         # Record championship victory
         self.champion_battles_completed += 1
-        
-        # Save champion data if database is available
+
+        # Save champion data to file
         if self.db_available:
             try:
                 # Find player's strongest monster
                 strongest_monster = max(self.player.monsters, key=lambda m: m.level)
-                strongest_monster_data = pickle.dumps(strongest_monster)
                 
-                conn = get_db_connection()
-                if conn:
+                # Read existing champions
+                champions = []
+                if os.path.exists(CHAMPIONS_FILE):
                     try:
-                        cursor = conn.cursor()
-                        cursor.execute(
-                            "INSERT INTO champions (player_name, monster_data) VALUES (%s, %s)",
-                            (self.player.name, strongest_monster_data)
-                        )
-                        conn.commit()
-                        print(f"\n{Fore.GREEN}Your champion {strongest_monster.get_colored_name()} has been recorded in the Hall of Fame!{Style.RESET_ALL}")
-                    except Exception as e:
-                        print(f"Error recording championship: {e}")
-                    finally:
-                        conn.close()
+                        with open(CHAMPIONS_FILE, 'rb') as f:
+                            champions = pickle.load(f)
+                    except Exception:
+                        # If file is corrupted, start with empty list
+                        champions = []
+                
+                # Add new champion data
+                champion_data = {
+                    "player_name": self.player.name,
+                    "monster": strongest_monster,
+                    "win_date": time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                champions.append(champion_data)
+                
+                # Save to file
+                with open(CHAMPIONS_FILE, 'wb') as f:
+                    pickle.dump(champions, f)
+                
+                print(f"\n{Fore.GREEN}Your champion {strongest_monster.get_colored_name()} has been recorded in the Hall of Fame!{Style.RESET_ALL}")
             except Exception as e:
                 print(f"Error recording championship: {e}")
-        
+
         input("Press Enter to continue...")
 
     def process_command(self, command: str):
@@ -2438,11 +2406,11 @@ your monster companions!
         # Handle slash commands
         if command.startswith('/'):
             command = command[1:]  # Remove the slash prefix
-        
+
         parts = command.split()
         cmd = parts[0] if parts else ""
         arg = " ".join(parts[1:]) if len(parts) > 1 else None
-        
+
         # Handle command shortcuts
         if cmd == "e":
             cmd = "explore"
@@ -2464,12 +2432,12 @@ your monster companions!
             cmd = "championship"
         elif cmd == "q":
             cmd = "quit"
-        
+
         # In battle, handle battle commands
         if self.current_battle:
             self.process_battle_command(cmd, arg)
             return
-        
+
         # Regular commands when not in battle
         if cmd == "explore":
             self.explore()
@@ -2502,18 +2470,18 @@ your monster companions!
             print(f"Unknown command: {cmd}")
             print("Type 'help' to see available commands.")
             input("Press Enter to continue...")
-    
+
     def process_battle_command(self, cmd: str, arg: Optional[str] = None):
         """Process battle commands"""
         if not self.current_battle:
             print("Error: No active battle!")
             return
-            
+
         if not self.player:
             print("Error: No active player!")
             self.current_battle = None
             return
-        
+
         # Handle battle command shortcuts
         if cmd == "f":
             cmd = "fight"
@@ -2525,9 +2493,9 @@ your monster companions!
             cmd = "item"
         elif cmd == "r":
             cmd = "run"
-            
+
         battle = self.current_battle
-        
+
         if cmd in ["fight", "catch", "switch", "item", "run"]:
             try:
                 result = battle.player_turn(cmd, arg)
@@ -2537,7 +2505,7 @@ your monster companions!
                 self.current_battle = None
                 input("\nPress Enter to continue...")
                 return
-            
+
             # Check if battle is finished
             if not hasattr(battle, 'is_finished') or battle.is_finished:
                 if not hasattr(battle, 'result'):
@@ -2545,16 +2513,16 @@ your monster companions!
                     self.current_battle = None
                     input("\nPress Enter to continue...")
                     return
-                    
+
                 if battle.result == "win":
                     print("\nYou won the battle!")
-                    
+
                     # Reward for winning
                     if hasattr(battle, 'wild_monster') and battle.wild_monster:
                         money_reward = battle.wild_monster.level * 10
                         self.player.money += money_reward
                         print(f"You earned ${money_reward}!")
-                        
+
                         # Award trainer exp for winning battles
                         exp_reward = battle.wild_monster.level * 3
                         if self.player.gain_trainer_exp(exp_reward):
@@ -2566,34 +2534,34 @@ your monster companions!
                         # Default reward if monster info is missing
                         self.player.money += 50
                         print("You earned $50!")
-                        
+
                         # Default trainer exp
                         if self.player.gain_trainer_exp(15):
                             print(f"{Fore.GREEN}You gained 15 trainer exp and leveled up to Trainer Level {self.player.trainer_level}!{Style.RESET_ALL}")
                         else:
                             print(f"You gained 15 trainer exp. ({self.player.exp}/{self.player.exp_to_level})")
-                    
+
                 elif battle.result == "lose":
                     print("\nYou lost the battle!")
-                    
+
                     # Penalty for losing
                     penalty = min(50, self.player.money // 4)
                     self.player.money -= penalty
                     print(f"You lost ${penalty}...")
-                    
+
                     # Fully heal monsters when returning to Hometown
                     self.player.location = "Hometown"
                     if hasattr(self.player, 'monsters') and self.player.monsters:
                         for monster in self.player.monsters:
                             if monster:
                                 monster.full_heal()
-                    
+
                 elif battle.result == "catch":
                     print("\nYou caught a new monster!")
-                
+
                 elif battle.result == "run":
                     print("\nYou got away safely!")
-                
+
                 # End battle
                 self.current_battle = None
                 input("\nPress Enter to continue...")
@@ -2601,23 +2569,23 @@ your monster companions!
             print("Invalid battle command.")
             print("Available commands: fight, catch, switch, item, run")
             input("Press Enter to continue...")
-    
+
     def explore(self):
         """Explore the current location"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-        
+
         location = self.player.location if hasattr(self.player, 'location') else "Unknown"
-        
+
         print(f"\nExploring {location}...")
         time.sleep(1)
-        
+
         # Check for location-specific story events
         if self.check_story_event(location):
             return
-            
+
         # Location-specific exploration events
         location_events = {
             "Hometown": [
@@ -2669,7 +2637,7 @@ your monster companions!
                 "You find ancient coins worth $250 in a hidden chamber!"
             ]
         }
-        
+
         # Default events if location is not in the dictionary
         events = location_events.get(location, [
             "You search the area but find nothing of interest.",
@@ -2677,13 +2645,13 @@ your monster companions!
             "You found a Monster Ball in the bushes!",
             "You found $50 on the ground!"
         ])
-        
+
         # Weight probabilities - first option is most common
         weights = [0.7, 0.1, 0.1, 0.1]
         event = random.choices(events, weights=weights)[0]
-        
+
         print(event)
-        
+
         # Handle rewards
         try:
             if "Potion" in event and hasattr(self, 'all_items'):
@@ -2701,10 +2669,10 @@ your monster companions!
                     self.player.money += amount
                 except ValueError:
                     self.player.money += 50  # Default if parsing fails
-            
+
             # Always gain trainer experience from exploring
             exp_gain = 5  # Base exploration exp
-            
+
             # Bonus exp based on location difficulty
             location_exp_bonus = {
                 "Hometown": 0,
@@ -2716,32 +2684,32 @@ your monster companions!
                 "Shadow Peak": 15,
                 "Ancient Ruins": 18
             }
-            
+
             # Add location bonus
             exp_gain += location_exp_bonus.get(self.player.location, 0)
-            
+
             # Award trainer exp
             if self.player.gain_trainer_exp(exp_gain):
                 print(f"{Fore.GREEN}You gained {exp_gain} trainer exp and leveled up to Trainer Level {self.player.trainer_level}!{Style.RESET_ALL}")
                 print("Your monsters can now grow to this level.")
             else:
                 print(f"You gained {exp_gain} trainer exp. ({self.player.exp}/{self.player.exp_to_level})")
-                
+
         except Exception as e:
             print(f"Error while processing rewards: {str(e)}")
-        
+
         input("\nPress Enter to continue...")
-        
+
     def check_story_event(self, location: str) -> bool:
         """Check and trigger location-specific story events. Returns True if an event was triggered."""
         # Safety check for player
         if not self.player:
             return False
-            
+
         # Initialize player progress tracking if it doesn't exist
         if not hasattr(self.player, 'story_progress'):
             self.player.story_progress = {}
-            
+
         # Location-specific storylines with progression
         story_events = {
             "Mystic Forest": [
@@ -3026,7 +2994,7 @@ The keeper turns back to their silent vigil, a sense of foreboding hanging in th
                 }
             ]
         }
-        
+
         # Check if player has all four crystals and is at Shadow Peak
         # Use hasattr to safely check properties before accessing
         if location == "Shadow Peak" and hasattr(self.player, 'quest_items'):
@@ -3041,25 +3009,25 @@ The keeper turns back to their silent vigil, a sense of foreboding hanging in th
                             print(f"{Fore.GREEN}For collecting all four elemental crystals, you gained {bonus_exp} trainer exp and leveled up to Trainer Level {self.player.trainer_level}!{Style.RESET_ALL}")
                         else:
                             print(f"For collecting all four elemental crystals, you gained {bonus_exp} trainer exp. ({self.player.exp}/{self.player.exp_to_level})")
-                        
+
                         # Mark this bonus as already awarded
                         self.player.story_progress["crystals_exp_awarded"] = True
                         input("\nPress Enter to continue...")
-                        
+
                     self.trigger_final_quest()
                     return True
-            
+
         # Check if there's a story event for this location
         if location in story_events:
             events = story_events[location]
-            
+
             # Find the first event that hasn't been completed
             for event in events:
                 event_id = event["id"]
                 # Skip if this event is already completed
                 if hasattr(self.player, 'story_progress') and self.player.story_progress.get(event_id, False):
                     continue
-                    
+
                 # Check if player's monsters meet level requirement
                 if hasattr(self.player, 'monsters') and self.player.monsters:
                     max_level = max([monster.level for monster in self.player.monsters if monster], default=0)
@@ -3068,12 +3036,12 @@ The keeper turns back to their silent vigil, a sense of foreboding hanging in th
                         clear_screen()
                         print(f"{Fore.YELLOW}=== STORY EVENT ==={Style.RESET_ALL}\n")
                         print(event["text"])
-                        
+
                         # Mark this event as completed
                         if not hasattr(self.player, 'story_progress'):
                             self.player.story_progress = {}
                         self.player.story_progress[event_id] = True
-                        
+
                         # Handle rewards
                         if "reward" in event:
                             reward = event["reward"]
@@ -3084,23 +3052,23 @@ The keeper turns back to their silent vigil, a sense of foreboding hanging in th
                                     print(f"\nYou received a {reward['name']}!")
                             elif reward["type"] == "quest_item":
                                 quest_item = reward["name"]
-                                
+
                                 # Safety check
                                 if not hasattr(self.player, 'quest_items'):
                                     self.player.quest_items = []
-                                    
+
                                 self.player.quest_items.append(quest_item)
                                 print(f"\nYou obtained the {quest_item}!")
-                                
+
                                 # Check if all crystals collected
                                 crystals = ["Forest Crystal", "Fire Crystal", "Water Crystal", "Earth Crystal"]
                                 crystal_count = sum(1 for crystal in crystals if crystal in self.player.quest_items)
                                 print(f"\nYou now have {crystal_count}/4 elemental crystals.")
-                                
+
                                 if crystal_count == 4:
                                     print(f"\n{Fore.CYAN}You have collected all four elemental crystals!{Style.RESET_ALL}")
                                     print("Perhaps it's time to investigate the Chamber of Sealing mentioned in the ancient texts...")
-                                
+
                                 # Award bonus trainer exp for finding a crystal
                                 if any(crystal_name in quest_item for crystal_name in ["Crystal", "Prism"]):
                                     bonus_exp = 50
@@ -3110,12 +3078,12 @@ The keeper turns back to their silent vigil, a sense of foreboding hanging in th
                                             print("Your monsters can now grow to this higher level.")
                                         else:
                                             print(f"\nYou gained {bonus_exp} trainer exp. ({self.player.exp}/{self.player.exp_to_level})")
-                    
+
                     input("\nPress Enter to continue...")
                     return True
-                    
+
         return False
-        
+
     def trigger_final_quest(self):
         """Trigger the final quest when all crystals are gathered"""
         clear_screen()
@@ -3136,23 +3104,23 @@ Be warned - the darkness will not yield easily. It may have even taken physical 
 Your monsters will face their greatest challenge yet."
 
 Do you wish to enter the Chamber of Sealing now?""")
-        
+
         choice = input(f"\n{Fore.CYAN}Enter the chamber? (y/n): {Style.RESET_ALL}").lower()
-        
+
         if choice == 'y' or choice == 'yes':
             self.final_battle()
         else:
             print("\nYou decide to prepare further before taking on this challenge.")
             print("Return to Shadow Peak when you're ready to face the final battle.")
             input("\nPress Enter to continue...")
-            
+
     def final_battle(self):
         """The final battle at the Chamber of Sealing"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-        
+
         clear_screen()
         print(f"{Fore.RED}=== THE CHAMBER OF SEALING ==={Style.RESET_ALL}\n")
         print("""You enter the ancient chamber, your path illuminated by the glow of the four crystals.
@@ -3160,10 +3128,10 @@ Shadow creatures lurk in the darkness, but scatter as you approach, sensing the 
 
 As you reach the central altar, a swirling mass of darkness rises from the broken seal in the floor.
 It coalesces into a monstrous form - a shadowy dragon with glowing red eyes.""")
-        
+
         print(f"\n{Fore.RED}The Sealed Darkness has awakened!{Style.RESET_ALL}")
         time.sleep(2)
-        
+
         # Create the final boss monster
         sealed_darkness = Monster(
             name="Sealed Darkness",
@@ -3181,25 +3149,25 @@ It coalesces into a monstrous form - a shadowy dragon with glowing red eyes.""")
             description="The ancient darkness that was sealed away ages ago. It seeks to corrupt all monsters and rule the world.",
             level=50
         )
-        
+
         sealed_darkness.calculate_stats()
-        
+
         # Start the epic final battle
         self.start_battle(sealed_darkness)
-        
+
         # Check if player won
         if not self.current_battle and self.player and hasattr(self.player, 'location'):
             # Battle is over and player wasn't transported back to hometown (which happens on loss)
             if self.player.location != "Hometown":
                 self.complete_final_quest()
-                
+
     def complete_final_quest(self):
         """Complete the final quest after defeating the Sealed Darkness"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-            
+
         clear_screen()
         print(f"{Fore.YELLOW}=== VICTORY ==={Style.RESET_ALL}\n")
         print(f"""With the Sealed Darkness defeated, you quickly place the four elemental crystals
@@ -3225,45 +3193,45 @@ You received the {Fore.YELLOW}Hero's Medallion{Style.RESET_ALL}!
 This special item increases the friendship and growth rate of all your monsters.
 
 You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
-        
+
         # Add rewards to player
         if hasattr(self, 'all_items') and "Hero's Medallion" in self.all_items:
             if hasattr(self.player, 'add_item'):
                 self.player.add_item(self.all_items["Hero's Medallion"])
-                
+
         # Add money reward
         if hasattr(self.player, 'money'):
             self.player.money += 5000
-        
+
         # Mark the main quest as complete
         if hasattr(self.player, 'story_progress'):
             self.player.story_progress["main_quest_complete"] = True
-        
+
         print(f"\n{Fore.YELLOW}Congratulations! You've completed the main storyline of World of Monsters!{Style.RESET_ALL}")
         print("You can continue exploring the world, catching monsters, and challenging the championship.")
-        
+
         input("\nPress Enter to continue...")
-    
+
     def travel(self):
         """Travel to a different location"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-            
+
         if not hasattr(self.player, 'location'):
             print("Error: Player location not set!")
             input("\nPress Enter to continue...")
             return
-            
+
         print(f"\nCurrent location: {self.player.location}")
         print("Available locations:")
-        
+
         if not hasattr(self, 'locations') or not self.locations:
             print("Error: No locations available!")
             input("\nPress Enter to continue...")
             return
-        
+
         # Location level requirements
         location_requirements = {
             "Hometown": 1,
@@ -3275,7 +3243,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             "Shadow Peak": 30,
             "Ancient Ruins": 35
         }
-        
+
         # Display locations with level requirements
         for i, location in enumerate(self.locations):
             if location == self.player.location:
@@ -3286,20 +3254,20 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"{i+1}. {location}")
                 else:
                     print(f"{i+1}. {location} {Fore.RED}(Requires Trainer Level {req_level}){Style.RESET_ALL}")
-        
+
         try:
             choice = int(input("\nEnter location number (0 to cancel): "))
             if choice == 0:
                 return
-            
+
             if 1 <= choice <= len(self.locations):
                 destination = self.locations[choice - 1]
-                
+
                 if destination == self.player.location:
                     print("You're already at that location!")
                     input("\nPress Enter to continue...")
                     return
-                
+
                 # Check level requirement
                 req_level = location_requirements.get(destination, 1)
                 if self.player.trainer_level < req_level:
@@ -3308,7 +3276,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print("Continue exploring and battling to increase your Trainer Level.")
                     input("\nPress Enter to continue...")
                     return
-                
+
                 print(f"\nTraveling to {destination}...")
                 time.sleep(1.5)  # Brief pause for traveling effect
                 self.player.location = destination
@@ -3319,57 +3287,57 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print("Please enter a valid number.")
         except Exception as e:
             print(f"Error during travel: {str(e)}")
-        
+
         input("\nPress Enter to continue...")
-    
+
     def show_monsters(self, for_fusion=False):
         """Show the player's monsters"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-            
+
         if not hasattr(self.player, 'monsters') or not self.player.monsters:
             print("\nYou don't have any monsters yet!")
             input("\nPress Enter to continue...")
             return
-        
+
         print(f"\n{Fore.CYAN}=== YOUR MONSTERS ==={Style.RESET_ALL}")
         for i, monster in enumerate(self.player.monsters):
             if not monster:
                 continue
-                
+
             fusion_info = ""
             if hasattr(monster, 'is_fusion') and monster.is_fusion:
                 fusion_info = f" {Fore.MAGENTA}[FUSION]{Style.RESET_ALL}"
-                
+
             if hasattr(self.player, 'active_monster_index') and i == self.player.active_monster_index:
                 print(f"\n{i+1}. {monster}{fusion_info} {Fore.YELLOW}(Active){Style.RESET_ALL}")
             else:
                 print(f"\n{i+1}. {monster}{fusion_info}")
-            
+
             # Make sure FUSION_LEVEL_REQUIREMENT is defined
             fusion_level_req = FUSION_LEVEL_REQUIREMENT if 'FUSION_LEVEL_REQUIREMENT' in globals() else 25
-            
+
             # Show fusion eligibility for fusion menu
             if for_fusion and hasattr(monster, 'level') and monster.level >= fusion_level_req:
                 print(f"{Fore.GREEN}✓ Eligible for fusion{Style.RESET_ALL}")
             elif for_fusion:
                 print(f"{Fore.RED}✗ Not eligible (needs level {fusion_level_req}+){Style.RESET_ALL}")
-        
+
         # Skip options if we're just showing monsters for fusion
         if for_fusion:
             return
-            
+
         # Options for monster management
         print("\nOptions:")
         print("1. Switch active monster")
         print("2. View monster details")
         print("3. Return to main menu")
-        
+
         try:
             choice = int(input("\nEnter choice: "))
-            
+
             if choice == 1:
                 try:
                     monster_idx = int(input("\nEnter monster number to make active: ")) - 1
@@ -3392,7 +3360,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print("Please enter a valid number.")
                 except Exception as e:
                     print(f"Error while switching monster: {str(e)}")
-            
+
             elif choice == 2:
                 try:
                     monster_idx = int(input("\nEnter monster number to view details: ")) - 1
@@ -3403,32 +3371,32 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                         else:
                             monster_name = monster.get_colored_name() if hasattr(monster, 'get_colored_name') else "Monster"
                             print(f"\n{Fore.CYAN}=== {monster_name} DETAILS ==={Style.RESET_ALL}")
-                            
+
                             # Display monster attributes with safeguards
                             print(f"Type: {monster.type if hasattr(monster, 'type') else 'Unknown'}")
                             print(f"Level: {monster.level if hasattr(monster, 'level') else 'Unknown'}")
-                            
+
                             if hasattr(monster, 'current_hp') and hasattr(monster, 'max_hp'):
                                 print(f"HP: {monster.current_hp}/{monster.max_hp}")
                             else:
                                 print("HP: Unknown")
-                                
+
                             print(f"Attack: {monster.attack if hasattr(monster, 'attack') else 'Unknown'}")
                             print(f"Defense: {monster.defense if hasattr(monster, 'defense') else 'Unknown'}")
                             print(f"Speed: {monster.speed if hasattr(monster, 'speed') else 'Unknown'}")
-                            
+
                             if hasattr(monster, 'exp') and hasattr(monster, 'exp_to_level'):
                                 print(f"EXP: {monster.exp}/{monster.exp_to_level}")
                             else:
                                 print("EXP: Unknown")
-                            
+
                             print("\nMoves:")
                             if hasattr(monster, 'moves') and monster.moves:
                                 for i, move in enumerate(monster.moves):
                                     print(f"{i+1}. {move}")
                             else:
                                 print("No moves available")
-                                
+
                             print(f"\nDescription: {monster.description if hasattr(monster, 'description') else 'No description available'}")
                     else:
                         print("Invalid monster number.")
@@ -3440,21 +3408,21 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print("Please enter a valid option.")
         except Exception as e:
             print(f"Error in monster management: {str(e)}")
-        
+
         input("\nPress Enter to continue...")
-    
+
     def show_items(self):
         """Show and use the player's inventory items"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-            
+
         if not hasattr(self.player, 'inventory') or not self.player.inventory:
             print("\nYour inventory is empty!")
             input("\nPress Enter to continue...")
             return
-        
+
         print(f"\n{Fore.CYAN}=== YOUR INVENTORY ==={Style.RESET_ALL}")
         try:
             items = list(self.player.inventory.keys())
@@ -3465,15 +3433,15 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 item_name = item.name if hasattr(item, 'name') else "Unknown Item"
                 item_desc = item.description if hasattr(item, 'description') else "No description"
                 print(f"{i+1}. {item_name} x{quantity} - {item_desc}")
-            
+
             # Options for item management
             print("\nOptions:")
             print("1. Use an item")
             print("2. Return to main menu")
-            
+
             try:
                 choice = int(input("\nEnter choice: "))
-                
+
                 if choice == 1:
                     # Can't use items in battle from this menu
                     if self.current_battle:
@@ -3481,7 +3449,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                         print("Use the 'item' command in battle instead.")
                         input("\nPress Enter to continue...")
                         return
-                    
+
                     try:
                         item_idx = int(input("\nEnter item number to use: ")) - 1
                         if 0 <= item_idx < len(items):
@@ -3490,13 +3458,13 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                                 print("Error: Invalid item selection!")
                                 input("\nPress Enter to continue...")
                                 return
-                                
+
                             # Monster Balls can only be used in battle
                             if hasattr(item, 'effect') and item.effect == "catch":
                                 print("You can only use Monster Balls during battle!")
                                 input("\nPress Enter to continue...")
                                 return
-                            
+
                             # Only healing items need a target
                             if hasattr(item, 'effect') and item.effect in ["heal", "revive"]:
                                 # Show monsters
@@ -3504,7 +3472,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                                     print("You don't have any monsters to use this item on!")
                                     input("\nPress Enter to continue...")
                                     return
-                                    
+
                                 print("\nChoose a monster to use the item on:")
                                 for i, monster in enumerate(self.player.monsters):
                                     if not monster:
@@ -3512,7 +3480,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                                     monster_name = monster.get_colored_name() if hasattr(monster, 'get_colored_name') else "Monster"
                                     hp_info = f"(HP: {monster.current_hp}/{monster.max_hp})" if hasattr(monster, 'current_hp') and hasattr(monster, 'max_hp') else "(HP: ?/?)"
                                     print(f"{i+1}. {monster_name} {hp_info}")
-                                
+
                                 try:
                                     monster_idx = int(input("\nEnter monster number: ")) - 1
                                     if 0 <= monster_idx < len(self.player.monsters):
@@ -3549,41 +3517,41 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 print(f"Error in item menu: {str(e)}")
         except Exception as e:
             print(f"Error displaying inventory: {str(e)}")
-        
+
         input("\nPress Enter to continue...")
-    
+
     def heal_monsters(self):
         """Heal all monsters (only in Hometown)"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-            
+
         if not hasattr(self.player, 'location') or self.player.location != "Hometown":
             print("\nYou can only rest and heal your monsters in your Hometown!")
             input("\nPress Enter to continue...")
             return
-        
+
         print("\nResting at the Healing Center in your Hometown...")
         time.sleep(1.5)
-        
+
         # Heal all monsters
         if not hasattr(self.player, 'monsters') or not self.player.monsters:
             print("You don't have any monsters to heal!")
             input("\nPress Enter to continue...")
             return
-            
+
         try:
             for monster in self.player.monsters:
                 if monster and hasattr(monster, 'full_heal'):
                     monster.full_heal()
-            
+
             print(f"{Fore.GREEN}All your monsters have been fully healed!{Style.RESET_ALL}")
         except Exception as e:
             print(f"Error healing monsters: {str(e)}")
-            
+
         input("\nPress Enter to continue...")
-    
+
     def show_help(self):
         """Show game help and instructions"""
         help_text = f"""
@@ -3639,46 +3607,46 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 """
         print(help_text)
         input("\nPress Enter to continue...")
-    
+
     def quit_game(self):
         """Quit the game with confirmation"""
         confirm = input("\nAre you sure you want to quit? (y/n): ").lower()
         if confirm == 'y' or confirm == 'yes':
             print("\nThank you for playing World of Monsters!")
             self.running = False
-    
+
     def start_battle(self, wild_monster: Monster):
         """Start a battle with a wild monster"""
         # Check if player exists and has usable monsters
         if not self.player:
             print("No active player found!")
             return
-            
+
         if not self.player.has_usable_monster():
             print("You don't have any monsters that can battle!")
             input("\nPress Enter to continue...")
             return
-        
+
         # Switch to first usable monster if active is fainted
         if self.player.active_monster is None or self.player.active_monster.is_fainted():
             idx = self.player.get_first_usable_monster_index()
             if idx >= 0:
                 self.player.switch_active_monster(idx)
-        
+
         # Create and start battle
         clear_screen()
         print(f"\n{Fore.RED}A wild {wild_monster.get_colored_name()} appeared!{Style.RESET_ALL}")
         time.sleep(1)
-        
+
         self.current_battle = Battle(self.player, wild_monster)
-        
+
     def start_puzzle(self):
         """Start a puzzle that can lead to legendary monster encounters"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-            
+
         # Get all legendary monsters with their associated locations, types, and temples
         legendary_info = {
             "Chronodrake": {
@@ -3754,69 +3722,69 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 "description": "Beams of light form words and symbols on ancient stone tablets. Decipher their meaning."
             }
         }
-        
+
         # Check if we're at a location that has a specific legendary associated with it
         location = self.player.location
         location_legendaries = [name for name, info in legendary_info.items() 
                               if info["location"] == location and name in self.all_monsters]
-        
+
         if not location_legendaries:
             print(f"{Fore.YELLOW}There are no legendary temples at {location}.{Style.RESET_ALL}")
             print("Try exploring other areas such as Mystic Forest, Volcanic Ridge, Crystal Cavern, Shadow Peak, or Ancient Ruins.")
             print("Each area may contain a temple dedicated to a different legendary monster.")
             input("\nPress Enter to continue...")
             return
-        
+
         # Select the legendary for this location
         legendary_name = random.choice(location_legendaries)
         legendary_data = legendary_info[legendary_name]
-        
+
         # Check if player's monsters are strong enough
         if not any(monster.level >= 30 for monster in self.player.monsters if monster):
             print(f"{Fore.RED}Your monsters aren't strong enough to attempt this challenge.{Style.RESET_ALL}")
             print("Train them to at least level 30 before approaching the temple!")
             input("\nPress Enter to continue...")
             return
-            
+
         # Create an immersive approach to the temple
         clear_screen()
         temple_name = legendary_data["temple"]
         legendary_color = legendary_data["color"]
         monster_type = legendary_data["type"]
-        
+
         print(f"{Fore.CYAN}You approach the {legendary_color}{temple_name}{Fore.CYAN}, an ancient structure dedicated")
         print(f"to the legendary {monster_type}-type monster {legendary_color}{legendary_name}{Fore.CYAN}.{Style.RESET_ALL}")
         time.sleep(1.5)
-        
+
         print(f"\nThe air crackles with {monster_type} energy, and the temple seems to respond to your presence.")
         time.sleep(1.5)
-        
+
         print("\nInscriptions on the temple wall suggest that only those who can solve")
         print(f"the temple's challenge may be granted an audience with {legendary_color}{legendary_name}{Style.RESET_ALL}.")
         time.sleep(1.5)
-        
+
         # Ask if the player wants to attempt the puzzle
         print(f"\n{Fore.YELLOW}Will you attempt the challenge of the {temple_name}?{Style.RESET_ALL}")
         choice = input("Enter 'yes' to continue or anything else to leave: ").lower()
-        
+
         if choice != 'yes' and choice != 'y':
             print("\nYou decide to leave the temple for now. Perhaps you'll return when you're better prepared.")
             input("\nPress Enter to continue...")
             return
-            
+
         # Start the puzzle
         puzzle_type = legendary_data["puzzle_type"]
         puzzle_name = legendary_data["puzzle_name"]
         puzzle_desc = legendary_data["description"]
-        
+
         clear_screen()
         print(f"{legendary_color}===== {puzzle_name.upper()} ====={Style.RESET_ALL}\n")
         print(puzzle_desc)
         print(f"\nProve your worth to encounter the legendary {legendary_color}{legendary_name}{Style.RESET_ALL}!")
-        
+
         # Start the puzzle based on its type
         puzzle_solved = False
-        
+
         if puzzle_type == 'sequence':
             puzzle_solved = self.sequence_puzzle()
         elif puzzle_type == 'riddle':
@@ -3827,34 +3795,34 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             puzzle_solved = self.memory_puzzle()
         elif puzzle_type == 'maze':
             puzzle_solved = self.maze_puzzle()
-            
+
         # If puzzle is solved, trigger legendary encounter
         if puzzle_solved:
             clear_screen()
             print(f"{Fore.GREEN}The temple resonates with your success!{Style.RESET_ALL}")
             print("\nThe ground trembles beneath your feet. Ancient mechanisms activate around you...")
             time.sleep(2)
-            
+
             print(f"\n{legendary_color}The {temple_name} acknowledges your worth.{Style.RESET_ALL}")
             print("A powerful energy surges through the chamber...")
             time.sleep(2)
-            
+
             # Dramatic reveal of the legendary monster
             print(f"\n{Fore.YELLOW}***********************{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}* LEGENDARY ENCOUNTER *{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}***********************{Style.RESET_ALL}")
             time.sleep(1)
-            
+
             print(f"\n{legendary_color}The legendary {legendary_name} has appeared before you!{Style.RESET_ALL}")
             input("\nPress Enter to continue...")
-            
+
             # Trigger encounter with the legendary monster
             if legendary_name in self.all_monsters:
                 legendary_monster = self.all_monsters[legendary_name].clone()
                 # Ensure the legendary is at a challenging level
                 legendary_monster.level = max(40, legendary_monster.level)
                 legendary_monster.calculate_stats()
-                
+
                 self.start_battle(legendary_monster)
             else:
                 print(f"{Fore.RED}Error: Legendary monster not found!{Style.RESET_ALL}")
@@ -3864,15 +3832,15 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print(f"The {legendary_color}{temple_name}{Style.RESET_ALL} grows quiet, as if disappointed.")
             print("You can try again later after training more with your monsters.")
             input("\nPress Enter to continue...")
-            
+
     def sequence_puzzle(self):
         """Puzzle where player needs to identify next number in a sequence"""
         print(f"\n{Fore.CYAN}SEQUENCE PUZZLE{Style.RESET_ALL}")
         print("Identify the next number in the sequence:")
-        
+
         # Generate random sequence type
         sequence_type = random.choice(["arithmetic", "geometric", "fibonacci"])
-        
+
         if sequence_type == "arithmetic":
             # Arithmetic sequence (adding a constant)
             diff = random.randint(2, 5)
@@ -3892,10 +3860,10 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             for i in range(3):
                 sequence.append(sequence[-1] + sequence[-2])
             answer = sequence[4] + sequence[3]
-        
+
         # Display the sequence
         print(f"{', '.join(str(num) for num in sequence)}, ?")
-        
+
         # Get player's answer
         try:
             player_answer = int(input("\nEnter the next number in the sequence: "))
@@ -3903,12 +3871,12 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         except ValueError:
             print("That's not a valid number!")
             return False
-            
+
     def riddle_puzzle(self):
         """Puzzle where player must answer a riddle"""
         print(f"\n{Fore.CYAN}RIDDLE PUZZLE{Style.RESET_ALL}")
         print("Answer the following riddle:")
-        
+
         riddles = [
             {"riddle": "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?", 
              "answer": "echo"},
@@ -3921,22 +3889,22 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             {"riddle": "I'm light as a feather, yet the strongest person can't hold me for more than a few minutes. What am I?", 
              "answer": "breath"}
         ]
-        
+
         riddle = random.choice(riddles)
         print(f"\n{riddle['riddle']}")
-        
+
         answer = input("\nYour answer: ").lower().strip()
         return answer == riddle["answer"]
-        
+
     def matching_puzzle(self):
         """Puzzle where player must match pairs"""
         print(f"\n{Fore.CYAN}MATCHING PUZZLE{Style.RESET_ALL}")
         print("Match each monster type with its strength:")
-        
+
         types = ["Fire", "Water", "Grass", "Electric", "Ice", "Ground"]
         # Randomly select 4 types for the puzzle
         selected_types = random.sample(types, 4)
-        
+
         # Create matchings (each type is strong against one other)
         strengths = {
             "Fire": "Grass",
@@ -3946,74 +3914,74 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             "Ice": "Grass",
             "Ground": "Electric"
         }
-        
+
         # Display the types
         for i, type_name in enumerate(selected_types, 1):
             print(f"{i}. {type_name}")
-        
+
         print("\nPairs (format: 1-3, 2-4, etc.):")
         pairs = input("Enter your pairs: ")
-        
+
         # Process and check pairs
         try:
             pair_entries = pairs.split(',')
             if len(pair_entries) != 2:  # Must have exactly 2 pairs for 4 types
                 return False
-            
+
             correct_count = 0
             for pair in pair_entries:
                 pair = pair.strip()
                 a, b = map(int, pair.split('-'))
-                
+
                 # Adjust indices to account for 0-based indexing
                 a -= 1
                 b -= 1
-                
+
                 type_a = selected_types[a]
                 type_b = selected_types[b]
-                
+
                 # Check for strength/weakness relationship
                 if strengths.get(type_a) == type_b or strengths.get(type_b) == type_a:
                     correct_count += 1
-                    
+
             return correct_count == 2  # Both pairs must be correct
         except ValueError:
             print("Invalid input format!")
             return False
-            
+
     def memory_puzzle(self):
         """Puzzle where player must remember a sequence"""
         print(f"\n{Fore.CYAN}MEMORY PUZZLE{Style.RESET_ALL}")
         print("Remember the following sequence of colors:")
-        
+
         colors = ["Red", "Blue", "Green", "Yellow", "Purple"]
         # Generate a random sequence of 5 colors
         sequence = [random.choice(colors) for _ in range(5)]
-        
+
         # Show the sequence
         for color in sequence:
             print(f"{color}...")
             time.sleep(0.8)
             clear_screen()
             time.sleep(0.3)
-            
+
         # Wait a bit to make it challenging
         time.sleep(1)
-        
+
         # Ask player to recall the sequence
         print("Enter the color sequence, separated by commas:")
         player_sequence = input().strip()
-        
+
         # Check if player's answer matches the sequence
         player_colors = [color.strip().capitalize() for color in player_sequence.split(',')]
         return player_colors == sequence
-        
+
     def maze_puzzle(self):
         """Puzzle where player navigates a text-based maze"""
         print(f"\n{Fore.CYAN}MAZE PUZZLE{Style.RESET_ALL}")
         print("Navigate through the maze to find the exit.")
         print("Commands: n (north), s (south), e (east), w (west)")
-        
+
         # Define a simple maze as a dictionary where each key is a position
         # and the value is a dictionary of possible moves and where they lead
         maze = {
@@ -4024,46 +3992,46 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             "room4": {"description": "A cool breeze suggests an exit is near.", "exits": {"s": "room2", "e": "room5"}},
             "room5": {"description": "You see a glowing crystal on a pedestal.", "exits": {"n": "exit", "w": "room4"}}
         }
-        
+
         current_room = "start"
         moves = 0
         max_moves = 12
-        
+
         while moves < max_moves and current_room != "exit":
             room = maze[current_room]
             print(f"\n{room['description']}")
-            
+
             # Show available directions
             exits = room["exits"]
             directions = ", ".join(exits.keys())
             print(f"Available directions: {directions}")
             print(f"Moves taken: {moves}/{max_moves}")
-            
+
             # Get player's move
             move = input("Which way do you go? ").lower().strip()
-            
+
             if move in exits:
                 current_room = exits[move]
                 moves += 1
             else:
                 print("You can't go that way!")
-                
+
         return current_room == "exit"
-        
+
     def legendary_encounter(self):
         """Trigger a random legendary monster encounter"""
         if not self.player:
             print("Error: No active player!")
             input("\nPress Enter to continue...")
             return
-            
+
         # Check if player has strong enough monsters for a legendary encounter
         if not any(monster.level >= 35 for monster in self.player.monsters if monster):
             print(f"{Fore.RED}Your monsters aren't strong enough for legendary encounters.{Style.RESET_ALL}")
             print("Train them to at least level 35 first!")
             input("\nPress Enter to continue...")
             return
-            
+
         # Get all legendary monsters with their associated locations, types and descriptions
         legendary_info = {
             "Chronodrake": {
@@ -4123,40 +4091,40 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 "description": "A being of pure mental energy, with a glowing form that pulses with psychic power. Ancient wisdom seems to emanate from its presence."
             }
         }
-        
+
         # Check which legendaries are in the game data
         available_legendaries = [name for name in legendary_info.keys() if name in self.all_monsters]
-        
+
         if not available_legendaries:
             print(f"{Fore.RED}No legendary monsters are available in the game data.{Style.RESET_ALL}")
             input("\nPress Enter to continue...")
             return
-            
+
         # Check if we're at a location that has a specific legendary associated with it
         location_specific_legendaries = [name for name, info in legendary_info.items() 
                                        if info["location"] == self.player.location and name in available_legendaries]
-        
+
         # Either choose a location-specific legendary or a random one
         if location_specific_legendaries and random.random() < 0.7:  # 70% chance to get the location-specific legendary
             legendary_name = random.choice(location_specific_legendaries)
         else:
             legendary_name = random.choice(available_legendaries)
-            
+
         # Get the legendary monster's info
         legendary_info_data = legendary_info[legendary_name]
         legendary_color = legendary_info_data["color"]
         legendary_type = legendary_info_data["type"]
         legendary_temple = legendary_info_data["temple"]
         legendary_monster = self.all_monsters[legendary_name].clone()
-        
+
         # Ensure it's a high level for challenge
         legendary_monster.level = max(40, legendary_monster.level)
         legendary_monster.calculate_stats()
-        
+
         # Create a dramatic encounter
         clear_screen()
         print(f"{Fore.YELLOW}===== LEGENDARY ENCOUNTER ====={Style.RESET_ALL}\n")
-        
+
         # Set the stage based on the monster type
         type_environment = {
             "Dragon": "The air becomes charged with ancient power...",
@@ -4168,29 +4136,29 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             "Ground": "The earth rumbles and shifts beneath your feet...",
             "Psychic": "Your mind fills with whispers and your vision blurs momentarily..."
         }
-        
+
         # Show type-specific environmental effect
         env_message = type_environment.get(legendary_type, "The atmosphere changes dramatically...")
         print(f"{Fore.CYAN}{env_message}{Style.RESET_ALL}")
         time.sleep(2)
-        
+
         # Describe the temple if it exists
         if legendary_temple:
             print(f"\n{Fore.CYAN}You stand within {legendary_temple}, an ancient place of power...{Style.RESET_ALL}")
             time.sleep(1.5)
-        
+
         # Build tension
         print("\nA powerful presence approaches... reality itself seems to bend in its wake...")
         time.sleep(1.5)
-        
+
         # Describe the legendary's appearance
         legendary_description = legendary_info_data.get("description", "A magnificent legendary monster")
-        
+
         print(f"\n{legendary_color}{legendary_name}{Style.RESET_ALL} appears before you!")
         time.sleep(1)
         print(f"{Fore.CYAN}{legendary_description}{Style.RESET_ALL}")
         time.sleep(2)
-        
+
         # Epic encounter message based on monster type
         encounter_messages = {
             "Dragon": f"The legendary {legendary_name} regards you with ancient eyes that have witnessed the passing of eons...",
@@ -4202,14 +4170,14 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             "Ground": f"The very earth rises to form a pedestal beneath {legendary_name}, acknowledging its mastery...",
             "Psychic": f"Your thoughts feel exposed as {legendary_name}'s mental power washes over you like waves..."
         }
-        
+
         type_message = encounter_messages.get(legendary_type, f"The legendary {legendary_name} exudes an aura of immense power...")
         print(f"\n{legendary_color}{type_message}{Style.RESET_ALL}")
         time.sleep(2)
-        
+
         print(f"\n{Fore.YELLOW}This will be your greatest challenge yet. Are you ready to face this legendary creature?{Style.RESET_ALL}")
         input("\nPress Enter to begin the battle...")
-        
+
         # Start the battle
         self.start_battle(legendary_monster)
 
@@ -4218,7 +4186,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 if __name__ == "__main__":
     # Initialize colorama
     init(autoreset=True)
-    
+
     try:
         # Start the game
         game = Game()
