@@ -247,7 +247,7 @@ def content_settings_menu():
                 current_index = romance_types.index(game_settings["cross_family_romance_type"])
                 next_index = (current_index + 1) % len(romance_types)
                 game_settings["cross_family_romance_type"] = romance_types[next_index]
-                
+
                 if game_settings["cross_family_romance_type"] == "none":
                     print("No romantic relationships with family members allowed.")
                 elif game_settings["cross_family_romance_type"] == "step":
@@ -262,10 +262,10 @@ def content_settings_menu():
             current_index = nsfw_levels.index(game_settings["nsfw_level"])
             next_index = (current_index + 1) % len(nsfw_levels)
             game_settings["nsfw_level"] = nsfw_levels[next_index]
-            
+
             # Update the allow_nsfw value based on the level
             game_settings["allow_nsfw"] = game_settings["nsfw_level"] != "none"
-            
+
             if game_settings["nsfw_level"] == "none":
                 print("All NSFW content disabled. The game will be completely family-friendly.")
             elif game_settings["nsfw_level"] == "low":
@@ -274,7 +274,7 @@ def content_settings_menu():
                 print(f"{Fore.YELLOW}Medium NSFW content enabled. This includes more detailed romantic scenes.{Style.RESET_ALL}")
             elif game_settings["nsfw_level"] == "high":
                 print(f"{Fore.RED}High NSFW content enabled. This includes detailed romantic encounters with anime-style descriptions.{Style.RESET_ALL}")
-            
+
             print(f"NSFW content level set to: {game_settings['nsfw_level'].capitalize()}")
         elif choice == "6":
             break
@@ -379,26 +379,26 @@ def is_content_allowed(content_type):
     """
     # Default: content not allowed
     allowed = False
-    
+
     # Check each content type
     if content_type == "nsfw":
         # NSFW is allowed if nsfw_level is not "none"
         allowed = game_settings["nsfw_level"] != "none"
-    
+
     elif content_type == "bullying":
         allowed = game_settings["allow_bullying"]
-    
+
     elif content_type == "cuss_words":
         allowed = game_settings["allow_cuss_words"]
-    
+
     elif content_type == "cross_family_love":
         # Initial check on if it's enabled
         allowed = game_settings.get("allow_cross_family_love", True)
-        
+
         # If it's enabled, also check that the romance type isn't "none"
         if allowed:
             allowed = game_settings.get("cross_family_romance_type", "none") != "none"
-    
+
     return allowed
 
 
@@ -436,24 +436,24 @@ def filter_text(text, content_types=None):
                 pattern = r'\b' + re.escape(word) + r'\b'
                 censored_text = re.sub(pattern, "*" * len(word), censored_text, flags=re.IGNORECASE)
             text = censored_text
-            
+
         elif content_type == "bullying" and not is_content_allowed("bullying"):
             # Replace bullying content with a milder version
             text = "Someone was unkind to you in class."
             continue
-            
+
         elif content_type == "nsfw":
             # Handle NSFW content based on nsfw_level setting
             nsfw_level = game_settings["nsfw_level"]
-            
+
             # If NSFW is completely disabled
             if nsfw_level == "none":
                 text = "[Content not available with current settings]"
                 continue
-            
+
             # For different NSFW levels, we provide different content
             content_modified = False
-            
+
             if "explicit" in text.lower() or "intimate" in text.lower():
                 # High level explicit content
                 if nsfw_level == "low":
@@ -471,7 +471,7 @@ def filter_text(text, content_types=None):
                     text = censored_text
                     content_modified = True
                 # For high level, we keep the original content
-            
+
             # Moderately suggestive content (only process if not already modified)
             elif not content_modified and ("kiss" in text.lower() or "embrace" in text.lower() or "cuddle" in text.lower()):
                 # Allow all levels to show this content since it's mild
@@ -485,11 +485,11 @@ def filter_text(text, content_types=None):
 def check_relationship_compatibility(person1, person2):
     """
     Check if a relationship is allowed based on settings
-    
+
     Arguments:
     person1 -- Player data dictionary
     person2 -- NPC data dictionary
-    
+
     Returns:
     bool -- Whether the relationship is compatible
     """
@@ -497,19 +497,19 @@ def check_relationship_compatibility(person1, person2):
     is_family_member = False
     relation_type = "none"  # Default relation (none, step, blood)
     relation_description = "sibling"  # Default description
-    
+
     if "family" in person1:
         # Check if they are siblings
         if "siblings" in person1["family"] and person2["name"] in [
             member["name"] for member in person1["family"]["siblings"]
         ]:
             is_family_member = True
-            
+
             # Get the specific relation (older/younger brother/sister and whether they're step or twin)
             for member in person1["family"]["siblings"]:
                 if member["name"] == person2["name"]:
                     relation_description = member["relation"]  # e.g., "older sister", "twin brother"
-                    
+
                     # Determine relation type (step or blood)
                     if "step" in relation_description:
                         relation_type = "step"
@@ -518,14 +518,14 @@ def check_relationship_compatibility(person1, person2):
                     else:
                         relation_type = "blood"  # Blood relation (includes twins)
                     break
-        
+
         # Check if they are parents (future implementation)
         if "parents" in person1["family"] and person2["name"] in [
             parent["name"] for parent in person1["family"]["parents"]
         ]:
             is_family_member = True
             relation_type = "blood"  # Default to blood for parents
-            
+
             # Get the specific relation (father/mother and whether they're step)
             for parent in person1["family"]["parents"]:
                 if parent["name"] == person2["name"]:
@@ -533,29 +533,29 @@ def check_relationship_compatibility(person1, person2):
                     if "step" in relation_description:
                         relation_type = "step"
                     break
-    
+
     # If they're family members, check if the relationship is allowed based on settings
     if is_family_member:
         # Check if cross-family love is enabled
         if not game_settings["allow_cross_family_love"]:
             slow_print(f"{Fore.RED}You cannot pursue a romantic relationship with family members.{Style.RESET_ALL}")
             return False
-        
+
         # Check specific type of cross-family relationship allowed
         romance_type = game_settings["cross_family_romance_type"]
-        
+
         if romance_type == "none":
             slow_print(f"{Fore.RED}You cannot pursue a romantic relationship with family members.{Style.RESET_ALL}")
             return False
         elif romance_type == "step" and relation_type == "blood":
             slow_print(f"{Fore.RED}You can only pursue romantic relationships with step-family members, not blood relatives.{Style.RESET_ALL}")
             return False
-        
+
         # If we reach here, the relationship is allowed based on settings
-        
+
         # Get more descriptive messages based on NSFW level
         nsfw_level = game_settings["nsfw_level"]
-        
+
         # Low NSFW level messages (mild suggestions)
         low_nsfw_messages = [
             '{0}"It\'s not like I think of you as just a {1} or anything..."{2}',
@@ -564,7 +564,7 @@ def check_relationship_compatibility(person1, person2):
             '{0}"I\'ve always felt this special connection with you..."{2}',
             '{0}"Maybe this was destined to happen all along..."{2}',
         ]
-        
+
         # Medium NSFW level messages (more romantic)
         medium_nsfw_messages = [
             '{0}"When we\'re alone like this, I forget we\'re supposed to be {1}s..."{2}',
@@ -573,7 +573,7 @@ def check_relationship_compatibility(person1, person2):
             '{0}"Let\'s keep this between us... our special secret relationship..."{2}',
             '{0}"I\'ve always watched you from afar, wishing we weren\'t related..."{2}',
         ]
-        
+
         # High NSFW level messages (more direct)
         high_nsfw_messages = [
             '{0}"Being your {1} makes this even more exciting somehow..."{2}',
@@ -582,7 +582,7 @@ def check_relationship_compatibility(person1, person2):
             '{0}"I\'ve dreamed of you holding me like this, even though we\'re family..."{2}',
             '{0}"The forbidden nature of our feelings makes them stronger, don\'t you think?"{2}',
         ]
-        
+
         # Choose appropriate message set based on NSFW level
         if nsfw_level == "medium":
             special_messages = medium_nsfw_messages
@@ -590,9 +590,9 @@ def check_relationship_compatibility(person1, person2):
             special_messages = high_nsfw_messages
         else:  # "none" or "low"
             special_messages = low_nsfw_messages
-        
+
         relation_term = relation_description.split()[-1]  # Get just "sister", "brother" etc.
-        
+
         # Show the special romance message
         slow_print(
             "{0}A special bond forms between you and your {1}...{2}".format(
@@ -600,18 +600,18 @@ def check_relationship_compatibility(person1, person2):
             ),
             delay=0.04,
         )
-        
+
         # Random anime-style line
         slow_print(
             random.choice(special_messages).format(Fore.MAGENTA, relation_term, Style.RESET_ALL),
             delay=0.05,
         )
-        
+
         # Add special achievement for family romance
         achievement_name = "Forbidden Love"
         if relation_type == "step":
             achievement_name = "Not Blood Related"
-        
+
         if achievement_name not in player["achievements"]:
             player["achievements"].append(achievement_name)
             slow_print(
@@ -619,15 +619,15 @@ def check_relationship_compatibility(person1, person2):
                     Fore.YELLOW, achievement_name, Style.RESET_ALL
                 )
             )
-            
+
             # Bonus charisma for being daring
             player["charisma"]["social"] += 3
             slow_print(
                 "Your social charisma has increased due to your unique relationship!"
             )
-        
+
         return True
-    
+
     # All other relationships are allowed
     return True
 
@@ -1969,7 +1969,7 @@ def handle_rumor_interaction(
                 slow_print("Invalid rumor type selection.")
         except ValueError:
             slow_print("Please enter a number.")
-            
+
     # Flirting options
     elif choice == "15":  # Basic flirting
         if personality == "tsundere":
@@ -1997,10 +1997,10 @@ def handle_rumor_interaction(
         else:
             slow_print(f"{Fore.MAGENTA}{name}: *smiles* That's sweet of you to say.{Style.RESET_ALL}")
             points_gain = int(random.randint(5, 9) * relationship_gain_mult)
-        
+
         # Increase charisma slightly
         player["charisma"]["romantic"] += 1
-        
+
     elif choice == "16":  # Compliment appearance
         if personality == "tsundere":
             slow_print(f"{Fore.MAGENTA}{name}: You think I look n-nice? Well, I didn't dress up for you or anything!{Style.RESET_ALL}")
@@ -2026,10 +2026,10 @@ def handle_rumor_interaction(
         else:
             slow_print(f"{Fore.MAGENTA}{name}: *blushes* Thank you so much. That's really sweet of you to say.{Style.RESET_ALL}")
             points_gain = int(random.randint(8, 12) * relationship_gain_mult)
-            
+
         # Increase charisma
         player["charisma"]["romantic"] += 2
-        
+
     elif choice == "17":  # Playful teasing
         if personality == "tsundere":
             slow_print(f"{Fore.MAGENTA}{name}: Hey! Who said you could tease me?! *playfully pushes your shoulder* Two can play at that game!{Style.RESET_ALL}")
@@ -2055,11 +2055,11 @@ def handle_rumor_interaction(
         else:
             slow_print(f"{Fore.MAGENTA}{name}: *laughs* You're so funny! I like this side of you.{Style.RESET_ALL}")
             points_gain = int(random.randint(10, 15) * relationship_gain_mult)
-            
+
         # Increase charisma
         player["charisma"]["romantic"] += 2
         player["charisma"]["social"] += 1
-        
+
     elif choice == "18":  # Hold hands
         if personality == "tsundere":
             slow_print(f"{Fore.MAGENTA}{name}: *blushes deeply* W-what are you doing? *doesn't pull away* F-fine, if you insist...{Style.RESET_ALL}")
@@ -2085,10 +2085,10 @@ def handle_rumor_interaction(
         else:
             slow_print(f"{Fore.MAGENTA}{name}: *smiles warmly and holds your hand gently* This feels nice.{Style.RESET_ALL}")
             points_gain = int(random.randint(12, 18) * relationship_gain_mult)
-            
+
         # Increase relationship faster and boost romantic charisma
         player["charisma"]["romantic"] += 3
-            
+
     return points_gain
 
 
@@ -2542,7 +2542,7 @@ curfew_violations = 0
 
 def assign_random_roommate():
     global roommate
-    
+
     # Check if player has a twin sibling who can be their roommate
     has_twin_roommate = False
     if "family" in player and "siblings" in player["family"]:
@@ -2557,13 +2557,13 @@ def assign_random_roommate():
                         "is_twin": True,
                         "relation": sibling["relation"]
                     }
-                    
+
                     # Higher starting relationship with twin roommate
                     roommate["relationship"] = str(player["family_relationship"].get(sibling["name"], 50))
-                    
+
                     slow_print(f"{Fore.MAGENTA}By coincidence, your {sibling['relation']}, {sibling['name']}, is your roommate!{Style.RESET_ALL}")
                     break
-    
+
     # If no twin or twin not selected to be roommate, choose a random roommate
     if not has_twin_roommate:
         possible_roommates = [
@@ -3571,7 +3571,7 @@ def slow_print(text, delay=None, color=Fore.WHITE, style=None, highlight=None):
     if style:
         style_prefix += style
     style_prefix += color
-    
+
     # Print with delay (with style before and reset after)
     if delay > 0.01 and not os.environ.get("REPLIT_ENVIRONMENT", False):  
         # Character-by-character for slower speeds, but only outside Replit
@@ -6431,76 +6431,76 @@ def is_holiday():
 def check_curfew():
     """Check if player is violating curfew and handle consequences"""
     global curfew_violations
-    
+
     # Only applies to players living at home
     if player["accommodation_type"] != "home":
         return
-    
+
     # Get current time
     current_hour = (ticks // 10) % 24
-    
+
     # Check if it's past curfew
     if current_hour >= CURFEW_HOUR or current_hour < 6:  # Between 10 PM and 6 AM
         # Define home locations
         home_locations = ["Your Bedroom", "Living Room", "Kitchen", "Home Study"]
-        
+
         # Check if player is not at home
         if player["current_location"] not in home_locations:
             slow_print(f"\n{Fore.RED}=== CURFEW VIOLATION ==={Style.RESET_ALL}")
             slow_print(f"It's {current_hour}:00, past your curfew of {CURFEW_HOUR}:00!")
-            
+
             # Player will be teleported home after this check
-            
+
             # Determine which parent will scold the player
             if "family" in player and "parents" in player["family"] and player["family"]["parents"]:
                 scolding_parent = random.choice(player["family"]["parents"])
                 parent_name = scolding_parent["name"]
                 parent_personality = scolding_parent["personality"]
-                
+
                 if parent_personality in ["strict", "protective", "traditional"]:
                     # Stricter parents have harsher reactions
                     penalty = random.randint(10, 20)
                     stress_increase = random.randint(15, 25)
-                    
+
                     slow_print(f"{Fore.RED}{parent_name} is furious that you've stayed out past curfew!{Style.RESET_ALL}")
                     slow_print(f"\"Where have you been? Do you know what time it is?\" {parent_name} demands.")
-                    
+
                     # Apply a relationship penalty with this parent
                     if parent_name in player["family_relationship"]:
                         player["family_relationship"][parent_name] = max(0, player["family_relationship"][parent_name] - penalty)
                         slow_print(f"Relationship with {parent_name} decreased by {penalty} points.")
-                    
+
                     # Possible grounding
                     if curfew_violations >= 2:
                         slow_print(f"{Fore.RED}You've been grounded for the next 3 days! Your movements will be restricted.{Style.RESET_ALL}")
                         player["grounded"] = 3  # Grounded for 3 days
-                    
+
                 else:
                     # More lenient parents have milder reactions
                     penalty = random.randint(5, 10)
                     stress_increase = random.randint(5, 15)
-                    
+
                     slow_print(f"{Fore.YELLOW}{parent_name} is concerned that you've stayed out past curfew.{Style.RESET_ALL}")
                     slow_print(f"\"I was worried about you. Please try to be home on time,\" {parent_name} says.")
-                    
+
                     # Apply a smaller relationship penalty with this parent
                     if parent_name in player["family_relationship"]:
                         player["family_relationship"][parent_name] = max(0, player["family_relationship"][parent_name] - penalty)
                         slow_print(f"Relationship with {parent_name} decreased by {penalty} points.")
-                
+
                 # Increase stress regardless of parent type
                 player["stress"] = min(100, player["stress"] + stress_increase)
                 slow_print(f"Your stress level increased by {stress_increase} points.")
-                
+
                 # Increase violation count
                 curfew_violations += 1
-            
+
             # Teleport player home
             player["current_location"] = "Your Bedroom"
             slow_print("You've been sent to your bedroom.")
-            
+
             return True  # Return True to indicate a curfew violation was handled
-    
+
     return False  # No curfew violation
 
 def update_year_progress():
@@ -7799,7 +7799,7 @@ def show_me():
     # Safely access rank with default value if key doesn't exist
     student_rank = player.get('rank', {}).get('students', 'Unknown')
     teacher_rank = player.get('rank', {}).get('teachers', 'Unknown')
-    
+
     print(
         f"  Among Students: {player['reputation']['students']} ({student_rank})"
     )
@@ -8070,7 +8070,7 @@ def generate_family_members():
 
         # Determine age (younger, older, or twin)
         has_twin = random.random() < 0.15  # 15% chance for a twin
-        
+
         if has_twin:
             age_diff = 0  # Same age = twin
         else:
@@ -8232,7 +8232,7 @@ def setup_game(non_interactive=False):
     _non_interactive = non_interactive
 
     slow_print(f"{Fore.CYAN}Welcome to {Fore.WHITE}{TITLE}{Fore.CYAN}!{Style.RESET_ALL}")
-    
+
     # Check if we're in non-interactive mode
     if non_interactive:
         # Default values for non-interactive environments (like Replit)
@@ -8296,7 +8296,7 @@ PLAYER_TRAITS = {
         "effects": {"winter_energy_penalty": 15, "winter_pe_penalty": 20},
         "category": "physical"
     },
-    
+
     # Mental traits
     "studious": {
         "description": "You learn academic subjects more easily",
@@ -8328,7 +8328,7 @@ PLAYER_TRAITS = {
         "effects": {"morning_energy_bonus": 20, "night_energy_penalty": 15},
         "category": "mental"
     },
-    
+
     # Social traits
     "charismatic": {
         "description": "People naturally like you",
@@ -8355,7 +8355,7 @@ PLAYER_TRAITS = {
         "effects": {"honesty_bonus": 20, "relationship_random_penalty": 10},
         "category": "social"
     },
-    
+
     # Circumstantial traits
     "wealthy_family": {
         "description": "Your family has significant wealth",
@@ -8382,7 +8382,7 @@ PLAYER_TRAITS = {
         "effects": {"cultural_misunderstanding_chance": 20, "language_bonus": 25},
         "category": "circumstantial"
     },
-    
+
     # Personality traits
     "ambitious": {
         "description": "You aim high in everything you do",
@@ -8415,48 +8415,52 @@ PLAYER_TRAITS = {
 def assign_random_traits(count=3):
     """
     Assign random traits to the player
-    
+
     Arguments:
     count -- Number of traits to assign (default: 3)
-    
+
     Returns:
     List of assigned trait names
     """
     # Get all trait categories
     categories = set(trait_data["category"] for trait_data in PLAYER_TRAITS.values())
-    
+
     # Try to select one trait from each category for balance
     selected_traits = []
     remaining_categories = list(categories)
-    
+
     # First, try to take one from each category
     while len(selected_traits) < count and remaining_categories:
         category = random.choice(remaining_categories)
         remaining_categories.remove(category)
-        
+
         # Get traits in this category
         category_traits = [name for name, data in PLAYER_TRAITS.items() 
                           if data["category"] == category and name not in selected_traits]
-        
+
         if category_traits:
             selected_trait = random.choice(category_traits)
             selected_traits.append(selected_trait)
-    
+
     # If we still need more traits, pick from any category
     while len(selected_traits) < count:
         # Get all traits not yet selected
         available_traits = [name for name in PLAYER_TRAITS.keys() 
                            if name not in selected_traits]
-        
+
         if not available_traits:
             break  # No more traits available
         else: 
             selected_trait = random.choice(available_traits)
             selected_traits.append(selected_trait)
-    
+
     return selected_traits
 
-# Reset player to starting state
+def reset_player():
+    """Reset player to starting state with default values"""
+    global player
+    
+    # Reset player to starting state
     player["school_year"] = 1
     player["year_progress"] = 0
     player["money"] = 1000
@@ -8501,17 +8505,17 @@ def assign_random_traits(count=3):
 
     # Reset ex partners
     player["ex_partners"] = []
-    
+
     # Assign random starting traits
     player["traits"] = assign_random_traits(3)
-    
+
     # Display traits to player
     if player["traits"]:
         slow_print(f"\n{Fore.YELLOW}=== Your Character Traits ==={Style.RESET_ALL}")
         for trait in player["traits"]:
             trait_info = PLAYER_TRAITS[trait]
             slow_print(f"{Fore.CYAN}{trait.title()}{Style.RESET_ALL}: {trait_info['description']}")
-            
+
             # Apply trait effects
             if trait == "wealthy_family":
                 player["money"] += 2000  # Apply starting money bonus
@@ -8533,7 +8537,7 @@ def assign_random_traits(count=3):
             elif trait == "local":
                 player["reputation"]["students"] += 10
                 slow_print(f"{Fore.GREEN}Your student reputation has been increased to {player['reputation']['students']}{Style.RESET_ALL}")
-    
+
     # 2% chance of having a neurodivergent trait
     if random.random() < 0.02:
         # Select a random trait
@@ -8625,7 +8629,7 @@ def assign_random_traits(count=3):
         print("\nWill you stay in student accommodation?")
         print("1. Yes (Dormitory)")
         print("2. No (Live at home)")
-        
+
         while True:
             try:
                 choice = input("Select an option (1-2): ")
@@ -8641,7 +8645,7 @@ def assign_random_traits(count=3):
                 print(f"\n{Fore.RED}Error during selection: {e}. Defaulting to dormitory.{Style.RESET_ALL}")
                 choice = "1"
                 break
-    
+
     if choice == "1":
         player["accommodation_type"] = "dorm"
         # Assign random dorm number
@@ -8735,7 +8739,7 @@ def assign_random_traits(count=3):
         print(f"{i}. {elective}")
 
     chosen_electives = []
-    
+
     # Handle non-interactive mode
     if _non_interactive:
         # Auto-select first two electives in non-interactive mode
@@ -8826,14 +8830,14 @@ def assign_random_traits(count=3):
         "Li", "Wei", "Chen", "Zhang", "Wang", "Liu", "Yang", "Huang", "Zhou", "Wu",
         "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Han"
     ]
-    
+
     international_first_names_female = [
         "Mary", "Jennifer", "Sarah", "Elizabeth", "Emily", "Emma", "Olivia", "Sophia", "Isabella", "Charlotte",
         "Maria", "Sofia", "Valentina", "Camila", "Lucia", "Isabella", "Gabriela", "Victoria", "Ana", "Elena",
         "Li", "Wang", "Zhang", "Liu", "Chen", "Yang", "Huang", "Wu", "Zhou", "Zhao",
         "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Ha", "Yoon", "Seo", "Jang"
     ]
-    
+
     international_last_names = [
         "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor",
         "Garcia", "Rodriguez", "Martinez", "Lopez", "Hernandez", "Gonzalez", "Perez", "Sanchez", "Ramirez", "Torres",
@@ -8845,19 +8849,19 @@ def assign_random_traits(count=3):
     for _ in range(15):
         # Determine if this student is international (15% chance)
         is_international = random.random() < 0.15
-        
+
         gender = random.choice(["M", "F"])
-        
+
         if is_international:
             # Choose a random nationality
             nationality = random.choice(["American", "Chinese", "Korean", "Mexican", "Spanish", "British", "French", "German", "Brazilian", "Indian"])
-            
+
             # Select name based on nationality and gender
             if gender == "M":
                 first_name = random.choice(international_first_names_male)
             else:
                 first_name = random.choice(international_first_names_female)
-                
+
             last_name = random.choice(international_last_names)
         else:
             # Japanese student
@@ -8866,11 +8870,11 @@ def assign_random_traits(count=3):
             )
             last_name = random.choice(last_names)
             nationality = "Japanese"
-            
+
         name = first_name + " " + last_name
         personality = random.choice(list(personalities.keys()))
         year = random.randint(1, 4)  # Students can be from any year
-        
+
         students.append({
             "name": name, 
             "personality": personality, 
@@ -8879,7 +8883,7 @@ def assign_random_traits(count=3):
             "nationality": nationality,
             "is_international": is_international
         })
-    
+
     # Add club presidents to the students list
     for president in club_presidents:
         # Check if the president is already in the students list
@@ -8888,14 +8892,14 @@ def assign_random_traits(count=3):
             year = random.randint(3, 4)
             # Assume gender based on name (simple approach)
             gender = "M" if president["name"].split()[0] in male_first_names else "F"
-            
+
             # 10% chance for club president to be international
             is_international = random.random() < 0.10
             if is_international:
                 nationality = random.choice(["American", "Chinese", "Korean", "Mexican", "Spanish", "British", "French", "German", "Brazilian", "Indian"])
             else:
                 nationality = "Japanese"
-                
+
             # Add to students list
             students.append({
                 "name": president["name"],
@@ -8907,11 +8911,11 @@ def assign_random_traits(count=3):
                 "nationality": nationality,
                 "is_international": is_international
             })
-    
+
     # Initialize at least 10 student relationships with random relationship points
     classmates = []
     classmate_count = 0
-    
+
     # First check if we have a twin sibling who should be in our class
     # We'll check each sibling to see if they're a twin
     if "family" in player and "siblings" in player["family"]:
@@ -8920,10 +8924,10 @@ def assign_random_traits(count=3):
                 # 100% chance that twin will be in your class if you have one
                 twin_name = sibling["name"]
                 twin_personality = sibling["personality"]
-                
+
                 # Add twin to students list as a year 1 student
                 twin_gender = "M" if "brother" in sibling["relation"] else "F"
-                
+
                 # Check if twin is already in students list
                 twin_exists = False
                 for student in students:
@@ -8934,7 +8938,7 @@ def assign_random_traits(count=3):
                         student["is_twin"] = True
                         student["personality"] = twin_personality
                         break
-                
+
                 # Add twin to students list if not already there
                 if not twin_exists:
                     students.append({
@@ -8946,22 +8950,22 @@ def assign_random_traits(count=3):
                         "is_international": False,
                         "is_twin": True
                     })
-                
+
                 # Add twin to classmates with higher starting relationship
                 relationship[twin_name] = player["family_relationship"].get(twin_name, 65)
                 student_status[twin_name] = get_relationship_status(relationship[twin_name])
                 classmates.append(twin_name)
                 classmate_count += 1
-                
+
                 slow_print(f"{Fore.MAGENTA}Your {sibling['relation']}, {twin_name}, is in your class!{Style.RESET_ALL}")
                 break
-    
+
     # First identify students in the player's year to be classmates
     player_year_students = [s for s in students if s.get("year", 1) == 1]
-    
+
     # Number of additional classmates to add (10 - any twins we already added)
     remaining_classmates = 10 - classmate_count
-    
+
     # If we don't have enough year 1 students, we'll just use any student
     if len(player_year_students) < remaining_classmates:
         random_students = random.sample(students, min(remaining_classmates, len(students)))
@@ -8985,7 +8989,7 @@ def assign_random_traits(count=3):
             student_status[name] = get_relationship_status(relationship_points)
             classmates.append(name)
             classmate_count += 1
-    
+
     # Also establish a relationship with at least one teacher
     if teachers:
         teacher = random.choice(teachers)
@@ -8994,7 +8998,7 @@ def assign_random_traits(count=3):
         teacher_relationship_points = random.randint(5, 25)
         player["relationships"][teacher_name] = teacher_relationship_points
         slow_print(f"\n{Fore.CYAN}You already know {teacher_name}, who teaches {teacher['subject']}.{Style.RESET_ALL}")
-    
+
     if classmates:
         slow_print(f"\n{Fore.CYAN}You already know some of your classmates:{Style.RESET_ALL}")
         for i, classmate in enumerate(classmates, 1):
@@ -9076,7 +9080,7 @@ def assign_random_traits(count=3):
 
     # Initialize birthdays for the game
     generate_birthdays()  # This sets the global birthdays variable
-    
+
     # Welcome message
     slow_print(
         f"\n{Fore.CYAN}Welcome to your first year of college, {player['name']}!{Style.RESET_ALL}"
@@ -9240,10 +9244,10 @@ def show_academic_year():
 def generate_full_student_list():
     """Generate a large list of students for the school (500-600 students)"""
     full_student_list = []
-    
+
     # Generate a random number between 500 and 600
     total_students = random.randint(500, 600)
-    
+
     # Create international student names lists
     international_first_names_male = [
         "John", "Michael", "William", "David", "James", "Robert", "Daniel", "Thomas", "Alex", "Richard",
@@ -9251,21 +9255,21 @@ def generate_full_student_list():
         "Li", "Wei", "Chen", "Zhang", "Wang", "Liu", "Yang", "Huang", "Zhou", "Wu",
         "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Han"
     ]
-    
+
     international_first_names_female = [
         "Mary", "Jennifer", "Sarah", "Elizabeth", "Emily", "Emma", "Olivia", "Sophia", "Isabella", "Charlotte",
         "Maria", "Sofia", "Valentina", "Camila", "Lucia", "Isabella", "Gabriela", "Victoria", "Ana", "Elena",
         "Li", "Wang", "Zhang", "Liu", "Chen", "Yang", "Huang", "Wu", "Zhou", "Zhao",
         "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Ha", "Yoon", "Seo", "Jang"
     ]
-    
+
     international_last_names = [
         "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor",
         "Garcia", "Rodriguez", "Martinez", "Lopez", "Hernandez", "Gonzalez", "Perez", "Sanchez", "Ramirez", "Torres",
         "Wang", "Li", "Zhang", "Liu", "Chen", "Yang", "Huang", "Zhao", "Wu", "Zhou",
         "Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim"
     ]
-    
+
     # Tags that can be assigned to students
     tags = [
         "athlete", "honors", "exchange", "scholarship", "commuter", "resident", 
@@ -9273,24 +9277,24 @@ def generate_full_student_list():
         "student_council", "newspaper", "theater", "music", "art", "stem", "social",
         "introverted", "extroverted", "night_owl", "early_bird", "studious", "party_goer"
     ]
-    
+
     # Generate students
     for _ in range(total_students):
         # Determine if this student is international (15% chance)
         is_international = random.random() < 0.15
-        
+
         gender = random.choice(["M", "F"])
-        
+
         if is_international:
             # Choose a random nationality
             nationality = random.choice(["American", "Chinese", "Korean", "Mexican", "Spanish", "British", "French", "German", "Brazilian", "Indian"])
-            
+
             # Select name based on nationality and gender
             if gender == "M":
                 first_name = random.choice(international_first_names_male)
             else:
                 first_name = random.choice(international_first_names_female)
-                
+
             last_name = random.choice(international_last_names)
         else:
             # Japanese student
@@ -9299,14 +9303,14 @@ def generate_full_student_list():
             )
             last_name = random.choice(last_names)
             nationality = "Japanese"
-            
+
         name = first_name + " " + last_name
         personality = random.choice(list(personalities.keys()))
         year = random.randint(1, 4)  # Students can be from any year
-        
+
         # Assign 1-3 random tags
         student_tags = random.sample(tags, random.randint(1, 3))
-        
+
         student = {
             "name": name, 
             "personality": personality, 
@@ -9316,20 +9320,20 @@ def generate_full_student_list():
             "is_international": is_international,
             "tags": student_tags
         }
-        
+
         # Special chance for club membership
         if random.random() < 0.2:  # 20% chance
             all_club_names = []
             for club_name in clubs:
                 all_club_names.append(club_name)
-            
+
             if all_club_names:
                 student["club_member"] = random.choice(all_club_names)
                 if "club_member" not in student_tags:
                     student_tags.append("club_member")
-        
+
         full_student_list.append(student)
-    
+
     return full_student_list
 
 def show_help():
@@ -10426,11 +10430,11 @@ def interact_student(args):
         current_status = get_relationship_status(relationship[name])
         print(f"\n{Fore.CYAN}================================{Style.RESET_ALL}")
         print(f"           {found['name']}")
-        
+
         # Show special status for club presidents
         if found.get("is_club_president", False):
             print(f"{Fore.YELLOW}Club President: {found['club']}{Style.RESET_ALL}")
-            
+
         print(f"Status: {current_status}")
         print(f"Points: {relationship[name]}")
         print("================================")
@@ -10467,7 +10471,7 @@ def interact_student(args):
                 print(f"{Fore.MAGENTA}17. Playful teasing{Style.RESET_ALL}")
             if relationship.get(name, 0) >= 85:
                 print(f"{Fore.MAGENTA}18. Hold hands{Style.RESET_ALL}")
-        
+
         # Gossip and rumor options
         if relationship.get(name, 0) >= 50:
             print("12. Share gossip")
@@ -11211,7 +11215,7 @@ def interact_student(args):
         # Make sure the relationship entry exists
         if name not in relationship:
             relationship[name] = 0
-            
+
         # Apply personality-based relationship changes
         relationship[name] += points_gain
 
@@ -11310,17 +11314,17 @@ def show_full_student_list():
     if "full_student_list" not in player:
         # Generate the full student list
         player["full_student_list"] = generate_full_student_list()
-        
+
     full_student_list = player["full_student_list"]
     total_students = len(full_student_list)
-    
+
     print(f"\n{Fore.CYAN}=== FULL STUDENT DIRECTORY ({total_students} STUDENTS) ==={Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Year 1: {len([s for s in full_student_list if s.get('year') == 1])} students{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Year 2: {len([s for s in full_student_list if s.get('year') == 2])} students{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Year 3: {len([s for s in full_student_list if s.get('year') == 3])} students{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Year 4: {len([s for s in full_student_list if s.get('year') == 4])} students{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}International: {len([s for s in full_student_list if s.get('is_international', False)])} students{Style.RESET_ALL}")
-    
+
     # Count students by nationality
     nationality_counts = {}
     for student in full_student_list:
@@ -11329,11 +11333,11 @@ def show_full_student_list():
             nationality_counts[nationality] += 1
         else:
             nationality_counts[nationality] = 1
-    
+
     print(f"\n{Fore.CYAN}=== NATIONALITIES ==={Style.RESET_ALL}")
     for nationality, count in sorted(nationality_counts.items(), key=lambda x: x[1], reverse=True):
         print(f"{nationality}: {count} students")
-    
+
     # Ask if the user wants to see the full list or filter
     while True:
         print(f"\n{Fore.YELLOW}Options:{Style.RESET_ALL}")
@@ -11342,9 +11346,9 @@ def show_full_student_list():
         print("3. Show students of a specific nationality")
         print("4. Show students with a specific tag")
         print("5. Back to game")
-        
+
         choice = input("Enter your choice (1-5): ")
-        
+
         if choice == "1":
             # Show all students in pages of 20
             print(f"\n{Fore.CYAN}=== ALL STUDENTS ({total_students}) ==={Style.RESET_ALL}")
@@ -11353,17 +11357,17 @@ def show_full_student_list():
                 year = student.get("year", 1)
                 nationality = student.get("nationality", "Unknown")
                 tags = ", ".join(student.get("tags", []))
-                
+
                 nationality_info = ""
                 if student.get("is_international", False):
                     nationality_info = f" ({Fore.BLUE}{nationality}{Style.RESET_ALL})"
-                    
+
                 print(f"{i}. {name}{nationality_info} - Year {year} - Tags: {tags}")
-                
+
                 # Pause after every 20 students
                 if i % 20 == 0 and i < total_students:
                     input("Press Enter to see more students...")
-        
+
         elif choice == "2":
             year_choice = input("Enter year (1-4): ")
             try:
@@ -11371,18 +11375,18 @@ def show_full_student_list():
                 if 1 <= year <= 4:
                     year_students = [s for s in full_student_list if s.get("year") == year]
                     print(f"\n{Fore.CYAN}=== YEAR {year} STUDENTS ({len(year_students)}) ==={Style.RESET_ALL}")
-                    
+
                     for i, student in enumerate(year_students, 1):
                         name = student.get("name", "Unknown")
                         nationality = student.get("nationality", "Unknown")
                         tags = ", ".join(student.get("tags", []))
-                        
+
                         nationality_info = ""
                         if student.get("is_international", False):
                             nationality_info = f" ({Fore.BLUE}{nationality}{Style.RESET_ALL})"
-                            
+
                         print(f"{i}. {name}{nationality_info} - Tags: {tags}")
-                        
+
                         # Pause after every 20 students
                         if i % 20 == 0 and i < len(year_students):
                             input("Press Enter to see more students...")
@@ -11390,68 +11394,68 @@ def show_full_student_list():
                     print("Invalid year number. Please enter a number between 1 and 4.")
             except ValueError:
                 print("Please enter a valid number.")
-        
+
         elif choice == "3":
             print(f"\n{Fore.CYAN}Available nationalities:{Style.RESET_ALL}")
             for nationality in sorted(nationality_counts.keys()):
                 print(f"- {nationality} ({nationality_counts[nationality]} students)")
-                
+
             nationality_choice = input("Enter nationality: ")
             if nationality_choice in nationality_counts:
                 nationality_students = [s for s in full_student_list if s.get("nationality") == nationality_choice]
                 print(f"\n{Fore.CYAN}=== {nationality_choice.upper()} STUDENTS ({len(nationality_students)}) ==={Style.RESET_ALL}")
-                
+
                 for i, student in enumerate(nationality_students, 1):
                     name = student.get("name", "Unknown")
                     year = student.get("year", 1)
                     tags = ", ".join(student.get("tags", []))
-                    
+
                     print(f"{i}. {name} - Year {year} - Tags: {tags}")
-                    
+
                     # Pause after every 20 students
                     if i % 20 == 0 and i < len(nationality_students):
                         input("Press Enter to see more students...")
             else:
                 print("Invalid nationality.")
-        
+
         elif choice == "4":
             # Gather all possible tags
             all_tags = set()
             for student in full_student_list:
                 for tag in student.get("tags", []):
                     all_tags.add(tag)
-            
+
             print(f"\n{Fore.CYAN}Available tags:{Style.RESET_ALL}")
             for tag in sorted(all_tags):
                 tag_count = len([s for s in full_student_list if tag in s.get("tags", [])])
                 print(f"- {tag} ({tag_count} students)")
-                
+
             tag_choice = input("Enter tag: ")
             if tag_choice in all_tags:
                 tagged_students = [s for s in full_student_list if tag_choice in s.get("tags", [])]
                 print(f"\n{Fore.CYAN}=== STUDENTS WITH TAG '{tag_choice}' ({len(tagged_students)}) ==={Style.RESET_ALL}")
-                
+
                 for i, student in enumerate(tagged_students, 1):
                     name = student.get("name", "Unknown")
                     year = student.get("year", 1)
                     nationality = student.get("nationality", "Unknown")
                     tags = ", ".join(student.get("tags", []))
-                    
+
                     nationality_info = ""
                     if student.get("is_international", False):
                         nationality_info = f" ({Fore.BLUE}{nationality}{Style.RESET_ALL})"
-                        
+
                     print(f"{i}. {name}{nationality_info} - Year {year} - Tags: {tags}")
-                    
+
                     # Pause after every 20 students
                     if i % 20 == 0 and i < len(tagged_students):
                         input("Press Enter to see more students...")
             else:
                 print("Invalid tag.")
-        
+
         elif choice == "5":
             break
-        
+
         else:
             print("Invalid choice. Please enter a number between 1 and 5.")
 
@@ -11461,22 +11465,22 @@ def show_npc_list(args):
     if "full_student_list" not in player:
         # Generate the full student list
         player["full_student_list"] = generate_full_student_list()
-        
+
     full_student_list = player["full_student_list"]
-    
+
     # Include teachers and other NPCs in the full NPC list
     npcs = full_student_list.copy()
-    
+
     # Add teachers to NPCs list with appropriate tags
     for teacher in teachers:
         teacher_name = teacher.get("name", "Unknown")
         subject = teacher.get("subject", "Unknown")
-        
+
         # Create tags for teachers
         teacher_tags = ["teacher", "faculty"]
         if subject:
             teacher_tags.append(f"{subject.lower().replace(' ', '_')}_teacher")
-            
+
         teacher_info = {
             "name": teacher_name,
             "role": "Teacher",
@@ -11484,9 +11488,9 @@ def show_npc_list(args):
             "tags": teacher_tags,
             "nationality": "Japanese"  # Default, could be changed if teacher data includes nationality
         }
-        
+
         npcs.append(teacher_info)
-    
+
     # Add club presidents with the "club_president" tag if not already there
     for president in club_presidents:
         # Check if already in the list
@@ -11498,7 +11502,7 @@ def show_npc_list(args):
                     npc.setdefault("tags", []).append("club_president")
                 president_in_list = True
                 break
-                
+
         if not president_in_list:
             president_info = {
                 "name": president.get("name", "Unknown"),
@@ -11508,28 +11512,28 @@ def show_npc_list(args):
                 "nationality": "Japanese"  # Default
             }
             npcs.append(president_info)
-    
+
     # Gather all possible NPC tags
     all_tags = set()
     for npc in npcs:
         for tag in npc.get("tags", []):
             all_tags.add(tag)
-    
+
     # Handle command arguments
     if args:
         tag_filter = args[0].lower()
-        
+
         if tag_filter in all_tags:
             # Filter NPCs by the specified tag
             filtered_npcs = [npc for npc in npcs if tag_filter in npc.get("tags", [])]
-            
+
             print(f"\n{Fore.CYAN}=== NPCs WITH TAG '{tag_filter}' ({len(filtered_npcs)}) ==={Style.RESET_ALL}")
-            
+
             for i, npc in enumerate(filtered_npcs, 1):
                 name = npc.get("name", "Unknown")
                 role = npc.get("role", "Student")
                 nationality = npc.get("nationality", "Unknown")
-                
+
                 # Add special info based on role
                 extra_info = ""
                 if role == "Teacher":
@@ -11538,21 +11542,21 @@ def show_npc_list(args):
                     extra_info = f" - Club: {npc.get('club', 'Unknown')}"
                 elif "year" in npc:
                     extra_info = f" - Year {npc.get('year', 1)}"
-                
+
                 # Show nationality for international NPCs
                 nationality_info = ""
                 if npc.get("is_international", False):
                     nationality_info = f" ({Fore.BLUE}{nationality}{Style.RESET_ALL})"
-                
+
                 # Show relationship if exists
                 relationship_info = ""
                 if name in relationship:
                     rel_points = relationship.get(name, 0)
                     rel_status = student_status.get(name, "Unknown")
                     relationship_info = f" - {rel_status} ({rel_points} points)"
-                
+
                 print(f"{i}. {name}{nationality_info} - {role}{extra_info}{relationship_info}")
-                
+
                 # Pause after every 20 NPCs
                 if i % 20 == 0 and i < len(filtered_npcs):
                     input("Press Enter to see more NPCs...")
@@ -11568,43 +11572,43 @@ def show_npc_list(args):
         print("Please specify a tag to filter NPCs.")
         print("Usage: /npc list [tag]")
         print(f"\n{Fore.CYAN}Available tags:{Style.RESET_ALL}")
-        
+
         for tag in sorted(all_tags):
             tag_count = len([npc for npc in npcs if tag in npc.get("tags", [])])
             print(f"- {tag} ({tag_count} NPCs)")
 
 def show_students():
     print(f"\n{Fore.CYAN}=== YOUR CLASSMATES ==={Style.RESET_ALL}")
-    
+
     # Filter students for player's year
     classmates = [s for s in students if s.get("year", 1) == player["school_year"]]
-    
+
     if not classmates:
         print("You don't have any classmates yet.")
         return
-    
+
     for student in classmates:
         name = student.get("name", "Unknown")
         rel_points = relationship.get(name, 0)
         rel_status = student_status.get(name, "Unknown")
-        
+
         # Check if they're a club president
         club_info = ""
         if student.get("is_club_president", False):
             club_info = f" ({Fore.MAGENTA}President of {student['club']}{Style.RESET_ALL})"
-            
+
         # Display nationality for international students
         nationality_info = ""
         if student.get("is_international", False):
             nationality_info = f" ({Fore.BLUE}{student.get('nationality', 'International')}{Style.RESET_ALL})"
-            
+
         print(f"{name}{nationality_info} - {rel_status} ({rel_points} points){club_info}")
-        
+
         # If high enough relationship, show more details
         if rel_points >= 50:
             personality = student.get("personality", "unknown")
             print(f"  Personality: {personality}")
-            
+
             # Show compatibility if available
             if "compatibility" in student:
                 compatibility = student["compatibility"]
@@ -11774,14 +11778,14 @@ def pe_class_challenge():
     slow_print(
         "\n{0}=== PE Class Challenge ==={1}".format(Fore.YELLOW, Style.RESET_ALL)
     )
-    
+
     # Check the current season to apply seasonal effects
     season = get_current_season()
-    
+
     # Inform about seasonal conditions
     if season == "summer":
         slow_print(f"{Fore.YELLOW}It's a hot summer day. The gym feels particularly warm today.{Style.RESET_ALL}")
-        
+
         # Check if player has the "strong" trait
         if "strong" in player.get("traits", []):
             slow_print(f"{Fore.GREEN}Your strength helps you handle the summer heat better.{Style.RESET_ALL}")
@@ -11789,14 +11793,14 @@ def pe_class_challenge():
             slow_print(f"{Fore.RED}You find the heat particularly difficult to deal with.{Style.RESET_ALL}")
         else:
             slow_print(f"{Fore.YELLOW}The heat makes physical activities more challenging.{Style.RESET_ALL}")
-    
+
     elif season == "winter":
         slow_print(f"{Fore.CYAN}It's cold outside, but the gym is adequately heated.{Style.RESET_ALL}")
-        
+
         # Check if player has the "cold_sensitive" trait
         if "cold_sensitive" in player.get("traits", []):
             slow_print(f"{Fore.RED}Even in the heated gym, you find it hard to warm up properly.{Style.RESET_ALL}")
-    
+
     # Apply special energy costs based on season and traits
     seasonal_energy_cost = 0
     if season == "summer":
@@ -11808,7 +11812,7 @@ def pe_class_challenge():
             seasonal_energy_cost = 5
             player["energy"] = max(0, player["energy"] - seasonal_energy_cost)
             slow_print(f"{Fore.YELLOW}The summer heat is making you tired more quickly. (-{seasonal_energy_cost} Energy){Style.RESET_ALL}")
-    
+
     elif season == "winter" and "cold_sensitive" in player.get("traits", []):
         seasonal_energy_cost = 7
         player["energy"] = max(0, player["energy"] - seasonal_energy_cost)
@@ -11980,7 +11984,7 @@ def pe_class_challenge():
     pe_skill_factor = (player["pe_stats"]["technique"] / 10) * 0.2 + (
         player["pe_stats"]["stamina"] / 10
     ) * 0.2
-    
+
     # Base success chance
     base_success_chance = (
         (player["energy"] / 100) * 0.4
@@ -11988,7 +11992,7 @@ def pe_class_challenge():
         + (player["charisma"]["social"] / 10) * 0.1
         + random.random() * 0.1
     )
-    
+
     # Apply trait bonuses/penalties
     trait_modifier = 0
     for trait in player.get("traits", []):
@@ -12007,7 +12011,7 @@ def pe_class_challenge():
         elif trait == "weak":
             trait_modifier -= 0.05  # Weak trait is a small penalty
             slow_print(f"{Fore.RED}Your lower strength is a slight disadvantage. (-5% success chance){Style.RESET_ALL}")
-            
+
     # Apply seasonal penalties if applicable
     if season == "summer" and "strong" not in player.get("traits", []):
         if "heat_sensitive" in player.get("traits", []):
@@ -12016,21 +12020,21 @@ def pe_class_challenge():
         else:
             trait_modifier -= 0.1  # Regular summer penalty without strong trait
             slow_print(f"{Fore.RED}The heat is making this more difficult. (-10% success chance){Style.RESET_ALL}")
-    
+
     elif season == "winter" and "cold_sensitive" in player.get("traits", []):
         trait_modifier -= 0.15  # Cold sensitive in winter is a penalty
         slow_print(f"{Fore.RED}The cold weather makes it hard for you to perform well. (-15% success chance){Style.RESET_ALL}")
-    
+
     # Apply trait modifier to success chance
     success_chance = base_success_chance + trait_modifier
-    
+
     # Show trait impact if significant
     if abs(trait_modifier) > 0.05:
         if trait_modifier > 0:
             slow_print(f"{Fore.GREEN}Your traits are helping your performance significantly!{Style.RESET_ALL}")
         else:
             slow_print(f"{Fore.RED}Your traits are making this challenge more difficult.{Style.RESET_ALL}")
-    
+
     difficulty_factor = challenge["difficulty"] / 5  # Normalize difficulty to 0-1 range
 
     if success_chance > difficulty_factor:
@@ -14158,10 +14162,10 @@ birthdays = {}
 def generate_birthdays():
     """Generate random birthdays for all students and family members"""
     # No need for global declarations as we're only modifying the contents of these variables, not reassigning them
-    
+
     # Dictionary to store birthdays (key: name, value: (month, day))
     birthday_dict = {}
-    
+
     # Generate player's birthday (default to start of school year if not set)
     if "birthday" not in player:
         # Random birthday, avoiding the first week of school
@@ -14170,10 +14174,10 @@ def generate_birthdays():
         max_days = 28 if month == 2 else 30 if month in [4, 6, 9, 11] else 31
         day = random.randint(1, max_days)
         player["birthday"] = (month, day)
-        
+
         # Add birthday to dictionary
         birthday_dict[player["name"]] = player["birthday"]
-    
+
     # Generate birthdays for family members
     if "family" in player:
         # Parents
@@ -14184,7 +14188,7 @@ def generate_birthdays():
                 day = random.randint(1, max_days)
                 parent["birthday"] = (month, day)
                 birthday_dict[parent["name"]] = parent["birthday"]
-        
+
         # Siblings
         if "siblings" in player["family"]:
             for sibling in player["family"]["siblings"]:
@@ -14197,7 +14201,7 @@ def generate_birthdays():
                     day = random.randint(1, max_days)
                     sibling["birthday"] = (month, day)
                 birthday_dict[sibling["name"]] = sibling["birthday"]
-    
+
     # Generate birthdays for students
     for student in students:
         month = random.randint(1, 12)
@@ -14205,7 +14209,7 @@ def generate_birthdays():
         day = random.randint(1, max_days)
         student["birthday"] = (month, day)
         birthday_dict[student["name"]] = student["birthday"]
-    
+
     # Generate birthdays for teachers
     for teacher in teachers:
         month = random.randint(1, 12)
@@ -14213,36 +14217,36 @@ def generate_birthdays():
         day = random.randint(1, max_days)
         teacher["birthday"] = (month, day)
         birthday_dict[teacher["name"]] = teacher["birthday"]
-    
+
     return birthday_dict
 
 def generate_weekly_quests():
     """Generate new quests at the beginning of each week"""
     # Only need global for quests if we're assigning new quests via add_random_quests
     # No need for player and current_date as we're only reading their values
-    
+
     # Only generate new quests at the beginning of the week (Monday)
     if current_date.weekday() != 0:  # 0 = Monday
         return
-    
+
     # Only run once per Monday - check if we've already generated quests this week
     if player.get("last_quest_generation_date") == current_date.isoformat():
         return
-    
+
     # Number of quests based on player's year and reputation
     base_quests = player["school_year"]
     reputation_bonus = sum(player["reputation"].values()) // 100
     total_quests = base_quests + reputation_bonus
-    
+
     # Cap at reasonable maximum
     total_quests = min(total_quests, 5)
-    
+
     # Generate the quests
     new_quests = add_random_quests(count=total_quests)
-    
+
     # Mark that we've generated quests today
     player["last_quest_generation_date"] = current_date.isoformat()
-    
+
     # Notify player of new quests if any were generated
     if new_quests:
         slow_print(f"\n{Fore.YELLOW}You have {len(new_quests)} new quests available!{Style.RESET_ALL}")
@@ -14253,24 +14257,24 @@ def check_for_special_events():
     global birthdays
     # Only need global birthdays because we're reassigning it on line 14252
     # No need for quests, player, relationship globals as we're only modifying their contents
-    
+
     current_month = current_date.month
     current_day = current_date.day
     today_date = (current_month, current_day)
-    
+
     # Initialize birthdays dictionary if not done yet
     if not birthdays:
         birthdays = generate_birthdays()
-    
+
     # Track if any special event is happening
     is_special_day = False
-    
+
     # Check for birthdays
     # Player's birthday
     if "birthday" in player and player["birthday"] == today_date:
         slow_print(f"\n{Fore.MAGENTA}🎂 Today is your birthday! 🎂{Style.RESET_ALL}")
         slow_print("Friends and family will want to celebrate with you!")
-        
+
         # Add special quest for player's birthday party
         birthday_quest = {
             "id": 9000,  # Special high ID for birthday quests
@@ -14285,13 +14289,13 @@ def check_for_special_events():
             "type": "birthday",
             "whose_birthday": player["name"]
         }
-        
+
         # Add to quests if not already there
         if not any(q.get("id") == 9000 for q in quests):
             quests.append(birthday_quest)
-        
+
         is_special_day = True
-    
+
     # Check family birthdays
     today_family_birthdays = []
     if "family" in player:
@@ -14300,7 +14304,7 @@ def check_for_special_events():
             for parent in player["family"]["parents"]:
                 if "birthday" in parent and parent["birthday"] == today_date:
                     today_family_birthdays.append(parent["name"])
-                    
+
                     # Add special quest for parent's birthday
                     parent_birthday_quest = {
                         "id": 9001 + len(today_family_birthdays),  # Special high ID for birthday quests
@@ -14314,17 +14318,17 @@ def check_for_special_events():
                         "type": "birthday",
                         "whose_birthday": parent["name"]
                     }
-                    
+
                     # Add to quests if not already there
                     if not any(q.get("whose_birthday") == parent["name"] for q in quests):
                         quests.append(parent_birthday_quest)
-        
+
         # Check siblings' birthdays
         if "siblings" in player["family"]:
             for sibling in player["family"]["siblings"]:
                 if "birthday" in sibling and sibling["birthday"] == today_date:
                     today_family_birthdays.append(sibling["name"])
-                    
+
                     # Add special quest for sibling's birthday
                     sibling_birthday_quest = {
                         "id": 9001 + len(today_family_birthdays),  # Special high ID for birthday quests
@@ -14338,17 +14342,17 @@ def check_for_special_events():
                         "type": "birthday",
                         "whose_birthday": sibling["name"]
                     }
-                    
+
                     # Add to quests if not already there
                     if not any(q.get("whose_birthday") == sibling["name"] for q in quests):
                         quests.append(sibling_birthday_quest)
-    
+
     # Display family birthday messages
     if today_family_birthdays:
         slow_print(f"\n{Fore.YELLOW}Today is the birthday of: {', '.join(today_family_birthdays)}{Style.RESET_ALL}")
         slow_print("You should visit them and bring a gift!")
         is_special_day = True
-    
+
     # Check for classmates/friends birthdays (only people you know)
     today_birthdays = []
     for student in students:
@@ -14357,13 +14361,13 @@ def check_for_special_events():
             # Only count as birthday if you know this person (relationship > 0)
             if name in relationship and relationship[name] > 0:
                 today_birthdays.append(name)
-                
+
                 # 50% chance of getting a party invitation if relationship > 40
                 if relationship[name] > 40 and random.random() < 0.5:
                     # Add birthday party invitation quest
                     party_time = f"{random.randint(16, 19)}:00"  # Random time between 4-7 PM
                     party_location = random.choice(["Cafeteria", "Student Lounge", "Mall"])
-                    
+
                     birthday_invite_quest = {
                         "id": 9100 + len(today_birthdays),  # Special high ID for birthday invites
                         "description": f"Attend {name}'s birthday party",
@@ -14377,12 +14381,12 @@ def check_for_special_events():
                         "type": "birthday_invite",
                         "whose_birthday": name
                     }
-                    
+
                     # Add to quests if not already there
                     if not any(q.get("whose_birthday") == name for q in quests):
                         quests.append(birthday_invite_quest)
                         slow_print(f"\n{Fore.CYAN}You've been invited to {name}'s birthday party at {party_time} in the {party_location}!{Style.RESET_ALL}")
-    
+
     # Display messages about other birthdays
     if today_birthdays and not any(name == player["name"] for name in today_birthdays):
         slow_print(f"\n{Fore.CYAN}Today is the birthday of: {', '.join(today_birthdays)}{Style.RESET_ALL}")
@@ -14519,43 +14523,43 @@ def check_for_special_events():
 
             update_ranks()
             return True
-    
+
     # Check for holiday based dates
     is_holiday = False
-    
+
     # Check major holidays
     if (current_month == 1 and current_day == 1) or (
         current_month == 12 and current_day >= 24 and current_day <= 26
     ):
         is_holiday = True  # New Year's Day or Christmas
-    
+
     # Check for Golden Week (early May)
     if current_month == 5 and current_day >= 1 and current_day <= 7:
         is_holiday = True
-    
+
     # Check for Obon (mid-August)
     if current_month == 8 and current_day >= 13 and current_day <= 16:
         is_holiday = True
-    
+
     # School breaks
     # Spring break (late March to early April)
     if (current_month == 3 and current_day >= 20) or (
         current_month == 4 and current_day <= 7
     ):
         is_holiday = True
-    
+
     # Summer break (late July to late August)
     if (current_month == 7 and current_day >= 20) or (
         current_month == 8 and current_day <= 31
     ):
         is_holiday = True
-    
+
     # Winter break (late December to early January)
     if (current_month == 12 and current_day >= 20) or (
         current_month == 1 and current_day <= 7
     ):
         is_holiday = True
-    
+
     return is_special_day or is_holiday
 
 
@@ -14652,36 +14656,36 @@ quest_counter = 1000
 def generate_new_quest(quest_type=None, difficulty=None):
     """
     Generate a new random quest based on type and difficulty
-    
+
     Arguments:
     quest_type -- Type of quest (academic, social, adventure, job, romance)
     difficulty -- Quest difficulty (easy, medium, hard) affecting rewards
-    
+
     Returns:
     A quest dictionary object
     """
     global quest_counter
     # Only need global for quest_counter as we're reassigning it on line 14657
     # No need for player, students, teachers, clubs, special_events globals as we're only reading their values
-    
+
     # Increment quest counter for unique IDs
     quest_counter += 1
-    
+
     # Set default difficulty if none provided
     if not difficulty:
         difficulty = random.choice(["easy", "medium", "hard"])
-    
+
     # Rewards based on difficulty
     rewards = {
         "easy": {"money": random.randint(10, 30), "reputation": random.randint(2, 5)},
         "medium": {"money": random.randint(25, 50), "reputation": random.randint(4, 8)},
         "hard": {"money": random.randint(45, 100), "reputation": random.randint(7, 15)}
     }
-    
+
     # Default to random quest type if none specified
     if not quest_type:
         quest_type = random.choice(["academic", "social", "adventure", "job", "romance"])
-    
+
     quest = {
         "id": quest_counter,
         "type": quest_type,
@@ -14692,7 +14696,7 @@ def generate_new_quest(quest_type=None, difficulty=None):
         "completed": False,
         "mandatory": False
     }
-    
+
     # Generate quest details based on type
     if quest_type == "academic":
         # Academic quests related to studying and school activities
@@ -14733,7 +14737,7 @@ def generate_new_quest(quest_type=None, difficulty=None):
         selected_quest = random.choice(academic_quests)
         quest["description"] = selected_quest["description"]
         quest["objective"] = selected_quest["objective"]
-    
+
     elif quest_type == "social":
         # Social quests involving making friends and social activities
         if not students:
@@ -14780,7 +14784,7 @@ def generate_new_quest(quest_type=None, difficulty=None):
             else:
                 quest["description"] = "Make a new friend"
                 quest["objective"] = "Talk to 3 different students"
-    
+
     elif quest_type == "adventure":
         # Exploration and adventure quests
         adventure_quests = [
@@ -14820,7 +14824,7 @@ def generate_new_quest(quest_type=None, difficulty=None):
         selected_quest = random.choice(adventure_quests)
         quest["description"] = selected_quest["description"]
         quest["objective"] = selected_quest["objective"]
-    
+
     elif quest_type == "job":
         # Part-time job and career-related quests
         job_quests = [
@@ -14860,7 +14864,7 @@ def generate_new_quest(quest_type=None, difficulty=None):
         selected_quest = random.choice(job_quests)
         quest["description"] = selected_quest["description"]
         quest["objective"] = selected_quest["objective"]
-    
+
     elif quest_type == "romance":
         # Romance-related quests (only if romance content is allowed)
         if is_content_allowed("romance"):
@@ -14902,7 +14906,7 @@ def generate_new_quest(quest_type=None, difficulty=None):
                         # Check compatibility based on settings
                         if check_relationship_compatibility(player, student):
                             crush_candidates.append(name)
-                
+
                 if crush_candidates:
                     crush_name = random.choice(crush_candidates)
                     romance_quests = [
@@ -14937,26 +14941,26 @@ def generate_new_quest(quest_type=None, difficulty=None):
         else:
             # If romance content not allowed, default to a social quest
             return generate_new_quest(quest_type="social", difficulty=difficulty)
-    
+
     return quest
 
 # Get time of day based on game ticks
 def get_time_of_day():
     """
     Get the current time of day based on game ticks
-    
+
     Returns:
     string -- "morning", "afternoon", "evening", or "night"
     """
     # No need for global ticks as we're only reading its value, not modifying it
-    
+
     # Default to afternoon if ticks not initialized
     if 'ticks' not in globals() or ticks is None:
         return "afternoon"
-    
+
     # Time of day is based on ticks (each tick is 10 minutes)
     hour = (ticks // 6) % 24  # Convert ticks to hours (24-hour format)
-    
+
     if 5 <= hour < 12:
         return "morning"
     elif 12 <= hour < 17:
@@ -14970,18 +14974,18 @@ def get_time_of_day():
 def get_current_season():
     """
     Determine the current season based on date
-    
+
     Returns:
     string -- "spring", "summer", "fall", or "winter"
     """
     # No need for global current_date as we're only reading its value, not modifying it
-    
+
     # Default to spring if current_date is not initialized
     if 'current_date' not in globals() or current_date is None:
         return "spring"
-        
+
     month = current_date.month
-    
+
     if 3 <= month <= 5:
         return "spring"
     elif 6 <= month <= 8:
@@ -14995,26 +14999,26 @@ def get_current_season():
 def apply_trait_effects_to_exam(subject, base_score):
     """
     Apply trait effects to exam performance
-    
+
     Arguments:
     subject -- The subject being tested
     base_score -- The base score before trait modifications
-    
+
     Returns:
     float -- Modified score after trait effects
     """
     modified_score = base_score
     season = get_current_season()
-    
+
     # Check if player has traits that affect this subject
     for trait in player.get("traits", []):
         trait_info = PLAYER_TRAITS.get(trait, {})
         effects = trait_info.get("effects", {})
-        
+
         # Apply general academic bonuses/penalties
         if "study_efficiency" in effects:
             modified_score += effects["study_efficiency"] * 0.1  # 10% of the efficiency bonus
-        
+
         # Apply subject-specific bonuses
         if subject == "Math I" and "math_bonus" in effects:
             modified_score += effects["math_bonus"] * 0.2
@@ -15024,7 +15028,7 @@ def apply_trait_effects_to_exam(subject, base_score):
             modified_score += effects["art_bonus"] * 0.2
         elif subject == "Music" and "music_bonus" in effects:
             modified_score += effects["music_bonus"] * 0.2
-        
+
         # PE subject specific modifications based on season and traits
         if subject.startswith("PE"):
             # Apply general PE bonuses
@@ -15032,7 +15036,7 @@ def apply_trait_effects_to_exam(subject, base_score):
                 modified_score += effects["pe_grade_bonus"]
             if "pe_grade_penalty" in effects:
                 modified_score -= effects["pe_grade_penalty"]
-            
+
             # Apply season specific PE modifiers for heat/cold sensitive traits
             if season == "summer" and "summer_pe_penalty" in effects:
                 modified_score -= effects["summer_pe_penalty"]
@@ -15040,37 +15044,37 @@ def apply_trait_effects_to_exam(subject, base_score):
             elif season == "winter" and "winter_pe_penalty" in effects:
                 modified_score -= effects["winter_pe_penalty"]
                 slow_print(f"{Fore.RED}The winter cold makes PE more challenging for you. (Score -{effects['winter_pe_penalty']}){Style.RESET_ALL}")
-    
+
     # Apply season-specific PE difficulty based on request
     if subject.startswith("PE") and season == "summer" and "strong" not in player.get("traits", []):
         # Summer PE is harder if you don't have the "strong" trait
         summer_penalty = 10
         modified_score -= summer_penalty
         slow_print(f"{Fore.RED}The summer heat makes PE class more challenging. (Score -{summer_penalty}){Style.RESET_ALL}")
-    
+
     return max(0, min(100, modified_score))  # Clamp between 0-100
 
 def add_random_quests(count=1, types=None):
     """
     Add random quests to the quest log
-    
+
     Arguments:
     count -- Number of quests to add
     types -- List of quest types to choose from (academic, social, adventure, job, romance)
-    
+
     Returns:
     List of newly added quests
     """
     # No need for 'global quests' as we're only modifying the contents of the quests list (by appending),
     # not reassigning the quests variable itself
-    
+
     # Default quest types if none specified
     if not types:
         types = ["academic", "social", "adventure", "job"]
         # Only add romance as option if content is allowed
         if is_content_allowed("romance"):
             types.append("romance")
-    
+
     new_quests = []
     for _ in range(count):
         quest_type = random.choice(types)
@@ -15078,7 +15082,7 @@ def add_random_quests(count=1, types=None):
         new_quest = generate_new_quest(quest_type, difficulty)
         quests.append(new_quest)
         new_quests.append(new_quest)
-    
+
     return new_quests
 
 def check_quest_objectives(location):
@@ -15088,15 +15092,15 @@ def check_quest_objectives(location):
     # - modifying player (money, reputation, achievements) on lines 15097-15098, etc.
     # - modifying quests (marking as completed) on line 15096, etc.
     # - modifying relationship values on lines 15141-15142, etc.
-    
+
     # Get current time safely
     current_time = get_time_of_day() if 'get_time_of_day' in globals() else "afternoon"
-    
+
     for quest in quests:
         # Skip completed quests
         if quest["completed"]:
             continue
-            
+
         # Regular location-based objectives
         if quest["objective"].startswith("Go to") and location in quest["objective"]:
             slow_print(
@@ -15112,15 +15116,15 @@ def check_quest_objectives(location):
                 slow_print(
                     f"{Fore.YELLOW}Achievement unlocked: Quest Completer{Style.RESET_ALL}"
                 )
-            
+
             update_ranks()
-        
+
         # Birthday quest objectives (if at right place and time)
         elif quest.get("type") == "birthday" and not quest["completed"]:
             quest_location = quest.get("location", "")
             quest_time = quest.get("time", "")
             whose_birthday = quest.get("whose_birthday", "")
-            
+
             # Check if at right location and time matches (if specified)
             if location == quest_location:
                 # If time is specified, check if current time matches
@@ -15128,79 +15132,79 @@ def check_quest_objectives(location):
                     slow_print(
                         f"{Fore.MAGENTA}=== Birthday Celebration ==={Style.RESET_ALL}"
                     )
-                    
+
                     if whose_birthday == player["name"]:
                         # Player's own birthday
                         slow_print("Everyone has gathered to celebrate your birthday!")
                         slow_print("You received gifts and had a wonderful time with your friends.")
-                        
+
                         # Special birthday rewards
                         money_gift = random.randint(1000, 2000)
                         player["money"] += money_gift
                         slow_print(f"Birthday gift money: +¥{money_gift}")
-                        
+
                         # Stress reduction
                         stress_reduction = random.randint(15, 30)
                         player["stress"] = max(0, player["stress"] - stress_reduction)
                         slow_print(f"The celebration helped you relax! (Stress -{stress_reduction})")
-                        
+
                         # Relationship boost with all friends
                         for name, points in relationship.items():
                             if points > 0:  # Only improve relationships with people you know
                                 relationship[name] += random.randint(2, 5)
                         slow_print("Your relationship with all friends has improved!")
-                        
+
                         # Achievement
                         if "Birthday Celebration" not in player["achievements"]:
                             player["achievements"].append("Birthday Celebration")
                             slow_print(f"{Fore.YELLOW}Achievement unlocked: Birthday Celebration{Style.RESET_ALL}")
-                    
+
                     elif any(parent.get("name") == whose_birthday for parent in player["family"]["parents"]):
                         # Parent's birthday
                         slow_print(f"You celebrated {whose_birthday}'s birthday!")
                         slow_print("You gave a thoughtful gift and spent quality time together.")
-                        
+
                         # Improve family relationship
                         if "family_relationship" in player and whose_birthday in player["family_relationship"]:
                             current_rel = player["family_relationship"][whose_birthday]
                             increase = random.randint(10, 20)
                             player["family_relationship"][whose_birthday] = min(100, current_rel + increase)
                             slow_print(f"Your relationship with {whose_birthday} has improved significantly! (+{increase})")
-                        
+
                         # Stress reduction
                         stress_reduction = random.randint(5, 15)
                         player["stress"] = max(0, player["stress"] - stress_reduction)
                         slow_print(f"The family celebration was relaxing. (Stress -{stress_reduction})")
-                    
+
                     elif "siblings" in player["family"] and any(sibling.get("name") == whose_birthday for sibling in player["family"]["siblings"]):
                         # Sibling's birthday
                         slow_print(f"You celebrated your sibling {whose_birthday}'s birthday!")
                         slow_print("You shared some good memories and had fun together.")
-                        
+
                         # Improve family relationship
                         if "family_relationship" in player and whose_birthday in player["family_relationship"]:
                             current_rel = player["family_relationship"][whose_birthday]
                             increase = random.randint(8, 15)
                             player["family_relationship"][whose_birthday] = min(100, current_rel + increase)
                             slow_print(f"Your relationship with {whose_birthday} has improved! (+{increase})")
-                        
+
                         # Stress reduction
                         stress_reduction = random.randint(5, 10)
                         player["stress"] = max(0, player["stress"] - stress_reduction)
                         slow_print(f"The sibling celebration was fun. (Stress -{stress_reduction})")
-                    
+
                     else:
                         # Friend's birthday
                         slow_print(f"You attended {whose_birthday}'s birthday party!")
                         slow_print(f"Everyone had a great time and {whose_birthday} appreciated your presence.")
-                        
+
                         # Improve relationship
                         if whose_birthday in relationship:
                             current_rel = relationship[whose_birthday]
                             increase = random.randint(10, 15)
                             relationship[whose_birthday] = min(100, current_rel + increase)
                             slow_print(f"Your relationship with {whose_birthday} has improved! (+{increase})")
-                        
+
                         # Small relationships boosts with other attendees
                         for student in students:
                             if student["name"] != whose_birthday and student["name"] in relationship and relationship[student["name"]] > 0:
@@ -15208,17 +15212,17 @@ def check_quest_objectives(location):
                                 if random.random() < 0.3:
                                     relationship[student["name"]] += random.randint(1, 3)
                                     slow_print(f"You also got to know {student['name']} better at the party.")
-                        
+
                         # Stress reduction
                         stress_reduction = random.randint(5, 15)
                         player["stress"] = max(0, player["stress"] - stress_reduction)
                         slow_print(f"The party was fun and relaxing. (Stress -{stress_reduction})")
-                    
+
                     # Mark quest as completed
                     quest["completed"] = True
                     player["money"] += quest["reward"]
                     player["reputation"]["students"] += quest["reward"] // 5
-                    
+
                     update_ranks()
 
 
@@ -16803,19 +16807,19 @@ def random_event(location):
 def save_game(slot_name):
     """
     Save the current game state to a file
-    
+
     Arguments:
     slot_name -- name of the save slot (without extension)
     """
     # Make sure the slot name doesn't already include .json
     clean_slot_name = slot_name.replace(".json", "")
-    
+
     # Ensure relationship dictionary exists
     if not isinstance(relationship, dict):
         relationship_dict = {}
     else:
         relationship_dict = relationship
-    
+
     game_data = {
         "player": player,
         "homework": homework,
@@ -16825,7 +16829,7 @@ def save_game(slot_name):
         "quests": quests,
         "current_date": current_date.isoformat(),
     }
-    
+
     # Always append .json extension
     filename = f"save_{clean_slot_name}.json"
     try:
@@ -16839,16 +16843,16 @@ def save_game(slot_name):
 def load_game(slot_name):
     """
     Load a saved game from a file
-    
+
     Arguments:
     slot_name -- name of the save slot (without extension)
     """
     global player, homework, teachers, students, relationship, quests, current_date
-    
+
     # Make sure the slot name doesn't already include .json
     clean_slot_name = slot_name.replace(".json", "")
     filename = f"save_{clean_slot_name}.json"
-    
+
     # Check if the file exists
     if not os.path.exists(filename):
         # Check if they provided just "save_name" instead of "name"
@@ -16858,32 +16862,32 @@ def load_game(slot_name):
                 alt_filename += ".json"
         else:
             alt_filename = filename
-            
+
         # If the alternative filename exists, use it
         if os.path.exists(alt_filename):
             filename = alt_filename
         else:
             slow_print(f"{Fore.RED}No save file found for {slot_name}.{Style.RESET_ALL}")
             return
-    
+
     # Try to load the file
     try:
         with open(filename, "r") as file:
             game_data = json.load(file)
-            
+
         # Update game state with loaded data
         player = game_data["player"]
         homework = game_data["homework"]
         teachers = game_data["teachers"]
         students = game_data["students"]
-        
+
         # Safely load relationship data
         if "relationship" in game_data and isinstance(game_data["relationship"], dict):
             relationship = game_data["relationship"]
         else:
             relationship = {}
             slow_print(f"{Fore.YELLOW}Warning: Relationship data was missing or invalid. Initializing empty relationships.{Style.RESET_ALL}")
-        
+
         quests = game_data["quests"]
         current_date = datetime.fromisoformat(game_data["current_date"])
         slow_print(f"{Fore.GREEN}Game loaded from {filename}.{Style.RESET_ALL}")
@@ -16906,7 +16910,7 @@ def display_save_slots():
     """Display and manage save slots for the game"""
     # Get only save game files (those starting with save_ and ending with .json)
     saves = [f for f in os.listdir() if f.startswith("save_") and f.endswith(".json")]
-    
+
     print(f"\n{Fore.CYAN}================================{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}          SAVING SLOTS          {Style.RESET_ALL}")
     print(f"{Fore.CYAN}================================{Style.RESET_ALL}")
@@ -16951,7 +16955,7 @@ def display_save_slots():
         print(f"\n{Fore.YELLOW}Returning to main menu due to input limitations.{Style.RESET_ALL}")
     except Exception as e:
         print(f"\n{Fore.RED}Error: {str(e)}{Style.RESET_ALL}")
-        
+
     return False
 
 
@@ -17494,7 +17498,7 @@ def show_main_menu():
     try:
         choice = input(
             "\n{0}Select an option (1-5):{1} ".format(Fore.GREEN, Style.RESET_ALL)
-        )
+        ).strip()
         if choice == "1":
             return False
         elif choice == "2":
@@ -17503,11 +17507,15 @@ def show_main_menu():
             settings_menu()
             return show_main_menu()
         elif choice == "4":
-            password = input(
-                "{0}Enter password (hint: complete a school year or graduate):{1} ".format(
-                    Fore.YELLOW, Style.RESET_ALL
-                )
-            )
+            try:
+                password = input(
+                    "{0}Enter password (hint: complete a school year or graduate):{1} ".format(
+                        Fore.YELLOW, Style.RESET_ALL
+                    )
+                ).strip()
+            except (EOFError, KeyboardInterrupt):
+                print(f"{Fore.RED}Input interrupted.{Style.RESET_ALL}")
+                return show_main_menu()
             if password.upper() == "SCHOOLYEAREND":
                 if show_templates():
                     return False  # Applied template, start new game
@@ -17557,21 +17565,21 @@ def show_schedule():
 
 def main(non_interactive=False):
     """Main game function that initializes and runs the game
-    
+
     Arguments:
     non_interactive -- If True, skips interactive prompts and uses defaults
     """
     global ticks, player, relationship, current_date, students
-    
+
     # Force color codes to work in environments like Replit
     os.environ["FORCE_COLOR"] = "1"
-    
+
     # Re-initialize colorama to ensure it's working correctly
     if platform.system() == "Windows":
         init(autoreset=True, convert=True)
     else:
         init(autoreset=True, strip=False)
-    
+
     # Print ASCII art with proper colors
     print(ASCII_ART)
     # Use f-strings for clearer color code formatting
@@ -17583,13 +17591,13 @@ def main(non_interactive=False):
         print(f"{Fore.YELLOW}Running in non-interactive mode with default choices.{Style.RESET_ALL}")
         # Setup the game with defaults
         setup_game(non_interactive=True)
-        
+
         # Display welcome message with instructions for non-interactive mode
         print(f"\n{Fore.GREEN}Hello {player['name']}!{Style.RESET_ALL}")
         print(f"{Fore.CYAN}Welcome to Campus Life! Type {Fore.YELLOW}/help{Fore.CYAN} to see available commands.{Style.RESET_ALL}")
         print(f"{Fore.MAGENTA}You're currently in {player['current_location']}.{Style.RESET_ALL}")
         # Skip the menu and continue directly to main game loop
-        
+
     # Otherwise, show the menu as usual
     try:
         if not show_main_menu():
@@ -17598,7 +17606,7 @@ def main(non_interactive=False):
         # If we get an EOF error, switch to non-interactive mode
         print(f"{Fore.YELLOW}Switching to non-interactive mode due to input limitations.{Style.RESET_ALL}")
         setup_game(non_interactive=True)
-        
+
         # Display welcome message with consistent formatting using f-strings
         print(f"\n{Fore.GREEN}Hello {player['name']}!{Style.RESET_ALL}")
         print(f"{Fore.CYAN}Welcome to Campus Life! Type {Fore.YELLOW}/help{Fore.CYAN} to see available commands.{Style.RESET_ALL}")
@@ -17632,7 +17640,7 @@ def main(non_interactive=False):
 
         # Command processing
         command = ""
-        
+
         # In non-interactive mode, auto-select help command first
         if non_interactive:
             print(f"\n{Fore.CYAN}Simulating a help command in non-interactive mode{Style.RESET_ALL}")
@@ -17649,16 +17657,16 @@ def main(non_interactive=False):
             except Exception as e:
                 print(f"{Fore.RED}Error: {str(e)}{Style.RESET_ALL}")
                 continue
-        
+
         # Process the command
         if not command.startswith("/"):
             print("Commands must start with '/'. Type /help for list of commands.")
             continue
-            
+
         parts = command[1:].split()
         if not parts:
             continue
-            
+
         cmd = parts[0]
         args = parts[1:] if len(parts) > 1 else []
 
@@ -17695,11 +17703,11 @@ def main(non_interactive=False):
             if display_hour == 0:
                 display_hour = 12
             print(f"{Fore.CYAN}Current Time: {display_hour}:{current_minute:02d} {am_pm}{Style.RESET_ALL}")
-            
+
             # Show time period information
             period_name = "Morning" if current_hour < 12 else "Afternoon" if current_hour < 18 else "Evening"
             print(f"It's currently {period_name}.")
-            
+
             # Check for specific time periods
             if 8 <= current_hour < 9:
                 print(f"{Fore.YELLOW}It's breakfast time!{Style.RESET_ALL}")
@@ -17983,7 +17991,7 @@ wake_up_time = 8 * 10  # 08:00 in ticks
 
 def random_after_class_event():
     """Generate a random event that happens after class"""
-    
+
     events = [
         {
             "type": "social",
@@ -18031,14 +18039,14 @@ def random_after_class_event():
             "effect": lambda: {"stress": 5, "reputation": {"students": -1}}
         }
     ]
-    
+
     # Only run event with 40% chance
     if random.random() < 0.4:
         event = random.choice(events)
-        
+
         slow_print(f"\n{Fore.CYAN}AFTER CLASS EVENT:{Style.RESET_ALL}")
         slow_print(event["description"])
-        
+
         # Apply event effects
         effects = event["effect"]()
         for key, value in effects.items():
@@ -18059,7 +18067,7 @@ def random_after_class_event():
                 for cha_type, cha_value in value.items():
                     player["charisma"][cha_type] += cha_value
                     slow_print(f"{cha_type.capitalize()} charisma increased by {cha_value}")
-        
+
         # Check for romance event and add a special interaction opportunity
         if event["type"] == "romance" and random.random() < 0.5:
             # Pick a random suitable student
@@ -18067,12 +18075,12 @@ def random_after_class_event():
             if potential_students:
                 student = random.choice(potential_students)
                 student_name = student["name"]
-                
+
                 # Add some relationship points with this student
                 if student_name not in relationship:
                     relationship[student_name] = 0
                     student_status[student_name] = "Stranger"
-                
+
                 relationship[student_name] += 10
                 slow_print(f"{Fore.MAGENTA}The note was from {student_name}! Your relationship improved.{Style.RESET_ALL}")
 
@@ -18188,7 +18196,7 @@ def apply_sanction(reason):
 
 def take_exam(subject):
     print("\n{0}=== {1} Exam ==={2}".format(Fore.YELLOW, subject, Style.RESET_ALL))
-    
+
     # Check if this is a PE exam to apply seasonal effects
     if subject.startswith("PE"):
         season = get_current_season()
@@ -18207,7 +18215,7 @@ def take_exam(subject):
     for trait in player.get("traits", []):
         trait_info = PLAYER_TRAITS.get(trait, {})
         effects = trait_info.get("effects", {})
-        
+
         # Academic trait bonuses
         if subject.startswith("Math") and "math_bonus" in effects:
             trait_bonuses.append(f"{trait.title()} gives you a math advantage")
@@ -18219,12 +18227,12 @@ def take_exam(subject):
             trait_bonuses.append(f"{trait.title()} gives you a musical advantage")
         elif "study_efficiency" in effects and effects["study_efficiency"] > 0:
             trait_bonuses.append(f"{trait.title()} helps with studying efficiency")
-        
+
     # Display trait advantages if any
     if trait_bonuses:
         advantages_text = ", ".join(trait_bonuses)
         slow_print(f"{Fore.GREEN}Trait advantage: {advantages_text}{Style.RESET_ALL}")
-    
+
     total_questions = random.randint(
         6, 10
     )  # Random number of questions between 6 and 10
@@ -18262,14 +18270,14 @@ def take_exam(subject):
 
     # Apply trait effects to the base score
     modified_score = apply_trait_effects_to_exam(subject, base_score)
-    
+
     # If score was modified, show the difference
     if modified_score != base_score:
         if modified_score > base_score:
             slow_print(f"{Fore.GREEN}Your traits helped improve your score from {base_score:.1f} to {modified_score:.1f}!{Style.RESET_ALL}")
         else:
             slow_print(f"{Fore.RED}Your score was reduced from {base_score:.1f} to {modified_score:.1f} due to trait/seasonal effects.{Style.RESET_ALL}")
-    
+
     return modified_score
 
 
@@ -18775,5 +18783,31 @@ def apply_graduate_template(template_name):
 
 # No longer auto-execute main() when imported
 # This allows the runner scripts to explicitly call main() instead
+# Launcher verification
+def is_launched_from_launcher():
+    import inspect
+    import os
+    
+    # Get the call stack
+    stack = inspect.stack()
+    
+    # Check if any calling file is launch.py
+    for frame in stack:
+        calling_file = os.path.basename(frame.filename)
+        if calling_file == "launch.py":
+            return True
+    
+    return False
+
 if __name__ == "__main__":
-    main()
+    # Check if game was launched from the launcher
+    if is_launched_from_launcher():
+        try:
+            main()
+        except Exception as e:
+            print(f"{Fore.RED}Error occurred: {e}{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Game will exit now.{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+        input("Press Enter to exit...")
