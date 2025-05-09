@@ -1780,11 +1780,13 @@ class GameManager:
                         
                         # Update quest objective if active
                         if "island_ruler" in gs.active_quests:
-                            # Check if resources are already collected
-                            if not gs.active_quests["island_ruler"]["objectives"]["collect_resources"]:
-                                # Mark resources as collected (set to True since the objective is boolean)
-                                gs.update_quest_objective("island_ruler", "collect_resources", True)
-                                print(f"\n{Fore.MAGENTA}Quest updated: Island Ruler - Resources collected!{Style.RESET_ALL}")
+                            # Make sure the quest has the expected structure
+                            if "objectives" in gs.active_quests["island_ruler"] and "collect_resources" in gs.active_quests["island_ruler"]["objectives"]:
+                                # Check if resources are already collected
+                                if not gs.active_quests["island_ruler"]["objectives"]["collect_resources"]:
+                                    # Mark resources as collected (set to True since the objective is boolean)
+                                    gs.update_quest_objective("island_ruler", "collect_resources", True)
+                                    print(f"\n{Fore.MAGENTA}Quest updated: Island Ruler - Resources collected!{Style.RESET_ALL}")
                 elif choice_num == 0:
                     return
                 else:
@@ -2585,17 +2587,21 @@ class GameManager:
                     print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
             
             # Chance to spy on pirates for the quest
-            if "pirate_threat" in gs.active_quests and not gs.active_quests["pirate_threat"]["objectives"]["spy_on_pirates"]:
-                print(f"{Fore.YELLOW}You overhear pirates discussing their plans. They seem to be searching for something valuable.{Style.RESET_ALL}")
-                gs.update_quest_objective("pirate_threat", "spy_on_pirates", True)
-                print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
+            if "pirate_threat" in gs.active_quests:
+                if "objectives" in gs.active_quests["pirate_threat"] and "spy_on_pirates" in gs.active_quests["pirate_threat"]["objectives"]:
+                    if not gs.active_quests["pirate_threat"]["objectives"]["spy_on_pirates"]:
+                        print(f"{Fore.YELLOW}You overhear pirates discussing their plans. They seem to be searching for something valuable.{Style.RESET_ALL}")
+                        gs.update_quest_objective("pirate_threat", "spy_on_pirates", True)
+                        print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
                 
             # Chance to find a treasure map
-            if "pirate_threat" in gs.active_quests and not gs.active_quests["pirate_threat"]["objectives"]["find_treasure_map"]:
-                if random.random() < 0.3:
-                    print(f"{Fore.YELLOW}Among the pirate belongings, you discover a tattered map with markings that could lead to treasure!{Style.RESET_ALL}")
-                    gs.update_quest_objective("pirate_threat", "find_treasure_map", True)
-                    print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
+            if "pirate_threat" in gs.active_quests:
+                if "objectives" in gs.active_quests["pirate_threat"] and "find_treasure_map" in gs.active_quests["pirate_threat"]["objectives"]:
+                    if not gs.active_quests["pirate_threat"]["objectives"]["find_treasure_map"]:
+                        if random.random() < 0.3:
+                            print(f"{Fore.YELLOW}Among the pirate belongings, you discover a tattered map with markings that could lead to treasure!{Style.RESET_ALL}")
+                            gs.update_quest_objective("pirate_threat", "find_treasure_map", True)
+                            print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
                 
         elif location == "Bamboo Grove":
             items = {
@@ -2635,25 +2641,26 @@ class GameManager:
                     print(f"{Fore.MAGENTA}Quest updated: Temple of the Ancients{Style.RESET_ALL}")
                     
                 if "ancient_technology" in gs.active_quests:
-                    # Update power source objective
-                    if not gs.active_quests["ancient_technology"]["objectives"]["find_power_source"]:
-                        print(f"{Fore.YELLOW}You find a strange crystal that seems to power the ancient device!{Style.RESET_ALL}")
-                        gs.update_quest_objective("ancient_technology", "find_power_source", True)
-                        gs.inventory["Power Crystal"] = gs.inventory.get("Power Crystal", 0) + 1
-                        print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
-                    
-                    # Update activate device objective
-                    elif not gs.active_quests["ancient_technology"]["objectives"]["activate_device"]:
-                        print(f"{Fore.YELLOW}After studying the markings, you manage to activate the ancient device!{Style.RESET_ALL}")
-                        gs.update_quest_objective("ancient_technology", "activate_device", True)
-                        print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
+                    if "objectives" in gs.active_quests["ancient_technology"]:
+                        # Update power source objective
+                        if "find_power_source" in gs.active_quests["ancient_technology"]["objectives"] and not gs.active_quests["ancient_technology"]["objectives"]["find_power_source"]:
+                            print(f"{Fore.YELLOW}You find a strange crystal that seems to power the ancient device!{Style.RESET_ALL}")
+                            gs.update_quest_objective("ancient_technology", "find_power_source", True)
+                            gs.inventory["Power Crystal"] = gs.inventory.get("Power Crystal", 0) + 1
+                            print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
                         
-                    # Update master technology objective
-                    elif not gs.active_quests["ancient_technology"]["objectives"]["master_technology"]:
-                        print(f"{Fore.YELLOW}With your continued study, you've finally mastered the ancient technology!{Style.RESET_ALL}")
-                        print(f"{Fore.GREEN}This knowledge could revolutionize modern science!{Style.RESET_ALL}")
-                        gs.update_quest_objective("ancient_technology", "master_technology", True)
-                        print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
+                        # Update activate device objective
+                        elif "activate_device" in gs.active_quests["ancient_technology"]["objectives"] and not gs.active_quests["ancient_technology"]["objectives"]["activate_device"]:
+                            print(f"{Fore.YELLOW}After studying the markings, you manage to activate the ancient device!{Style.RESET_ALL}")
+                            gs.update_quest_objective("ancient_technology", "activate_device", True)
+                            print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
+                            
+                        # Update master technology objective
+                        elif "master_technology" in gs.active_quests["ancient_technology"]["objectives"] and not gs.active_quests["ancient_technology"]["objectives"]["master_technology"]:
+                            print(f"{Fore.YELLOW}With your continued study, you've finally mastered the ancient technology!{Style.RESET_ALL}")
+                            print(f"{Fore.GREEN}This knowledge could revolutionize modern science!{Style.RESET_ALL}")
+                            gs.update_quest_objective("ancient_technology", "master_technology", True)
+                            print(f"{Fore.MAGENTA}Quest updated: Lost Technology{Style.RESET_ALL}")
             
         elif location == "Mangrove Shore":
             items = {
@@ -4207,16 +4214,20 @@ class GameManager:
                 
             # Update quest objectives for conqueror path
             if "island_ruler" in gs.active_quests and enemy.startswith("Pirate"):
-                gs.update_quest_objective("island_ruler", "defeat_challengers", True)
-                print(f"{Fore.MAGENTA}Quest updated: Island Ruler{Style.RESET_ALL}")
+                if "objectives" in gs.active_quests["island_ruler"] and "defeat_challengers" in gs.active_quests["island_ruler"]["objectives"]:
+                    gs.update_quest_objective("island_ruler", "defeat_challengers", True)
+                    print(f"{Fore.MAGENTA}Quest updated: Island Ruler{Style.RESET_ALL}")
                 
             # Update quest objectives for pirate quest
-            if "pirate_threat" in gs.active_quests and enemy.startswith("Pirate") and not gs.active_quests["pirate_threat"]["objectives"]["locate_treasure"]:
-                # Small chance to find treasure map when defeating pirates
-                if random.random() < 0.3:
-                    print(f"{Fore.YELLOW}The defeated pirate drops a crumpled treasure map!{Style.RESET_ALL}")
-                    gs.update_quest_objective("pirate_threat", "find_treasure_map", True)
-                    print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
+            if "pirate_threat" in gs.active_quests and enemy.startswith("Pirate"):
+                # Make sure the quest has the expected structure
+                if "objectives" in gs.active_quests["pirate_threat"] and "locate_treasure" in gs.active_quests["pirate_threat"]["objectives"]:
+                    if not gs.active_quests["pirate_threat"]["objectives"]["locate_treasure"]:
+                        # Small chance to find treasure map when defeating pirates
+                        if random.random() < 0.3:
+                            print(f"{Fore.YELLOW}The defeated pirate drops a crumpled treasure map!{Style.RESET_ALL}")
+                            gs.update_quest_objective("pirate_threat", "find_treasure_map", True)
+                            print(f"{Fore.MAGENTA}Quest updated: Pirate Problem{Style.RESET_ALL}")
         else:
             # Defeat
             damage = random.randint(5, 15)
