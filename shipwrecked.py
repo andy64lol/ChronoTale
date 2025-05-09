@@ -2296,6 +2296,13 @@ class GameManager:
             # Special chance to find the shipwreck
             if not gs.locations["Shipwreck"] and random.random() < 0.2:
                 gs.locations["Shipwreck"] = True
+                # Make sure there's a connection to Shipwreck in the island map
+                if "Shipwreck" not in gs.island_map:
+                    gs.island_map["Shipwreck"] = ["Beach"]
+                if "Beach" not in gs.island_map["Shipwreck"]:
+                    gs.island_map["Shipwreck"].append("Beach")
+                if "Shipwreck" not in gs.island_map["Beach"]:
+                    gs.island_map["Beach"].append("Shipwreck")
                 print(f"{Fore.YELLOW}You spot debris in the distance. You've discovered the {Fore.CYAN}Shipwreck{Fore.YELLOW}!{Style.RESET_ALL}")
             
         elif location == "Forest":
@@ -2311,10 +2318,24 @@ class GameManager:
             # Chance to find mountain or waterfall
             if not gs.locations["Mountain"] and random.random() < 0.15:
                 gs.locations["Mountain"] = True
+                # Connect Mountain to Forest in the island map
+                if "Mountain" not in gs.island_map:
+                    gs.island_map["Mountain"] = ["Forest"]
+                if "Forest" not in gs.island_map["Mountain"]:
+                    gs.island_map["Mountain"].append("Forest")
+                if "Mountain" not in gs.island_map["Forest"]:
+                    gs.island_map["Forest"].append("Mountain")
                 print(f"{Fore.YELLOW}Through the trees, you spot a {Fore.CYAN}Mountain{Fore.YELLOW} in the distance!{Style.RESET_ALL}")
             
             if not gs.locations["Waterfall"] and random.random() < 0.15:
                 gs.locations["Waterfall"] = True
+                # Connect Waterfall to Forest in the island map
+                if "Waterfall" not in gs.island_map:
+                    gs.island_map["Waterfall"] = ["Forest"]
+                if "Forest" not in gs.island_map["Waterfall"]:
+                    gs.island_map["Waterfall"].append("Forest")
+                if "Waterfall" not in gs.island_map["Forest"]:
+                    gs.island_map["Forest"].append("Waterfall")
                 print(f"{Fore.YELLOW}You hear rushing water. You've discovered a {Fore.CYAN}Waterfall{Fore.YELLOW}!{Style.RESET_ALL}")
             
         elif location == "Mountain":
@@ -2327,6 +2348,13 @@ class GameManager:
             # Chance to find cave
             if not gs.locations["Cave"] and random.random() < 0.25:
                 gs.locations["Cave"] = True
+                # Connect Cave to Mountain in the island map
+                if "Cave" not in gs.island_map:
+                    gs.island_map["Cave"] = ["Mountain"]
+                if "Mountain" not in gs.island_map["Cave"]:
+                    gs.island_map["Cave"].append("Mountain")
+                if "Cave" not in gs.island_map["Mountain"]:
+                    gs.island_map["Mountain"].append("Cave")
                 print(f"{Fore.YELLOW}You notice a dark opening in the mountainside. You've found a {Fore.CYAN}Cave{Fore.YELLOW}!{Style.RESET_ALL}")
                 
         elif location == "Cave":
@@ -2352,6 +2380,13 @@ class GameManager:
             # Chance to find abandoned hut
             if not gs.locations["Abandoned Hut"] and random.random() < 0.2:
                 gs.locations["Abandoned Hut"] = True
+                # Connect Abandoned Hut to Waterfall in the island map
+                if "Abandoned Hut" not in gs.island_map:
+                    gs.island_map["Abandoned Hut"] = ["Waterfall"]
+                if "Waterfall" not in gs.island_map["Abandoned Hut"]:
+                    gs.island_map["Abandoned Hut"].append("Waterfall")
+                if "Abandoned Hut" not in gs.island_map["Waterfall"]:
+                    gs.island_map["Waterfall"].append("Abandoned Hut")
                 print(f"{Fore.YELLOW}Beyond the waterfall, you spot an {Fore.CYAN}Abandoned Hut{Fore.YELLOW}!{Style.RESET_ALL}")
                 
         elif location == "Abandoned Hut":
@@ -2402,6 +2437,13 @@ class GameManager:
             # Chance to find hidden areas
             if not gs.locations["Ancient Ruins"] and random.random() < 0.15:
                 gs.locations["Ancient Ruins"] = True
+                # Connect Ancient Ruins to Jungle in the island map
+                if "Ancient Ruins" not in gs.island_map:
+                    gs.island_map["Ancient Ruins"] = ["Jungle"]
+                if "Jungle" not in gs.island_map["Ancient Ruins"]:
+                    gs.island_map["Ancient Ruins"].append("Jungle")
+                if "Ancient Ruins" not in gs.island_map["Jungle"]:
+                    gs.island_map["Jungle"].append("Ancient Ruins")
                 print(f"{Fore.YELLOW}Through the dense foliage, you spot what looks like {Fore.CYAN}Ancient Ruins{Fore.YELLOW}!{Style.RESET_ALL}")
                 
         elif location == "Cliff Side":
@@ -2413,6 +2455,13 @@ class GameManager:
             # Good view from the cliff might reveal new locations
             if not gs.locations["Island Summit"] and random.random() < 0.25:
                 gs.locations["Island Summit"] = True
+                # Connect Island Summit to Cliff Side in the island map
+                if "Island Summit" not in gs.island_map:
+                    gs.island_map["Island Summit"] = ["Cliff Side", "Mountain"]
+                if "Cliff Side" not in gs.island_map["Island Summit"]:
+                    gs.island_map["Island Summit"].append("Cliff Side")
+                if "Island Summit" not in gs.island_map["Cliff Side"]:
+                    gs.island_map["Cliff Side"].append("Island Summit")
                 print(f"{Fore.YELLOW}From this vantage point, you can see the {Fore.CYAN}Island Summit{Fore.YELLOW}!{Style.RESET_ALL}")
                 
         elif location == "Ancient Ruins":
@@ -2450,6 +2499,13 @@ class GameManager:
             # Chance to find quicksand pit
             if not gs.locations["Quicksand Pit"] and random.random() < 0.2:
                 gs.locations["Quicksand Pit"] = True
+                # Connect Quicksand Pit to Swamp in the island map
+                if "Quicksand Pit" not in gs.island_map:
+                    gs.island_map["Quicksand Pit"] = ["Swamp"]
+                if "Swamp" not in gs.island_map["Quicksand Pit"]:
+                    gs.island_map["Quicksand Pit"].append("Swamp")
+                if "Quicksand Pit" not in gs.island_map["Swamp"]:
+                    gs.island_map["Swamp"].append("Quicksand Pit")
                 print(f"{Fore.YELLOW}You almost fall into a {Fore.CYAN}Quicksand Pit{Fore.YELLOW}! At least now you know where it is.{Style.RESET_ALL}")
                 
         elif location == "Coral Reef":
@@ -2651,6 +2707,28 @@ class GameManager:
                 if locked_locations:
                     new_location = random.choice(locked_locations)
                     gs.locations[new_location] = True
+                    
+                    # Connect the newly discovered location to the most appropriate other location
+                    if new_location not in gs.island_map:
+                        # Find a logical location to connect it to
+                        possible_connections = ["Beach", "Forest", "Mountain", "Cliff Side", "Jungle"]
+                        available_connections = [loc for loc in possible_connections if gs.locations.get(loc, False)]
+                        
+                        if available_connections:
+                            connect_to = random.choice(available_connections)
+                            
+                            # Add the connection to the island map
+                            if new_location not in gs.island_map:
+                                gs.island_map[new_location] = [connect_to]
+                            else:
+                                gs.island_map[new_location].append(connect_to)
+                                
+                            if new_location not in gs.island_map.get(connect_to, []):
+                                if connect_to in gs.island_map:
+                                    gs.island_map[connect_to].append(new_location)
+                                else:
+                                    gs.island_map[connect_to] = [new_location]
+                    
                     print(f"{Fore.YELLOW}From this height, you spot a {Fore.CYAN}{new_location}{Fore.YELLOW} in the distance!{Style.RESET_ALL}")
             
         elif location == "Abandoned Mine":
@@ -3172,17 +3250,26 @@ class GameManager:
             print(f"\n{Fore.CYAN}===== TRAVEL ====={Style.RESET_ALL}")
             print(f"{Fore.WHITE}Current location: {Fore.YELLOW}{gs.current_location}{Style.RESET_ALL}")
             
-            # Show available locations
+            # Show available connected locations based on the island map
             print(f"\n{Fore.WHITE}Available locations:{Style.RESET_ALL}")
             
-            available_locations = [(i, location) for i, (location, unlocked) in enumerate(gs.locations.items(), 1) 
-                                  if unlocked and location != gs.current_location]
+            # Get locations connected to current location from island map
+            connected_locations = []
+            
+            if gs.current_location in gs.island_map:
+                connected_locations = gs.island_map[gs.current_location]
+            
+            # Filter out locations that are unlocked
+            available_locations = []
+            for i, location in enumerate(connected_locations, 1):
+                if gs.locations.get(location, False):
+                    available_locations.append((i, location))
             
             if available_locations:
                 for i, location in available_locations:
                     print(f"{Fore.YELLOW}{i}. {Fore.CYAN}{location}{Style.RESET_ALL}")
             else:
-                print(f"{Fore.RED}No other locations available.{Style.RESET_ALL}")
+                print(f"{Fore.RED}No other locations available from here.{Style.RESET_ALL}")
             
             # Special case for raft if it's complete
             if gs.raft_progress >= 100:
@@ -3343,11 +3430,18 @@ class GameManager:
         if os.path.exists(self.map_file):
             try:
                 with open(self.map_file, 'r') as f:
-                    gs.island_map = json.load(f)
-                return
-            except (json.JSONDecodeError, FileNotFoundError) as e:
-                print(f"{Fore.RED}Error loading save: {e}{Style.RESET_ALL}")
-                pass  # If loading fails, continue with randomization
+                    map_data = json.load(f)
+                    
+                    # Validate the loaded map
+                    for location in gs.locations.keys():
+                        if location not in ["Shelter", "Stronghold"] and location not in map_data:
+                            raise ValueError(f"Missing location in map: {location}")
+                    
+                    gs.island_map = map_data
+                    return
+            except (json.JSONDecodeError, FileNotFoundError, ValueError) as e:
+                print(f"{Fore.RED}Error loading island map: {e}. Generating new map...{Style.RESET_ALL}")
+                # If loading fails, continue with randomization
         
         # Maintain key locations connections
         key_connections = {
@@ -3355,12 +3449,17 @@ class GameManager:
             "Forest": ["Beach", "Mountain"],
             "Mountain": ["Forest", "Cave"],
             "Cave": ["Mountain"],
-            "Shelter": []  # Shelter is not part of the map connections
+            # Special locations that aren't part of the travel network
+            "Shelter": [],
+            "Stronghold": []
         }
         
         # Create a new randomized map
         new_map = {}
-        all_locations = [loc for loc in gs.locations.keys() if loc != "Shelter"]
+        
+        # Filter out special locations that aren't part of the travel network
+        non_travel_locations = ["Shelter", "Stronghold"]
+        all_locations = [loc for loc in gs.locations.keys() if loc not in non_travel_locations]
         
         for location in all_locations:
             # Start with any required connections
@@ -3368,7 +3467,9 @@ class GameManager:
             
             # Add 1-3 random connections
             possible_connections = [loc for loc in all_locations 
-                                   if loc != location and loc not in connections]
+                                   if loc != location and loc not in connections 
+                                   and loc not in non_travel_locations]
+            
             num_connections = min(len(possible_connections), random.randint(1, 3))
             
             if possible_connections and num_connections > 0:
@@ -3382,7 +3483,7 @@ class GameManager:
         
         while frontier:
             current = frontier.pop(0)
-            for next_loc in new_map[current]:
+            for next_loc in new_map.get(current, []):
                 if next_loc not in reachable:
                     reachable.add(next_loc)
                     frontier.append(next_loc)
@@ -3390,18 +3491,27 @@ class GameManager:
         # Add additional paths for unreachable locations
         unreachable = set(all_locations) - reachable
         for location in unreachable:
+            if location not in new_map:
+                new_map[location] = []
+                
             connect_to = random.choice(list(reachable))
             new_map[connect_to].append(location)
             new_map[location].append(connect_to)
+        
+        # Make sure all regular locations are in the map
+        for location in all_locations:
+            if location not in new_map:
+                new_map[location] = ["Beach"]  # Connect to Beach as fallback
+                new_map["Beach"].append(location)
         
         # Save the map
         gs.island_map = new_map
         try:
             with open(self.map_file, 'w') as f:
                 json.dump(new_map, f)
-        except (json.JSONDecodeError, FileNotFoundError) as e:
-            print(f"{Fore.RED}Error loading save: {e}{Style.RESET_ALL}")
-            pass  # If saving fails, continue with the game
+        except Exception as e:
+            print(f"{Fore.RED}Error saving island map: {e}{Style.RESET_ALL}")
+            # If saving fails, continue with the game
     
     def go_fishing(self) -> None:
         """Handle fishing activity - requires a fishing rod"""
