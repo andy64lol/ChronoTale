@@ -10,26 +10,54 @@ from colorama import Fore, Back, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-# Color constants - using colorama for cross-platform compatibility
+# Color constants - using colorama named colors for cross-platform compatibility
 OKBLUE = Fore.BLUE
 OKGREEN = Fore.GREEN
 WARNING = Fore.YELLOW
 FAIL = Fore.RED
 ENDC = Style.RESET_ALL
 BOLD = Style.BRIGHT
-UNDERLINE = '\033[4m'  # Not directly available in colorama
+UNDERLINE = Style.BRIGHT  # Closest alternative in colorama (original was '\033[4m')
+HEADER = Fore.MAGENTA + Style.BRIGHT
 CYAN = Fore.CYAN
 MAGENTA = Fore.MAGENTA
 YELLOW = Fore.YELLOW
 RED = Fore.RED
 GREEN = Fore.GREEN
 BLUE = Fore.BLUE
+WHITE = Fore.WHITE
+BLACK = Fore.BLACK
+GREY = Fore.BLACK + Style.DIM
 LIGHTCYAN = Fore.CYAN + Style.BRIGHT
 LIGHTYELLOW = Fore.YELLOW + Style.BRIGHT
+LIGHTRED = Fore.RED + Style.BRIGHT
+LIGHTGREEN = Fore.GREEN + Style.BRIGHT
+LIGHTBLUE = Fore.BLUE + Style.BRIGHT
+LIGHTMAGENTA = Fore.MAGENTA + Style.BRIGHT
+BG_BLACK = Back.BLACK
+BG_RED = Back.RED
+BG_GREEN = Back.GREEN
 BG_YELLOW = Back.YELLOW
+BG_BLUE = Back.BLUE
+BG_MAGENTA = Back.MAGENTA
 BG_CYAN = Back.CYAN
+BG_WHITE = Back.WHITE
+BG_GREY = Back.BLACK + Style.DIM
+BG_LIGHTRED = Back.RED + Style.BRIGHT
+BG_LIGHTGREEN = Back.GREEN + Style.BRIGHT
 BG_LIGHTYELLOW = Back.YELLOW + Style.BRIGHT
+BG_LIGHTBLUE = Back.BLUE + Style.BRIGHT
+BG_LIGHTMAGENTA = Back.MAGENTA + Style.BRIGHT
 BG_LIGHTCYAN = Back.CYAN + Style.BRIGHT
+BG_BRIGHTWHITE = Back.WHITE + Style.BRIGHT
+
+# Special effects (some not available in colorama but included for compatibility)
+DIM = Style.DIM  # Dim/faint text
+ITALIC = ""  # Not available in colorama
+REVERSE = Style.RESET_ALL  # Not directly available
+BLINK = ""  # Not available in colorama 
+HIDDEN = ""  # Not available in colorama
+STRIKETHROUGH = ""  # Not available in colorama
 
 # Constants
 INITIAL_GOLD = 100
@@ -2584,27 +2612,27 @@ def use_potion(potion_name: str) -> None:
 # Artifact rarities
 ARTIFACT_RARITIES = {
     "Common": {
-        "color": '\033[96m',  # CYAN
+        "color": Fore.CYAN,  # CYAN
         "stat_multiplier": 1.0,
         "drop_chance": 0.5
     },
     "Uncommon": {
-        "color": '\033[92m',  # OKGREEN
+        "color": Fore.GREEN,  # GREEN
         "stat_multiplier": 1.2,
         "drop_chance": 0.3
     },
     "Rare": {
-        "color": '\033[94m',  # BLUE
+        "color": Fore.BLUE,  # BLUE
         "stat_multiplier": 1.5,
         "drop_chance": 0.15
     },
     "Epic": {
-        "color": '\033[35m',  # MAGENTA
+        "color": Fore.MAGENTA,  # MAGENTA
         "stat_multiplier": 1.8,
         "drop_chance": 0.04
     },
     "Legendary": {
-        "color": '\033[33m',  # YELLOW
+        "color": Fore.YELLOW,  # YELLOW
         "stat_multiplier": 2.0,
         "drop_chance": 0.01
     }
@@ -3244,59 +3272,7 @@ dungeons = [
 ]
 
 
-# ANSI color codes for output
-
-# Text color (foreground)
-HEADER = '\033[95m'
-OKBLUE = '\033[94m'
-OKGREEN = '\033[92m'
-WARNING = '\033[93m'
-FAIL = '\033[91m'
-ENDC = '\033[0m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
-CYAN = '\033[96m'
-MAGENTA = '\033[35m'
-YELLOW = '\033[33m'
-RED = '\033[31m'
-GREEN = '\033[32m'
-BLUE = '\033[34m'
-WHITE = '\033[37m'
-BLACK = '\033[30m'
-GREY = '\033[90m'
-LIGHTRED = '\033[91m'
-LIGHTGREEN = '\033[92m'
-LIGHTYELLOW = '\033[93m'
-LIGHTBLUE = '\033[94m'
-LIGHTMAGENTA = '\033[95m'
-LIGHTCYAN = '\033[96m'
-
-# Background colors
-BG_BLACK = '\033[40m'
-BG_RED = '\033[41m'
-BG_GREEN = '\033[42m'
-BG_YELLOW = '\033[43m'
-BG_BLUE = '\033[44m'
-BG_MAGENTA = '\033[45m'
-BG_CYAN = '\033[46m'
-BG_WHITE = '\033[47m'
-BG_GREY = '\033[100m'
-BG_LIGHTRED = '\033[101m'
-BG_LIGHTGREEN = '\033[102m'
-BG_LIGHTYELLOW = '\033[103m'
-BG_LIGHTBLUE = '\033[104m'
-BG_LIGHTMAGENTA = '\033[105m'
-BG_LIGHTCYAN = '\033[106m'
-BG_BRIGHTWHITE = '\033[107m'
-
-# Text effects
-RESET = '\033[0m'
-DIM = '\033[2m'
-ITALIC = '\033[3m'
-BLINK = '\033[5m'
-REVERSE = '\033[7m'
-HIDDEN = '\033[8m'
-STRIKETHROUGH = '\033[9m'
+# Note: All color constants are defined at the top of the file using colorama for cross-platform compatibility
 
 def print_colored(text: str, color_code: str = "") -> None:
     print(f"{color_code}{text}{ENDC}" if color_code else text)
@@ -3489,7 +3465,7 @@ ELEMENTS = {
     "Ignis": {
         "name": "Ignis",
         "description": "The element of fire, capable of burning and dealing damage over time.",
-        "color": "\033[91m",  # Red
+        "color": Fore.RED + Style.BRIGHT,  # LIGHTRED
         "weakness": ["Aqua", "Gē"],
         "strength": ["Glacies", "Aer", "Pneuma"],
         "damage_type": "elemental"
@@ -3497,7 +3473,7 @@ ELEMENTS = {
     "Aqua": {
         "name": "Aqua",
         "description": "The element of water, versatile and adaptive, weakens fire.",
-        "color": "\033[94m",  # Blue
+        "color": Fore.BLUE,  # Blue
         "weakness": ["Fulmen", "Glacies"],
         "strength": ["Ignis", "Venēnum"],
         "damage_type": "elemental"
@@ -3505,7 +3481,7 @@ ELEMENTS = {
     "Gē": {
         "name": "Gē",
         "description": "The element of earth, sturdy and grounding, absorbs electricity.",
-        "color": "\033[33m",  # Yellow/Brown
+        "color": Fore.YELLOW,  # Yellow/Brown
         "weakness": ["Aer", "Ferrum"],
         "strength": ["Fulmen", "Ignis"],
         "damage_type": "elemental"
@@ -3513,7 +3489,7 @@ ELEMENTS = {
     "Aer": {
         "name": "Aer",
         "description": "The element of air, swift and evasive, disperses poison.",
-        "color": "\033[96m",  # Cyan
+        "color": Fore.CYAN,  # Cyan
         "weakness": ["Ignis", "Ferrum"],
         "strength": ["Gē", "Venēnum"],
         "damage_type": "elemental"
@@ -3521,7 +3497,7 @@ ELEMENTS = {
     "Fulmen": {
         "name": "Fulmen",
         "description": "The element of lightning, delivering swift, powerful strikes.",
-        "color": "\033[95m",  # Magenta
+        "color": Fore.MAGENTA,  # Magenta
         "weakness": ["Gē", "Ferrum"],
         "strength": ["Aqua", "Aer"],
         "damage_type": "elemental"
@@ -3529,7 +3505,7 @@ ELEMENTS = {
     "Glacies": {
         "name": "Glacies",
         "description": "The element of ice, freezing and slowing opponents.",
-        "color": "\033[96m",  # Light Cyan
+        "color": Fore.CYAN + Style.BRIGHT,  # Light Cyan
         "weakness": ["Ignis", "Ferrum"],
         "strength": ["Aqua", "Aer"],
         "damage_type": "elemental"
@@ -3537,7 +3513,7 @@ ELEMENTS = {
     "Lux": {
         "name": "Lux",
         "description": "The element of light, purifying and revealing the hidden.",
-        "color": "\033[97m",  # White
+        "color": Fore.WHITE + Style.BRIGHT,  # White
         "weakness": ["Tenebrae"],
         "strength": ["Tenebrae", "Pneuma"],
         "damage_type": "elemental"
@@ -3545,7 +3521,7 @@ ELEMENTS = {
     "Tenebrae": {
         "name": "Tenebrae",
         "description": "The element of darkness, corrupting and concealing.",
-        "color": "\033[90m",  # Dark Gray
+        "color": Fore.BLACK + Style.DIM,  # Dark Gray
         "weakness": ["Lux"],
         "strength": ["Lux", "Pneuma"],
         "damage_type": "elemental"
@@ -3553,7 +3529,7 @@ ELEMENTS = {
     "Venēnum": {
         "name": "Venēnum",
         "description": "The element of poison, inflicting toxins and weakening foes.",
-        "color": "\033[92m",  # Green
+        "color": Fore.GREEN,  # Green
         "weakness": ["Aqua", "Aer"],
         "strength": ["Gē", "Ferrum"],
         "damage_type": "elemental"
@@ -3561,7 +3537,7 @@ ELEMENTS = {
     "Ferrum": {
         "name": "Ferrum",
         "description": "The element of metal, resistant and conductive.",
-        "color": "\033[37m",  # Light Gray
+        "color": Fore.WHITE,  # Light Gray
         "weakness": ["Venēnum", "Fulmen"],
         "strength": ["Glacies", "Aer", "Gē"],
         "damage_type": "elemental"
@@ -3569,7 +3545,7 @@ ELEMENTS = {
     "Pneuma": {
         "name": "Pneuma",
         "description": "The element of spirit, affecting the soul and mind.",
-        "color": "\033[35m",  # Purple
+        "color": Fore.MAGENTA,  # Purple
         "weakness": ["Lux", "Tenebrae"],
         "strength": ["Venēnum", "Glacies"],
         "damage_type": "elemental"
@@ -3577,7 +3553,7 @@ ELEMENTS = {
     "Viridia": {
         "name": "Viridia",
         "description": "The element of plants and nature, with restorative and ensnaring abilities.",
-        "color": "\033[32m",  # Green
+        "color": Fore.GREEN + Style.BRIGHT,  # Bright Green
         "weakness": ["Ignis", "Venēnum"],
         "strength": ["Aqua", "Gē", "Aer"],
         "damage_type": "elemental"
@@ -3585,7 +3561,7 @@ ELEMENTS = {
     "Nullum": {
         "name": "Nullum",
         "description": "Non-elemental physical damage that ignores elemental resistances.",
-        "color": "\033[0m",  # Default/White
+        "color": Style.RESET_ALL,  # Default/White
         "weakness": [],
         "strength": [],
         "damage_type": "physical"
