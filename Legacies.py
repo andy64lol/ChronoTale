@@ -10,6 +10,17 @@ from colorama import Fore, Back, Style, init
 # Initialize colorama
 init(autoreset=True)
 
+# Check if called with python3 command
+def check_python_command():
+    """Check if script was called with 'python3' command and exit if it was"""
+    program_name = os.path.basename(sys.executable)
+    command = sys.argv[0]
+    
+    if program_name == "python3" or "python3" in command:
+        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
+        print(f"{Fore.YELLOW}Run: python launch.py")
+        sys.exit(0)
+
 # Color constants - using colorama named colors for cross-platform compatibility
 OKBLUE = Fore.BLUE
 OKGREEN = Fore.GREEN
@@ -6491,14 +6502,26 @@ def show_postgame_content() -> None:
 
 # Main loop
 if __name__ == "__main__":
-    print("\n")  # Add a blank line for spacing
-    print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
-    print_animated(f"{BOLD}{CYAN}     Welcome to Legacies of our Legends RPG!{ENDC}")
-    print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
-    print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
-    print_animated(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}")
-    print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
-    print_animated(f"{BOLD}{BLUE}Made by andy64lol{ENDC}")
+    # Check for python3 command
+    check_python_command()
+    
+    # Check if launched from the proper launcher
+    launcher_env = os.environ.get("LAUNCHER_ACTIVE")
+    if not launcher_env:
+        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+        input("Press Enter to exit...")
+        print(f"{Fore.BLUE}Made by andy64lol{Style.RESET_ALL}")
+        sys.exit(0)
+    else:
+        print("\n")  # Add a blank line for spacing
+        print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
+        print_animated(f"{BOLD}{CYAN}     Welcome to Legacies of our Legends RPG!{ENDC}")
+        print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
+        print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
+        print_animated(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}")
+        print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
+        print_animated(f"{BOLD}{BLUE}Made by andy64lol{ENDC}")
 
     # Auto-save interval in seconds
     AUTO_SAVE_INTERVAL = 300  # 5 minutes
