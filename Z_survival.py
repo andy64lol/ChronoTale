@@ -16,6 +16,21 @@ import math
 import sys
 from datetime import datetime
 from typing import Dict, List, Optional, Union
+from colorama import init, Fore, Style
+
+# Initialize colorama for cross-platform colored terminal output
+init(autoreset=True)
+
+# Check if called with python3 command
+def check_python_command():
+    """Check if script was called with 'python3' command and exit if it was"""
+    program_name = os.path.basename(sys.executable)
+    command = sys.argv[0]
+    
+    if program_name == "python3" or "python3" in command:
+        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
+        print(f"{Fore.YELLOW}Run: python launch.py")
+        sys.exit(0)
 
 # Setup save folder
 SAVES_FOLDER = "saves"
@@ -26,16 +41,17 @@ if not os.path.exists(SAVES_FOLDER):
     os.makedirs(SAVES_FOLDER)
 
 class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    MAGENTA = '\033[95m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    # Use colorama for cross-platform compatibility
+    HEADER = Fore.MAGENTA + Style.BRIGHT
+    BLUE = Fore.BLUE
+    CYAN = Fore.CYAN
+    GREEN = Fore.GREEN
+    YELLOW = Fore.YELLOW
+    RED = Fore.RED
+    MAGENTA = Fore.MAGENTA
+    ENDC = Style.RESET_ALL
+    BOLD = Style.BRIGHT
+    UNDERLINE = Style.BRIGHT  # Closest approximation in colorama
 
     @staticmethod
     def colorize(text, color):
@@ -5506,11 +5522,19 @@ class GameState:
 
 # Start the game if run directly
 if __name__ == "__main__":
+    # Check for python3 command
+    check_python_command()
+    
     # Check if game was launched from the launcher
-    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
+    # Check for both environment variables for compatibility
+    launched_from_launcher = os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1"
+    launcher_active = os.environ.get("LAUNCHER_ACTIVE") == "1"
+    
+    if launched_from_launcher or launcher_active:
         game = GameState()
         game.start_game()
     else:
-        print("This game should be launched through the launch.py launcher.")
-        print("Please run 'python launch.py' to access all games.")
-        input("Press Enter to exit...")
+        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+        input(f"{Fore.CYAN}Press Enter to exit...{Style.RESET_ALL}")
+        sys.exit(0)
