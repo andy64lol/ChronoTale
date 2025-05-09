@@ -1393,17 +1393,17 @@ class GameState:
         # Ensure saves directory exists
         if not os.path.exists(SAVES_FOLDER):
             os.makedirs(SAVES_FOLDER)
-            
+
         # Initialize death log for hardcore mode tracking
         self.death_log = {
             "total_deaths": 0,
             "deaths": []
         }
         self.death_log.update(self.load_death_log() or {})
-        
+
         # Initialize crafting skill
         self.crafting_skill = 0
-        
+
         # Initialize combat state
         self.in_combat = False
         self.current_zombie = None
@@ -5506,5 +5506,11 @@ class GameState:
 
 # Start the game if run directly
 if __name__ == "__main__":
-    game = GameState()
-    game.start_game()
+    # Check if game was launched from the launcher
+    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
+        game = GameState()
+        game.start_game()
+    else:
+        print("This game should be launched through the launch.py launcher.")
+        print("Please run 'python launch.py' to access all games.")
+        input("Press Enter to exit...")
