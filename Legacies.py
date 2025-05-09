@@ -5,27 +5,31 @@ import os
 import time
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
+from colorama import Fore, Back, Style, init
 
-# Color constants
-OKBLUE = '\033[94m'
-OKGREEN = '\033[92m'
-WARNING = '\033[93m'
-FAIL = '\033[91m'
-ENDC = '\033[0m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
-CYAN = '\033[96m'
-MAGENTA = '\033[35m'
-YELLOW = '\033[33m'
-RED = '\033[31m'
-GREEN = '\033[32m'
-BLUE = '\033[94m'
-LIGHTCYAN = '\033[96m'
-LIGHTYELLOW = '\033[93m'
-BG_YELLOW = '\033[43m'
-BG_CYAN = '\033[46m'
-BG_LIGHTYELLOW = '\033[103m'
-BG_LIGHTCYAN = '\033[106m'
+# Initialize colorama
+init(autoreset=True)
+
+# Color constants - using colorama for cross-platform compatibility
+OKBLUE = Fore.BLUE
+OKGREEN = Fore.GREEN
+WARNING = Fore.YELLOW
+FAIL = Fore.RED
+ENDC = Style.RESET_ALL
+BOLD = Style.BRIGHT
+UNDERLINE = '\033[4m'  # Not directly available in colorama
+CYAN = Fore.CYAN
+MAGENTA = Fore.MAGENTA
+YELLOW = Fore.YELLOW
+RED = Fore.RED
+GREEN = Fore.GREEN
+BLUE = Fore.BLUE
+LIGHTCYAN = Fore.CYAN + Style.BRIGHT
+LIGHTYELLOW = Fore.YELLOW + Style.BRIGHT
+BG_YELLOW = Back.YELLOW
+BG_CYAN = Back.CYAN
+BG_LIGHTYELLOW = Back.YELLOW + Style.BRIGHT
+BG_LIGHTCYAN = Back.CYAN + Style.BRIGHT
 
 # Constants
 INITIAL_GOLD = 100
@@ -1381,7 +1385,21 @@ def ensure_user_data_keys(data: Dict) -> None:
         "tools": ["Axe", "Pickaxe", "Flask", "Hunting Knife"],
         "current_area": "Greenwood Village",
         "monsters_killed": 0,
-        "dungeons_completed": []
+        "dungeons_completed": [],
+        "achievements": {
+            "completed": set(),
+            "stats": {
+                "monsters_killed": 0,
+                "items_crafted": 0,
+                "bosses_defeated": 0,
+                "quests_completed": 0,
+                "areas_visited": set(),
+                "crops_harvested": 0,
+                "max_damage_dealt": 0,
+                "total_gold_earned": 0,
+                "rare_items_found": 0
+            }
+        }
     }
     for key, default_value in defaults.items():
         if key not in data:
@@ -1392,6 +1410,12 @@ def ensure_user_data_keys(data: Dict) -> None:
                 for subkey, subdefault in default_value.items():
                     if subkey not in data[key]:
                         data[key][subkey] = subdefault
+                        
+                    # Handle nested dictionaries one level deeper
+                    if isinstance(subdefault, dict) and isinstance(data[key][subkey], dict):
+                        for sub_subkey, sub_subdefault in subdefault.items():
+                            if sub_subkey not in data[key][subkey]:
+                                data[key][subkey][sub_subkey] = sub_subdefault
 
 
 # Market prices for items and materials
