@@ -398,7 +398,7 @@ class Game:
         self.entities = []
         self.high_score = self.load_high_score()
         self.current_room = None
-        self.show_menu()
+        # Initialize game state, menu will be shown explicitly from main()
 
     def clear_screen(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -454,7 +454,7 @@ class Game:
                 self.high_score = score
                 print(Fore.GREEN + f"\nNew High Score: {score}!" + Style.RESET_ALL)
 
-        
+
         except (FileNotFoundError, ValueError) as e:
             print(Fore.RED + f"\nCould not load high score: {e}" + Style.RESET_ALL)
             return 0
@@ -469,26 +469,47 @@ class Game:
         print(Fore.RED + "1. Nightmare Mode" + Style.RESET_ALL + " - 34 entities, one life, infinite levels")
         print(Fore.YELLOW + "2. Normal Mode" + Style.RESET_ALL)
         print(Fore.CYAN + "3. Load Game" + Style.RESET_ALL)
+        print(Fore.WHITE + "0. Quit Game" + Style.RESET_ALL)
 
-        choice = input("\nEnter your choice (1-3): ").strip()
+        try:
+            choice = input("\nEnter your choice (0-3): ").strip()
 
-        if choice == "1":
-            self.game_mode = "nightmare"
-            print(Fore.RED + f"\nCurrent High Score: {self.high_score} levels" + Style.RESET_ALL)
-        elif choice == "3":
-            if self.show_load_menu():
+            if choice == "0":
+                print(Fore.YELLOW + "\nThank you for playing Liminal. Goodbye!" + Style.RESET_ALL)
+                sys.exit(0)
+            elif choice == "1":
+                self.game_mode = "nightmare"
+                print(Fore.RED + f"\nCurrent High Score: {self.high_score} levels" + Style.RESET_ALL)
+            elif choice == "3":
+                if self.show_load_menu():
+                    return
+                self.show_menu()
                 return
-            self.show_menu()
-            return
-        elif choice == "2":
-            print("\nSelect Normal Mode Type:")
-            print(Fore.CYAN + "1. Coma Mode" + Style.RESET_ALL + " - Standard game")
-            print(Fore.GREEN + "2. Dreaming Mode" + Style.RESET_ALL + " - No entities, special ending")
-            sub_choice = input("\nEnter your choice (1-2): ").strip()
-            self.game_mode = "coma" if sub_choice == "1" else "dreaming"
-        else:
-            self.show_menu()
-            return
+            elif choice == "2":
+                print("\nSelect Normal Mode Type:")
+                print(Fore.CYAN + "1. Coma Mode" + Style.RESET_ALL + " - Standard game")
+                print(Fore.GREEN + "2. Dreaming Mode" + Style.RESET_ALL + " - No entities, special ending")
+                try:
+                    sub_choice = input("\nEnter your choice (1-2): ").strip()
+                    if sub_choice == "1":
+                        self.game_mode = "coma"
+                    elif sub_choice == "2":
+                        self.game_mode = "dreaming" 
+                    else:
+                        print(Fore.YELLOW + "\nInvalid choice. Defaulting to Coma Mode." + Style.RESET_ALL)
+                        self.game_mode = "coma"
+                except (EOFError, KeyboardInterrupt):
+                    print(Fore.RED + "\nInput interrupted. Returning to main menu." + Style.RESET_ALL)
+                    self.show_menu()
+                    return
+            else:
+                print(Fore.RED + "\nInvalid choice. Please try again." + Style.RESET_ALL)
+                time.sleep(1)
+                self.show_menu()
+                return
+        except (EOFError, KeyboardInterrupt):
+            print(Fore.RED + "\nInput interrupted. Exiting game." + Style.RESET_ALL)
+            sys.exit(0)
 
         self.initialize_game()
 
@@ -661,39 +682,63 @@ class Game:
                 self.entities.append(entity_type)
 
     def initialize_game(self):
-        print(Fore.CYAN + "\nEnter your character's name:" + Style.RESET_ALL)
-        name = input("> ").strip()
-        if not name:
-            name = "Unknown"
-
-        start_z = random.randint(Z_MIN, Z_MAX)
-        self.player = Player(name=name, x=0, y=0, z=start_z)
-        self.generate_level()
-        self.print_intro()
+        try:
+            print(Fore.CYAN + "\nEnter your character's name:" + Style.RESET_ALL)
+            name = input("> ").strip()
+            if not name:
+                name = "Unknown"
+            
+            start_z = random.randint(Z_MIN, Z_MAX)
+            self.player = Player(name=name, x=0, y=0, z=start_z)
+            self.generate_level()
+            self.print_intro()
+        except (EOFError, KeyboardInterrupt):
+            print(Fore.RED + "\nGame initialization interrupted. Returning to menu." + Style.RESET_ALL)
+            self.player = None
+            time.sleep(1)
+            try:
+                self.show_menu()
+            except Exception as e:
+                print(Fore.RED + f"\nError returning to menu: {str(e)}" + Style.RESET_ALL)
+                sys.exit(1)
+        except Exception as e:
+            print(Fore.RED + f"\nError during game initialization: {str(e)}" + Style.RESET_ALL)
+            self.player = None
+            time.sleep(1)
+            try:
+                self.show_menu()
+            except Exception as e:
+                print(Fore.RED + f"\nError returning to menu: {str(e)}" + Style.RESET_ALL)
+                sys.exit(1)
 
     def generate_level(self):
         # Choose a theme for the level
-        themes = ['hospital', 'school', 'home', 'limbo', 'mall','Train_station','Abandoned_amusement_park']
+        themes = ['hospital', 'school', 'home', 'limbo', 'mall', 'Train_station', 'Abandoned_amusement_park']
 
         # Theme progression: early levels are hospital and home, mid-levels include school and mall,
         # and higher levels tend toward limbo with higher frequency
         if self.player is None:
             # Default to a random theme if no player is set yet
-            theme_weights = [1, 1, 1, 1, 1]
+            theme_weights = [1, 1, 1, 1, 1, 1, 1]  # Equal weights for all themes
             level = 1
         elif self.player.level < 10:
-            theme_weights = [5, 1, 5, 1, 2]  # Hospital and home more common
+            theme_weights = [5, 1, 5, 1, 2, 1, 1]  # Hospital and home more common
             level = self.player.level
         elif self.player.level < 25:
-            theme_weights = [3, 4, 3, 2, 4]  # School and mall more common
+            theme_weights = [3, 4, 3, 2, 4, 2, 2]  # School and mall more common
             level = self.player.level
         elif self.player.level < 40:
-            theme_weights = [2, 3, 2, 5, 3]  # Limbo becomes more common
+            theme_weights = [2, 3, 2, 5, 3, 2, 2]  # Limbo becomes more common
             level = self.player.level
         else:
-            theme_weights = [1, 2, 1, 10, 1]  # Limbo dominant at high levels
+            theme_weights = [1, 2, 1, 10, 1, 2, 3]  # Limbo dominant at high levels, more amusement park at very high levels
             level = self.player.level
 
+        # Make sure the number of weights matches the number of themes
+        if len(theme_weights) != len(themes):
+            print(Fore.RED + "Warning: Theme weights don't match themes. Using equal weights." + Style.RESET_ALL)
+            theme_weights = [1] * len(themes)
+            
         self.level_theme = random.choices(themes, weights=theme_weights, k=1)[0]
 
         # Generate the exit far from the player
@@ -1489,16 +1534,35 @@ class Game:
                 self.running = False
                 break
 
-            command = input("\n> ").strip().lower()
-            self.process_command(command)
+            try:
+                command = input("\n> ").strip().lower()
+                self.process_command(command)
+            except EOFError:
+                print(Fore.RED + "\nInput error occurred. Exiting game." + Style.RESET_ALL)
+                self.running = False
+                break
+            except KeyboardInterrupt:
+                print(Fore.YELLOW + "\nGame interrupted. Goodbye!" + Style.RESET_ALL)
+                self.running = False
+                break
 
             # Dreaming mode check for special ending
             if self.game_mode == "dreaming" and self.player.level >= 10 and random.random() < 0.05:
                 self.dreaming_ending()
 
 def main():
-    game = Game()
-    game.game_loop()
+    try:
+        game = Game()
+        game.show_menu()  # Show menu explicitly first
+        game.game_loop()
+    except KeyboardInterrupt:
+        print("\nGame interrupted. Goodbye!")
+    except EOFError:
+        print("\nInput error occurred. Exiting game.")
+    except Exception as e:
+        print(f"\nUnexpected error: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
