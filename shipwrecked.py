@@ -4544,25 +4544,9 @@ def main() -> None:
     except Exception as e:
         print(f"\n\n{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
         
-# Launcher verification
-def is_launched_from_launcher():
-    import inspect
-    import os
-    
-    # Get the call stack
-    stack = inspect.stack()
-    
-    # Check if any calling file is launch.py
-    for frame in stack:
-        calling_file = os.path.basename(frame.filename)
-        if calling_file == "launch.py":
-            return True
-    
-    return False
-
 if __name__ == "__main__":
     # Check if game was launched from the launcher
-    if is_launched_from_launcher():
+    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
         main()
     else:
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
