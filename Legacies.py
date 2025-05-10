@@ -4459,123 +4459,502 @@ def show_mobs(area: Optional[str] = None) -> None:
 
 # Function to handle a fight with a monster (used in dungeons)
 def fight(monster: Dict) -> None:
+    """
+    Enhanced combat system with combo mechanics, status effects, and visual feedback
+    """
     if not user_data["class"]:
-        print("You need to create a character first! Use /new")
+        print(f"{FAIL}You need to create a character first! Use /new{ENDC}")
         return
 
     if user_data["health"] <= 0:
-        print("You can't fight while defeated! Use a healing potion or rest.")
+        print(f"{FAIL}You can't fight while defeated! Use a healing potion or rest.{ENDC}")
         return
 
-    print_header(f"Fighting {monster['name']}")
+    # Initialize combat state variables
+    combo_counter = 0
+    max_combo = 3  # Can build up to 3-hit combos
+    stunned = False
+    monster_stunned = False
+    combat_log = []  # Track recent actions for combo detection
+    player_status_effects = []  # Track temporary buffs/debuffs
+    monster_status_effects = []
+    
+    # Extract monster data with defaults
     monster_health = monster["health"]
-    print(f"You encountered a {monster['name']} (Level {monster['level']})!")
-
+    monster_name = monster["name"]
+    monster_level = monster["level"]
+    monster_element = monster.get("element", "Normal")
+    
+    # Get player element
+    player_element = user_data.get("element", "Normal")
+    
+    # Battle intro with fancy visuals
+    print_header(f"⚔️ COMBAT: {monster_name} ⚔️")
+    print_animated(f"{BG_RED}{WHITE} BATTLE START! {ENDC}", delay=0.05)
+    print_animated(f"You encountered a {LIGHTRED}{monster_name}{ENDC} (Level {YELLOW}{monster_level}{ENDC})!", delay=0.03)
+    
+    if monster.get("boss", False):
+        print_animated(f"{BG_MAGENTA}{WHITE}❗ BOSS BATTLE ❗{ENDC}", delay=0.05)
+        print_animated(f"{monster.get('description', 'A powerful foe stands before you!')}", LIGHTMAGENTA, delay=0.03)
+    
+    # Display monster's element if available
+    if monster_element != "Normal":
+        print_animated(f"Element: {get_element_color(monster_element)}{monster_element}{ENDC}", delay=0.02)
+    
+    # Main combat loop
+    turn_counter = 0
     while user_data["health"] > 0 and monster_health > 0:
+        turn_counter += 1
         try:
-            print(f"\nYour Health: {user_data['health']}/{user_data['max_health']}")
-            print(f"Monster Health: {monster_health}/{monster['health']}")
-            print("\nActions:")
-            print("1. Attack")
-            print("2. Use Skill")
-            print("3. Use Healing Potion")
-            print("4. Flee")
-
-            choice = input("Choose action (1-4): ").strip()
-
-            if choice == "1":
-                # Calculate damage with equipped weapon
-                base_damage = user_data.get("attack", 10)  # Default attack value if not found
-                weapon_bonus = user_data.get("equipped", {}).get("weapon", {}).get("effect", 0)
-                damage = base_damage + weapon_bonus
-
-                if random.random() < CRITICAL_CHANCE:
-                    damage *= 2
-                    print("Critical hit!")
-
-                monster_health -= damage
-                print(f"You deal {damage} damage!")
-
-            elif choice == "2":
-                if user_data["skills"]:
-                    print("\nAvailable skills:")
-                    for i, skill in enumerate(user_data["skills"], 1):
-                        print(f"[{i}] {skill}")
-                    try:
-                        skill_choice = int(input("Choose skill (0 to cancel): "))
-                        if skill_choice == 0:
-                            continue
-                        if 1 <= skill_choice <= len(user_data["skills"]):
-                            skill = user_data["skills"][skill_choice - 1]
-                            damage = random.randint(15, 25)  # Skills do more damage
-                            monster_health -= damage
-                            print(f"You used {skill} and dealt {damage} damage!")
-                        else:
-                            print("Invalid skill choice.")
-                    except ValueError:
-                        print("Invalid input.")
-                else:
-                    print("You have no skills available!")
-                    continue
-
-            elif choice == "3":
-                if "Healing Potion" in user_data["inventory"]:
-                    user_data["health"] = min(user_data["health"] + 30, user_data["max_health"])
-                    user_data["inventory"].remove("Healing Potion")
-                    print("You used a Healing Potion! Health restored.")
-                    continue
-                else:
-                    print("You have no Healing Potions!")
-                    continue
-
-            elif choice == "4":
-                # Calculate flee chance based on speed
-                player_speed = user_data.get("speed", 5)
-                monster_speed = monster.get("speed", 5)  # Default monster speed 5 if not set
-                base_chance = 0.4  # Base flee chance
-                speed_diff = player_speed - monster_speed
-                flee_chance = base_chance + (speed_diff * 0.05)
-                flee_chance = max(0.1, min(flee_chance, 0.9))  # Clamp between 10% and 90%
-
-                if random.random() < flee_chance:
-                    print("You successfully fled!")
-                    return
-                print("Failed to flee!")
-
+            # Display health bars with visual representation
+            player_health_percent = user_data["health"] / user_data["max_health"]
+            monster_health_percent = monster_health / monster["health"]
+            
+            # Create health bars
+            player_health_bar = create_health_bar(player_health_percent, 20)
+            monster_health_bar = create_health_bar(monster_health_percent, 20)
+            
+            print(f"\n{BOLD}Turn {turn_counter}{ENDC}")
+            print(f"\n{CYAN}Your Health: {user_data['health']}/{user_data['max_health']} {player_health_bar}{ENDC}")
+            print(f"{LIGHTRED}Enemy Health: {monster_health}/{monster['health']} {monster_health_bar}{ENDC}")
+            
+            # Display active status effects
+            if player_status_effects:
+                effects_str = ", ".join([f"{e['name']} ({e['duration']})" for e in player_status_effects])
+                print(f"{LIGHTYELLOW}Your Status: {effects_str}{ENDC}")
+            if monster_status_effects:
+                effects_str = ", ".join([f"{e['name']} ({e['duration']})" for e in monster_status_effects])
+                print(f"{LIGHTYELLOW}Enemy Status: {effects_str}{ENDC}")
+            
+            # Display combo counter if active
+            if combo_counter > 0:
+                print(f"{LIGHTMAGENTA}Combo: x{combo_counter}{ENDC}")
+            
+            # Check if player is stunned
+            if stunned:
+                print(f"{YELLOW}You are stunned and cannot act this turn!{ENDC}")
+                stunned = False  # Stun lasts one turn
             else:
-                print("Invalid choice!")
-                continue
-
-            # Monster attacks if still alive
-            if monster_health > 0:
-                defense_bonus = user_data.get("equipped", {}).get("armor", {}).get("effect", 0)
-                damage_taken = max(1, monster["attack"] - defense_bonus)
-                if random.random() > DODGE_CHANCE:
-                    user_data["health"] -= damage_taken
-                    print(f"Monster deals {damage_taken} damage!")
+                # Actions menu
+                print("\n⚔️ Actions:")
+                print(f"{LIGHTCYAN}1. Attack{ENDC}")
+                print(f"{LIGHTGREEN}2. Use Skill{ENDC}")
+                print(f"{LIGHTBLUE}3. Use Item{ENDC}")
+                print(f"{YELLOW}4. Defend{ENDC}")
+                print(f"{LIGHTRED}5. Flee{ENDC}")
+                
+                choice = input(f"{YELLOW}Choose action (1-5): {ENDC}").strip()
+                
+                if choice == "1":  # Basic Attack
+                    # Calculate damage with equipped weapon and combo bonus
+                    base_damage = user_data.get("attack", 10)
+                    weapon_bonus = user_data.get("equipped", {}).get("weapon", {}).get("effect", 0)
+                    combo_bonus = int(combo_counter * base_damage * 0.2)  # 20% bonus damage per combo point
+                    
+                    # Calculate critical hit
+                    is_critical = random.random() < (CRITICAL_CHANCE + combo_counter * 0.05)  # Combo increases crit chance
+                    
+                    # Calculate total damage
+                    damage = base_damage + weapon_bonus + combo_bonus
+                    
+                    if is_critical:
+                        crit_multiplier = 2.0
+                        # Apply class-specific crit bonuses
+                        if user_data["class"] == "Rogue":
+                            crit_multiplier = 2.5
+                        elif user_data["class"] == "Archer":
+                            crit_multiplier = 2.2
+                            
+                        damage = int(damage * crit_multiplier)
+                        print_animated(f"{BG_YELLOW}{BLACK} CRITICAL HIT! {ENDC}", delay=0.02)
+                    
+                    # Apply elemental damage modifiers
+                    elemental_result = calculate_elemental_damage(player_element, monster_element, damage)
+                    damage = elemental_result[0]
+                    effect_message = elemental_result[1]
+                    elemental_effects = elemental_result[2]
+                    
+                    # Apply damage
+                    monster_health -= damage
+                    
+                    # Apply any elemental effects to monster
+                    if elemental_effects:
+                        for effect_name, effect_data in elemental_effects.items():
+                            monster_status_effects.append({
+                                "name": effect_name,
+                                "duration": effect_data.get("duration", 2),
+                                "effect": effect_data
+                            })
+                    
+                    # Display attack results
+                    print_animated(f"You {get_attack_verb(combo_counter)} the {monster_name} for {LIGHTGREEN}{damage}{ENDC} damage!", delay=0.02)
+                    if effect_message:
+                        print_animated(f"{LIGHTCYAN}{effect_message}{ENDC}", delay=0.02)
+                    
+                    # Update combo counter
+                    combat_log.append("attack")
+                    if len(combat_log) >= 3 and combat_log[-3:] == ["attack", "attack", "attack"]:
+                        # Reset combo after 3 consecutive attacks
+                        print_animated(f"{BG_MAGENTA}{WHITE} COMBO FINISHER! {ENDC}", delay=0.02)
+                        combo_counter = 0
+                        combat_log = []
+                        # Apply stun effect on combo finisher
+                        monster_stunned = True
+                        print_animated(f"The {monster_name} is stunned!", LIGHTYELLOW, delay=0.02)
+                    else:
+                        combo_counter = min(combo_counter + 1, max_combo)
+                
+                elif choice == "2":  # Use Skill
+                    if user_data["skills"]:
+                        print("\nAvailable skills:")
+                        for i, skill in enumerate(user_data["skills"], 1):
+                            # Get skill details if available
+                            skill_name = skill if isinstance(skill, str) else skill.get("name", "Unknown Skill")
+                            skill_desc = skill.get("description", "No description") if isinstance(skill, dict) else ""
+                            skill_element = skill.get("element", player_element) if isinstance(skill, dict) else player_element
+                            
+                            # Display with element color
+                            print(f"[{i}] {get_element_color(skill_element)}{skill_name}{ENDC} - {skill_desc}")
+                            
+                        try:
+                            skill_choice = int(input("Choose skill (0 to cancel): "))
+                            if skill_choice == 0:
+                                continue
+                                
+                            if 1 <= skill_choice <= len(user_data["skills"]):
+                                skill = user_data["skills"][skill_choice - 1]
+                                skill_name = skill if isinstance(skill, str) else skill.get("name", "Unknown Skill")
+                                skill_element = skill.get("element", player_element) if isinstance(skill, dict) else player_element
+                                
+                                # Base skill damage calculation
+                                intellect_bonus = user_data.get("intellect", 0) * 0.5
+                                base_skill_damage = random.randint(15, 25) + int(intellect_bonus)
+                                
+                                # Calculate skill-specific damage
+                                if isinstance(skill, dict) and "damage_multiplier" in skill:
+                                    skill_multiplier = skill.get("damage_multiplier", 1.0)
+                                    damage = int(base_skill_damage * skill_multiplier)
+                                else:
+                                    damage = base_skill_damage
+                                
+                                # Apply elemental damage modifiers
+                                elemental_result = calculate_elemental_damage(skill_element, monster_element, damage)
+                                damage = elemental_result[0]
+                                effect_message = elemental_result[1]
+                                elemental_effects = elemental_result[2]
+                                
+                                # Apply damage
+                                monster_health -= damage
+                                
+                                # Apply any elemental effects
+                                if elemental_effects:
+                                    for effect_name, effect_data in elemental_effects.items():
+                                        monster_status_effects.append({
+                                            "name": effect_name,
+                                            "duration": effect_data.get("duration", 2),
+                                            "effect": effect_data
+                                        })
+                                
+                                # Display skill results with visual effects
+                                print_animated(f"{BG_CYAN}{WHITE} SKILL ACTIVATED! {ENDC}", delay=0.02)
+                                print_animated(f"You cast {get_element_color(skill_element)}{skill_name}{ENDC} and deal {LIGHTGREEN}{damage}{ENDC} damage!", delay=0.02)
+                                if effect_message:
+                                    print_animated(f"{LIGHTCYAN}{effect_message}{ENDC}", delay=0.02)
+                                
+                                # Special skill effects
+                                if isinstance(skill, dict) and "effects" in skill:
+                                    for effect, value in skill["effects"].items():
+                                        if effect == "heal":
+                                            heal_amount = int(value)
+                                            user_data["health"] = min(user_data["health"] + heal_amount, user_data["max_health"])
+                                            print_animated(f"You recover {LIGHTGREEN}{heal_amount}{ENDC} health!", delay=0.02)
+                                        elif effect == "stun":
+                                            if random.random() < value:
+                                                monster_stunned = True
+                                                print_animated(f"The {monster_name} is stunned!", LIGHTYELLOW, delay=0.02)
+                                        elif effect == "combo":
+                                            combo_counter = min(combo_counter + value, max_combo)
+                                            print_animated(f"Combo increased to {LIGHTMAGENTA}x{combo_counter}{ENDC}!", delay=0.02)
+                                
+                                # Reset combo counter after using a skill
+                                combat_log = []
+                            else:
+                                print("Invalid skill choice.")
+                                
+                        except ValueError:
+                            print("Invalid input.")
+                    else:
+                        print(f"{YELLOW}You have no skills available!{ENDC}")
+                        continue
+                        
+                elif choice == "3":  # Use Item
+                    # Get a list of usable combat items
+                    combat_items = [item for item in user_data["inventory"] 
+                                  if item in ["Healing Potion", "Mana Potion", "Strength Potion", 
+                                             "Defense Potion", "Speed Potion", "Bomb"]]
+                    
+                    if combat_items:
+                        print("\nUsable items:")
+                        for i, item in enumerate(combat_items, 1):
+                            print(f"[{i}] {item}")
+                            
+                        try:
+                            item_choice = int(input("Choose item (0 to cancel): "))
+                            if item_choice == 0:
+                                continue
+                                
+                            if 1 <= item_choice <= len(combat_items):
+                                item_name = combat_items[item_choice - 1]
+                                
+                                # Apply item effects
+                                if item_name == "Healing Potion":
+                                    heal_amount = int(user_data["max_health"] * 0.3)  # 30% of max health
+                                    user_data["health"] = min(user_data["health"] + heal_amount, user_data["max_health"])
+                                    print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
+                                    print_animated(f"You used a Healing Potion and recovered {LIGHTGREEN}{heal_amount}{ENDC} health!", delay=0.02)
+                                    
+                                elif item_name == "Strength Potion":
+                                    # Add temporary strength buff
+                                    player_status_effects.append({
+                                        "name": "Strength Up",
+                                        "duration": 3,
+                                        "effect": {"attack": 10}
+                                    })
+                                    print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
+                                    print_animated("You used a Strength Potion! Attack increased for 3 turns.", delay=0.02)
+                                    
+                                elif item_name == "Defense Potion":
+                                    # Add temporary defense buff
+                                    player_status_effects.append({
+                                        "name": "Defense Up",
+                                        "duration": 3,
+                                        "effect": {"defense": 10}
+                                    })
+                                    print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
+                                    print_animated("You used a Defense Potion! Defense increased for 3 turns.", delay=0.02)
+                                    
+                                elif item_name == "Speed Potion":
+                                    # Add temporary speed buff
+                                    player_status_effects.append({
+                                        "name": "Speed Up",
+                                        "duration": 3,
+                                        "effect": {"speed": 5}
+                                    })
+                                    print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
+                                    print_animated("You used a Speed Potion! Speed increased for 3 turns.", delay=0.02)
+                                    
+                                elif item_name == "Bomb":
+                                    # Deal direct damage to monster
+                                    bomb_damage = 50  # Fixed damage
+                                    monster_health -= bomb_damage
+                                    print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
+                                    print_animated(f"You threw a Bomb! The {monster_name} takes {LIGHTRED}{bomb_damage}{ENDC} damage!", delay=0.02)
+                                
+                                # Remove the item after use
+                                user_data["inventory"].remove(item_name)
+                                
+                            else:
+                                print("Invalid item choice.")
+                                
+                        except ValueError:
+                            print("Invalid input.")
+                    else:
+                        print(f"{YELLOW}You have no usable combat items!{ENDC}")
+                        continue
+                
+                elif choice == "4":  # Defend
+                    # Reduce incoming damage and gain a small health recovery
+                    defense_buff = int(user_data.get("defense", 5) * 0.5)
+                    player_status_effects.append({
+                        "name": "Defending",
+                        "duration": 1,
+                        "effect": {"defense": defense_buff}
+                    })
+                    
+                    # Heal a small amount
+                    heal_amount = int(user_data["max_health"] * 0.05)  # 5% of max health
+                    user_data["health"] = min(user_data["health"] + heal_amount, user_data["max_health"])
+                    
+                    # Gain a combo point
+                    combo_counter = min(combo_counter + 1, max_combo)
+                    
+                    print_animated(f"{BG_BLUE}{WHITE} DEFENDING! {ENDC}", delay=0.02)
+                    print_animated(f"You take a defensive stance! Reduced damage for 1 turn and recovered {LIGHTGREEN}{heal_amount}{ENDC} health.", delay=0.02)
+                    print_animated(f"Combo increased to {LIGHTMAGENTA}x{combo_counter}{ENDC}!", delay=0.02)
+                    
+                    # Update combat log
+                    combat_log.append("defend")
+                
+                elif choice == "5":  # Flee
+                    # Calculate flee chance based on speed and status
+                    player_speed = user_data.get("speed", 5)
+                    monster_speed = monster.get("speed", 5)
+                    
+                    # Apply speed buffs from status effects
+                    for effect in player_status_effects:
+                        if "speed" in effect["effect"]:
+                            player_speed += effect["effect"]["speed"]
+                    
+                    base_chance = 0.4  # Base flee chance
+                    speed_diff = player_speed - monster_speed
+                    flee_chance = base_chance + (speed_diff * 0.05)
+                    
+                    # Boss battles are harder to flee from
+                    if monster.get("boss", False):
+                        flee_chance *= 0.5
+                    
+                    # Clamp between 10% and 90%
+                    flee_chance = max(0.1, min(flee_chance, 0.9))
+                    
+                    # Roll for success
+                    if random.random() < flee_chance:
+                        print_animated(f"{BG_GREEN}{BLACK} ESCAPED! {ENDC}", delay=0.02)
+                        print_animated("You successfully fled from battle!", delay=0.02)
+                        return
+                    else:
+                        print_animated(f"{BG_RED}{WHITE} FAILED TO ESCAPE! {ENDC}", delay=0.02)
+                        print_animated("You couldn't escape!", delay=0.02)
+                        # Reset combo after failed flee
+                        combo_counter = 0
+                        combat_log = []
+                
                 else:
-                    print("You dodged the attack!")
+                    print(f"{YELLOW}Invalid choice!{ENDC}")
+                    continue
+            
+            # Update status effects
+            player_status_effects = [effect for effect in player_status_effects if effect["duration"] > 0]
+            for effect in player_status_effects:
+                effect["duration"] -= 1
+            
+            monster_status_effects = [effect for effect in monster_status_effects if effect["duration"] > 0]
+            for effect in monster_status_effects:
+                effect["duration"] -= 1
+            
+            # Monster's turn if it's still alive and not stunned
+            if monster_health > 0:
+                if monster_stunned:
+                    print_animated(f"The {monster_name} is stunned and cannot attack!", LIGHTYELLOW, delay=0.02)
+                    monster_stunned = False  # Reset stun for next turn
+                else:
+                    print_animated(f"\n{LIGHTRED}Enemy's turn!{ENDC}", delay=0.02)
+                    
+                    # Calculate base monster damage
+                    monster_attack = monster["attack"]
+                    
+                    # Calculate player defense with equipment and status effects
+                    defense_bonus = user_data.get("equipped", {}).get("armor", {}).get("effect", 0)
+                    for effect in player_status_effects:
+                        if "defense" in effect["effect"]:
+                            defense_bonus += effect["effect"]["defense"]
+                    
+                    # Calculate final damage
+                    damage_taken = max(1, monster_attack - defense_bonus)
+                    
+                    # Check for dodge
+                    player_speed = user_data.get("speed", 5)
+                    for effect in player_status_effects:
+                        if "speed" in effect["effect"]:
+                            player_speed += effect["effect"]["speed"]
+                    
+                    dodge_chance = DODGE_CHANCE + (player_speed * 0.01)  # Speed increases dodge chance
+                    dodge_chance = min(dodge_chance, 0.5)  # Cap at 50%
+                    
+                    if random.random() < dodge_chance:
+                        print_animated(f"{BG_CYAN}{BLACK} DODGE! {ENDC}", delay=0.02)
+                        print_animated("You dodged the attack!", delay=0.02)
+                    else:
+                        # Apply damage to player
+                        user_data["health"] -= damage_taken
+                        
+                        # Check for critical hit from monster
+                        if random.random() < 0.1:  # 10% monster crit chance
+                            damage_taken = int(damage_taken * 1.5)
+                            print_animated(f"{BG_RED}{WHITE} CRITICAL HIT! {ENDC}", delay=0.02)
+                        
+                        print_animated(f"The {monster_name} attacks and deals {LIGHTRED}{damage_taken}{ENDC} damage!", delay=0.02)
+                        
+                        # Apply monster attack effects
+                        if "effects" in monster:
+                            for effect_name, chance in monster["effects"].items():
+                                if random.random() < chance:
+                                    if effect_name == "poison":
+                                        player_status_effects.append({
+                                            "name": "Poisoned",
+                                            "duration": 3,
+                                            "effect": {"poison_damage": int(user_data["max_health"] * 0.05)}
+                                        })
+                                        print_animated(f"{LIGHTGREEN}You have been poisoned!{ENDC}", delay=0.02)
+                                    elif effect_name == "stun":
+                                        stunned = True
+                                        print_animated(f"{LIGHTYELLOW}You have been stunned!{ENDC}", delay=0.02)
+                                    elif effect_name == "burn":
+                                        player_status_effects.append({
+                                            "name": "Burning",
+                                            "duration": 2,
+                                            "effect": {"burn_damage": int(user_data["max_health"] * 0.07)}
+                                        })
+                                        print_animated(f"{LIGHTRED}You are burning!{ENDC}", delay=0.02)
+                    
+                    # Apply damage over time effects
+                    for effect in player_status_effects:
+                        if "poison_damage" in effect["effect"]:
+                            poison_damage = effect["effect"]["poison_damage"]
+                            user_data["health"] -= poison_damage
+                            print_animated(f"{LIGHTGREEN}Poison deals {poison_damage} damage!{ENDC}", delay=0.02)
+                        elif "burn_damage" in effect["effect"]:
+                            burn_damage = effect["effect"]["burn_damage"]
+                            user_data["health"] -= burn_damage
+                            print_animated(f"{LIGHTRED}Burning deals {burn_damage} damage!{ENDC}", delay=0.02)
 
         except Exception as e:
-            print(f"Error during combat: {e}")
+            print(f"{FAIL}Error during combat: {e}{ENDC}")
             continue
 
+    # Combat conclusion
+    print_animated(f"\n{BG_CYAN}{WHITE} BATTLE COMPLETED! {ENDC}", delay=0.05)
+    
     if monster_health <= 0:
-        print(f"\nYou defeated the {monster['name']}!")
+        print_animated(f"\n{BG_GREEN}{BLACK} VICTORY! {ENDC}", delay=0.05)
+        print_animated(f"You defeated the {monster_name}!", LIGHTGREEN, delay=0.03)
+        
+        # Calculate experience and rewards
         exp_gain = monster["level"] * 20
+        
+        # Bonus exp for higher level monsters
+        if monster["level"] > user_data["level"]:
+            level_diff = monster["level"] - user_data["level"]
+            exp_bonus = int(exp_gain * (level_diff * 0.2))  # 20% more exp per level difference
+            exp_gain += exp_bonus
+            print_animated(f"Bonus EXP for defeating a stronger enemy: +{exp_bonus}!", LIGHTCYAN, delay=0.02)
+        
         user_data["exp"] += exp_gain
-        print(f"Gained {exp_gain} experience!")
+        print_animated(f"Gained {LIGHTCYAN}{exp_gain}{ENDC} experience!", delay=0.02)
 
         # Increment monsters killed count
         user_data["monsters_killed"] += 1
+        
+        # Increment specific monster type counter
+        monster_type = monster.get("type", "unknown")
+        if "monster_types_killed" not in user_data:
+            user_data["monster_types_killed"] = {}
+        user_data["monster_types_killed"][monster_type] = user_data["monster_types_killed"].get(monster_type, 0) + 1
+
+        # Check for achievements
+        check_achievements()
 
         # Check if monster is a boss
         if monster.get("boss", False):
-            print(f"Congratulations! You defeated the boss {monster['name']}!")
-            # Note: We no longer auto-complete dungeons here
-            # Dungeon completion is now handled directly in enter_dungeon function
-            # This prevents confusion between fighting bosses outside dungeons
-            # and completing dungeon runs
+            print_animated(f"{BG_MAGENTA}{WHITE} BOSS DEFEATED! {ENDC}", delay=0.05)
+            print_animated(f"Congratulations! You defeated the boss {monster_name}!", LIGHTMAGENTA, delay=0.03)
+            
+            # Award special boss rewards
+            bonus_gold = monster["level"] * 50
+            user_data["gold"] += bonus_gold
+            print_animated(f"Bonus reward: {LIGHTYELLOW}{bonus_gold} gold{ENDC}!", delay=0.02)
+            
+            # Check for level up
+            check_level_up()
         else:
             # Check for level up
             check_level_up()
@@ -4583,8 +4962,60 @@ def fight(monster: Dict) -> None:
         # Handle loot
         loot(monster)
     else:
-        print("You were defeated!")
+        print_animated(f"\n{BG_RED}{WHITE} DEFEAT! {ENDC}", delay=0.05)
+        print_animated("You were defeated!", LIGHTRED, delay=0.03)
         user_data["health"] = 1  # Prevent death, set to 1 HP
+        
+        # Lose some gold on defeat
+        if user_data["gold"] > 0:
+            gold_loss = max(1, int(user_data["gold"] * 0.1))  # Lose 10% of gold
+            user_data["gold"] -= gold_loss
+            print_animated(f"You lost {LIGHTYELLOW}{gold_loss} gold{ENDC}!", delay=0.02)
+        
+        print_animated("Rest at an inn or use a healing potion to recover.", LIGHTCYAN, delay=0.02)
+
+# Utility functions for the enhanced combat system
+def create_health_bar(percent: float, length: int = 20) -> str:
+    """Creates a visual health bar based on percentage"""
+    filled_length = int(length * percent)
+    empty_length = length - filled_length
+    
+    if percent > 0.7:
+        bar_color = LIGHTGREEN
+    elif percent > 0.3:
+        bar_color = LIGHTYELLOW
+    else:
+        bar_color = LIGHTRED
+    
+    bar = f"{bar_color}{'█' * filled_length}{GREY}{'▒' * empty_length}{ENDC}"
+    return bar
+
+def get_attack_verb(combo: int) -> str:
+    """Returns a different attack verb based on combo counter for variety"""
+    if combo == 0:
+        return random.choice(["strike", "hit", "attack"])
+    elif combo == 1:
+        return random.choice(["slash", "smash", "strike"])
+    elif combo == 2:
+        return random.choice(["thrash", "pummel", "devastate"])
+    else:
+        return random.choice(["obliterate", "annihilate", "demolish"])
+
+def get_element_color(element: str) -> str:
+    """Returns the appropriate color code for an element"""
+    element_colors = {
+        "Fire": LIGHTRED,
+        "Water": LIGHTBLUE,
+        "Earth": LIGHTGREEN,
+        "Air": LIGHTCYAN,
+        "Lightning": LIGHTYELLOW,
+        "Ice": CYAN,
+        "Light": WHITE,
+        "Dark": GREY,
+        "Poison": GREEN,
+        "Normal": WHITE
+    }
+    return element_colors.get(element, WHITE)
 
 def get_save_slots() -> List[str]:
     saves = [f for f in os.listdir() if f.startswith("save_") and f.endswith(".json")]
@@ -4740,33 +5171,338 @@ def show_quests() -> None:
 
 # Function to handle loot drops
 def loot(monster: Dict) -> None:
+    """
+    Enhanced loot system with rarity levels, random drops, and treasure chests
+    """
     global user_data
-    drops = monster["drops"]
-    print("\nLoot found:")
-    for idx, item in enumerate(drops, 1):
-        print(f"{idx}. {item}")
-
+    
+    print_animated(f"\n{BG_YELLOW}{BLACK} LOOT DISCOVERED! {ENDC}", delay=0.05)
+    
+    # Basic monster drops
+    base_drops = monster.get("drops", [])
+    
+    # Calculate additional random drops based on monster level
+    monster_level = monster.get("level", 1)
+    is_boss = monster.get("boss", False)
+    
+    # Determine drop quantities and chances
+    drop_count = random.randint(1, 3)  # Base drop count
+    
+    # Bosses give more loot
+    if is_boss:
+        drop_count += random.randint(2, 4)
+    
+    # Chance to find a chest
+    chest_chance = 0.1 + (monster_level * 0.01)  # 10% base + 1% per monster level
+    if is_boss:
+        chest_chance += 0.3  # Bosses have higher chest chance
+    
+    # Prepare loot table
+    all_drops = []
+    
+    # Add base drops from monster definition
+    for item in base_drops:
+        all_drops.append({
+            "name": item,
+            "type": "base",
+            "rarity": "Common" if item != "Gold Coin" else "Currency"
+        })
+    
+    # Check for chest
+    found_chest = random.random() < chest_chance
+    if found_chest:
+        chest_tier = "Common"
+        if is_boss:
+            # Boss chests are better
+            if monster_level > 20:
+                chest_tier = random.choice(["Epic", "Legendary"])
+            elif monster_level > 10:
+                chest_tier = random.choice(["Rare", "Epic"])
+            else:
+                chest_tier = random.choice(["Common", "Uncommon", "Rare"])
+        else:
+            # Regular monster chests
+            rarity_roll = random.random()
+            if rarity_roll < 0.1 * (monster_level / 20):  # Higher level monsters have better chest chance
+                chest_tier = "Legendary"
+            elif rarity_roll < 0.2 * (monster_level / 15):
+                chest_tier = "Epic"
+            elif rarity_roll < 0.4 * (monster_level / 10):
+                chest_tier = "Rare"
+            elif rarity_roll < 0.6:
+                chest_tier = "Uncommon"
+            
+        all_drops.append({
+            "name": f"{chest_tier} Chest",
+            "type": "chest",
+            "rarity": chest_tier
+        })
+    
+    # Add random gold based on monster level
+    gold_amount = random.randint(5, 15) * max(1, monster_level // 2)
+    if is_boss:
+        gold_amount *= 3  # Triple gold for bosses
+    
+    all_drops.append({
+        "name": f"{gold_amount} Gold",
+        "type": "gold",
+        "rarity": "Currency",
+        "amount": gold_amount
+    })
+    
+    # Add random material drops based on area and monster type
+    if "type" in monster:
+        monster_type = monster["type"]
+        material_chance = 0.3 + (monster_level * 0.02)  # 30% base + 2% per level
+        
+        if random.random() < material_chance:
+            if monster_type == "undead":
+                material = random.choice(["Bone Dust", "Spectral Essence", "Grave Soil"])
+            elif monster_type == "beast":
+                material = random.choice(["Beast Hide", "Sharp Claw", "Monster Tooth"])
+            elif monster_type == "elemental":
+                material = random.choice(["Elemental Core", "Pure Essence", "Crystallized Magic"])
+            elif monster_type == "dragon":
+                material = random.choice(["Dragon Scale", "Dragon Tooth", "Dragon Blood"])
+            elif monster_type == "demon":
+                material = random.choice(["Demon Horn", "Infernal Ash", "Corrupted Essence"])
+            else:
+                material = random.choice(["Strange Dust", "Magical Residue", "Creature Part"])
+                
+            rarity = "Common"
+            if random.random() < 0.2:
+                rarity = "Uncommon"
+            if random.random() < 0.1:
+                rarity = "Rare"
+                
+            all_drops.append({
+                "name": material,
+                "type": "material",
+                "rarity": rarity
+            })
+    
+    # Add random equipment drop for higher level monsters or bosses
+    equipment_chance = 0.05 + (monster_level * 0.01)  # 5% base + 1% per level
+    if is_boss:
+        equipment_chance = 0.5 + (monster_level * 0.02)  # 50% base + 2% per level for bosses
+        
+    if random.random() < equipment_chance:
+        equip_type = random.choice(["weapon", "armor", "accessory"])
+        
+        if equip_type == "weapon":
+            weapons = ["Sword", "Axe", "Dagger", "Staff", "Bow", "Wand", "Hammer", "Spear"]
+            equip_name = random.choice(weapons)
+        elif equip_type == "armor":
+            armors = ["Helmet", "Chestplate", "Leggings", "Boots", "Gauntlets", "Shield"]
+            equip_name = random.choice(armors)
+        else:  # accessory
+            accessories = ["Ring", "Amulet", "Charm", "Bracelet", "Belt", "Earring"]
+            equip_name = random.choice(accessories)
+        
+        # Determine rarity
+        rarity_roll = random.random()
+        if rarity_roll < 0.05 * (monster_level / 20):  # Higher level = better chance
+            rarity = "Legendary"
+            prefix = random.choice(["Ancient", "Mythical", "Godly", "Supreme", "Ultimate"])
+        elif rarity_roll < 0.15 * (monster_level / 15):
+            rarity = "Epic"
+            prefix = random.choice(["Magnificent", "Heroic", "Superior", "Masterful", "Elite"])
+        elif rarity_roll < 0.3 * (monster_level / 10):
+            rarity = "Rare"
+            prefix = random.choice(["Exceptional", "Valuable", "Quality", "Refined", "Pristine"])
+        elif rarity_roll < 0.5:
+            rarity = "Uncommon"
+            prefix = random.choice(["Fine", "Strong", "Sturdy", "Keen", "Reinforced"])
+        else:
+            rarity = "Common"
+            prefix = random.choice(["Basic", "Simple", "Standard", "Plain", "Ordinary"])
+        
+        # Add effects based on rarity
+        effect_value = 0
+        if rarity == "Legendary":
+            effect_value = 15 + monster_level // 2
+        elif rarity == "Epic":
+            effect_value = 10 + monster_level // 3
+        elif rarity == "Rare":
+            effect_value = 7 + monster_level // 4
+        elif rarity == "Uncommon":
+            effect_value = 5 + monster_level // 5
+        else:
+            effect_value = 3 + monster_level // 7
+        
+        # Sometimes add a random element
+        has_element = random.random() < 0.3
+        element = None
+        if has_element:
+            element = random.choice(["Fire", "Water", "Earth", "Air", "Lightning", "Ice", "Light", "Dark"])
+            
+        # Build the full item name
+        if element:
+            full_name = f"{prefix} {element} {equip_name}"
+        else:
+            full_name = f"{prefix} {equip_name}"
+            
+        all_drops.append({
+            "name": full_name,
+            "type": "equipment",
+            "rarity": rarity,
+            "equip_type": equip_type,
+            "effect": effect_value,
+            "element": element
+        })
+    
+    # Display all drops with colors based on rarity
+    print_animated("\nLoot found:", delay=0.02)
+    
+    # Group items by type for better display
+    grouped_drops = {}
+    for i, drop in enumerate(all_drops):
+        drop_type = drop["type"]
+        if drop_type not in grouped_drops:
+            grouped_drops[drop_type] = []
+        # Add the index so we can refer back to the original list
+        drop["index"] = i
+        grouped_drops[drop_type].append(drop)
+    
+    # Display loot by category with colors
+    current_idx = 1
+    display_drops = []
+    
+    # 1. Equipment (most exciting)
+    if "equipment" in grouped_drops:
+        print_animated(f"\n{BOLD}Equipment:{ENDC}", delay=0.01)
+        for item in grouped_drops["equipment"]:
+            rarity_color = get_rarity_color(item["rarity"])
+            print_animated(f"{current_idx}. {rarity_color}{item['name']}{ENDC} ({item['rarity']} {item['equip_type'].capitalize()})", delay=0.02)
+            item["display_index"] = current_idx
+            display_drops.append(item)
+            current_idx += 1
+    
+    # 2. Chests
+    if "chest" in grouped_drops:
+        print_animated(f"\n{BOLD}Treasures:{ENDC}", delay=0.01)
+        for item in grouped_drops["chest"]:
+            rarity_color = get_rarity_color(item["rarity"])
+            print_animated(f"{current_idx}. {rarity_color}{item['name']}{ENDC}", delay=0.02)
+            item["display_index"] = current_idx
+            display_drops.append(item)
+            current_idx += 1
+    
+    # 3. Materials
+    if "material" in grouped_drops:
+        print_animated(f"\n{BOLD}Materials:{ENDC}", delay=0.01)
+        for item in grouped_drops["material"]:
+            rarity_color = get_rarity_color(item["rarity"])
+            print_animated(f"{current_idx}. {rarity_color}{item['name']}{ENDC} ({item['rarity']})", delay=0.02)
+            item["display_index"] = current_idx
+            display_drops.append(item)
+            current_idx += 1
+            
+    # 4. Basic drops
+    if "base" in grouped_drops:
+        print_animated(f"\n{BOLD}Other Items:{ENDC}", delay=0.01)
+        for item in grouped_drops["base"]:
+            rarity_color = get_rarity_color(item["rarity"])
+            print_animated(f"{current_idx}. {rarity_color}{item['name']}{ENDC}", delay=0.02)
+            item["display_index"] = current_idx
+            display_drops.append(item)
+            current_idx += 1
+    
+    # 5. Gold (always shown)
+    if "gold" in grouped_drops:
+        print_animated(f"\n{BOLD}Currency:{ENDC}", delay=0.01)
+        for item in grouped_drops["gold"]:
+            print_animated(f"{current_idx}. {LIGHTYELLOW}{item['name']}{ENDC}", delay=0.02)
+            item["display_index"] = current_idx
+            display_drops.append(item)
+            current_idx += 1
+    
+    # Handle loot selection with improved UI
+    print_animated(f"\n{BOLD}You can select one item to loot.{ENDC}", delay=0.02)
+    print_animated("Type 'all' to take everything or press Enter to skip.", delay=0.02)
+    
     while True:
         try:
-            choice = input(f"Choose item to take (1-{len(drops)}) or press Enter to skip: ").strip()
-            if choice == "":
-                print("No loot taken.")
+            choice = input(f"{CYAN}Choose loot (1-{len(display_drops)}, 'all', or press Enter): {ENDC}").strip().lower()
+            
+            # Take all loot
+            if choice == "all":
+                print_animated(f"{BG_GREEN}{BLACK} LOOTING ALL ITEMS {ENDC}", delay=0.02)
+                # Process each item
+                for item in display_drops:
+                    process_loot_item(item)
                 break
-            choice_int = int(choice)
-            if 1 <= choice_int <= len(drops):
-                item = drops[choice_int - 1]
-                if item == "Gold Coin":
-                    gold_amount = random.randint(5, 15)
-                    user_data["gold"] += gold_amount
-                    print(f"Gained {gold_amount} gold!")
-                else:
-                    user_data["inventory"].append(item)
-                    print(f"Added {item} to inventory!")
+                
+            # Skip looting
+            elif choice == "":
+                print_animated(f"{YELLOW}No loot taken.{ENDC}", delay=0.02)
                 break
+                
+            # Take specific item
             else:
-                print("Invalid choice, please try again.")
+                choice_int = int(choice)
+                if 1 <= choice_int <= len(display_drops):
+                    selected_item = next((item for item in display_drops if item["display_index"] == choice_int), None)
+                    if selected_item:
+                        # Process the selected item
+                        process_loot_item(selected_item)
+                        break
+                else:
+                    print(f"{YELLOW}Invalid choice, please try again.{ENDC}")
+                    
         except ValueError:
-            print("Invalid input, please enter a number or press Enter to skip.")
+            print(f"{YELLOW}Invalid input, please enter a number, 'all', or press Enter to skip.{ENDC}")
+
+def process_loot_item(item):
+    """Process a single loot item based on its type"""
+    global user_data
+    
+    item_type = item["type"]
+    item_name = item["name"]
+    
+    if item_type == "gold":
+        gold_amount = item["amount"]
+        user_data["gold"] += gold_amount
+        print_animated(f"Gained {LIGHTYELLOW}{gold_amount} gold{ENDC}!", delay=0.02)
+        
+    elif item_type == "chest":
+        print_animated(f"{CYAN}You've found a {get_rarity_color(item['rarity'])}{item_name}{ENDC}!", delay=0.02)
+        # Directly open the chest
+        open_chest(item["rarity"])
+        
+    elif item_type == "equipment":
+        # Add equipment to inventory with properties
+        equip_item = {
+            "name": item["name"],
+            "type": item["equip_type"],
+            "rarity": item["rarity"],
+            "effect": item["effect"]
+        }
+        if item["element"]:
+            equip_item["element"] = item["element"]
+            
+        # Check if inventory has equipment section
+        if "equipment" not in user_data:
+            user_data["equipment"] = []
+            
+        user_data["equipment"].append(equip_item)
+        print_animated(f"Added {get_rarity_color(item['rarity'])}{item_name}{ENDC} to your equipment!", delay=0.02)
+        
+    else:  # base items, materials, etc.
+        user_data["inventory"].append(item_name)
+        print_animated(f"Added {get_rarity_color(item.get('rarity', 'Common'))}{item_name}{ENDC} to inventory!", delay=0.02)
+
+def get_rarity_color(rarity):
+    """Returns the appropriate color code for an item rarity"""
+    rarity_colors = {
+        "Common": WHITE,
+        "Uncommon": LIGHTGREEN,
+        "Rare": LIGHTBLUE,
+        "Epic": LIGHTMAGENTA,
+        "Legendary": LIGHTYELLOW,
+        "Currency": LIGHTYELLOW
+    }
+    return rarity_colors.get(rarity, WHITE)
 
 # Function to enter a dungeon
 def enter_dungeon(dungeon_name: str) -> None:
