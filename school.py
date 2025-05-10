@@ -635,11 +635,11 @@ def check_relationship_compatibility(person1, person2):
 # Game Title
 TITLE = "My First Day Here: Campus Life Edition"
 # Define ASCII art with line-by-line strings for better readability
-ASCII_ART = f"""    {Fore.MAGENTA}____________________________
-   |{Fore.CYAN}                            {Fore.MAGENTA}|
-   |{Fore.WHITE}    My First Day Here:      {Fore.MAGENTA}|
-   |{Fore.WHITE}    Campus Life Edition     {Fore.MAGENTA}|
-   |____________________________| {Style.RESET_ALL}"""
+ASCII_ART = """    {0}____________________________
+   |{1}                            {0}|
+   |{2}    My First Day Here:      {0}|
+   |{2}    Campus Life Edition     {0}|
+   |____________________________| {3}""".format(Fore.MAGENTA, Fore.CYAN, Fore.WHITE, Style.RESET_ALL)
 
 # Weather system variables
 WEATHER_TYPES = ["sunny", "cloudy", "rainy", "stormy", "foggy", "snowy", "windy"]
@@ -9337,11 +9337,10 @@ def generate_full_student_list():
     return full_student_list
 
 def show_help():
-    print(
-        f"""
-{Fore.CYAN}=== AVAILABLE COMMANDS ==={Style.RESET_ALL}
+    help_text = """
+{0}=== AVAILABLE COMMANDS ==={1}
 
-{Fore.YELLOW}Basic Commands:{Style.RESET_ALL}
+{2}Basic Commands:{1}
 /help               - Show this help message
 /exit               - Quit the game
 /save [slot_name]   - Save your progress
@@ -9352,7 +9351,7 @@ def show_help():
 /schedule           - Show the school schedule
 /settings           - Modify game settings (content filters, difficulty, text speed)
 
-{Fore.YELLOW}Status Commands:{Style.RESET_ALL}
+{2}Status Commands:{1}
 /me                 - Show your complete profile with all stats
 /status             - View your current status
 /homework           - Check your homework
@@ -9365,20 +9364,20 @@ def show_help():
 /student list       - Show all students in the school (500-600 NPCs)
 /npc list [tag]     - Show NPCs filtered by tag category
 
-{Fore.YELLOW}Location Commands:{Style.RESET_ALL}
+{2}Location Commands:{1}
 /go [location]      - Move to a location
 /sleep              - Sleep in your room or bedroom to advance to the next day
 /dinner             - Have dinner at Kitchen or Cafeteria during dinner hours
 /look               - Inspect your current location in detail
 /who_is_here        - See who is currently in the same location as you
 
-{Fore.YELLOW}Academic Commands:{Style.RESET_ALL}
+{2}Academic Commands:{1}
 /study [subject]    - Study a subject
 /teachers           - See a list of your teachers
 /students           - See a list of your classmates
 /complete_quest [id]- Complete a quest
 
-{Fore.YELLOW}Social Commands:{Style.RESET_ALL}
+{2}Social Commands:{1}
 /interact [student] - Interact with a student
 /clubs              - See available clubs
 /join_club [name]   - Join a club
@@ -9386,13 +9385,13 @@ def show_help():
 /romance            - Check your romantic relationship
 /date [date_type]    - Go on a date with your romantic interest (at valid locations)
 
-{Fore.YELLOW}Activities Commands:{Style.RESET_ALL}
+{2}Activities Commands:{1}
 /work [job_name]    - Work at a part-time job
 /jobs               - List available jobs
 /eat [food_name]    - Eat food at the cafeteria
 /relax              - Reduce stress by relaxing
 """
-    )
+    print(help_text.format(Fore.CYAN, Style.RESET_ALL, Fore.YELLOW))
 
 
 def go_location(args):
