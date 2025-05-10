@@ -2749,7 +2749,7 @@ class GameState:
                     weapon_type = item["weapon"]
                     weapon_found = False
 
-                    for i, inv_item in enumerate(self.player["inventory"]):
+                    for _, inv_item in enumerate(self.player["inventory"]):  # Index not used
                         if inv_item.get("id") == weapon_type:
                             # Load ammo into the weapon
                             space_available = inv_item["max_ammo"] - inv_item["ammo"]
@@ -5262,7 +5262,7 @@ class GameState:
             for material, amount in materials_needed.items():
                 remaining = amount
                 inventory_copy = self.player["inventory"].copy()
-                for idx, item in enumerate(inventory_copy):
+                for _, item in enumerate(inventory_copy):  # Using _ instead of idx as it's not used
                     if item.get("id") == material:
                         to_use = min(remaining, item.get("count", 1))
                         remaining -= to_use
@@ -5402,7 +5402,7 @@ class GameState:
         potential_items = min(3, 1 + self.current_scavenging['round'] // 2)
 
         # For each potential item slot
-        for i in range(potential_items):
+        for _ in range(potential_items):  # Using _ since the index isn't used
             # Base chance to find something (60-85%)
             find_chance = 0.6 + (0.05 * self.current_scavenging['loot_modifier'])
             find_chance = min(find_chance, 0.85)  # Cap at 85%
