@@ -19,8 +19,10 @@ import sys
 import time
 from colorama import Fore, init
 
+# Check if called with python3 command
 def check_python_command():
     """Check if script was called with 'python3' command and exit if it was"""
+    import sys, os
     # Get the command used to run this script
     command = sys.argv[0]
     program_name = os.path.basename(sys.executable)
@@ -1364,7 +1366,7 @@ def whack_a_mole():
     holes = ["⚫"] * 9
     score = 0
 
-    for round in range(6):
+    for _ in range(6):  # Loop through 6 rounds
         mole_pos = random.randint(0, 8)
         holes[mole_pos] = "🦔"
 
@@ -1456,7 +1458,7 @@ def bottle_toss():
     bottles = ["🍾"] * 6
     hits = 0
 
-    for throw in range(3):
+    for _ in range(3):  # Three throwing attempts
         print("\nBottles:", " ".join(bottles))
         input("Press Enter to throw...")
 
@@ -1489,11 +1491,10 @@ def treasure_hunt():
     print(Fore.YELLOW + "🏆 TREASURE HUNT 🏆")
     print("Find hidden treasures in the carnival grounds!")
     
-    # Grid setup
+    # Game setup
     grid_size = 5
-    grid = [["⬜" for _ in range(grid_size)] for _ in range(grid_size)]
     
-    # Place treasures
+    # Place treasures (for future grid implementation)
     treasures = []
     for _ in range(3):
         x, y = random.randint(0, grid_size-1), random.randint(0, grid_size-1)
@@ -1503,7 +1504,6 @@ def treasure_hunt():
     
     # Game variables
     attempts = 8
-    found = 0
     score = 0
     
     # Simple treasure grid
