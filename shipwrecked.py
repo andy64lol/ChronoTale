@@ -1530,7 +1530,7 @@ class GameManager:
         if gs.active_quests:
             print(f"\n{Fore.GREEN}Active Quests: {len(gs.active_quests)}{Style.RESET_ALL}")
             
-            for quest_id, quest in gs.active_quests.items():
+            for _, quest in gs.active_quests.items():
                 print(f"\n{Fore.YELLOW}{quest['title']} [{quest['progress']}%]{Style.RESET_ALL}")
                 print(f"{Fore.WHITE}{quest['description']}{Style.RESET_ALL}")
                 
@@ -1567,14 +1567,14 @@ class GameManager:
         if gs.completed_quests:
             print(f"\n{Fore.GREEN}Completed Quests: {len(gs.completed_quests)}{Style.RESET_ALL}")
             
-            for quest_id, quest in gs.completed_quests.items():
+            for _, quest in gs.completed_quests.items():
                 print(f"{Fore.GREEN}✓ {quest['title']} (Day {quest['date_completed']}){Style.RESET_ALL}")
         
         # Display failed quests
         if gs.failed_quests:
             print(f"\n{Fore.RED}Failed Quests: {len(gs.failed_quests)}{Style.RESET_ALL}")
             
-            for quest_id, quest in gs.failed_quests.items():
+            for _, quest in gs.failed_quests.items():
                 print(f"{Fore.RED}✗ {quest['title']} - {quest['failure_reason']} (Day {quest['date_failed']}){Style.RESET_ALL}")
         
         # Display recent quest log entries
