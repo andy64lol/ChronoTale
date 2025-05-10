@@ -2201,7 +2201,7 @@ def build_support_network():
 
     # Count close relationships (over 70 points)
     close_friends = 0
-    for name, points in player["relationships"].items():
+    for _, points in player["relationships"].items():  # Using _ for unused name variable
         if points >= 70:
             close_friends += 1
 
@@ -11659,7 +11659,7 @@ def handle_club_location(club_name):
         benefits = clubs[club_name]["benefits"]
 
         # Apply subject bonus if applicable
-        for subject, bonus in benefits.items():
+        for subject, _ in benefits.items():  # Using _ for unused bonus variable
             if subject in subjects:
                 if not homework.get(subject, False):
                     homework[subject] = True
