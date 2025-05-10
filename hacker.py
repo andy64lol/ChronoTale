@@ -2504,7 +2504,7 @@ class NovaSecInterpreter(CodeInterpreter):
         
         # Check if it's an NPC
         if not is_system and hasattr(self.game_state.player, 'contacts'):
-            for contact_id, contact in self.game_state.player.contacts.items():
+            for _, contact in self.game_state.player.contacts.items():  # Using _ to indicate unused variable
                 if contact and 'name' in contact and contact['name'].lower() == target.lower():
                     is_npc = True
                     break
@@ -2554,7 +2554,7 @@ class NovaSecInterpreter(CodeInterpreter):
                 self.output.append(f"Your social engineering approach worked on {target}!")
                 
                 if technique.lower() == "persuasion":
-                    for contact_id, contact in self.game_state.player.contacts.items():
+                    for _, contact in self.game_state.player.contacts.items():  # Using _ to indicate unused ID
                         if contact and 'name' in contact and contact['name'].lower() == target.lower():
                             # Increase trust
                             if 'trust' in contact:
@@ -5086,7 +5086,7 @@ class Texting2ExitingInterpreter(CodeInterpreter):
         lines = code.split('\n')
         processed_lines = []
         
-        for i, line in enumerate(lines):
+        for _, line in enumerate(lines):  # Line number not needed
             # Remove comments
             if ';' in line:
                 line = line[:line.index(';')]
