@@ -149,7 +149,8 @@ def shop_menu(data):
     purchasable_games = [
         {"name": "Shipwrecked", "file": "shipwrecked.py", "cost": 30},
         {"name": "Carnival", "file": "Carnival.py", "cost": 30},
-        {"name": "World Of Monsters", "file": "WOM.py", "cost": 30}
+        {"name": "World Of Monsters", "file": "WOM.py", "cost": 30},
+        {"name": "Hacker: Digital Hijacker", "file": "hacker.py", "cost": 40}
     ]
 
     while True:
