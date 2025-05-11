@@ -19,30 +19,16 @@ import sys
 import time
 from colorama import Fore, init
 
-# Check if called with python3 command
-def check_python_command():
-    """Check if script was called with 'python3' command and exit if it was"""
-    import sys, os
-    # Get the command used to run this script
-    command = sys.argv[0]
-    program_name = os.path.basename(sys.executable)
-    
-    if program_name == "python3" or "python3" in command:
-        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
-        print(f"{Fore.YELLOW}Run: python launch.py")
-        sys.exit(0)
-
 # Launcher protection at the very beginning
 if __name__ == "__main__":
-    # First check if using python3 command
-    check_python_command()
-    
+
     # Then check if launched through launcher
     if os.environ.get("LAUNCHED_FROM_LAUNCHER") != "1":
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+        print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
         input("Press Enter to exit...")
         sys.exit(0)
+        
 init(autoreset=True)
 
 # Save file locations
@@ -1486,14 +1472,14 @@ def treasure_hunt():
         return
     if not pay_to_play(5):
         return
-        
+
     clear()
     print(Fore.YELLOW + "🏆 TREASURE HUNT 🏆")
     print("Find hidden treasures in the carnival grounds!")
-    
+
     # Game setup
     grid_size = 5
-    
+
     # Place treasures (for future grid implementation)
     treasures = []
     for _ in range(3):
@@ -1501,28 +1487,28 @@ def treasure_hunt():
         while (x, y) in treasures:
             x, y = random.randint(0, grid_size-1), random.randint(0, grid_size-1)
         treasures.append((x, y))
-    
+
     # Game variables
     attempts = 8
     score = 0
-    
+
     # Simple treasure grid
     treasure_items = ["💎", "👑", "💰", "⭐", "❌"]
     map_size = 5
     treasure_map = random.choices(treasure_items, weights=[1, 1, 2, 2, 4], k=map_size)
-    
+
     while attempts > 0:
         clear()
         print(Fore.YELLOW + "🏆 TREASURE HUNT 🏆")
         print(f"Attempts remaining: {attempts}")
-        
+
         # Display map with hidden treasures
         print("\nMap:", " ".join("?" * map_size))
-        
+
         # Get user input
         try:
             choice = int(input(f"\nChoose location (1-{map_size}): ")) - 1
-            
+
             if 0 <= choice < map_size:
                 find = treasure_map[choice]
                 if find == "💎":
@@ -1539,37 +1525,37 @@ def treasure_hunt():
                     score += 3
                 else:
                     print(Fore.RED + "Nothing here! ❌")
-                
+
                 # Replace the item with a blank space
                 treasure_map[choice] = " "
             else:
                 print(Fore.RED + "Invalid location!")
-                
+
             attempts -= 1
             time.sleep(1)
-            
+
         except (ValueError, IndexError):
             print(Fore.RED + "Invalid input! Please enter a number.")
             time.sleep(1)
-    
+
     # Game result
     clear()
     print(Fore.YELLOW + "🏆 TREASURE HUNT RESULTS 🏆")
-    
+
     # Show final map
     print("\nFinal Map:", " ".join(treasure_map))
-    
+
     print(f"\nYour score: {score}")
-    
+
     # Award tickets based on score
     tickets = score
     if tickets > 0:
         print(Fore.GREEN + f"You earned {tickets} tickets!")
         player["tickets"] += tickets
-        
+
         if score >= 20:
             award_achievement("Treasure Hunter")
-            
+
     input("\nPress Enter to continue...")
     update_mission_progress("vip_games")
 
@@ -1756,10 +1742,10 @@ def manage_deck():
     """Manage your TCG card deck"""
     if "card_collection" not in player:
         player["card_collection"] = []
-    
+
     if "current_deck" not in player:
         player["current_deck"] = []
-    
+
     while True:
         clear()
         print(Fore.CYAN + "📋 Deck Management")
@@ -1769,9 +1755,9 @@ def manage_deck():
         print("[3] Build new deck")
         print("[4] Card collection info")
         print("[0] Back")
-        
+
         choice = input("\nChoose option: ")
-        
+
         if choice == "1":
             view_card_collection()
         elif choice == "2":
@@ -2043,58 +2029,58 @@ def tcg_championship():
     clear()
     print(Fore.LIGHTMAGENTA_EX + "🏆 TCG CHAMPIONSHIP 🏆")
     print("Compete in the ultimate card tournament!")
-    
+
     # Check if player has enough cards
     if "card_collection" not in player:
         player["card_collection"] = []
-    
+
     if len(player.get("card_collection", [])) < 5:
         print(Fore.RED + "You need at least 5 cards to participate in the championship.")
         print("Visit the shop to buy card packs!")
         input("Press Enter to continue...")
         return
-    
+
     # Tournament structure
     rounds = [
         {"name": "Qualifying Round", "opponents": 2, "difficulty": 1},
         {"name": "Semi-Finals", "opponents": 1, "difficulty": 2},
         {"name": "Finals", "opponents": 1, "difficulty": 3}
     ]
-    
+
     print("\nTournament Structure:")
     for i, round_info in enumerate(rounds):
         print(f"Round {i+1}: {round_info['name']} - {round_info['opponents']} matches")
-    
+
     if input("\nReady to begin? (y/n): ").lower() != 'y':
         return
-    
+
     # Tournament progression
     eliminated = False
     current_round = 1
-    
+
     for round_info in rounds:
         if eliminated:
             break
-            
+
         clear()
         print(Fore.CYAN + f"== {round_info['name']} ==")
         print(f"You need to win {round_info['opponents']} matches to advance.")
-        
+
         wins_needed = round_info['opponents']
         wins = 0
-        
+
         for match in range(wins_needed):
             print(f"\nMatch {match+1}:")
-            
+
             # Generate opponent based on difficulty
             opponent_skill = round_info['difficulty']
             opponent_name = random.choice([
                 "Card Wizard", "Deck Master", "Strategy King", 
                 "TCG Champion", "Card Collector", "Deck Builder"
             ])
-            
+
             print(f"Facing: {opponent_name} (Difficulty: {'★' * opponent_skill})")
-            
+
             # Simulate card battle with skill-based random outcome
             if random.random() < 0.5 + (len(player.get("card_collection", [])) * 0.02) - (opponent_skill * 0.1):
                 print(Fore.GREEN + "You won the match!")
@@ -2105,44 +2091,44 @@ def tcg_championship():
                 print(Fore.RED + "You lost the match...")
                 eliminated = True
                 break
-                
+
             time.sleep(1)
-        
+
         if wins == wins_needed:
             print(Fore.GREEN + "You've advanced to the next round!")
             current_round += 1
             time.sleep(1)
-    
+
     # Tournament results
     if current_round > len(rounds):
         print(Fore.YELLOW + "\n🏆 CONGRATULATIONS! 🏆")
         print("You are the TCG Champion!")
-        
+
         # Championship rewards
         bonus = 25
         player['tickets'] += bonus
         print(f"Championship Bonus: +{bonus} tickets!")
-        
+
         # Award a special card
         special_card = "Legendary Champion's Card"
         if "card_collection" not in player:
             player["card_collection"] = []
         player["card_collection"].append(special_card)
         print(f"You received a special card: {special_card}!")
-        
+
         # Achievement
         award_achievement("TCG Champion")
     else:
         print(Fore.YELLOW + "\nBetter luck next time!")
         print(f"You reached Round {current_round} of the tournament.")
-    
+
     input("\nPress Enter to continue...")
 
 def card_battle(opponent=None, championship=False):
     """Card battle game using the player's card collection"""
     if "card_collection" not in player:
         player["card_collection"] = []
-        
+
     # Generate card database if not defined
     if "CARD_DATABASE" not in globals():
         global CARD_DATABASE
@@ -2159,22 +2145,22 @@ def card_battle(opponent=None, championship=False):
             "Mystic Wizard": {"emoji": "🧙", "power": 8, "element": "arcane"},
             "Legendary Champion's Card": {"emoji": "🏆", "power": 10, "element": "legendary"}
         }
-    
+
     if len(player["card_collection"]) < 3:
         print(Fore.RED + "You need at least 3 cards to play!")
         print("Visit the shop to buy card packs!")
         input("Press Enter to continue...")
         return False
-    
+
     clear()
     print(Fore.CYAN + "🃏 CARD BATTLE 🃏")
-    
+
     # Opponent selection
     if opponent is None:
         opponent = random.choice(["Novice Duelist", "Card Enthusiast", "Deck Master"])
-    
+
     print(f"Opponent: {opponent}")
-    
+
     # Draw cards for player
     available_cards = player["card_collection"].copy()
     player_hand = []
@@ -2182,7 +2168,7 @@ def card_battle(opponent=None, championship=False):
         card = random.choice(available_cards)
         player_hand.append(card)
         available_cards.remove(card)
-    
+
     # Draw cards for CPU
     cpu_cards = list(CARD_DATABASE.keys())
     cpu_hand = []
@@ -2190,21 +2176,21 @@ def card_battle(opponent=None, championship=False):
         card = random.choice(cpu_cards)
         cpu_hand.append(card)
         cpu_cards.remove(card)
-    
+
     # Battle
     rounds = 3
     player_score = 0
     cpu_score = 0
-    
+
     for round_num in range(1, rounds+1):
         clear()
         print(Fore.CYAN + f"🃏 CARD BATTLE - Round {round_num}/{rounds} 🃏")
         print(f"Score: You {player_score} - {cpu_score} CPU")
-        
+
         print("\nYour hand:")
         for i, card in enumerate(player_hand, 1):
             print(f"{i}. {CARD_DATABASE[card]['emoji']} {card} (Power: {CARD_DATABASE[card]['power']})")
-        
+
         # Player selects card
         valid_choice = False
         choice = -1
@@ -2218,13 +2204,13 @@ def card_battle(opponent=None, championship=False):
             except ValueError:
                 print(Fore.RED + "Invalid input! Please enter a number.")
                 continue
-        
+
         player_card = player_hand[choice]
         cpu_card = random.choice(cpu_hand)
-        
+
         print(f"\nYou played: {CARD_DATABASE[player_card]['emoji']} {player_card}")
         print(f"CPU played: {CARD_DATABASE[cpu_card]['emoji']} {cpu_card}")
-        
+
         if CARD_DATABASE[player_card]['power'] > CARD_DATABASE[cpu_card]['power']:
             print(Fore.GREEN + "You win this round!")
             player_score += 1
@@ -2233,14 +2219,14 @@ def card_battle(opponent=None, championship=False):
             cpu_score += 1
         else:
             print(Fore.YELLOW + "It's a tie!")
-        
+
         player_hand.remove(player_card)
         cpu_hand.remove(cpu_card)
         time.sleep(1)
-    
+
     # Game result
     print(f"\nFinal Score - You: {player_score} | CPU: {cpu_score}")
-    
+
     if player_score > cpu_score:
         tickets = 10
         print(Fore.GREEN + f"You won the battle! +{tickets} tickets!")
@@ -2255,22 +2241,22 @@ def card_battle(opponent=None, championship=False):
         print(Fore.YELLOW + f"It's a tie! +{tickets} tickets")
         player["tickets"] += tickets
         return True
-        
+
 def buy_card_pack():
     """Purchase a card pack containing random cards"""
     pack_cost = 15
-    
+
     if player["tickets"] < pack_cost:
         print(Fore.RED + f"Not enough tickets! You need {pack_cost} tickets.")
         return
-    
+
     # Confirm purchase
     print(f"Buy a card pack for {pack_cost} tickets? (y/n)")
     if input("> ").lower() != 'y':
         return
-        
+
     player["tickets"] -= pack_cost
-    
+
     # Generate card database if not defined
     if "CARD_DATABASE" not in globals():
         global CARD_DATABASE
@@ -2286,46 +2272,46 @@ def buy_card_pack():
             "Forest Elf": {"emoji": "🌳", "power": 5, "element": "nature"},
             "Mystic Wizard": {"emoji": "🧙", "power": 8, "element": "arcane"}
         }
-    
+
     # Initialize card collection if needed
     if "card_collection" not in player:
         player["card_collection"] = []
-    
+
     # Draw cards
     cards_per_pack = 3
     cards = list(CARD_DATABASE.keys())
     new_cards = []
-    
+
     for _ in range(cards_per_pack):
         card = random.choice(cards)
         new_cards.append(card)
         player["card_collection"].append(card)
-    
+
     # Display results
     print(Fore.GREEN + "\nCard Pack Opened!")
     print("You got:")
     for card in new_cards:
         print(f"{CARD_DATABASE[card]['emoji']} {card} (Power: {CARD_DATABASE[card]['power']})")
-    
+
     # Achievement
     if len(player["card_collection"]) >= 10:
         award_achievement("Card Collector")
-        
+
     input("\nPress Enter to continue...")
-    
+
 def view_card_collection():
     """View all cards owned by the player"""
     clear()
-    
+
     if "card_collection" not in player:
         player["card_collection"] = []
-    
+
     if not player["card_collection"]:
         print(Fore.YELLOW + "You don't have any cards yet!")
         print("Visit the shop to buy card packs!")
         input("\nPress Enter to continue...")
         return
-    
+
     # Generate card database if not defined
     if "CARD_DATABASE" not in globals():
         global CARD_DATABASE
@@ -2342,9 +2328,9 @@ def view_card_collection():
             "Mystic Wizard": {"emoji": "🧙", "power": 8, "element": "arcane"},
             "Legendary Champion's Card": {"emoji": "🏆", "power": 10, "element": "legendary"}
         }
-    
+
     print(Fore.CYAN + "🃏 YOUR CARD COLLECTION 🃏")
-    
+
     # Group cards by element
     cards_by_element = {}
     for card in player["card_collection"]:
@@ -2352,17 +2338,17 @@ def view_card_collection():
         if element not in cards_by_element:
             cards_by_element[element] = []
         cards_by_element[element].append(card)
-    
+
     # Display cards by element
     for element, cards in cards_by_element.items():
         print(f"\n{element.upper()} CARDS:")
         for card in cards:
             card_data = CARD_DATABASE.get(card, {"emoji": "❓", "power": 0})
             print(f"{card_data['emoji']} {card} (Power: {card_data['power']})")
-    
+
     print(f"\nTotal Cards: {len(player['card_collection'])}")
     input("\nPress Enter to continue...")
-    
+
 # Main execution - launcher already checked at the beginning of the file
 if __name__ == "__main__":
     # If we got this far, launcher check passed
