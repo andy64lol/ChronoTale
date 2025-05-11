@@ -11,17 +11,6 @@ from colorama import Fore, Back, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-# Check if called with python3 command
-def check_python_command():
-    """Check if script was called with 'python3' command and exit if it was"""
-    program_name = os.path.basename(sys.executable)
-    command = sys.argv[0]
-    
-    if program_name == "python3" or "python3" in command:
-        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
-        print(f"{Fore.YELLOW}Run: python launch.py")
-        sys.exit(0)
-
 # Color constants - using colorama named colors for cross-platform compatibility
 OKBLUE = Fore.BLUE
 OKGREEN = Fore.GREEN
@@ -45,7 +34,7 @@ BLACK = Fore.BLACK
 GREY = Fore.BLACK + Style.DIM
 DARKGRAY = Fore.BLACK + Style.BRIGHT  # Using bright black for dark gray
 PURPLE = Fore.MAGENTA  # Using MAGENTA for purple
-LIGHTCYAN = Fore.CYAN + Style.BRIGHT
+# LIGHTCYAN already defined above
 LIGHTYELLOW = Fore.YELLOW + Style.BRIGHT
 LIGHTRED = Fore.RED + Style.BRIGHT
 LIGHTGREEN = Fore.GREEN + Style.BRIGHT
@@ -1524,7 +1513,7 @@ QUESTS = [
         "chapter": 3,
         "travel_locations": ["Long Shui Zhen's well"]
     },
-    
+
     # Seasonal Farming Quests
     {
         "id": 451,
@@ -1566,7 +1555,7 @@ QUESTS = [
         "chapter": 4,
         "requirements": {"season": "Fall"}
     },
-    
+
     # Weather-Dependent Quests
     {
         "id": 405,
@@ -1598,7 +1587,7 @@ QUESTS = [
         "chapter": 4,
         "requirements": {"weather": "sunny"}
     },
-    
+
     # Secondary Story Quests - The Weather Sage's Tale
     {
         "id": 851,
@@ -1643,7 +1632,7 @@ QUESTS = [
         "chapter": 8,
         "prerequisite": 853
     },
-    
+
     # Dimension-Specific Secondary Stories - The Void Walker
     {
         "id": 901,
@@ -1801,7 +1790,7 @@ PROFESSIONS = {
             15: "Artifact Creation - Can create custom magical items"
         }
     },
-    
+
     # New professions
     "Farmer": {
         "gather_bonus": ["Seeds", "Crop", "Fertilizer", "Exotic Seeds"],
@@ -1967,7 +1956,7 @@ def ensure_user_data_keys(data: Dict) -> None:
                 for subkey, subdefault in default_value.items():
                     if subkey not in data[key]:
                         data[key][subkey] = subdefault
-                        
+
                     # Handle nested dictionaries one level deeper
                     if isinstance(subdefault, dict) and isinstance(data[key][subkey], dict):
                         for sub_subkey, sub_subdefault in subdefault.items():
@@ -2110,26 +2099,26 @@ shop_items = [
     {"name": "Kitsune Mask", "type": "armor", "effect": 18, "price": 700, "special": "Illusionary clones confuse enemies", "source": "Kitsune Warrior"},
     {"name": "Storm Eye", "type": "consumable", "effect": "summon_storm", "price": 600, "special": "Calls lightning on enemies (3 uses)", "source": "Vision of the Thunder"},
     {"name": "Frozen Soul", "type": "consumable", "effect": "freeze_enemies", "price": 500, "special": "Freezes all enemies for 1 turn", "source": "Hatred frozen soul"},
-    
+
     # === Elemental Lord Equipment ===
     {"name": "Blazing Warhammer", "type": "weapon", "effect": 55, "price": 3500, "special": "Ignites enemies", "source": "Ignis, Lord of Flames", "element": "Ignis"},
     {"name": "Frost Giant's Axe", "type": "weapon", "effect": 52, "price": 3200, "special": "Slows enemies", "source": "Glacies, Frost Sovereign", "element": "Glacies"},
     {"name": "Storm Caller Staff", "type": "weapon", "effect": 48, "price": 3400, "special": "Chain lightning effect", "source": "Fulmen, Storm Emperor", "element": "Fulmen"},
     {"name": "Earthshaker Maul", "type": "weapon", "effect": 58, "price": 3600, "special": "Stuns enemies", "source": "Terra, Earth Colossus", "element": "Gē"},
     {"name": "Tidecaller Trident", "type": "weapon", "effect": 50, "price": 3300, "special": "Drowns enemies", "source": "Aquarius, Tide Master", "element": "Aqua"},
-    
+
     {"name": "Inferno Plate", "type": "armor", "effect": 45, "price": 3800, "special": "Fire resistance", "source": "Ignis, Lord of Flames", "element": "Ignis"},
     {"name": "Glacier Mail", "type": "armor", "effect": 42, "price": 3500, "special": "Ice resistance", "source": "Glacies, Frost Sovereign", "element": "Glacies"},
     {"name": "Thunderstorm Garb", "type": "armor", "effect": 40, "price": 3600, "special": "Lightning resistance", "source": "Fulmen, Storm Emperor", "element": "Fulmen"},
     {"name": "Mountain's Heart Plate", "type": "armor", "effect": 48, "price": 3900, "special": "Earth resistance", "source": "Terra, Earth Colossus", "element": "Gē"},
     {"name": "Deep Sea Armor", "type": "armor", "effect": 43, "price": 3700, "special": "Water resistance", "source": "Aquarius, Tide Master", "element": "Aqua"},
-    
+
     # === Four Horsemen Equipment ===
     {"name": "Victor's Bow", "type": "weapon", "effect": 65, "price": 8000, "special": "Always strikes first", "source": "Conquest, The White Rider", "element": "Lux"},
     {"name": "Warlord's Greatsword", "type": "weapon", "effect": 75, "price": 8500, "special": "Causes bleeding", "source": "War, The Red Rider", "element": "Ignis"},
     {"name": "Famine's Scythe", "type": "weapon", "effect": 70, "price": 8200, "special": "Drains life", "source": "Famine, The Black Rider", "element": "Gē"},
     {"name": "Death's Reaper", "type": "weapon", "effect": 85, "price": 9000, "special": "Instant death chance", "source": "Death, The Pale Rider", "element": "Nullum"},
-    
+
     {"name": "Armor of Conquest", "type": "armor", "effect": 60, "price": 8200, "special": "Victory aura", "source": "Conquest, The White Rider", "element": "Lux"},
     {"name": "Blood-Soaked Plate", "type": "armor", "effect": 65, "price": 8500, "special": "Returns damage", "source": "War, The Red Rider", "element": "Ignis"},
     {"name": "Withering Mail", "type": "armor", "effect": 62, "price": 8300, "special": "Weakens attackers", "source": "Famine, The Black Rider", "element": "Gē"},
@@ -2323,21 +2312,21 @@ monsters = [
     {"name": "Chaos Spawn", "level": 33, "health": 3300, "attack": 430, "drops": ["Chaos Shard", "Spawn Crystal", "Gold Coin"], "element": "Nullum", "immunities": []},
     {"name": "Abyss Dweller", "level": 38, "health": 3800, "attack": 480, "drops": ["Dweller's Heart", "Abyssal Fragment", "Gold Coin"], "element": "Aqua", "immunities": ["Aqua"]},
     {"name": "Void Dragon", "level": 45, "health": 5000, "attack": 600, "drops": ["Void Dragon Scale", "Void Crown", "Gold Coin"], "boss": True, "element": "Tenebrae", "immunities": ["Tenebrae", "Lux"]},
-    
+
     # New Mid-Level Bosses (15-25)
     {"name": "Archmage Zephyrius", "level": 15, "health": 800, "attack": 120, "drops": ["Zephyr Staff", "Wind Crystal", "Gold Coin"], "boss": True, "element": "Pneuma", "immunities": ["Pneuma"], "special_ability": "Summons tornadoes that deal area damage"},
     {"name": "Warlord Magmar", "level": 18, "health": 950, "attack": 140, "drops": ["Magma Battleaxe", "Molten Core", "Gold Coin"], "boss": True, "element": "Ignis", "immunities": ["Ignis"], "special_ability": "Enrages at low health, increasing attack by 50%"},
     {"name": "Lady Crystallia", "level": 20, "health": 1100, "attack": 150, "drops": ["Crystal Scepter", "Diamond Heart", "Gold Coin"], "boss": True, "element": "Gē", "immunities": ["Gē"], "special_ability": "Creates crystal shields that must be broken first"},
     {"name": "Admiral Hydros", "level": 22, "health": 1250, "attack": 160, "drops": ["Trident of the Deep", "Abyssal Pearl", "Gold Coin"], "boss": True, "element": "Aqua", "immunities": ["Aqua"], "special_ability": "Summons tidal waves that push players back"},
     {"name": "Necrolord Morbius", "level": 25, "health": 1400, "attack": 175, "drops": ["Death's Embrace", "Soul Gem", "Gold Coin"], "boss": True, "element": "Tenebrae", "immunities": ["Tenebrae"], "special_ability": "Resurrects fallen minions to fight alongside him"},
-    
+
     # New High-Level Bosses (35-50)
     {"name": "The Celestial Arbiter", "level": 35, "health": 3500, "attack": 300, "drops": ["Astral Judgment", "Star Fragment", "Gold Coin"], "boss": True, "element": "Lux", "immunities": ["Lux"], "special_ability": "Can banish players temporarily from battle"},
     {"name": "Queen Titania of the Fae", "level": 38, "health": 3800, "attack": 320, "drops": ["Titania's Blessing", "Fae Crown", "Gold Coin"], "boss": True, "element": "Vita", "immunities": ["Vita"], "special_ability": "Charms players to fight for her temporarily"},
     {"name": "Overlord Infernus", "level": 40, "health": 4200, "attack": 350, "drops": ["Infernal Mantle", "Demon's Heart", "Gold Coin"], "boss": True, "element": "Ignis", "immunities": ["Ignis", "Aqua"], "special_ability": "Sets the battlefield ablaze, causing damage over time"},
     {"name": "The World Serpent", "level": 45, "health": 4800, "attack": 380, "drops": ["Serpent Scale Mail", "Primordial Fang", "Gold Coin"], "boss": True, "element": "Venēnum", "immunities": ["Venēnum", "Gē"], "special_ability": "Coils around players, reducing their movement and attack speed"},
     {"name": "Chronos, Master of Time", "level": 48, "health": 5200, "attack": 400, "drops": ["Timekeeper's Watch", "Crystallized Time", "Gold Coin"], "boss": True, "element": "Nullum", "immunities": ["Nullum"], "special_ability": "Can rewind time to heal himself or reset player abilities"},
-    
+
     # Ultimate Bosses (50+)
     {"name": "The Void Empress", "level": 50, "health": 6000, "attack": 500, "drops": ["Void Empress Crown", "Black Hole Core", "Void-Touched Weapon", "Gold Coin"], "boss": True, "element": "Tenebrae", "immunities": ["Tenebrae", "Lux", "Pneuma"], "special_ability": "Creates zones of emptiness that nullify all abilities"},
     {"name": "Primal Elemental Titan", "level": 55, "health": 7000, "attack": 550, "drops": ["Primal Essence", "Elemental Heart", "Titan's Greatsword", "Gold Coin"], "boss": True, "element": "Nullum", "immunities": [], "special_ability": "Changes elemental affinity throughout battle"},
@@ -2346,20 +2335,20 @@ monsters = [
     {"name": "Time Keeper", "level": 42, "health": 4500, "attack": 550, "drops": ["Chronos Crystal", "Time Keeper's Staff", "Gold Coin"], "boss": True, "element": "Aer", "immunities": ["Aer"]},
     {"name": "Celestial Titan", "level": 48, "health": 5500, "attack": 650, "drops": ["Celestial Heart", "Titan's Crown", "Gold Coin"], "boss": True, "element": "Lux", "immunities": ["Lux"]},
     {"name": "Dimensional Horror", "level": 50, "health": 6000, "attack": 700, "drops": ["Horror Essence", "Dimensional Shard", "Gold Coin"], "boss": True, "element": "Tenebrae", "immunities": ["Tenebrae", "Lux"]},
-    
+
     # New Elemental Lords bosses
     {"name": "Ignis, Lord of Flames", "level": 38, "health": 3800, "attack": 480, "drops": ["Heart of Fire", "Blazing Crown", "Gold Coin"], "boss": True, "element": "Ignis", "immunities": ["Ignis"]},
     {"name": "Glacies, Frost Sovereign", "level": 38, "health": 3800, "attack": 460, "drops": ["Core of Ice", "Frozen Crown", "Gold Coin"], "boss": True, "element": "Glacies", "immunities": ["Glacies"]},
     {"name": "Fulmen, Storm Emperor", "level": 38, "health": 3700, "attack": 490, "drops": ["Lightning Heart", "Storm Crown", "Gold Coin"], "boss": True, "element": "Fulmen", "immunities": ["Fulmen"]},
     {"name": "Terra, Earth Colossus", "level": 38, "health": 4000, "attack": 450, "drops": ["Earth Core", "Mountain Crown", "Gold Coin"], "boss": True, "element": "Gē", "immunities": ["Gē"]},
     {"name": "Aquarius, Tide Master", "level": 38, "health": 3800, "attack": 470, "drops": ["Ocean Heart", "Coral Crown", "Gold Coin"], "boss": True, "element": "Aqua", "immunities": ["Aqua"]},
-    
+
     # Four Horsemen boss series
     {"name": "Conquest, The White Rider", "level": 52, "health": 5500, "attack": 700, "drops": ["White Bow", "Victor's Crown", "Gold Coin"], "boss": True, "element": "Lux", "immunities": ["Lux", "Tenebrae"]},
     {"name": "War, The Red Rider", "level": 54, "health": 5800, "attack": 750, "drops": ["Bloodthirsty Blade", "Warlord's Crown", "Gold Coin"], "boss": True, "element": "Ignis", "immunities": ["Ignis", "Aqua"]},
     {"name": "Famine, The Black Rider", "level": 56, "health": 6000, "attack": 720, "drops": ["Scales of Balance", "Crown of Hunger", "Gold Coin"], "boss": True, "element": "Gē", "immunities": ["Gē", "Viridia"]},
     {"name": "Death, The Pale Rider", "level": 60, "health": 7000, "attack": 800, "drops": ["Soul Scythe", "Pale Crown", "Gold Coin", "Final Judgment"], "boss": True, "element": "Nullum", "immunities": ["Tenebrae", "Lux"]},
-    
+
     # New minions for elemental lords and horsemen
     {"name": "Winter Wolf", "level": 34, "health": 3400, "attack": 400, "drops": ["Wolf Fang", "Frost Crystal", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"]},
     {"name": "Lightning Elemental", "level": 34, "health": 3300, "attack": 420, "drops": ["Charged Crystal", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
@@ -2370,7 +2359,7 @@ monsters = [
     {"name": "Reaper's Assistant", "level": 56, "health": 5600, "attack": 680, "drops": ["Soul Fragment", "Gold Coin"], "element": "Tenebrae", "immunities": ["Tenebrae"]},
     {"name": "Temporal Guardian", "level": 40, "health": 4000, "attack": 500, "drops": ["Paradox Shard", "Gold Coin"], "element": "Aer", "immunities": ["Aer"]},
     {"name": "Astral Entity", "level": 44, "health": 4400, "attack": 550, "drops": ["Star Fragment", "Gold Coin"], "element": "Lux", "immunities": ["Lux"]},
-    
+
     # Weather-dependent monsters
     {"name": "Lightning Wyvern", "level": 20, "health": 1200, "attack": 180, "drops": ["Storm Scale", "Lightning Crystal", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"], "weather": "Stormy"},
     {"name": "Mist Wraith", "level": 18, "health": 900, "attack": 150, "drops": ["Ethereal Essence", "Ghost Cloth", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"], "weather": "Foggy"},
@@ -2379,20 +2368,20 @@ monsters = [
     {"name": "Gale Harpy", "level": 19, "health": 950, "attack": 160, "drops": ["Razor Feather", "Wind Crystal", "Gold Coin"], "element": "Aer", "immunities": ["Aer"], "weather": "Windy"},
     {"name": "Mud Golem", "level": 20, "health": 1250, "attack": 165, "drops": ["Clay Core", "Mud Stone", "Gold Coin"], "element": "Gē", "immunities": ["Gē"], "weather": "Rainy"},
     {"name": "Cloud Skimmer", "level": 19, "health": 980, "attack": 155, "drops": ["Cloud Fragment", "Sky Essence", "Gold Coin"], "element": "Aer", "immunities": ["Aer"], "weather": "Cloudy"},
-    
+
     # Seasonal monsters
     {"name": "Winter Frost Monarch", "level": 25, "health": 1500, "attack": 200, "drops": ["Frost Crown", "Winter Essence", "Gold Coin"], "element": "Glacies", "immunities": ["Glacies"], "season": "Winter"},
     {"name": "Spring Bloom Guardian", "level": 24, "health": 1400, "attack": 190, "drops": ["Petal Crown", "Spring Essence", "Gold Coin"], "element": "Viridia", "immunities": ["Viridia"], "season": "Spring"},
     {"name": "Summer Flame Salamander", "level": 26, "health": 1550, "attack": 210, "drops": ["Burning Scale", "Summer Essence", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"], "season": "Summer"},
     {"name": "Autumn Harvest Keeper", "level": 25, "health": 1450, "attack": 195, "drops": ["Harvest Crown", "Autumn Essence", "Gold Coin"], "element": "Gē", "immunities": ["Gē"], "season": "Autumn"},
-    
+
     # Farming quest monsters
     {"name": "Gargantuan Turnip", "level": 15, "health": 500, "attack": 80, "drops": ["Giant Turnip Seeds", "Vegetable Essence", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
     {"name": "Crop Devourer", "level": 18, "health": 800, "attack": 120, "drops": ["Fertilizer", "Pest Control", "Gold Coin"], "element": "Venēnum", "immunities": ["Venēnum"]},
     {"name": "Soil Defiler", "level": 20, "health": 900, "attack": 150, "drops": ["Purified Soil", "Earth Crystal", "Gold Coin"], "element": "Gē", "immunities": ["Gē"]},
     {"name": "Phantom Scarecrow", "level": 22, "health": 1000, "attack": 170, "drops": ["Enchanted Straw", "Fear Essence", "Gold Coin"], "element": "Pneuma", "immunities": ["Pneuma"]},
     {"name": "Berry Behemoth", "level": 16, "health": 600, "attack": 100, "drops": ["Giant Berry Seeds", "Fruit Essence", "Gold Coin"], "element": "Viridia", "immunities": ["Viridia"]},
-    
+
     # Elemental infusion monsters
     {"name": "Thunderstruck Wolf", "level": 28, "health": 1700, "attack": 230, "drops": ["Charged Pelt", "Shock Fang", "Gold Coin"], "element": "Fulmen", "immunities": ["Fulmen"]},
     {"name": "Molten Spider", "level": 27, "health": 1600, "attack": 220, "drops": ["Heat-resistant Silk", "Lava Venom", "Gold Coin"], "element": "Ignis", "immunities": ["Ignis"]},
@@ -2496,7 +2485,7 @@ def check_achievements():
             "reward": {"gold": 5000, "exp": 5000, "stat_bonus": {"attack": 10, "defense": 5}, "item": "Hunter's Trophy"},
             "icon": "🏆"
         },
-        
+
         # Boss Achievements
         {
             "id": "boss_challenge",
@@ -2528,7 +2517,7 @@ def check_achievements():
             "reward": {"gold": 3000, "exp": 4000, "stat_bonus": {"attack": 7, "defense": 7}, "item": "Boss Master's Crown"},
             "icon": "👑"
         },
-        
+
         # Skill Achievements
         {
             "id": "skill_novice",
@@ -2560,7 +2549,7 @@ def check_achievements():
             "reward": {"exp": 2000, "stat_bonus": {"intellect": 10}, "item": "Spellbinder's Tome"},
             "icon": "🌟"
         },
-        
+
         # Combo Achievements
         {
             "id": "combo_striker",
@@ -2592,7 +2581,7 @@ def check_achievements():
             "reward": {"exp": 3000, "stat_bonus": {"speed": 10, "attack": 7}, "item": "Combo Master's Gloves"},
             "icon": "🌪️"
         },
-        
+
         # Critical Hit Achievements
         {
             "id": "critical_striker",
@@ -2624,7 +2613,7 @@ def check_achievements():
             "reward": {"exp": 2000, "stat_bonus": {"critical_chance": 0.1}, "item": "Precision Scope"},
             "icon": "💥"
         },
-        
+
         # Wealth Achievements
         {
             "id": "gold_collector",
@@ -2666,7 +2655,7 @@ def check_achievements():
             "reward": {"exp": 10000, "stat_bonus": {"charisma": 20}, "item": "Midas Touch Gloves"},
             "icon": "🏛️"
         },
-        
+
         # Experience Achievements
         {
             "id": "level_up",
@@ -2708,7 +2697,7 @@ def check_achievements():
             "reward": {"gold": 5000, "stat_bonus": {"health": 100, "attack": 10, "defense": 10}, "item": "Legendary Cape"},
             "icon": "🌟"
         },
-        
+
         # Exploration Achievements
         {
             "id": "explorer_novice",
@@ -2750,7 +2739,7 @@ def check_achievements():
             "reward": {"exp": 3000, "gold": 2000, "stat_bonus": {"speed": 10, "charisma": 5}, "item": "World Map"},
             "icon": "🌐"
         },
-        
+
         # Collection Achievements
         {
             "id": "collector",
@@ -2782,7 +2771,7 @@ def check_achievements():
             "reward": {"gold": 1500, "exp": 2000, "item": "Collector's Bag"},
             "icon": "🎒"
         },
-        
+
         # Crafting Achievements
         {
             "id": "apprentice_crafter",
@@ -2814,7 +2803,7 @@ def check_achievements():
             "reward": {"exp": 1500, "stat_bonus": {"crafting": 10}, "item": "Artisan's Tools"},
             "icon": "🛠️"
         },
-        
+
         # Quest Achievements
         {
             "id": "quest_beginner",
@@ -2846,7 +2835,7 @@ def check_achievements():
             "reward": {"exp": 2000, "gold": 1500, "item": "Quest Master's Journal"},
             "icon": "📚"
         },
-        
+
         # Dungeon Achievements
         {
             "id": "dungeon_novice",
@@ -2878,7 +2867,7 @@ def check_achievements():
             "reward": {"exp": 3000, "gold": 2000, "stat_bonus": {"defense": 8}, "item": "Dungeon Key"},
             "icon": "🔑"
         },
-        
+
         # Survival Achievements
         {
             "id": "survivor",
@@ -2911,20 +2900,20 @@ def check_achievements():
             "icon": "💨"
         }
     ]
-    
+
     # Check each achievement
     newly_unlocked = []
-    
+
     for achievement in ACHIEVEMENTS:
         achievement_id = achievement["id"]
-        
+
         # Skip if already unlocked
         if achievement_id in user_data["achievements"]["unlocked"]:
             continue
-            
+
         # Check if achievement is unlocked based on requirement
         requirement_met = False
-        
+
         # Handle lambda requirements (custom conditions)
         if callable(achievement.get("requirement")):
             requirement_met = achievement["requirement"]()
@@ -2941,16 +2930,16 @@ def check_achievements():
                 elif user_data["achievements"]["progress"].get(stat, 0) < required_value:
                     requirement_met = False
                     break
-                    
+
         # If requirement is met, unlock achievement
         if requirement_met:
             # Unlock the achievement
             user_data["achievements"]["unlocked"].append(achievement_id)
             newly_unlocked.append(achievement)
-            
+
             # Apply rewards
             grant_achievement_rewards(achievement)
-    
+
     # Display newly unlocked achievements with fancy UI
     if newly_unlocked:
         print_animated(f"\n{BG_YELLOW}{BLACK} ACHIEVEMENTS UNLOCKED! {ENDC}", delay=0.05)
@@ -2958,9 +2947,9 @@ def check_achievements():
             icon = achievement.get("icon", "🏆")
             tier = achievement.get("tier", 1)
             tier_color = [WHITE, LIGHTGREEN, LIGHTBLUE, LIGHTMAGENTA, LIGHTYELLOW][min(tier, 4)]
-            
+
             print_animated(f"{tier_color}{icon} {achievement['name']}{ENDC} - {achievement['description']}", delay=0.03)
-            
+
             # Show rewards
             if "reward" in achievement:
                 reward_str = "Rewards: "
@@ -2982,45 +2971,45 @@ def update_achievement_progress():
     """Update and track progress towards achievements"""
     # Update achievement stats based on user_data
     user_stats = user_data["achievements"]["progress"]
-    
+
     # Combat stats
     user_stats["monsters_killed"] = user_data.get("monsters_killed", 0)
     user_stats["bosses_defeated"] = user_data.get("bosses_defeated", 0)
     user_stats["critical_hits"] = user_data.get("critical_hits", 0)
     user_stats["combo_finishers"] = user_data.get("combo_finishers", 0)
     user_stats["skills_used"] = user_data.get("skills_used", 0)
-    
+
     # Wealth stats
     user_stats["total_gold_earned"] = user_data.get("total_gold_earned", user_data.get("gold", 0))
     user_stats["gold_spent"] = user_data.get("gold_spent", 0)
-    
+
     # Experience stats (level is directly accessed)
-    
+
     # Exploration stats
     if "visited_locations" not in user_stats:
         user_stats["visited_locations"] = set()
     if "current_area" in user_data:
         user_stats["visited_locations"].add(user_data["current_area"])
     user_stats["distance_traveled"] = user_data.get("distance_traveled", 0)
-    
+
     # Collection stats
     user_stats["items_collected"] = len(user_data.get("inventory", []))
     user_stats["treasure_chests_opened"] = user_data.get("treasure_chests_opened", 0)
-    
+
     # Crafting stats
     user_stats["items_crafted"] = user_data.get("items_crafted", 0)
-    
+
     # Quest stats
     user_stats["quests_completed"] = len(user_data.get("completed_quests", []))
-    
+
     # Dungeon stats
     user_stats["dungeons_completed"] = len(user_data.get("completed_dungeons", []))
-    
+
     # Other stats
     user_stats["potions_used"] = user_data.get("potions_used", 0)
     user_stats["deaths"] = user_data.get("deaths", 0)
     user_stats["enemies_dodged"] = user_data.get("enemies_dodged", 0)
-    
+
     # Ensure all_collected_items exists for tracking unique items
     if "all_collected_items" not in user_data:
         user_data["all_collected_items"] = []
@@ -3030,17 +3019,17 @@ def update_achievement_progress():
 def grant_achievement_rewards(achievement):
     """Apply rewards from unlocking an achievement"""
     global user_data
-    
+
     if "reward" not in achievement:
         return
-        
+
     reward = achievement["reward"]
-    
+
     # Apply gold reward
     if "gold" in reward:
         user_data["gold"] += reward["gold"]
         print_animated(f"  {LIGHTYELLOW}+{reward['gold']} Gold{ENDC}", delay=0.02)
-        
+
     # Apply experience reward
     if "exp" in reward:
         old_level = user_data["level"]
@@ -3051,18 +3040,18 @@ def grant_achievement_rewards(achievement):
         # Note if level up occurred
         if user_data["level"] > old_level:
             print_animated(f"  {BG_GREEN}{BLACK} LEVEL UP! {ENDC} You are now level {user_data['level']}!", delay=0.03)
-        
+
     # Add item reward
     if "item" in reward:
         item_name = reward["item"]
         user_data["inventory"].append(item_name)
         print_animated(f"  {LIGHTMAGENTA}Received {item_name}{ENDC}", delay=0.02)
-        
+
         # Track item collection for achievement tracking
         if "all_collected_items" not in user_data:
             user_data["all_collected_items"] = []
         user_data["all_collected_items"].append(item_name)
-        
+
     # Apply stat bonuses
     if "stat_bonus" in reward:
         for stat, value in reward["stat_bonus"].items():
@@ -3091,10 +3080,10 @@ def show_achievements():
             "unlocked": [],
             "progress": {}
         }
-    
+
     # Update achievement progress before showing
     update_achievement_progress()
-    
+
     # Get all achievements organized by category
     all_achievements = {
         "Combat": [],
@@ -3107,65 +3096,65 @@ def show_achievements():
         "Dungeons": [],
         "Survival": []
     }
-    
+
     # Dynamically generate the achievements list based on the ACHIEVEMENTS constant
     for achievement in ACHIEVEMENTS:
         # Ensure we have proper dictionary objects for achievements
         if not isinstance(achievement, dict):
             # Skip non-dictionary achievements to prevent typing errors
             continue
-            
+
         # Explicitly cast to proper types to avoid LSP errors
         achievement_dict = achievement  # Type hint now recognizes this as a dictionary
-        
+
         # Get category with a safer approach using get()
         category = achievement_dict.get("category", "Other")
-            
+
         if category in all_achievements:
             all_achievements[category].append(achievement_dict)
-    
+
     # Count total and unlocked achievements
     total_achievements = len(ACHIEVEMENTS)
     unlocked_count = len(user_data["achievements"]["unlocked"])
     completion_pct = unlocked_count / total_achievements * 100 if total_achievements > 0 else 0
-    
+
     # Display achievements screen
     print_header("Achievements")
-    
+
     # Show completion summary
     print(f"{BOLD}Achievements Unlocked:{ENDC} {LIGHTCYAN}{unlocked_count}/{total_achievements}{ENDC} ({completion_pct:.1f}%)")
-    
+
     # Show achievement progress bar
     progress_bar = create_progress_bar(completion_pct/100, 40)
     print(f"{progress_bar}\n")
-    
+
     # Show achievement categories
     categories = list(all_achievements.keys())
-    
+
     # Ask which category to display
     print(f"{BOLD}Categories:{ENDC}")
     for i, category in enumerate(categories, 1):
         cat_achievements = all_achievements[category]
         if not cat_achievements:
             continue
-            
+
         cat_unlocked = len([a for a in cat_achievements if a["id"] in user_data["achievements"]["unlocked"]])
         cat_total = len(cat_achievements)
         cat_pct = cat_unlocked / cat_total * 100 if cat_total > 0 else 0
         cat_color = get_completion_color(cat_pct)
-        
+
         print(f"{i}. {cat_color}{category}{ENDC} - {cat_unlocked}/{cat_total} ({cat_pct:.1f}%)")
-    
+
     # Add option to show all
     all_option = len(categories) + 1
     print(f"{all_option}. {CYAN}Show All{ENDC}")
     print(f"{all_option + 1}. {YELLOW}Back{ENDC}")
-    
+
     # Get user choice
     try:
         choice = input(f"\n{YELLOW}Choose category (1-{all_option + 1}): {ENDC}")
         choice = int(choice)
-        
+
         if choice == all_option + 1:  # Back
             return
         elif choice == all_option:  # Show all
@@ -3181,7 +3170,7 @@ def show_achievements():
 def show_category_achievements(category, achievements):
     """Show achievements for a specific category"""
     print_header(f"{category} Achievements")
-    
+
     # Group by tier
     by_tier = {}
     for achievement in achievements:
@@ -3189,49 +3178,49 @@ def show_category_achievements(category, achievements):
         if tier not in by_tier:
             by_tier[tier] = []
         by_tier[tier].append(achievement)
-    
+
     # Display by tier (ascending)
     for tier in sorted(by_tier.keys()):
         tier_name = ["Beginner", "Intermediate", "Advanced", "Expert", "Master"][min(tier - 1, 4)]
         tier_color = [GREEN, CYAN, BLUE, MAGENTA, YELLOW][min(tier - 1, 4)]
-        
+
         print(f"\n{tier_color}{BOLD}Tier {tier}: {tier_name}{ENDC}")
-        
+
         for achievement in by_tier[tier]:
             display_achievement(achievement)
-    
+
     input(f"\n{YELLOW}Press Enter to continue...{ENDC}")
 
 def show_all_achievements(all_achievements):
     """Show all achievements grouped by category"""
     print_header("All Achievements")
-    
+
     for category, achievements in all_achievements.items():
         if not achievements:
             continue
-            
+
         cat_unlocked = len([a for a in achievements if a["id"] in user_data["achievements"]["unlocked"]])
         cat_total = len(achievements)
-        
+
         print(f"\n{BOLD}{CYAN}{category}{ENDC} ({cat_unlocked}/{cat_total})")
         print(f"{CYAN}{'-' * (len(category) + 2)}{ENDC}")
-        
+
         for achievement in achievements:
             display_achievement(achievement, short=True)
-    
+
     input(f"\n{YELLOW}Press Enter to continue...{ENDC}")
 
 def display_achievement(achievement, short=False):
     """Display a single achievement with its status and progress"""
     achievement_id = achievement["id"]
     is_unlocked = achievement_id in user_data["achievements"]["unlocked"]
-    
+
     # Get achievement details
     name = achievement["name"]
     description = achievement["description"]
     icon = achievement.get("icon", "🏆")
     tier = achievement.get("tier", 1)
-    
+
     # Determine colors based on tier and unlock status
     if is_unlocked:
         tier_color = [LIGHTGREEN, LIGHTCYAN, LIGHTBLUE, LIGHTMAGENTA, LIGHTYELLOW][min(tier - 1, 4)]
@@ -3239,33 +3228,33 @@ def display_achievement(achievement, short=False):
     else:
         tier_color = GREY
         status_icon = "☐"
-    
+
     # Display basic info
     if short:
         print(f"{tier_color}{status_icon} {icon} {name}{ENDC}")
     else:
         print(f"{tier_color}{status_icon} {icon} {name}{ENDC} - {description}")
-    
+
     # If not unlocked, show progress (if progress tracking is available)
     if not is_unlocked and not short and isinstance(achievement.get("requirement"), dict):
         for stat, required_value in achievement["requirement"].items():
             current_value = 0
-            
+
             # Handle set-type stats (like areas_visited)
             if stat == "areas_visited" and isinstance(user_data["achievements"]["progress"].get(stat), set):
                 current_value = len(user_data["achievements"]["progress"].get(stat, set()))
             else:
                 current_value = user_data["achievements"]["progress"].get(stat, 0)
-                
+
             progress_pct = min(1.0, current_value / required_value)
             progress_bar = create_progress_bar(progress_pct, 20)
             print(f"  Progress: {current_value}/{required_value} {progress_bar}")
-    
+
     # Show rewards if not short view
     if not short and "reward" in achievement:
         reward = achievement["reward"]
         reward_parts = []
-        
+
         if "gold" in reward:
             reward_parts.append(f"{LIGHTYELLOW}{reward['gold']} Gold{ENDC}")
         if "exp" in reward:
@@ -3279,7 +3268,7 @@ def display_achievement(achievement, short=False):
                     reward_parts.append(f"{LIGHTCYAN}+{value*100}% Crit Chance{ENDC}")
                 else:
                     reward_parts.append(f"{LIGHTCYAN}+{value} {stat_name}{ENDC}")
-                
+
         if reward_parts:
             print(f"  Rewards: {', '.join(reward_parts)}")
 
@@ -3287,14 +3276,14 @@ def create_progress_bar(percentage, length=20):
     """Create a visual progress bar with gradients"""
     filled_length = int(length * percentage)
     empty_length = length - filled_length
-    
+
     if percentage < 0.3:
         color = RED
     elif percentage < 0.7:
         color = YELLOW
     else:
         color = GREEN
-        
+
     bar = f"{color}{'█' * filled_length}{LIGHTGRAY}{'▒' * empty_length}{ENDC}"
     return bar
 
@@ -3691,7 +3680,7 @@ HOME_STRUCTURES = {
 def enchant_item() -> None:
     """Function to enchant weapons and armor with special effects"""
     print_header("Item Enchantment")
-    
+
     # Get list of enchantable equipment
     enchantable_items = []
     if "equipment" in user_data:
@@ -3699,15 +3688,15 @@ def enchant_item() -> None:
             # Skip already enchanted items unless they can be re-enchanted
             if item.get("enchantment") and not item.get("can_reenchant", False):
                 continue
-                
+
             # Only weapons, armor, and accessories can be enchanted
             if item.get("type") in ["weapon", "armor", "accessory"]:
                 enchantable_items.append(item)
-    
+
     if not enchantable_items:
         print_animated(f"{YELLOW}You don't have any items that can be enchanted.{ENDC}", delay=0.03)
         return
-    
+
     # Display enchantable items
     print_animated(f"{CYAN}Select an item to enchant:{ENDC}", delay=0.03)
     for i, item in enumerate(enchantable_items, 1):
@@ -3715,28 +3704,28 @@ def enchant_item() -> None:
         enchant_text = ""
         if item.get("enchantment"):
             enchant_text = f" (Currently: {LIGHTMAGENTA}{item['enchantment']['name']}{ENDC})"
-            
+
         print(f"{i}. {rarity_color}{item['name']}{ENDC}{enchant_text}")
-    
+
     print(f"{len(enchantable_items) + 1}. {YELLOW}Cancel{ENDC}")
-    
+
     # Get user selection
     try:
         choice = int(input(f"\n{YELLOW}Choose an item (1-{len(enchantable_items) + 1}): {ENDC}"))
         if choice == len(enchantable_items) + 1:
             print_animated(f"{YELLOW}Enchantment canceled.{ENDC}", delay=0.03)
             return
-            
+
         if 1 <= choice <= len(enchantable_items):
             selected_item = enchantable_items[choice - 1]
-            
+
             # Get available enchantments based on item type and player level
             available_enchants = get_available_enchantments(selected_item["type"], user_data["level"])
-            
+
             if not available_enchants:
                 print_animated(f"{YELLOW}No enchantments available for this item.{ENDC}", delay=0.03)
                 return
-            
+
             # Check if player has materials
             required_materials = {
                 "Common": {"Magical Dust": 5},
@@ -3745,10 +3734,10 @@ def enchant_item() -> None:
                 "Epic": {"Magical Dust": 30, "Enchanted Fragment": 10, "Arcane Crystal": 3, "Ethereal Essence": 1},
                 "Legendary": {"Magical Dust": 50, "Enchanted Fragment": 20, "Arcane Crystal": 5, "Ethereal Essence": 3}
             }
-            
+
             item_rarity = selected_item.get("rarity", "Common")
             materials_needed = required_materials.get(item_rarity, required_materials["Common"])
-            
+
             # Check if player has the materials
             has_materials = True
             for material, amount in materials_needed.items():
@@ -3756,41 +3745,41 @@ def enchant_item() -> None:
                 if count < amount:
                     has_materials = False
                     break
-            
+
             # Display enchantment options
             print_header(f"Enchant {selected_item['name']}")
-            
+
             # Show required materials
             print_animated(f"{CYAN}Required Materials:{ENDC}", delay=0.02)
             for material, amount in materials_needed.items():
                 current = user_data["inventory"].count(material)
                 color = GREEN if current >= amount else RED
                 print(f"- {material}: {color}{current}/{amount}{ENDC}")
-            
+
             if not has_materials:
                 print_animated(f"\n{RED}You don't have enough materials for enchanting.{ENDC}", delay=0.03)
                 return
-            
+
             print_animated(f"\n{CYAN}Available Enchantments:{ENDC}", delay=0.03)
             for i, enchant in enumerate(available_enchants, 1):
                 print(f"{i}. {LIGHTMAGENTA}{enchant['name']}{ENDC} - {enchant['description']}")
-            
+
             print(f"{len(available_enchants) + 1}. {YELLOW}Cancel{ENDC}")
-            
+
             # Get enchantment choice
             try:
                 enchant_choice = int(input(f"\n{YELLOW}Choose an enchantment (1-{len(available_enchants) + 1}): {ENDC}"))
                 if enchant_choice == len(available_enchants) + 1:
                     print_animated(f"{YELLOW}Enchantment canceled.{ENDC}", delay=0.03)
                     return
-                    
+
                 if 1 <= enchant_choice <= len(available_enchants):
                     selected_enchant = available_enchants[enchant_choice - 1]
-                    
+
                     # Apply enchantment
                     print_animated(f"{BG_MAGENTA}{WHITE} ENCHANTING... {ENDC}", delay=0.5)
                     print_animated(f"{LIGHTMAGENTA}Mystical energies swirl around the {selected_item['name']}...{ENDC}", delay=0.05)
-                    
+
                     # Calculate success chance based on rarity and player stats
                     success_chance = {
                         "Common": 0.95,
@@ -3799,11 +3788,11 @@ def enchant_item() -> None:
                         "Epic": 0.65,
                         "Legendary": 0.50
                     }.get(item_rarity, 0.95)
-                    
+
                     # Increase chance based on player stats
                     if "crafting" in user_data:
                         success_chance += min(0.3, user_data["crafting"] * 0.01)
-                    
+
                     # Roll for success
                     if random.random() < success_chance:
                         # Success!
@@ -3812,10 +3801,10 @@ def enchant_item() -> None:
                             "effect": selected_enchant["effect"],
                             "effect_value": selected_enchant["value"]
                         }
-                        
+
                         print_animated(f"\n{BG_GREEN}{BLACK} SUCCESS! {ENDC}", delay=0.03)
                         print_animated(f"Your {selected_item['name']} is now enchanted with {LIGHTMAGENTA}{selected_enchant['name']}{ENDC}!", delay=0.03)
-                        
+
                         # Apply the enchantment effect to the item's stats if applicable
                         if selected_enchant["effect"] == "damage":
                             if "effect" not in selected_item:
@@ -3825,29 +3814,29 @@ def enchant_item() -> None:
                             if "effect" not in selected_item:
                                 selected_item["effect"] = 0
                             selected_item["effect"] += selected_enchant["value"]
-                            
+
                         # Add element if the enchantment adds one
                         if "element" in selected_enchant:
                             selected_item["element"] = selected_enchant["element"]
-                        
+
                         # Update achievement stats
                         if "achievements" in user_data and "progress" in user_data["achievements"]:
                             if "items_enchanted" not in user_data["achievements"]["progress"]:
                                 user_data["achievements"]["progress"]["items_enchanted"] = 0
                             user_data["achievements"]["progress"]["items_enchanted"] += 1
-                            
+
                         # Check achievements
                         check_achievements()
                     else:
                         # Failure
                         print_animated(f"\n{BG_RED}{WHITE} FAILURE! {ENDC}", delay=0.03)
                         print_animated("The enchantment failed! The materials were consumed but the item remains unchanged.", delay=0.03)
-                    
+
                     # Consume materials
                     for material, amount in materials_needed.items():
                         for _ in range(amount):
                             user_data["inventory"].remove(material)
-                    
+
                 else:
                     print_animated(f"{YELLOW}Invalid enchantment choice.{ENDC}", delay=0.03)
             except ValueError:
@@ -3922,7 +3911,7 @@ def get_available_enchantments(item_type, player_level):
                 "min_level": 25
             }
         ],
-        
+
         # Armor enchantments
         "armor": [
             {
@@ -3982,7 +3971,7 @@ def get_available_enchantments(item_type, player_level):
                 "min_level": 25
             }
         ],
-        
+
         # Accessory enchantments
         "accessory": [
             {
@@ -4036,16 +4025,16 @@ def get_available_enchantments(item_type, player_level):
             }
         ]
     }
-    
+
     # Filter enchantments by level requirement
     available = [enchant for enchant in all_enchantments.get(item_type, []) if enchant["min_level"] <= player_level]
-    
+
     return available
 
 def upgrade_item() -> None:
     """Function to level up weapons and armor"""
     print_header("Item Upgrade")
-    
+
     # Get list of upgradable equipment
     upgradable_items = []
     if "equipment" in user_data:
@@ -4053,38 +4042,38 @@ def upgrade_item() -> None:
             # Only weapons, armor, and accessories can be upgraded
             if item.get("type") in ["weapon", "armor", "accessory"]:
                 upgradable_items.append(item)
-    
+
     if not upgradable_items:
         print_animated(f"{YELLOW}You don't have any items that can be upgraded.{ENDC}", delay=0.03)
         return
-    
+
     # Display upgradable items
     print_animated(f"{CYAN}Select an item to upgrade:{ENDC}", delay=0.03)
     for i, item in enumerate(upgradable_items, 1):
         rarity_color = get_rarity_color(item.get("rarity", "Common"))
         level_text = f" (Level {item.get('level', 1)})"
         print(f"{i}. {rarity_color}{item['name']}{ENDC}{level_text}")
-    
+
     print(f"{len(upgradable_items) + 1}. {YELLOW}Cancel{ENDC}")
-    
+
     # Get user selection
     try:
         choice = int(input(f"\n{YELLOW}Choose an item (1-{len(upgradable_items) + 1}): {ENDC}"))
         if choice == len(upgradable_items) + 1:
             print_animated(f"{YELLOW}Upgrade canceled.{ENDC}", delay=0.03)
             return
-            
+
         if 1 <= choice <= len(upgradable_items):
             selected_item = upgradable_items[choice - 1]
-            
+
             # Get current item level
             current_level = selected_item.get("level", 1)
             max_level = 10
-            
+
             if current_level >= max_level:
                 print_animated(f"{YELLOW}This item is already at maximum level.{ENDC}", delay=0.03)
                 return
-            
+
             # Calculate upgrade costs based on rarity and current level
             upgrade_costs = {
                 "Common": {"base_gold": 100, "materials": {"Iron Ingot": 2, "Leather": 1}},
@@ -4093,28 +4082,28 @@ def upgrade_item() -> None:
                 "Epic": {"base_gold": 1000, "materials": {"Gold Ingot": 2, "Enchanted Fragment": 3, "Magical Dust": 5}},
                 "Legendary": {"base_gold": 2500, "materials": {"Gold Ingot": 4, "Enchanted Fragment": 5, "Arcane Crystal": 2}}
             }
-            
+
             item_rarity = selected_item.get("rarity", "Common")
             base_cost = upgrade_costs.get(item_rarity, upgrade_costs["Common"])
-            
+
             # Scale gold cost based on level
             gold_cost = base_cost["base_gold"] * current_level
-            
+
             # Scale material costs
             materials_needed = {}
             for material, amount in base_cost["materials"].items():
                 materials_needed[material] = amount * current_level
-            
+
             # Display upgrade details
             print_header(f"Upgrade {selected_item['name']}")
-            
+
             print(f"Current Level: {CYAN}{current_level}{ENDC}")
             print(f"New Level: {GREEN}{current_level + 1}{ENDC}")
-            
+
             # Show stat improvements
             item_type = selected_item.get("type", "weapon")
             current_effect = selected_item.get("effect", 0)
-            
+
             if item_type == "weapon":
                 upgrade_bonus = 2 * current_level
                 print(f"Damage: {CYAN}{current_effect}{ENDC} → {GREEN}{current_effect + upgrade_bonus}{ENDC} (+{upgrade_bonus})")
@@ -4124,57 +4113,57 @@ def upgrade_item() -> None:
             else:  # accessory
                 upgrade_bonus = 1 * current_level
                 print(f"Effect: {CYAN}{current_effect}{ENDC} → {GREEN}{current_effect + upgrade_bonus}{ENDC} (+{upgrade_bonus})")
-            
+
             # Show costs
             print(f"\n{CYAN}Upgrade Cost:{ENDC}")
             print(f"- Gold: {LIGHTYELLOW}{gold_cost}{ENDC}")
-            
+
             # Check if player has enough gold
             has_gold = user_data["gold"] >= gold_cost
             gold_color = GREEN if has_gold else RED
             print(f"  {gold_color}You have: {user_data['gold']}{ENDC}")
-            
+
             print(f"{CYAN}Required Materials:{ENDC}")
             has_materials = True
             for material, amount in materials_needed.items():
                 current = user_data["inventory"].count(material)
                 if current < amount:
                     has_materials = False
-                
+
                 color = GREEN if current >= amount else RED
                 print(f"- {material}: {color}{current}/{amount}{ENDC}")
-            
+
             # Check if player can afford upgrade
             if not has_gold or not has_materials:
                 print_animated(f"\n{RED}You don't have enough resources for this upgrade.{ENDC}", delay=0.03)
                 return
-            
+
             # Ask for confirmation
             print()
             confirm = input(f"{YELLOW}Proceed with upgrade? (y/n): {ENDC}").lower()
             if confirm != 'y':
                 print_animated(f"{YELLOW}Upgrade canceled.{ENDC}", delay=0.03)
                 return
-            
+
             # Perform upgrade
             print_animated(f"{BG_CYAN}{BLACK} UPGRADING... {ENDC}", delay=0.5)
-            
+
             # Success chance decreases with higher levels
             success_chance = 1.0 - (current_level * 0.05)
-            
+
             # Improve chance based on crafting skill
             if "crafting" in user_data:
                 success_chance += min(0.3, user_data["crafting"] * 0.01)
-                
+
             # Cap success chance between 50% and 95%
             success_chance = max(0.5, min(0.95, success_chance))
-            
+
             # Roll for success
             if random.random() < success_chance:
                 # Success!
                 # Update item level
                 selected_item["level"] = current_level + 1
-                
+
                 # Update item stats based on type
                 if item_type == "weapon":
                     if "effect" not in selected_item:
@@ -4188,23 +4177,23 @@ def upgrade_item() -> None:
                     if "effect" not in selected_item:
                         selected_item["effect"] = 0
                     selected_item["effect"] += upgrade_bonus
-                
+
                 print_animated(f"\n{BG_GREEN}{BLACK} SUCCESS! {ENDC}", delay=0.03)
                 print_animated(f"Your {selected_item['name']} has been upgraded to level {selected_item['level']}!", delay=0.03)
-                
+
                 # Update achievement stats
                 if "achievements" in user_data and "progress" in user_data["achievements"]:
                     if "items_upgraded" not in user_data["achievements"]["progress"]:
                         user_data["achievements"]["progress"]["items_upgraded"] = 0
                     user_data["achievements"]["progress"]["items_upgraded"] += 1
-                    
+
                 # Check achievements
                 check_achievements()
             else:
                 # Failure - item remains the same but resources are consumed
                 print_animated(f"\n{BG_RED}{WHITE} FAILURE! {ENDC}", delay=0.03)
                 print_animated("The upgrade failed! The materials were consumed but the item remains unchanged.", delay=0.03)
-                
+
                 # Critical failure chance increases with level (small chance to downgrade or break)
                 critical_failure_chance = 0.05 * current_level
                 if random.random() < critical_failure_chance and current_level > 1:
@@ -4215,7 +4204,7 @@ def upgrade_item() -> None:
                     elif "enchantment" in selected_item:
                         del selected_item["enchantment"]
                         print_animated(f"{RED}The enchantment was lost in the failed upgrade attempt!{ENDC}", delay=0.03)
-            
+
             # Consume resources
             user_data["gold"] -= gold_cost
             for material, amount in materials_needed.items():
@@ -4233,12 +4222,12 @@ def open_chest(tier: str = "Common") -> None:
         tier: The rarity tier of the chest (Common, Uncommon, Rare, Epic, Legendary)
     """
     print_header(f"Opening {tier} Chest")
-    
+
     # Add visual effects based on chest rarity
     rarity_color = get_rarity_color(tier)
     print_animated(f"{BG_CYAN}{BLACK} OPENING CHEST... {ENDC}", delay=0.5)
     print_animated(f"{rarity_color}The {tier} chest creaks open, revealing its contents...{ENDC}", delay=0.05)
-    
+
     # Define loot tables for different chest tiers
     chest_contents = {
         # Standard rarity-based chests
@@ -4292,7 +4281,7 @@ def open_chest(tier: str = "Common") -> None:
             "artifact_chance": 0.75,
             "special_item_chance": 0.5
         },
-        
+
         # Specialized chests with themed contents
         "Weather": {
             "gold_range": (200, 800),
@@ -4361,71 +4350,71 @@ def open_chest(tier: str = "Common") -> None:
             "description": "A chest that seems to exist between dimensions, containing items beyond normal reality."
         }
     }
-    
+
     # Default to Common if tier not found
     chest_config = chest_contents.get(tier, chest_contents["Common"])
-    
+
     # Generate gold
     gold_min, gold_max = chest_config["gold_range"]
     gold_amount = random.randint(gold_min, gold_max)
-    
+
     # Generate items
     min_items, max_items = chest_config["item_count"]
     item_count = random.randint(min_items, max_items)
-    
+
     # Generate materials
     min_materials, max_materials = chest_config["material_count"]
     material_count = random.randint(min_materials, max_materials)
-    
+
     # Prepare lists for different types of loot
     loot_items = []
     loot_equipment = []
     loot_materials = []
-    
+
     # Common items pool
     common_items = [
         "Healing Potion", "Mana Potion", "Strength Potion", "Defense Potion", 
         "Speed Potion", "Antidote", "Torch", "Rope", "Bandage", "Food Ration"
     ]
-    
+
     # Material pools
     common_materials = [
         "Wood", "Stone", "Iron Ore", "Leather", "Cloth", "Bone", "Plant Fiber",
         "Coal", "Sand", "Clay"
     ]
-    
+
     uncommon_materials = [
         "Silver Ore", "Iron Ingot", "Silk", "Fur", "Feather", "Gem Shard", 
         "Hardwood", "Glass", "Saltpeter", "Hardened Leather"
     ]
-    
+
     rare_materials = [
         "Gold Ore", "Silver Ingot", "Gold Ingot", "Magical Dust", "Crystal Shard",
         "Enchanted Fragment", "Rare Herb", "Monster Essence", "Mystic Oil", "Rune Fragment"
     ]
-    
+
     epic_materials = [
         "Arcane Crystal", "Mythril Ore", "Dragon Scale", "Phoenix Feather",
         "Ethereal Essence", "Void Fragment", "Cosmic Dust", "Elemental Core",
         "Ancient Relic Piece", "Abyssal Pearl"
     ]
-    
+
     # Weapon types
     weapon_types = ["Sword", "Axe", "Dagger", "Staff", "Bow", "Wand", "Hammer", "Spear"]
-    
+
     # Armor types
     armor_types = ["Helmet", "Chestplate", "Leggings", "Boots", "Gauntlets", "Shield"]
-    
+
     # Accessory types
     accessory_types = ["Ring", "Amulet", "Charm", "Bracelet", "Belt", "Earring"]
-    
+
     # Add gold
     user_data["gold"] += gold_amount
-    
+
     # Add common items
     for _ in range(item_count):
         loot_items.append(random.choice(common_items))
-    
+
     # Add materials
     for _ in range(material_count):
         # Determine rarity of material
@@ -4438,12 +4427,12 @@ def open_chest(tier: str = "Common") -> None:
                 loot_materials.append(random.choice(uncommon_materials))
         else:
             loot_materials.append(random.choice(common_materials))
-    
+
     # Add equipment
     if random.random() < chest_config["equipment_chance"]:
         # Determine equipment type
         equip_type = random.choice(["weapon", "armor", "accessory"])
-        
+
         # Choose specific equipment
         if equip_type == "weapon":
             equip_name = random.choice(weapon_types)
@@ -4451,12 +4440,12 @@ def open_chest(tier: str = "Common") -> None:
             equip_name = random.choice(armor_types)
         else:  # accessory
             equip_name = random.choice(accessory_types)
-        
+
         # Determine rarity based on chest tier
         rarities = list(chest_config["rarity_weights"].keys())
         weights = list(chest_config["rarity_weights"].values())
         rarity = random.choices(rarities, weights=weights, k=1)[0]
-        
+
         # Generate prefix based on rarity
         prefixes = {
             "Common": ["Basic", "Simple", "Standard", "Plain", "Ordinary"],
@@ -4465,20 +4454,20 @@ def open_chest(tier: str = "Common") -> None:
             "Epic": ["Magnificent", "Heroic", "Superior", "Masterful", "Elite"],
             "Legendary": ["Ancient", "Mythical", "Godly", "Supreme", "Ultimate"]
         }
-        
+
         prefix = random.choice(prefixes[rarity])
-        
+
         # Determine if item has an element
         elements = ["Fire", "Water", "Earth", "Air", "Lightning", "Ice", "Light", "Dark"]
         has_element = random.random() < 0.3
         element = random.choice(elements) if has_element else None
-        
+
         # Build the full item name
         if element:
             full_name = f"{prefix} {element} {equip_name}"
         else:
             full_name = f"{prefix} {equip_name}"
-        
+
         # Calculate effect value based on rarity
         effect_value = {
             "Common": random.randint(1, 5),
@@ -4487,7 +4476,7 @@ def open_chest(tier: str = "Common") -> None:
             "Epic": random.randint(20, 30),
             "Legendary": random.randint(30, 50)
         }.get(rarity, 1)
-        
+
         # Create equipment object
         equipment = {
             "name": full_name,
@@ -4496,38 +4485,38 @@ def open_chest(tier: str = "Common") -> None:
             "effect": effect_value,
             "level": 1
         }
-        
+
         if element:
             equipment["element"] = element
-        
+
         loot_equipment.append(equipment)
-    
+
     # Update global tracker for achievements
     if "treasure_chests_opened" not in user_data:
         user_data["treasure_chests_opened"] = 0
     user_data["treasure_chests_opened"] += 1
-    
+
     # Update achievement progress
     if "achievements" in user_data and "progress" in user_data["achievements"]:
         if "treasure_chests_opened" not in user_data["achievements"]["progress"]:
             user_data["achievements"]["progress"]["treasure_chests_opened"] = 0
         user_data["achievements"]["progress"]["treasure_chests_opened"] += 1
-    
+
     # Display loot
     print_animated(f"\n{LIGHTYELLOW}You found {gold_amount} gold!{ENDC}", delay=0.03)
-    
+
     # Show equipment (most exciting first)
     if loot_equipment:
         print_animated(f"\n{CYAN}Equipment:{ENDC}", delay=0.03)
         for equip in loot_equipment:
             rarity_color = get_rarity_color(equip["rarity"])
             print_animated(f"- {rarity_color}{equip['name']}{ENDC} ({equip['rarity']} {equip['type'].capitalize()})", delay=0.03)
-            
+
             # Add to player's equipment
             if "equipment" not in user_data:
                 user_data["equipment"] = []
             user_data["equipment"].append(equip)
-    
+
     # Show materials
     if loot_materials:
         print_animated(f"\n{GREEN}Materials:{ENDC}", delay=0.03)
@@ -4535,14 +4524,14 @@ def open_chest(tier: str = "Common") -> None:
         material_counts = {}
         for material in loot_materials:
             material_counts[material] = material_counts.get(material, 0) + 1
-            
+
         for material, count in material_counts.items():
             print_animated(f"- {material} x{count}", delay=0.02)
-            
+
             # Add to inventory
             for _ in range(count):
                 user_data["inventory"].append(material)
-    
+
     # Show items
     if loot_items:
         print_animated(f"\n{LIGHTBLUE}Items:{ENDC}", delay=0.03)
@@ -4550,57 +4539,57 @@ def open_chest(tier: str = "Common") -> None:
         item_counts = {}
         for item in loot_items:
             item_counts[item] = item_counts.get(item, 0) + 1
-            
+
         for item, count in item_counts.items():
             print_animated(f"- {item} x{count}", delay=0.02)
-            
+
             # Add to inventory
             for _ in range(count):
                 user_data["inventory"].append(item)
-    
+
     # For tracking unique items for achievements
     new_items = set(loot_items + loot_materials + [equip["name"] for equip in loot_equipment])
     if "all_collected_items" not in user_data:
         user_data["all_collected_items"] = []
     user_data["all_collected_items"].extend(list(new_items))
-    
+
     common_materials = [
         "Wood", "Stone", "Iron Ore", "Leather", "Cloth", "Bone", "Plant Fiber",
         "Coal", "Sand", "Clay"
     ]
-    
+
     uncommon_materials = [
         "Silver Ore", "Iron Ingot", "Silk", "Fur", "Feather", "Gem Shard", 
         "Hardwood", "Glass", "Saltpeter", "Hardened Leather"
     ]
-    
+
     rare_materials = [
         "Gold Ore", "Silver Ingot", "Gold Ingot", "Magical Dust", "Crystal Shard",
         "Enchanted Fragment", "Rare Herb", "Monster Essence", "Mystic Oil", "Rune Fragment"
     ]
-    
+
     epic_materials = [
         "Arcane Crystal", "Mythril Ore", "Dragon Scale", "Phoenix Feather",
         "Ethereal Essence", "Void Fragment", "Cosmic Dust", "Elemental Core",
         "Ancient Relic Piece", "Abyssal Pearl"
     ]
-    
+
     # Weapon types
     weapon_types = ["Sword", "Axe", "Dagger", "Staff", "Bow", "Wand", "Hammer", "Spear"]
-    
+
     # Armor types
     armor_types = ["Helmet", "Chestplate", "Leggings", "Boots", "Gauntlets", "Shield"]
-    
+
     # Accessory types
     accessory_types = ["Ring", "Amulet", "Charm", "Bracelet", "Belt", "Earring"]
-    
+
     # Add gold
     user_data["gold"] += gold_amount
-    
+
     # Add common items
     for _ in range(item_count):
         loot_items.append(random.choice(common_items))
-    
+
     # Add materials
     for _ in range(material_count):
         # Determine rarity of material
@@ -4613,12 +4602,12 @@ def open_chest(tier: str = "Common") -> None:
                 loot_materials.append(random.choice(uncommon_materials))
         else:
             loot_materials.append(random.choice(common_materials))
-    
+
     # Add equipment
     if random.random() < chest_config["equipment_chance"]:
         # Determine equipment type
         equip_type = random.choice(["weapon", "armor", "accessory"])
-        
+
         # Choose specific equipment
         if equip_type == "weapon":
             equip_name = random.choice(weapon_types)
@@ -4626,12 +4615,12 @@ def open_chest(tier: str = "Common") -> None:
             equip_name = random.choice(armor_types)
         else:  # accessory
             equip_name = random.choice(accessory_types)
-        
+
         # Determine rarity based on chest tier
         rarities = list(chest_config["rarity_weights"].keys())
         weights = list(chest_config["rarity_weights"].values())
         rarity = random.choices(rarities, weights=weights, k=1)[0]
-        
+
         # Generate prefix based on rarity
         prefixes = {
             "Common": ["Basic", "Simple", "Standard", "Plain", "Ordinary"],
@@ -4640,20 +4629,20 @@ def open_chest(tier: str = "Common") -> None:
             "Epic": ["Magnificent", "Heroic", "Superior", "Masterful", "Elite"],
             "Legendary": ["Ancient", "Mythical", "Godly", "Supreme", "Ultimate"]
         }
-        
+
         prefix = random.choice(prefixes[rarity])
-        
+
         # Determine if item has an element
         elements = ["Fire", "Water", "Earth", "Air", "Lightning", "Ice", "Light", "Dark"]
         has_element = random.random() < 0.3
         element = random.choice(elements) if has_element else None
-        
+
         # Build the full item name
         if element:
             full_name = f"{prefix} {element} {equip_name}"
         else:
             full_name = f"{prefix} {equip_name}"
-        
+
         # Calculate effect value based on rarity
         effect_value = {
             "Common": random.randint(1, 5),
@@ -4662,7 +4651,7 @@ def open_chest(tier: str = "Common") -> None:
             "Epic": random.randint(20, 30),
             "Legendary": random.randint(30, 50)
         }.get(rarity, 1)
-        
+
         # Create equipment object
         equipment = {
             "name": full_name,
@@ -4671,38 +4660,38 @@ def open_chest(tier: str = "Common") -> None:
             "effect": effect_value,
             "level": 1
         }
-        
+
         if element:
             equipment["element"] = element
-        
+
         loot_equipment.append(equipment)
-    
+
     # Update global tracker for achievements
     if "treasure_chests_opened" not in user_data:
         user_data["treasure_chests_opened"] = 0
     user_data["treasure_chests_opened"] += 1
-    
+
     # Update achievement progress
     if "achievements" in user_data and "progress" in user_data["achievements"]:
         if "treasure_chests_opened" not in user_data["achievements"]["progress"]:
             user_data["achievements"]["progress"]["treasure_chests_opened"] = 0
         user_data["achievements"]["progress"]["treasure_chests_opened"] += 1
-    
+
     # Display loot
     print_animated(f"\n{LIGHTYELLOW}You found {gold_amount} gold!{ENDC}", delay=0.03)
-    
+
     # Show equipment (most exciting first)
     if loot_equipment:
         print_animated(f"\n{CYAN}Equipment:{ENDC}", delay=0.03)
         for equip in loot_equipment:
             rarity_color = get_rarity_color(equip["rarity"])
             print_animated(f"- {rarity_color}{equip['name']}{ENDC} ({equip['rarity']} {equip['type'].capitalize()})", delay=0.03)
-            
+
             # Add to player's equipment
             if "equipment" not in user_data:
                 user_data["equipment"] = []
             user_data["equipment"].append(equip)
-    
+
     # Show materials
     if loot_materials:
         print_animated(f"\n{GREEN}Materials:{ENDC}", delay=0.03)
@@ -4710,14 +4699,14 @@ def open_chest(tier: str = "Common") -> None:
         material_counts = {}
         for material in loot_materials:
             material_counts[material] = material_counts.get(material, 0) + 1
-            
+
         for material, count in material_counts.items():
             print_animated(f"- {material} x{count}", delay=0.02)
-            
+
             # Add to inventory
             for _ in range(count):
                 user_data["inventory"].append(material)
-    
+
     # Show items
     if loot_items:
         print_animated(f"\n{LIGHTBLUE}Items:{ENDC}", delay=0.03)
@@ -4725,23 +4714,23 @@ def open_chest(tier: str = "Common") -> None:
         item_counts = {}
         for item in loot_items:
             item_counts[item] = item_counts.get(item, 0) + 1
-            
+
         for item, count in item_counts.items():
             print_animated(f"- {item} x{count}", delay=0.02)
-            
+
             # Add to inventory
             for _ in range(count):
                 user_data["inventory"].append(item)
-    
+
     # For tracking unique items for achievements
     new_items = set(loot_items + loot_materials + [equip["name"] for equip in loot_equipment])
     if "all_collected_items" not in user_data:
         user_data["all_collected_items"] = []
     user_data["all_collected_items"].extend(list(new_items))
-    
+
     # Check achievements
     check_achievements()
-    
+
     print_animated(f"\n{GREEN}All items have been added to your inventory!{ENDC}", delay=0.03)
 
 def check_artifact_set_bonuses() -> Dict[str, Dict[int, Dict[str, Any]]]:
@@ -4776,7 +4765,7 @@ def check_artifact_set_bonuses() -> Dict[str, Dict[int, Dict[str, Any]]]:
         for set_name, bonuses in active_bonuses.items():
             for piece_count, bonus in bonuses.items():
                 print(f"{set_name} ({piece_count}-piece): " + ", ".join([f"{stat}: {value}" for stat, value in bonus.items()]))
-    
+
     return active_bonuses
 
 
@@ -5302,7 +5291,7 @@ ARTIFACT_SETS = {
             3: {"health_regen": 20, "mana_regen": 10, "nature_control": True}
         }
     },
-    
+
     # Weather Artifact Sets
     "Storm Chaser": {
         "pieces": ["Lightning Headpiece", "Thunder Pendant", "Cyclone Ring", "Storm Feather"],
@@ -5337,7 +5326,7 @@ ARTIFACT_SETS = {
         "weather": "Snowy",
         "description": "Artifacts that harness the biting cold of winter storms."
     },
-    
+
     # Seasonal Artifact Sets
     "Spring Renewal": {
         "pieces": ["Blossom Crown", "Renewal Pendant", "Growth Timepiece", "Petal Essence"],
@@ -5383,7 +5372,7 @@ ARTIFACT_SETS = {
         "season": "Winter",
         "description": "Artifacts that contain the quiet power and preservation of winter."
     },
-    
+
     # Farming Artifact Sets
     "Bountiful Harvest": {
         "pieces": ["Farmer's Hat", "Soil Pendant", "Growth Clock", "Seed Pouch"],
@@ -5477,7 +5466,7 @@ CRAFTING_RECIPES.update({
         "effect": 10,
         "special": "Reduces fall damage by 50%"
     },
-    
+
     # Farming Equipment
     "Enhanced Hoe": {
         "materials": {"Iron Ore": 5, "Wood": 3, "Magic Crystal": 1},
@@ -5509,7 +5498,7 @@ CRAFTING_RECIPES.update({
         "type": "tool",
         "special": "Automatically cycles crops to prevent soil depletion"
     },
-    
+
     # Legendary Weapons
     "Void Blade": {
         "materials": {"Void Crystal": 3, "Dark Legion's Heart": 1, "Magic Crystal": 5},
@@ -5530,7 +5519,7 @@ CRAFTING_RECIPES.update({
         "type": "armor",
         "effect": 45
     },
-    
+
     # Weather-based Equipment
     "Storm Caller": {
         "materials": {"Storm Crystal": 5, "Lightning Wyvern Scale": 2, "Magic Crystal": 3},
@@ -5595,7 +5584,7 @@ CRAFTING_RECIPES.update({
         "special": "Increased magic power during cloudy weather",
         "weather_bonus": {"Cloudy": 1.5}
     },
-    
+
     # Seasonal Equipment
     "Winter's Embrace": {
         "materials": {"Frost Crown": 1, "Winter Essence": 5, "Silver Ore": 3},
@@ -5633,7 +5622,7 @@ CRAFTING_RECIPES.update({
         "special": "Resource gathering bonus during fall",
         "season_bonus": {"Fall": 1.5}
     },
-    
+
     # Farming Tools and Equipment
     "Enchanted Hoe": {
         "materials": {"Iron Ingot": 3, "Magic Crystal": 2, "Ancient Wood": 1},
@@ -5663,7 +5652,7 @@ CRAFTING_RECIPES.update({
         "effect": 10,
         "special": "Increases seed storage capacity"
     },
-    
+
     # Artifact Crafting
     "Weather Attunement Crystal": {
         "materials": {"Storm Crystal": 1, "Sunlight Fragment": 1, "Ice Crystal": 1, "Wind Crystal": 1, "Rain Drop": 1},
@@ -5679,7 +5668,7 @@ CRAFTING_RECIPES.update({
         "effect": 0,
         "special": "Used to craft season-attuned artifacts"
     },
-    
+
     # New Artifact Pieces
     "Lightning Headpiece": {
         "materials": {"Weather Attunement Crystal": 1, "Storm Crystal": 3, "Gold Ore": 5},
@@ -5936,7 +5925,7 @@ CRAFTING_RECIPES.update({
         "element": "Wind",
         "special": "Doubles critical hit chance"
     },
-    
+
     # Elemental Armor
     "Flame-Forged Breastplate": {
         "materials": {"Iron Ore": 8, "Magic Crystal": 3, "Fire Essence": 2},
@@ -5978,7 +5967,7 @@ CRAFTING_RECIPES.update({
         "element": "Wind",
         "special": "Reduces Wind damage by 30% and increases movement speed by 10%"
     },
-    
+
     # Advanced Farming Tools
     "Weather-Sensitive Plow": {
         "materials": {"Iron Ore": 8, "Wood": 5, "Weather Sample": 2, "Magic Crystal": 1},
@@ -6154,13 +6143,13 @@ dungeons = [
     {"name": "Thunder Peaks", "monsters": ["Fulmen, Storm Emperor", "Lightning Elemental"], "loot": ["Lightning Heart", "Storm Crown", "Charged Crystal"], "description": "The highest mountain peaks where eternal storms rage and lightning never ceases.", "min_level": 35, "area_type": "postgame"},
     {"name": "Tectonic Depths", "monsters": ["Terra, Earth Colossus", "Stone Golem"], "loot": ["Earth Core", "Mountain Crown", "Ancient Fossil"], "description": "Deep underground caverns where the very earth shifts and breathes.", "min_level": 35, "area_type": "postgame"},
     {"name": "Abyssal Trench", "monsters": ["Aquarius, Tide Master", "Abyssal Leviathan"], "loot": ["Ocean Heart", "Coral Crown", "Leviathan Scale"], "description": "The deepest ocean trenches where pressure crushes all but the mightiest beings.", "min_level": 35, "area_type": "postgame"},
-    
+
     # Four Horsemen challenge dungeons
     {"name": "Fields of Conquest", "monsters": ["Conquest, The White Rider", "Celestial Warrior"], "loot": ["White Bow", "Victor's Crown", "Celestial Armor"], "description": "A battlefield where victory is always just out of reach.", "min_level": 50, "area_type": "endgame"},
     {"name": "War's Domain", "monsters": ["War, The Red Rider", "Blood Knight"], "loot": ["Bloodthirsty Blade", "Warlord's Crown", "Blood-Stained Armor"], "description": "A realm where conflict never ends and peace is unknown.", "min_level": 52, "area_type": "endgame"},
     {"name": "Barren Wastelands", "monsters": ["Famine, The Black Rider", "Withered Guardian"], "loot": ["Scales of Balance", "Crown of Hunger", "Life Essence"], "description": "A desolate landscape where nothing grows and hunger is eternal.", "min_level": 54, "area_type": "endgame"},
     {"name": "Death's Dominion", "monsters": ["Death, The Pale Rider", "Reaper's Assistant"], "loot": ["Soul Scythe", "Pale Crown", "Final Judgment"], "description": "The final resting place for all mortal souls.", "min_level": 58, "area_type": "endgame"},
-    
+
     # Special challenge dungeons
     {"name": "The Void Between Worlds", "monsters": ["Void Dragon", "Dimensional Horror"], "loot": ["Void Dragon Scale", "Void Crown", "Horror Essence"], "description": "A place that exists between realities, where the laws of physics break down.", "min_level": 45, "area_type": "dimensional"},
     {"name": "Chronos Sanctum", "monsters": ["Time Keeper", "Temporal Guardian"], "loot": ["Chronos Crystal", "Time Keeper's Staff", "Paradox Shard"], "description": "A sanctuary where past, present, and future converge into one.", "min_level": 42, "area_type": "dimensional"},
@@ -6171,9 +6160,82 @@ dungeons = [
 # Note: All color constants are defined at the top of the file using colorama for cross-platform compatibility
 
 def print_colored(text: str, color_code: str = "", end: str = "\n") -> None:
+    """
+    Print text with color formatting.
+    
+    Args:
+        text: The text to print
+        color_code: Optional color code from colorama
+        end: String appended after the last character, default a newline
+    """
+    # If text already contains color codes, extract them
+    if ENDC in text and not color_code:
+        extracted_color, clean_text = extract_color_and_text(text)
+        if extracted_color:
+            color_code = extracted_color
+            text = clean_text
+    
     print(f"{color_code}{text}{ENDC}" if color_code else text, end=end)
 
+def extract_color_and_text(text: str) -> Tuple[str, str]:
+    """
+    Extract color codes and clean text from a string that might contain ANSI color codes.
+    
+    Args:
+        text: Text with potential color codes
+        
+    Returns:
+        Tuple of (extracted_color_code, clean_text)
+    """
+    if ENDC not in text:
+        return "", text
+        
+    # Check for common color patterns
+    all_colors = [
+        OKBLUE, OKGREEN, WARNING, FAIL, BOLD, LIGHTGRAY, LIGHTCYAN, MAGENTA, 
+        UNDERLINE, SUCCESS, HEADER, CYAN, YELLOW, RED, GREEN, BLUE, WHITE, 
+        BLACK, GREY, DARKGRAY, PURPLE, LIGHTYELLOW, LIGHTRED, LIGHTGREEN, 
+        LIGHTBLUE, LIGHTMAGENTA, BG_BLACK, BG_RED, BG_GREEN, BG_YELLOW, 
+        BG_BLUE, BG_MAGENTA, BG_CYAN, BG_WHITE
+    ]
+    
+    # Search for color codes at the beginning of the text
+    found_color = ""
+    clean_text = text
+    
+    # Handle BOLD + COLOR combinations first
+    for color in all_colors:
+        if BOLD + color in text:
+            found_color = BOLD + color
+            clean_text = text.replace(found_color, "").replace(ENDC, "")
+            return found_color, clean_text
+    
+    # Handle single color codes
+    for color in all_colors:
+        if color in text:
+            found_color = color
+            clean_text = text.replace(found_color, "").replace(ENDC, "")
+            return found_color, clean_text
+            
+    # If no specific color found but ENDC exists, just strip it
+    return "", text.replace(ENDC, "")
+
 def print_animated(text: str, color_code: str = "", delay: Optional[float] = None) -> None:
+    """
+    Print text character by character with an animation effect.
+    
+    Args:
+        text: The text to print
+        color_code: Optional color code from colorama
+        delay: Time delay between characters (or None for auto-calculation)
+    """
+    # If text contains color codes, extract them
+    if ENDC in text:
+        extracted_color, clean_text = extract_color_and_text(text)
+        if extracted_color:
+            color_code = extracted_color
+            text = clean_text
+        
     length = len(text)
     actual_delay = 0.01  # Default delay
     if delay is not None:
@@ -6746,11 +6808,11 @@ def dimensional_rifts() -> None:
 def dimensions_menu() -> None:
     """Function to handle dimension traveling and discovery"""
     print_header("DIMENSIONAL TRAVEL")
-    
+
     print_colored("Current Dimension: ", CYAN, end="")
     print_colored(user_data["current_dimension"], MAGENTA)
     print()
-    
+
     print_colored("Discovered Dimensions:", CYAN)
     for dim_name in user_data["dimensions_discovered"]:
         if dim_name == user_data["current_dimension"]:
@@ -6758,19 +6820,19 @@ def dimensions_menu() -> None:
         else:
             print_colored(f"  - {dim_name}", LIGHTGRAY)
     print()
-    
+
     # Check for portal frame
     has_portal = "Portal Frame" in [s for s in user_data["home_structures"] if user_data["home_structures"].get(s, {}).get("built", False)]
-    
+
     if not has_portal:
         print_colored("You need to build a Portal Frame in your camp to travel between dimensions.", WARNING)
         print_colored("Use /camp_build to construct a Portal Frame.", LIGHTGRAY)
         return
-    
+
     # Show available dimensions based on discovered keys and level
     print_colored("Available Dimensions for Travel:", CYAN)
     available_dimensions = []
-    
+
     for dim_name, dim_info in DIMENSIONS.items():
         if dim_name in user_data["dimensions_discovered"]:
             available_dimensions.append(dim_name)
@@ -6783,38 +6845,38 @@ def dimensions_menu() -> None:
                 print_colored(f"  [?] {dim_name} (Requires Level {dim_info['access_level']})", WARNING)
         elif user_data["level"] >= dim_info["access_level"]:
             print_colored(f"  [?] {dim_name} (Requires {dim_info.get('unlock_item', 'Unknown Key')})", WARNING)
-    
+
     print_colored("  [0] Cancel", LIGHTGRAY)
     print()
-    
+
     # Get player choice
     choice = input("Select a dimension to travel to (number): ")
-    
+
     try:
         choice_idx = int(choice)
         if choice_idx == 0:
             print_colored("Dimensional travel canceled.", LIGHTGRAY)
             return
-            
+
         if 1 <= choice_idx <= len(available_dimensions):
             selected_dimension = available_dimensions[choice_idx - 1]
-            
+
             if selected_dimension == user_data["current_dimension"]:
                 print_colored("You are already in this dimension.", YELLOW)
                 return
-                
+
             # Travel to the dimension
             user_data["current_dimension"] = selected_dimension
-            
+
             # Add to discovered if not already there
             if selected_dimension not in user_data["dimensions_discovered"]:
                 user_data["dimensions_discovered"].append(selected_dimension)
                 print_colored(f"You have discovered the {selected_dimension}!", OKGREEN)
-                
+
             print_colored(f"Traveling to the {selected_dimension}...", CYAN)
             time.sleep(1)
             print_colored(f"You have arrived in the {selected_dimension}!", OKGREEN)
-            
+
             # Describe the dimension
             if selected_dimension in DIMENSIONS:
                 print_colored(DIMENSIONS[selected_dimension]["description"], LIGHTCYAN)
@@ -6827,25 +6889,25 @@ def find_dimension_key() -> None:
     """Find a key to unlock a new dimension"""
     current_dim = user_data["current_dimension"]
     player_level = user_data["level"]
-    
+
     # Find potential dimensions that could have keys
     potential_keys = []
     for dim_name, dim_info in DIMENSIONS.items():
         if dim_name not in user_data["dimensions_discovered"] and "unlock_item" in dim_info:
             if dim_info["unlock_item"] not in user_data["dimension_keys"] and player_level >= dim_info["access_level"]:
                 potential_keys.append((dim_name, dim_info["unlock_item"]))
-    
+
     if not potential_keys:
         print_colored("You have found all available dimension keys for your current level.", YELLOW)
         return
-        
+
     # Random chance to find a key based on current dimension and player level
     find_chance = min(0.05 * player_level, 0.5)  # 5% per level, max 50%
-    
+
     # Exploring other dimensions increases chance
     if current_dim != "Overworld":
         find_chance += 0.2
-        
+
     if random.random() < find_chance:
         # Found a key
         dim_name, key_name = random.choice(potential_keys)
@@ -6861,7 +6923,7 @@ def returnToOverworld() -> None:
     if user_data["current_dimension"] == "Overworld":
         print_colored("You are already in the Overworld.", YELLOW)
         return
-        
+
     # Return to Overworld
     prev_dimension = user_data["current_dimension"]
     user_data["current_dimension"] = "Overworld"
@@ -6872,9 +6934,9 @@ def returnToOverworld() -> None:
 def camp_menu() -> None:
     """Function to handle camp management"""
     print_header("CAMP MANAGEMENT")
-    
+
     print_colored(f"Current Location: {user_data['home_location']}", CYAN)
-    
+
     # Show existing structures
     print_colored("\nCurrent Structures:", CYAN)
     if not any(user_data["home_structures"].get(s, {}).get("built", False) for s in user_data["home_structures"]):
@@ -6886,7 +6948,7 @@ def camp_menu() -> None:
                 health_color = OKGREEN if health_percent > 70 else (YELLOW if health_percent > 30 else FAIL)
                 print_colored(f"  - {struct_name} ", LIGHTGRAY, end="")
                 print_colored(f"[Health: {health_percent}%]", health_color)
-    
+
     print_colored("\nOptions:", CYAN)
     print_colored("  [1] Build/Upgrade Structure", LIGHTGRAY)
     print_colored("  [2] Repair Structure", LIGHTGRAY)
@@ -6894,9 +6956,9 @@ def camp_menu() -> None:
     print_colored("  [4] Demolish Structure", LIGHTGRAY)
     print_colored("  [5] View Structure Info", LIGHTGRAY)
     print_colored("  [0] Exit", LIGHTGRAY)
-    
+
     choice = input("\nSelect an option: ")
-    
+
     if choice == "1":
         build_structure()
     elif choice == "2":
@@ -6915,7 +6977,7 @@ def camp_menu() -> None:
 def build_structure() -> None:
     """Build or upgrade a camp structure"""
     print_header("BUILD/UPGRADE STRUCTURE")
-    
+
     # Group structures by category
     structures_by_category = {}
     for struct_name, struct_data in HOME_STRUCTURES.items():
@@ -6923,7 +6985,7 @@ def build_structure() -> None:
         if category not in structures_by_category:
             structures_by_category[category] = []
         structures_by_category[category].append((struct_name, struct_data))
-    
+
     # Filter available structures based on player level and dependencies
     available_structures = []
     for category, structures in structures_by_category.items():
@@ -6931,24 +6993,24 @@ def build_structure() -> None:
         for struct_name, struct_data in structures:
             # Check if already built
             already_built = user_data["home_structures"].get(struct_name, {}).get("built", False)
-            
+
             # Check for upgrades
             upgrade_from = struct_data.get("upgrade_from")
             if upgrade_from and not user_data["home_structures"].get(upgrade_from, {}).get("built", False):
                 print_colored(f"  [?] {struct_name} (Requires {upgrade_from})", WARNING)
                 continue
-                
+
             # Check for dependencies
             requires = struct_data.get("requires")
             if requires and not user_data["home_structures"].get(requires, {}).get("built", False):
                 print_colored(f"  [?] {struct_name} (Requires {requires})", WARNING)
                 continue
-                
+
             # Check level requirement (implicit in structure level)
             if struct_data.get("level", 1) * 5 > user_data["level"]:
                 print_colored(f"  [?] {struct_name} (Requires Level {struct_data.get('level', 1) * 5})", WARNING)
                 continue
-                
+
             if already_built:
                 if not upgrade_from:  # Can't upgrade a structure that isn't an upgrade
                     print_colored(f"  [B] {struct_name} (Already Built)", OKGREEN)
@@ -6957,56 +7019,56 @@ def build_structure() -> None:
                     print_colored(f"  [U] {struct_name} (Upgrade from {upgrade_from})", YELLOW)
             else:
                 print_colored(f"  [{len(available_structures) + 1}] {struct_name}", LIGHTGRAY)
-                
+
             # Show required materials
             for material, amount in struct_data.get("materials", {}).items():
                 material_owned = user_data.get("materials", {}).get(material, 0)
                 color = OKGREEN if material_owned >= amount else FAIL
                 print_colored(f"      {material}: {material_owned}/{amount}", color)
-                
+
             available_structures.append(struct_name)
-    
+
     if not available_structures:
         print_colored("\nNo structures available to build at your current level.", WARNING)
         return
-        
+
     print_colored("\n  [0] Cancel", LIGHTGRAY)
-    
+
     choice = input("\nSelect a structure to build (number): ")
-    
+
     try:
         choice_idx = int(choice)
         if choice_idx == 0:
             return
-            
+
         if 1 <= choice_idx <= len(available_structures):
             selected_structure = available_structures[choice_idx - 1]
             struct_data = HOME_STRUCTURES[selected_structure]
-            
+
             # Check if we have the materials
             materials = struct_data.get("materials", {})
             can_build = True
-            
+
             for material, amount in materials.items():
                 if user_data.get("materials", {}).get(material, 0) < amount:
                     can_build = False
                     print_colored(f"Not enough {material}. Need {amount}.", FAIL)
-            
+
             if can_build:
                 # Deduct materials
                 for material, amount in materials.items():
                     user_data["materials"][material] = user_data["materials"].get(material, 0) - amount
-                
+
                 # Add structure to home
                 if selected_structure not in user_data["home_structures"]:
                     user_data["home_structures"][selected_structure] = {}
-                    
+
                 user_data["home_structures"][selected_structure]["built"] = True
                 user_data["home_structures"][selected_structure]["health"] = 100
                 user_data["home_structures"][selected_structure]["position"] = [0, 0]  # Simple position
-                
+
                 print_colored(f"Successfully built {selected_structure}!", OKGREEN)
-                
+
                 # Check if this is an upgrade
                 upgrade_from = struct_data.get("upgrade_from")
                 if upgrade_from:
@@ -7024,11 +7086,11 @@ def build_structure() -> None:
 def repair_structure() -> None:
     """Repair a damaged camp structure"""
     print_header("REPAIR STRUCTURE")
-    
+
     # Show existing structures with health
     structures_to_repair = []
     print_colored("Structures that need repair:", CYAN)
-    
+
     for struct_name, struct_data in user_data["home_structures"].items():
         if struct_data.get("built", False) and struct_data.get("health", 100) < 100:
             structures_to_repair.append(struct_name)
@@ -7036,37 +7098,37 @@ def repair_structure() -> None:
             health_color = YELLOW if health > 50 else FAIL
             print_colored(f"  [{len(structures_to_repair)}] {struct_name} ", LIGHTGRAY, end="")
             print_colored(f"[Health: {health}%]", health_color)
-    
+
     if not structures_to_repair:
         print_colored("  No structures need repair.", LIGHTGRAY)
         return
-        
+
     print_colored("  [0] Cancel", LIGHTGRAY)
-    
+
     choice = input("\nSelect a structure to repair (number): ")
-    
+
     try:
         choice_idx = int(choice)
         if choice_idx == 0:
             return
-            
+
         if 1 <= choice_idx <= len(structures_to_repair):
             selected_structure = structures_to_repair[choice_idx - 1]
             current_health = user_data["home_structures"][selected_structure].get("health", 100)
-            
+
             # Calculate repair materials (25% of original for a full repair)
             original_materials = HOME_STRUCTURES[selected_structure].get("materials", {})
             repair_materials = {}
             repair_percentage = (100 - current_health) / 100
-            
+
             for material, amount in original_materials.items():
                 repair_amount = math.ceil(amount * 0.25 * repair_percentage)
                 repair_materials[material] = repair_amount
-            
+
             # Show repair cost
             print_colored(f"\nRepairing {selected_structure} will cost:", CYAN)
             can_repair = True
-            
+
             for material, amount in repair_materials.items():
                 if amount > 0:
                     material_owned = user_data.get("materials", {}).get(material, 0)
@@ -7074,7 +7136,7 @@ def repair_structure() -> None:
                     print_colored(f"  {material}: {material_owned}/{amount}", color)
                     if material_owned < amount:
                         can_repair = False
-            
+
             if can_repair:
                 confirm = input("\nProceed with repair? (y/n): ").lower()
                 if confirm == 'y':
@@ -7082,7 +7144,7 @@ def repair_structure() -> None:
                     for material, amount in repair_materials.items():
                         if amount > 0:
                             user_data["materials"][material] = user_data["materials"].get(material, 0) - amount
-                    
+
                     # Repair structure
                     user_data["home_structures"][selected_structure]["health"] = 100
                     print_colored(f"Successfully repaired {selected_structure}!", OKGREEN)
@@ -7096,11 +7158,11 @@ def repair_structure() -> None:
 def use_structure() -> None:
     """Use a camp structure and receive its benefits"""
     print_header("USE STRUCTURE")
-    
+
     # Show existing usable structures
     usable_structures = []
     print_colored("Usable structures:", CYAN)
-    
+
     for struct_name, struct_data in user_data["home_structures"].items():
         if struct_data.get("built", False) and struct_data.get("health", 0) > 0:
             # Structure must be built and have health
@@ -7108,28 +7170,28 @@ def use_structure() -> None:
             if struct_info.get("effects"):
                 usable_structures.append(struct_name)
                 print_colored(f"  [{len(usable_structures)}] {struct_name}", LIGHTGRAY)
-    
+
     if not usable_structures:
         print_colored("  No usable structures available.", LIGHTGRAY)
         return
-        
+
     print_colored("  [0] Cancel", LIGHTGRAY)
-    
+
     choice = input("\nSelect a structure to use (number): ")
-    
+
     try:
         choice_idx = int(choice)
         if choice_idx == 0:
             return
-            
+
         if 1 <= choice_idx <= len(usable_structures):
             selected_structure = usable_structures[choice_idx - 1]
             struct_info = HOME_STRUCTURES.get(selected_structure, {})
             effects = struct_info.get("effects", {})
-            
+
             # Apply effects based on structure type
             print_colored(f"Using {selected_structure}...", CYAN)
-            
+
             # Health regeneration
             if "rest_heal" in effects:
                 heal_amount = effects["rest_heal"]
@@ -7137,7 +7199,7 @@ def use_structure() -> None:
                 user_data["health"] = min(user_data["max_health"], user_data["health"] + heal_amount)
                 actual_heal = user_data["health"] - old_health
                 print_colored(f"You rest and recover {actual_heal} health points!", OKGREEN)
-            
+
             # Mana regeneration
             if "mana_regen" in effects:
                 if "mana" in user_data and "max_mana" in user_data:
@@ -7146,23 +7208,23 @@ def use_structure() -> None:
                     user_data["mana"] = min(user_data["max_mana"], user_data["mana"] + int(user_data["max_mana"] * mana_regen))
                     actual_regen = user_data["mana"] - old_mana
                     print_colored(f"You meditate and recover {actual_regen} mana points!", OKGREEN)
-            
+
             # Herb production
             if "herb_production" in effects:
                 herb_amount = effects["herb_production"]
                 herb_types = ["Red Herb", "Blue Herb", "Green Herb"]
-                
+
                 for _ in range(herb_amount):
                     herb = random.choice(herb_types)
                     user_data["materials"][herb] = user_data["materials"].get(herb, 0) + 1
                     print_colored(f"You harvested 1 {herb}!", OKGREEN)
-            
+
             # Cooking food
             if "cook_food" in effects:
                 if "food_quality" in effects:
                     quality_bonus = effects["food_quality"]
                     print_colored(f"Your food is {int(quality_bonus * 100)}% more effective when cooked here!", OKGREEN)
-                
+
                 # Simplified cooking system
                 if "Raw Meat" in user_data.get("materials", {}):
                     meat_amount = min(3, user_data["materials"]["Raw Meat"])
@@ -7172,7 +7234,7 @@ def use_structure() -> None:
                         print_colored(f"You cooked {meat_amount} Raw Meat into Cooked Meat!", OKGREEN)
                 else:
                     print_colored("You don't have any Raw Meat to cook.", YELLOW)
-            
+
             # Combat experience bonus
             if "combat_exp_bonus" in effects:
                 print_colored(f"Training here will give you {int(effects['combat_exp_bonus'] * 100)}% more combat experience!", OKGREEN)
@@ -7181,31 +7243,31 @@ def use_structure() -> None:
                 user_data["exp"] += exp_gain
                 print_colored(f"You trained and gained {exp_gain} experience!", OKGREEN)
                 check_level_up()
-            
+
             # Crafting bonus
             if "crafting_bonus" in effects or "smithing_bonus" in effects or "alchemy_bonus" in effects:
                 bonus_type = "crafting"
                 bonus_value = effects.get("crafting_bonus", 0)
-                
+
                 if "smithing_bonus" in effects:
                     bonus_type = "smithing"
                     bonus_value = effects["smithing_bonus"]
                 elif "alchemy_bonus" in effects:
                     bonus_type = "alchemy"
                     bonus_value = effects["alchemy_bonus"]
-                
+
                 print_colored(f"Using this {bonus_type} station gives you a {int(bonus_value * 100)}% bonus to {bonus_type}!", OKGREEN)
-            
+
             # Dimension travel
             if "dimension_travel" in effects:
                 print_colored("This portal allows dimensional travel!", CYAN)
                 print_colored("Use /dimensions to travel between dimensions.", LIGHTGRAY)
-            
+
             # Slightly damage structure from use
             current_health = user_data["home_structures"][selected_structure].get("health", 100)
             damage = random.randint(1, 5)  # Random damage between 1-5%
             user_data["home_structures"][selected_structure]["health"] = max(0, current_health - damage)
-            
+
             if user_data["home_structures"][selected_structure]["health"] < 30:
                 print_colored(f"Warning: {selected_structure} is in need of repair!", WARNING)
         else:
@@ -7216,11 +7278,11 @@ def use_structure() -> None:
 def demolish_structure() -> None:
     """Demolish a camp structure and recover some materials"""
     print_header("DEMOLISH STRUCTURE")
-    
+
     # Show existing structures that can be demolished
     demolishable_structures = []
     print_colored("Structures that can be demolished:", CYAN)
-    
+
     for struct_name, struct_data in user_data["home_structures"].items():
         if struct_data.get("built", False):
             # Check if any other structures depend on this one
@@ -7230,7 +7292,7 @@ def demolish_structure() -> None:
                     if dep_name in user_data["home_structures"] and user_data["home_structures"][dep_name].get("built", False):
                         has_dependents = True
                         break
-            
+
             if has_dependents:
                 print_colored(f"  [X] {struct_name} (Required by other structures)", WARNING)
             elif struct_name == "Tent" and len([s for s in user_data["home_structures"] if user_data["home_structures"].get(s, {}).get("built", False)]) == 1:
@@ -7238,38 +7300,38 @@ def demolish_structure() -> None:
             else:
                 demolishable_structures.append(struct_name)
                 print_colored(f"  [{len(demolishable_structures)}] {struct_name}", LIGHTGRAY)
-    
+
     if not demolishable_structures:
         print_colored("  No structures can be demolished at this time.", LIGHTGRAY)
         return
-        
+
     print_colored("  [0] Cancel", LIGHTGRAY)
-    
+
     choice = input("\nSelect a structure to demolish (number): ")
-    
+
     try:
         choice_idx = int(choice)
         if choice_idx == 0:
             return
-            
+
         if 1 <= choice_idx <= len(demolishable_structures):
             selected_structure = demolishable_structures[choice_idx - 1]
-            
+
             # Confirm demolition
             confirm = input(f"Are you sure you want to demolish {selected_structure}? (y/n): ").lower()
             if confirm != 'y':
                 print_colored("Demolition canceled.", LIGHTGRAY)
                 return
-            
+
             # Return some materials (50% of original)
             original_materials = HOME_STRUCTURES[selected_structure].get("materials", {})
             print_colored("Recovered materials:", CYAN)
-            
+
             for material, amount in original_materials.items():
                 recovered = math.ceil(amount * 0.5)
                 user_data["materials"][material] = user_data["materials"].get(material, 0) + recovered
                 print_colored(f"  {material}: +{recovered}", OKGREEN)
-            
+
             # Remove structure
             user_data["home_structures"][selected_structure]["built"] = False
             print_colored(f"Successfully demolished {selected_structure}!", OKGREEN)
@@ -7281,7 +7343,7 @@ def demolish_structure() -> None:
 def view_structure_info() -> None:
     """View detailed information about camp structures"""
     print_header("STRUCTURE INFORMATION")
-    
+
     # Group structures by category
     structures_by_category = {}
     for struct_name, struct_data in HOME_STRUCTURES.items():
@@ -7289,60 +7351,60 @@ def view_structure_info() -> None:
         if category not in structures_by_category:
             structures_by_category[category] = []
         structures_by_category[category].append((struct_name, struct_data))
-    
+
     # Display categories
     categories = list(structures_by_category.keys())
     print_colored("Structure Categories:", CYAN)
-    
+
     for idx, category in enumerate(categories, 1):
         print_colored(f"  [{idx}] {category.capitalize()}", LIGHTGRAY)
-    
+
     print_colored("  [0] Cancel", LIGHTGRAY)
-    
+
     cat_choice = input("\nSelect a category (number): ")
-    
+
     try:
         cat_idx = int(cat_choice)
         if cat_idx == 0:
             return
-            
+
         if 1 <= cat_idx <= len(categories):
             selected_category = categories[cat_idx - 1]
             structures = structures_by_category[selected_category]
-            
+
             print_colored(f"\n{selected_category.capitalize()} Structures:", CYAN)
-            
+
             for idx, (struct_name, struct_data) in enumerate(structures, 1):
                 print_colored(f"  [{idx}] {struct_name}", LIGHTGRAY)
-            
+
             print_colored("  [0] Back", LIGHTGRAY)
-            
+
             struct_choice = input("\nSelect a structure (number): ")
-            
+
             try:
                 struct_idx = int(struct_choice)
                 if struct_idx == 0:
                     view_structure_info()  # Go back to category selection
                     return
-                    
+
                 if 1 <= struct_idx <= len(structures):
                     selected_structure, struct_data = structures[struct_idx - 1]
-                    
+
                     # Display detailed information
                     print_header(selected_structure)
                     print_colored(f"Description: {struct_data.get('description', 'No description available.')}", LIGHTCYAN)
                     print_colored(f"Level: {struct_data.get('level', 1)}", LIGHTGRAY)
-                    
+
                     if "upgrade_from" in struct_data:
                         print_colored(f"Upgrade from: {struct_data['upgrade_from']}", YELLOW)
-                    
+
                     if "requires" in struct_data:
                         print_colored(f"Requires: {struct_data['requires']}", YELLOW)
-                    
+
                     print_colored("\nMaterials:", CYAN)
                     for material, amount in struct_data.get("materials", {}).items():
                         print_colored(f"  {material}: {amount}", LIGHTGRAY)
-                    
+
                     print_colored("\nEffects:", CYAN)
                     for effect, value in struct_data.get("effects", {}).items():
                         effect_name = effect.replace("_", " ").capitalize()
@@ -7357,10 +7419,10 @@ def view_structure_info() -> None:
                                 print_colored(f"  {effect_name}: +{int(value * 100)}%", OKGREEN)
                             else:
                                 print_colored(f"  {effect_name}: {value}", OKGREEN)
-                    
+
                     # Check if player has this structure
                     built = selected_structure in user_data["home_structures"] and user_data["home_structures"][selected_structure].get("built", False)
-                    
+
                     if built:
                         health = user_data["home_structures"][selected_structure].get("health", 100)
                         health_color = OKGREEN if health > 70 else (YELLOW if health > 30 else FAIL)
@@ -7368,7 +7430,7 @@ def view_structure_info() -> None:
                         print_colored(f"Health: {health}%", health_color)
                     else:
                         print_colored("\nStatus: Not Built", LIGHTGRAY)
-                    
+
                     input("\nPress Enter to return to categories...")
                     view_structure_info()  # Return to category selection
                 else:
@@ -7727,11 +7789,11 @@ def dev_command_handler(cmd: str) -> None:
 def update_weather() -> None:
     """Function to update the weather based on current game time"""
     current_day = game_state["current_day"]
-    
+
     # Check if it's time to change the weather
     if current_day - game_state["last_weather_change"] >= game_state["weather_duration"]:
         dimension = user_data.get("current_dimension", "Overworld")
-        
+
         # Different weather system for different dimensions
         if dimension != "Overworld" and dimension in DIMENSION_WEATHERS:
             # Special dimension-specific weather
@@ -7744,21 +7806,21 @@ def update_weather() -> None:
             # Regular weather
             weathers = []
             weights = []
-            
+
             for weather_id, weather_data in WEATHERS.items():
                 weathers.append(weather_id)
                 weights.append(weather_data["rarity"])
-                
+
             new_weather = random.choices(weathers, weights=weights, k=1)[0]
             game_state["current_weather"] = new_weather
             game_state["current_weather_description"] = WEATHERS[new_weather]["description"]
             game_state["current_weather_color"] = WEATHERS[new_weather]["color"]
             game_state["current_weather_crop_modifier"] = WEATHERS[new_weather]["crop_growth_modifier"]
-            
+
         # Update weather duration (3-7 days)
         game_state["weather_duration"] = random.randint(3, 7)
         game_state["last_weather_change"] = current_day
-        
+
         # Notify player
         print_colored(f"The weather has changed to: {get_weather_name()}", game_state["current_weather_color"])
         print_colored(f"{get_weather_description()}", LIGHTGRAY)
@@ -7767,19 +7829,19 @@ def update_season() -> None:
     """Function to update the season based on current game time"""
     current_day = game_state["current_day"]
     days_per_season = game_state["days_per_season"]
-    
+
     # Calculate which season it should be
     season_index = (current_day // days_per_season) % len(SEASONS)
     new_season = SEASONS[season_index]
-    
+
     # Check if season changed
     if new_season != game_state["current_season"]:
         game_state["current_season"] = new_season
         game_state["season_day"] = 1
-        
+
         # Notify player
         print_colored(f"The season has changed to {new_season}!", YELLOW)
-        
+
         # Different message for each season
         if new_season == "Spring":
             print_colored("The world blooms with new life and the air is filled with fresh scents.", GREEN)
@@ -7795,7 +7857,7 @@ def update_season() -> None:
 def get_weather_name() -> str:
     """Get the current weather name with proper formatting"""
     dimension = user_data.get("current_dimension", "Overworld")
-    
+
     if dimension != "Overworld" and dimension in DIMENSION_WEATHERS:
         # Special dimension-specific weather may already be stored as a name
         return game_state["current_weather"]
@@ -7806,7 +7868,7 @@ def get_weather_name() -> str:
 def get_weather_description() -> str:
     """Get the current weather description"""
     dimension = user_data.get("current_dimension", "Overworld")
-    
+
     if dimension != "Overworld" and dimension in DIMENSION_WEATHERS:
         # Special dimension-specific weather description
         return game_state["current_weather_description"]
@@ -7817,15 +7879,15 @@ def get_weather_description() -> str:
 def show_weather() -> None:
     """Function to display current weather information"""
     print_header("Current Weather")
-    
+
     weather_name = get_weather_name()
     weather_desc = get_weather_description()
     weather_color = game_state["current_weather_color"]
-    
+
     print_colored(f"Current Weather: {weather_name}", weather_color)
     print_colored(f"Description: {weather_desc}", LIGHTGRAY)
     print_colored("Effect on Crops: ", CYAN, end="")
-    
+
     modifier = game_state["current_weather_crop_modifier"]
     if modifier > 1.0:
         print_colored(f"+{int((modifier-1.0)*100)}% growth rate", OKGREEN)
@@ -7833,7 +7895,7 @@ def show_weather() -> None:
         print_colored(f"-{int((1.0-modifier)*100)}% growth rate", FAIL)
     else:
         print_colored("No effect", LIGHTGRAY)
-        
+
     print()
     print_colored("Weather affects how quickly your crops grow and can influence", YELLOW)
     print_colored("certain activities. Each crop has optimal and unfavorable weather.", YELLOW)
@@ -7841,21 +7903,21 @@ def show_weather() -> None:
 def show_season() -> None:
     """Function to display current season information"""
     print_header("Current Season")
-    
+
     season = game_state["current_season"]
     day = game_state["season_day"]
     days_total = game_state["days_per_season"]
-    
+
     season_colors = {
         "Spring": GREEN,
         "Summer": YELLOW,
         "Fall": RED,
         "Winter": CYAN
     }
-    
+
     print_colored(f"Current Season: {season}", season_colors.get(season, LIGHTGRAY))
     print_colored(f"Day: {day}/{days_total}", LIGHTGRAY)
-    
+
     # Season-specific messages
     if season == "Spring":
         print_colored("Best crops: Most common vegetables, berries", OKGREEN)
@@ -7869,7 +7931,7 @@ def show_season() -> None:
     elif season == "Winter":
         print_colored("Best crops: Frost berries, crystal blooms", OKGREEN)
         print_colored("Few crops grow in winter - a time for planning.", BLUE)
-        
+
     print()
     print_colored("Some crops will only grow during certain seasons.", YELLOW)
     print_colored("Check the crop information before planting!", YELLOW)
@@ -7916,24 +7978,24 @@ def handle_command(cmd: str) -> None:
                 # Update weather and season based on current game time
                 update_weather()
                 update_season()
-                
+
                 current_weather = game_state["current_weather"]
                 current_season = game_state["current_season"]
                 weather_modifier = game_state.get("current_weather_crop_modifier", 1.0)
-                
+
                 for plot in user_data["farming"]["growth"]:
                     crop_name = user_data["farming"]["plots"].get(plot)
                     if not crop_name:
                         continue
-                        
+
                     # Base growth ticks
                     growth_ticks = ticks
                     crop_data = CROPS.get(crop_name, {})
-                    
+
                     # Season modifier - check if current season is optimal for this crop
                     season_modifier = 1.0
                     crop_seasons = crop_data.get("seasons", [])
-                    
+
                     # All-season crops (mainly dimension-specific)
                     if "All" in crop_seasons:
                         season_modifier = 1.2  # Bonus for all-season crops
@@ -7941,25 +8003,25 @@ def handle_command(cmd: str) -> None:
                         season_modifier = 1.2  # Good season for this crop
                     else:
                         season_modifier = 0.5  # Bad season - grows slower
-                    
+
                     # Weather modifier - check if current weather is optimal/weak for this crop
                     crop_optimal_weather = crop_data.get("optimal_weather", [])
                     crop_weak_weather = crop_data.get("weak_weather", [])
-                    
+
                     additional_weather_modifier = 1.0
                     if current_weather in crop_optimal_weather:
                         additional_weather_modifier = 1.3  # This weather is perfect for the crop
                     elif current_weather in crop_weak_weather:
                         additional_weather_modifier = 0.7  # This weather harms the crop
-                    
+
                     # Apply all modifiers
                     total_modifier = weather_modifier * season_modifier * additional_weather_modifier
-                    
+
                     # Apply modified growth ticks (convert to integer)
                     modified_ticks = int(growth_ticks * total_modifier)
                     if modified_ticks < 1:
                         modified_ticks = 1  # Ensure at least some growth
-                        
+
                     user_data["farming"]["growth"][plot] += modified_ticks
 
     elif cmd.startswith("/talk"):
@@ -8061,7 +8123,7 @@ def handle_command(cmd: str) -> None:
         "/camp_use": use_structure,
         "/camp_demolish": demolish_structure,
         "/camp_info": view_structure_info,
-        
+
         # Weather and season commands
         "/weather": show_weather,
         "/season": show_season,
@@ -8147,7 +8209,7 @@ def random_tip() -> None:
 
 def guild_guide() -> None:
     print_header("Adventurer's Guild")
-    
+
     # Initialize adventurer data if it doesn't exist
     if "adventurer" not in user_data:
         user_data["adventurer"] = {
@@ -8158,35 +8220,35 @@ def guild_guide() -> None:
             "bosses_defeated": 0,
             "reputation": 0
         }
-    
+
     adv = user_data["adventurer"]
     exp_required = adv["level"] * 100
-    
+
     print(f"{CYAN}Adventurer Rank:{ENDC} {adv['rank']}")
     print(f"{CYAN}Adventurer Level:{ENDC} {adv['level']}")
     print(f"{CYAN}Experience:{ENDC} {adv['exp']}/{exp_required}")
     print(f"{CYAN}Quests Completed:{ENDC} {adv['total_quests']}")
     print(f"{CYAN}Bosses Defeated:{ENDC} {adv['bosses_defeated']}")
     print(f"{CYAN}Guild Reputation:{ENDC} {adv['reputation']}")
-    
+
     # Create progress bar for experience
     exp_percentage = min(100, (adv['exp'] / exp_required) * 100)
     progress_bar = create_progress_bar(exp_percentage)
     print(f"\n{CYAN}Progress:{ENDC} [{progress_bar}] {int(exp_percentage)}%")
-    
+
     # Show available rank advancements
     next_rank = get_next_rank(adv["rank"])
     if next_rank:
         print(f"\n{YELLOW}Next Rank:{ENDC} {next_rank['name']}")
         print(f"{YELLOW}Requirements:{ENDC} Level {next_rank['level_req']}, {next_rank['quest_req']} Quests, {next_rank['boss_req']} Bosses")
-    
+
     # Show rewards for current level
     print(f"\n{GREEN}Active Benefits:{ENDC}")
     for level in range(1, adv["level"] + 1):
         rewards = get_adventurer_level_rewards(level)
         if rewards:
             print(f"- Level {level}: {rewards['description']}")
-    
+
     # Show guild facilities
     print(f"\n{PURPLE}Adventurer's Guild Facilities:{ENDC}")
     print(f"- {LIGHTBLUE}Quest Board{ENDC}: Special quests for adventurers")
@@ -8286,36 +8348,36 @@ def fight(monster: Dict) -> None:
     combat_log = []  # Track recent actions for combo detection
     player_status_effects = []  # Track temporary buffs/debuffs
     monster_status_effects = []
-    
+
     # Pet combat variables
     active_pet = get_active_pet()
     pet_shield_active = False
     pet_shield_duration = 0
     pet_dodge_bonus = 0
     # Track turns for pet ability cooldowns in future implementation
-    
+
     # Extract monster data with defaults
     monster_health = monster["health"]
     monster_name = monster["name"]
     monster_level = monster["level"]
     monster_element = monster.get("element", "Normal")
-    
+
     # Get player element
     player_element = user_data.get("element", "Normal")
-    
+
     # Battle intro with fancy visuals
     print_header(f"⚔️ COMBAT: {monster_name} ⚔️")
     print_animated(f"{BG_RED}{WHITE} BATTLE START! {ENDC}", delay=0.05)
     print_animated(f"You encountered a {LIGHTRED}{monster_name}{ENDC} (Level {YELLOW}{monster_level}{ENDC})!", delay=0.03)
-    
+
     if monster.get("boss", False):
         print_animated(f"{BG_MAGENTA}{WHITE}❗ BOSS BATTLE ❗{ENDC}", delay=0.05)
         print_animated(f"{monster.get('description', 'A powerful foe stands before you!')}", LIGHTMAGENTA, delay=0.03)
-    
+
     # Display monster's element if available
     if monster_element != "Normal":
         print_animated(f"Element: {get_element_color(monster_element)}{monster_element}{ENDC}", delay=0.02)
-    
+
     # Main combat loop
     turn_counter = 0
     while user_data["health"] > 0 and monster_health > 0:
@@ -8324,15 +8386,15 @@ def fight(monster: Dict) -> None:
             # Display health bars with visual representation
             player_health_percent = user_data["health"] / user_data["max_health"]
             monster_health_percent = monster_health / monster["health"]
-            
+
             # Create health bars
             player_health_bar = create_health_bar(player_health_percent, 20)
             monster_health_bar = create_health_bar(monster_health_percent, 20)
-            
+
             print(f"\n{BOLD}Turn {turn_counter}{ENDC}")
             print(f"\n{CYAN}Your Health: {user_data['health']}/{user_data['max_health']} {player_health_bar}{ENDC}")
             print(f"{LIGHTRED}Enemy Health: {monster_health}/{monster['health']} {monster_health_bar}{ENDC}")
-            
+
             # Display active status effects
             if player_status_effects:
                 effects_str = ", ".join([f"{e['name']} ({e['duration']})" for e in player_status_effects])
@@ -8340,26 +8402,26 @@ def fight(monster: Dict) -> None:
             if monster_status_effects:
                 effects_str = ", ".join([f"{e['name']} ({e['duration']})" for e in monster_status_effects])
                 print(f"{LIGHTYELLOW}Enemy Status: {effects_str}{ENDC}")
-            
+
             # Display combo counter if active
             if combo_counter > 0:
                 print(f"{LIGHTMAGENTA}Combo: x{combo_counter}{ENDC}")
-                
+
             # Display active pet information if any
             if active_pet:
                 pet_name = active_pet["name"]
                 pet_level = active_pet.get("level", 1)
                 pet_element = active_pet.get("element", "Nullum")
                 pet_element_display = f" | {get_element_color(pet_element)}{pet_element}{ENDC}" if pet_element != "Nullum" else ""
-                
+
                 # Display pet status
                 print(f"\n{CYAN}Active Pet: {pet_name} (Lvl {pet_level}){pet_element_display}{ENDC}")
-                
+
                 # Show active abilities if any
                 pet_abilities = active_pet.get("abilities", [])
                 if pet_abilities and pet_shield_active:
                     print(f"{YELLOW}Pet Shield: Active ({pet_shield_duration} turns){ENDC}")
-            
+
             # Check if player is stunned
             if stunned:
                 print(f"{YELLOW}You are stunned and cannot act this turn!{ENDC}")
@@ -8378,22 +8440,22 @@ def fight(monster: Dict) -> None:
                 else:
                     print(f"{YELLOW}4. Defend{ENDC}")
                     print(f"{LIGHTRED}5. Flee{ENDC}")
-                
+
                 max_choice = "6" if active_pet and active_pet.get("abilities", []) else "5"
                 choice = input(f"{YELLOW}Choose action (1-{max_choice}): {ENDC}").strip()
-                
+
                 if choice == "1":  # Basic Attack
                     # Calculate damage with equipped weapon and combo bonus
                     base_damage = user_data.get("attack", 10)
                     weapon_bonus = user_data.get("equipped", {}).get("weapon", {}).get("effect", 0)
                     combo_bonus = int(combo_counter * base_damage * 0.2)  # 20% bonus damage per combo point
-                    
+
                     # Calculate critical hit
                     is_critical = random.random() < (CRITICAL_CHANCE + combo_counter * 0.05)  # Combo increases crit chance
-                    
+
                     # Calculate total damage
                     damage = base_damage + weapon_bonus + combo_bonus
-                    
+
                     if is_critical:
                         crit_multiplier = 2.0
                         # Apply class-specific crit bonuses
@@ -8401,19 +8463,19 @@ def fight(monster: Dict) -> None:
                             crit_multiplier = 2.5
                         elif user_data["class"] == "Archer":
                             crit_multiplier = 2.2
-                            
+
                         damage = int(damage * crit_multiplier)
                         print_animated(f"{BG_YELLOW}{BLACK} CRITICAL HIT! {ENDC}", delay=0.02)
-                    
+
                     # Apply elemental damage modifiers
                     elemental_result = calculate_elemental_damage(player_element, monster_element, damage)
                     damage = elemental_result[0]
                     effect_message = elemental_result[1]
                     elemental_effects = elemental_result[2]
-                    
+
                     # Apply damage
                     monster_health -= damage
-                    
+
                     # Apply any elemental effects to monster
                     if elemental_effects:
                         for effect_name, effect_data in elemental_effects.items():
@@ -8422,12 +8484,12 @@ def fight(monster: Dict) -> None:
                                 "duration": effect_data.get("duration", 2),
                                 "effect": effect_data
                             })
-                    
+
                     # Display attack results
                     print_animated(f"You {get_attack_verb(combo_counter)} the {monster_name} for {LIGHTGREEN}{damage}{ENDC} damage!", delay=0.02)
                     if effect_message:
                         print_animated(f"{LIGHTCYAN}{effect_message}{ENDC}", delay=0.02)
-                    
+
                     # Update combo counter
                     combat_log.append("attack")
                     if len(combat_log) >= 3 and combat_log[-3:] == ["attack", "attack", "attack"]:
@@ -8440,7 +8502,7 @@ def fight(monster: Dict) -> None:
                         print_animated(f"The {monster_name} is stunned!", LIGHTYELLOW, delay=0.02)
                     else:
                         combo_counter = min(combo_counter + 1, max_combo)
-                
+
                 elif choice == "2":  # Use Skill
                     if user_data["skills"]:
                         print("\nAvailable skills:")
@@ -8449,40 +8511,40 @@ def fight(monster: Dict) -> None:
                             skill_name = skill if isinstance(skill, str) else skill.get("name", "Unknown Skill")
                             skill_desc = skill.get("description", "No description") if isinstance(skill, dict) else ""
                             skill_element = skill.get("element", player_element) if isinstance(skill, dict) else player_element
-                            
+
                             # Display with element color
                             print(f"[{i}] {get_element_color(skill_element)}{skill_name}{ENDC} - {skill_desc}")
-                            
+
                         try:
                             skill_choice = int(input("Choose skill (0 to cancel): "))
                             if skill_choice == 0:
                                 continue
-                                
+
                             if 1 <= skill_choice <= len(user_data["skills"]):
                                 skill = user_data["skills"][skill_choice - 1]
                                 skill_name = skill if isinstance(skill, str) else skill.get("name", "Unknown Skill")
                                 skill_element = skill.get("element", player_element) if isinstance(skill, dict) else player_element
-                                
+
                                 # Base skill damage calculation
                                 intellect_bonus = user_data.get("intellect", 0) * 0.5
                                 base_skill_damage = random.randint(15, 25) + int(intellect_bonus)
-                                
+
                                 # Calculate skill-specific damage
                                 if isinstance(skill, dict) and "damage_multiplier" in skill:
                                     skill_multiplier = skill.get("damage_multiplier", 1.0)
                                     damage = int(base_skill_damage * skill_multiplier)
                                 else:
                                     damage = base_skill_damage
-                                
+
                                 # Apply elemental damage modifiers
                                 elemental_result = calculate_elemental_damage(skill_element, monster_element, damage)
                                 damage = elemental_result[0]
                                 effect_message = elemental_result[1]
                                 elemental_effects = elemental_result[2]
-                                
+
                                 # Apply damage
                                 monster_health -= damage
-                                
+
                                 # Apply any elemental effects
                                 if elemental_effects:
                                     for effect_name, effect_data in elemental_effects.items():
@@ -8491,13 +8553,13 @@ def fight(monster: Dict) -> None:
                                             "duration": effect_data.get("duration", 2),
                                             "effect": effect_data
                                         })
-                                
+
                                 # Display skill results with visual effects
                                 print_animated(f"{BG_CYAN}{WHITE} SKILL ACTIVATED! {ENDC}", delay=0.02)
                                 print_animated(f"You cast {get_element_color(skill_element)}{skill_name}{ENDC} and deal {LIGHTGREEN}{damage}{ENDC} damage!", delay=0.02)
                                 if effect_message:
                                     print_animated(f"{LIGHTCYAN}{effect_message}{ENDC}", delay=0.02)
-                                
+
                                 # Special skill effects
                                 if isinstance(skill, dict) and "effects" in skill:
                                     for effect, value in skill["effects"].items():
@@ -8512,44 +8574,44 @@ def fight(monster: Dict) -> None:
                                         elif effect == "combo":
                                             combo_counter = min(combo_counter + value, max_combo)
                                             print_animated(f"Combo increased to {LIGHTMAGENTA}x{combo_counter}{ENDC}!", delay=0.02)
-                                
+
                                 # Reset combo counter after using a skill
                                 combat_log = []
                             else:
                                 print("Invalid skill choice.")
-                                
+
                         except ValueError:
                             print("Invalid input.")
                     else:
                         print(f"{YELLOW}You have no skills available!{ENDC}")
                         continue
-                        
+
                 elif choice == "3":  # Use Item
                     # Get a list of usable combat items
                     combat_items = [item for item in user_data["inventory"] 
                                   if item in ["Healing Potion", "Mana Potion", "Strength Potion", 
                                              "Defense Potion", "Speed Potion", "Bomb"]]
-                    
+
                     if combat_items:
                         print("\nUsable items:")
                         for i, item in enumerate(combat_items, 1):
                             print(f"[{i}] {item}")
-                            
+
                         try:
                             item_choice = int(input("Choose item (0 to cancel): "))
                             if item_choice == 0:
                                 continue
-                                
+
                             if 1 <= item_choice <= len(combat_items):
                                 item_name = combat_items[item_choice - 1]
-                                
+
                                 # Apply item effects
                                 if item_name == "Healing Potion":
                                     heal_amount = int(user_data["max_health"] * 0.3)  # 30% of max health
                                     user_data["health"] = min(user_data["health"] + heal_amount, user_data["max_health"])
                                     print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
                                     print_animated(f"You used a Healing Potion and recovered {LIGHTGREEN}{heal_amount}{ENDC} health!", delay=0.02)
-                                    
+
                                 elif item_name == "Strength Potion":
                                     # Add temporary strength buff
                                     player_status_effects.append({
@@ -8559,7 +8621,7 @@ def fight(monster: Dict) -> None:
                                     })
                                     print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
                                     print_animated("You used a Strength Potion! Attack increased for 3 turns.", delay=0.02)
-                                    
+
                                 elif item_name == "Defense Potion":
                                     # Add temporary defense buff
                                     player_status_effects.append({
@@ -8569,7 +8631,7 @@ def fight(monster: Dict) -> None:
                                     })
                                     print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
                                     print_animated("You used a Defense Potion! Defense increased for 3 turns.", delay=0.02)
-                                    
+
                                 elif item_name == "Speed Potion":
                                     # Add temporary speed buff
                                     player_status_effects.append({
@@ -8579,63 +8641,63 @@ def fight(monster: Dict) -> None:
                                     })
                                     print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
                                     print_animated("You used a Speed Potion! Speed increased for 3 turns.", delay=0.02)
-                                    
+
                                 elif item_name == "Bomb":
                                     # Deal direct damage to monster
                                     bomb_damage = 50  # Fixed damage
                                     monster_health -= bomb_damage
                                     print_animated(f"{BG_GREEN}{BLACK} ITEM USED! {ENDC}", delay=0.02)
                                     print_animated(f"You threw a Bomb! The {monster_name} takes {LIGHTRED}{bomb_damage}{ENDC} damage!", delay=0.02)
-                                
+
                                 # Remove the item after use
                                 user_data["inventory"].remove(item_name)
-                                
+
                             else:
                                 print("Invalid item choice.")
-                                
+
                         except ValueError:
                             print("Invalid input.")
                     else:
                         print(f"{YELLOW}You have no usable combat items!{ENDC}")
                         continue
-                
+
                 elif choice == "4" and active_pet and active_pet.get("abilities", []):  # Pet Command
                     # Get active pet abilities
                     pet_abilities = []
                     pet_stats = user_data["pet_stats"].get(active_pet["name"], {}).get("level", 1)
                     pet_loyalty = user_data["pet_stats"].get(active_pet["name"], {}).get("loyalty", 50)
-                    
+
                     # Get abilities available at current pet level
                     for level_req, ability_name in active_pet.get("abilities", {}).items():
                         if int(level_req) <= pet_stats:
                             pet_abilities.append(ability_name)
-                    
+
                     if not pet_abilities:
                         print_animated(f"{YELLOW}{active_pet['name']} doesn't know any abilities yet. Train your pet more!{ENDC}", delay=0.02)
                         continue
-                        
+
                     # Display pet abilities
                     print(f"\n{CYAN}{active_pet['name']}'s Abilities:{ENDC}")
                     for i, ability in enumerate(pet_abilities, 1):
                         ability_desc = ABILITY_DESCRIPTIONS.get(ability, "No description available")
                         print(f"{i}. {MAGENTA}{ability}{ENDC} - {ability_desc}")
-                    
+
                     print(f"0. {YELLOW}Back{ENDC}")
-                    
+
                     try:
                         ability_choice = int(input("Choose ability (0 to cancel): "))
                         if ability_choice == 0:
                             continue
-                            
+
                         if 1 <= ability_choice <= len(pet_abilities):
                             selected_ability = pet_abilities[ability_choice-1]
-                            
+
                             # Check loyalty for ability success
                             loyalty_check_passed = True
                             if pet_loyalty < 30 and random.random() < 0.3:  # 30% chance to fail at low loyalty
                                 print_animated(f"{RED}{active_pet['name']} ignores your command!{ENDC}", delay=0.02)
                                 loyalty_check_passed = False
-                            
+
                             if loyalty_check_passed:
                                 # Process pet ability
                                 if selected_ability == "Quick Attack":
@@ -8643,32 +8705,32 @@ def fight(monster: Dict) -> None:
                                     pet_damage = int(user_data.get("attack", 10) * 0.1)  # 10% of player attack
                                     monster_health -= pet_damage
                                     print_animated(f"{CYAN}{active_pet['name']} dashes forward with a quick attack, dealing {LIGHTRED}{pet_damage}{ENDC} damage!", delay=0.02)
-                                
+
                                 elif selected_ability == "Protective Stance":
                                     # Pet provides damage reduction
                                     pet_shield_active = True
                                     pet_shield_duration = 3
                                     print_animated(f"{CYAN}{active_pet['name']} takes a protective stance, ready to block incoming attacks!{ENDC}", delay=0.02)
-                                
+
                                 elif selected_ability == "Flame Burst":
                                     # Pet deals fire elemental damage
                                     pet_damage = int(user_data.get("attack", 10) * 0.15)  # 15% of player attack
                                     # Apply elemental damage calculation
                                     final_damage, reaction_name, reaction_effect = calculate_elemental_damage("Fire", monster_element, pet_damage)
                                     monster_health -= final_damage
-                                    
+
                                     print_animated(f"{CYAN}{active_pet['name']} unleashes a burst of {RED}flames{ENDC}, dealing {LIGHTRED}{final_damage}{ENDC} damage!", delay=0.02)
-                                    
+
                                     if reaction_name:
                                         print_animated(f"{YELLOW}Elemental Reaction: {reaction_name}!{ENDC}", delay=0.02)
                                         apply_elemental_effects(monster, reaction_effect, is_player=False)
-                                
+
                                 elif selected_ability == "Healing Mist":
                                     # Pet heals player
                                     heal_amount = int(user_data.get("max_health", 100) * 0.1)  # 10% of max health
                                     user_data["health"] = min(user_data["health"] + heal_amount, user_data["max_health"])
                                     print_animated(f"{CYAN}{active_pet['name']} creates a healing mist, restoring {GREEN}{heal_amount}{ENDC} health!", delay=0.02)
-                                
+
                                 elif selected_ability == "Stone Shield":
                                     # Pet creates a stronger shield
                                     pet_shield_active = True
@@ -8679,7 +8741,7 @@ def fight(monster: Dict) -> None:
                                         "effect": {"defense": int(user_data.get("defense", 5) * 0.15)}  # 15% defense boost
                                     })
                                     print_animated(f"{CYAN}{active_pet['name']} creates a shield of stone around you!{ENDC}", delay=0.02)
-                                
+
                                 elif selected_ability == "Swift Movement":
                                     # Pet increases dodge chance
                                     pet_dodge_bonus = 0.1  # +10% dodge chance
@@ -8689,31 +8751,31 @@ def fight(monster: Dict) -> None:
                                         "effect": {"speed": int(user_data.get("speed", 5) * 0.2)}  # 20% speed boost
                                     })
                                     print_animated(f"{CYAN}{active_pet['name']} enhances your agility, making you more difficult to hit!{ENDC}", delay=0.02)
-                                
+
                                 elif selected_ability == "Shock Strike":
                                     # Pet deals lightning damage with stun chance
                                     pet_damage = int(user_data.get("attack", 10) * 0.15)  # 15% of player attack
                                     # Apply elemental damage calculation
                                     final_damage, reaction_name, reaction_effect = calculate_elemental_damage("Lightning", monster_element, pet_damage)
                                     monster_health -= final_damage
-                                    
+
                                     print_animated(f"{CYAN}{active_pet['name']} strikes with {YELLOW}lightning{ENDC}, dealing {LIGHTRED}{final_damage}{ENDC} damage!", delay=0.02)
-                                    
+
                                     # Chance to stun
                                     if random.random() < 0.15:  # 15% stun chance
                                         monster_stunned = True
                                         print_animated(f"{YELLOW}The {monster_name} is stunned!{ENDC}", delay=0.02)
-                                        
+
                                     if reaction_name:
                                         print_animated(f"{YELLOW}Elemental Reaction: {reaction_name}!{ENDC}", delay=0.02)
                                         apply_elemental_effects(monster, reaction_effect, is_player=False)
-                                
+
                                 elif selected_ability == "Energy Pulse":
                                     # Pet deals neutral damage
                                     pet_damage = int(user_data.get("attack", 10) * 0.12)  # 12% of player attack
                                     monster_health -= pet_damage
                                     print_animated(f"{CYAN}{active_pet['name']} releases a pulse of neutral energy, dealing {LIGHTRED}{pet_damage}{ENDC} damage!", delay=0.02)
-                                
+
                                 elif selected_ability == "Find Treasure":
                                     # No direct combat effect, will be checked during loot
                                     print_animated(f"{CYAN}{active_pet['name']} is keeping an eye out for extra treasures!{ENDC}", delay=0.02)
@@ -8721,7 +8783,7 @@ def fight(monster: Dict) -> None:
                                     pet_damage = int(user_data.get("attack", 10) * 0.05)  # 5% of player attack
                                     monster_health -= pet_damage
                                     print_animated(f"{CYAN}While searching, {active_pet['name']} deals {LIGHTRED}{pet_damage}{ENDC} damage!", delay=0.02)
-                                
+
                                 elif selected_ability == "Intimidate":
                                     # Chance for weaker enemies to flee
                                     if monster_level < user_data.get("level", 1) and random.random() < 0.3:  # 30% chance if monster is lower level
@@ -8737,7 +8799,7 @@ def fight(monster: Dict) -> None:
                                             "effect": {"attack": -int(monster["attack"] * 0.15)}  # Reduce enemy attack by 15%
                                         })
                                         print_animated(f"{CYAN}{active_pet['name']} intimidates the {monster_name}, lowering its attack power!{ENDC}", delay=0.02)
-                                
+
                                 elif selected_ability == "Fierce Loyalty":
                                     # Only activates when player health is low, gives damage boost
                                     if user_data["health"] < user_data["max_health"] * 0.2:  # Below 20% health
@@ -8749,11 +8811,11 @@ def fight(monster: Dict) -> None:
                                         pet_damage = int(user_data.get("attack", 10) * 0.1)  # 10% of player attack
                                         monster_health -= pet_damage
                                         print_animated(f"{CYAN}{active_pet['name']} loyally attacks for {LIGHTRED}{pet_damage}{ENDC} damage!{ENDC}", delay=0.02)
-                                
+
                                 # Pet gains experience from battle
                                 if "pet_stats" not in user_data:
                                     user_data["pet_stats"] = {}
-                                    
+
                                 if active_pet["name"] not in user_data["pet_stats"]:
                                     user_data["pet_stats"][active_pet["name"]] = {
                                         "level": 1,
@@ -8763,17 +8825,17 @@ def fight(monster: Dict) -> None:
                                         "abilities": [],
                                         "element": active_pet.get("element", "Nullum")
                                     }
-                                    
+
                                 # Add some exp for using ability in battle
                                 user_data["pet_stats"][active_pet["name"]]["exp"] += 3
-                                
+
                         else:
                             print("Invalid ability selection.")
                             continue
                     except ValueError:
                         print("Please enter a valid number.")
                         continue
-                
+
                 elif choice == "5" and active_pet and active_pet.get("abilities", []) or choice == "4":  # Defend
                     # Reduce incoming damage and gain a small health recovery
                     defense_buff = int(user_data.get("defense", 5) * 0.5)
@@ -8782,42 +8844,42 @@ def fight(monster: Dict) -> None:
                         "duration": 1,
                         "effect": {"defense": defense_buff}
                     })
-                    
+
                     # Heal a small amount
                     heal_amount = int(user_data["max_health"] * 0.05)  # 5% of max health
                     user_data["health"] = min(user_data["health"] + heal_amount, user_data["max_health"])
-                    
+
                     # Gain a combo point
                     combo_counter = min(combo_counter + 1, max_combo)
-                    
+
                     print_animated(f"{BG_BLUE}{WHITE} DEFENDING! {ENDC}", delay=0.02)
                     print_animated(f"You take a defensive stance! Reduced damage for 1 turn and recovered {LIGHTGREEN}{heal_amount}{ENDC} health.", delay=0.02)
                     print_animated(f"Combo increased to {LIGHTMAGENTA}x{combo_counter}{ENDC}!", delay=0.02)
-                    
+
                     # Update combat log
                     combat_log.append("defend")
-                
+
                 elif choice == "6" and active_pet and active_pet.get("abilities", []) or choice == "5" and not (active_pet and active_pet.get("abilities", [])):  # Flee
                     # Calculate flee chance based on speed and status
                     player_speed = user_data.get("speed", 5)
                     monster_speed = monster.get("speed", 5)
-                    
+
                     # Apply speed buffs from status effects
                     for effect in player_status_effects:
                         if "speed" in effect["effect"]:
                             player_speed += effect["effect"]["speed"]
-                    
+
                     base_chance = 0.4  # Base flee chance
                     speed_diff = player_speed - monster_speed
                     flee_chance = base_chance + (speed_diff * 0.05)
-                    
+
                     # Boss battles are harder to flee from
                     if monster.get("boss", False):
                         flee_chance *= 0.5
-                    
+
                     # Clamp between 10% and 90%
                     flee_chance = max(0.1, min(flee_chance, 0.9))
-                    
+
                     # Roll for success
                     if random.random() < flee_chance:
                         print_animated(f"{BG_GREEN}{BLACK} ESCAPED! {ENDC}", delay=0.02)
@@ -8829,20 +8891,20 @@ def fight(monster: Dict) -> None:
                         # Reset combo after failed flee
                         combo_counter = 0
                         combat_log = []
-                
+
                 else:
                     print(f"{YELLOW}Invalid choice!{ENDC}")
                     continue
-            
+
             # Update status effects
             player_status_effects = [effect for effect in player_status_effects if effect["duration"] > 0]
             for effect in player_status_effects:
                 effect["duration"] -= 1
-            
+
             monster_status_effects = [effect for effect in monster_status_effects if effect["duration"] > 0]
             for effect in monster_status_effects:
                 effect["duration"] -= 1
-            
+
             # Monster's turn if it's still alive and not stunned
             if monster_health > 0:
                 if monster_stunned:
@@ -8850,19 +8912,19 @@ def fight(monster: Dict) -> None:
                     monster_stunned = False  # Reset stun for next turn
                 else:
                     print_animated(f"\n{LIGHTRED}Enemy's turn!{ENDC}", delay=0.02)
-                    
+
                     # Calculate base monster damage
                     monster_attack = monster["attack"]
-                    
+
                     # Calculate player defense with equipment and status effects
                     defense_bonus = user_data.get("equipped", {}).get("armor", {}).get("effect", 0)
                     for effect in player_status_effects:
                         if "defense" in effect["effect"]:
                             defense_bonus += effect["effect"]["defense"]
-                    
+
                     # Calculate final damage
                     damage_taken = max(1, monster_attack - defense_bonus)
-                    
+
                     # Check for pet shield effect
                     if pet_shield_active and pet_shield_duration > 0 and active_pet:
                         # Check for Protective Stance ability
@@ -8872,41 +8934,41 @@ def fight(monster: Dict) -> None:
                                 blocked_damage = int(damage_taken * 0.3)  # Block 30% of damage
                                 damage_taken -= blocked_damage
                                 print_animated(f"{CYAN}{active_pet['name']} blocks {blocked_damage} damage!{ENDC}", delay=0.02)
-                        
+
                         # Decrement pet shield duration
                         pet_shield_duration -= 1
                         if pet_shield_duration <= 0:
                             pet_shield_active = False
                             print_animated(f"{YELLOW}{active_pet['name']}'s protective stance ends.{ENDC}", delay=0.02)
-                    
+
                     # Check for dodge
                     player_speed = user_data.get("speed", 5)
                     for effect in player_status_effects:
                         if "speed" in effect["effect"]:
                             player_speed += effect["effect"]["speed"]
-                    
+
                     dodge_chance = DODGE_CHANCE + (player_speed * 0.01)  # Speed increases dodge chance
-                    
+
                     # Add pet dodge bonus if active
                     if pet_dodge_bonus > 0:
                         dodge_chance += pet_dodge_bonus
-                        
+
                     dodge_chance = min(dodge_chance, 0.5)  # Cap at 50%
-                    
+
                     if random.random() < dodge_chance:
                         print_animated(f"{BG_CYAN}{BLACK} DODGE! {ENDC}", delay=0.02)
                         print_animated("You dodged the attack!", delay=0.02)
                     else:
                         # Apply damage to player
                         user_data["health"] -= damage_taken
-                        
+
                         # Check for critical hit from monster
                         if random.random() < 0.1:  # 10% monster crit chance
                             damage_taken = int(damage_taken * 1.5)
                             print_animated(f"{BG_RED}{WHITE} CRITICAL HIT! {ENDC}", delay=0.02)
-                        
+
                         print_animated(f"The {monster_name} attacks and deals {LIGHTRED}{damage_taken}{ENDC} damage!", delay=0.02)
-                        
+
                         # Apply monster attack effects
                         if "effects" in monster:
                             for effect_name, chance in monster["effects"].items():
@@ -8928,7 +8990,7 @@ def fight(monster: Dict) -> None:
                                             "effect": {"burn_damage": int(user_data["max_health"] * 0.07)}
                                         })
                                         print_animated(f"{LIGHTRED}You are burning!{ENDC}", delay=0.02)
-                    
+
                     # Apply damage over time effects
                     for effect in player_status_effects:
                         if "poison_damage" in effect["effect"]:
@@ -8946,27 +9008,27 @@ def fight(monster: Dict) -> None:
 
     # Combat conclusion
     print_animated(f"\n{BG_CYAN}{WHITE} BATTLE COMPLETED! {ENDC}", delay=0.05)
-    
+
     if monster_health <= 0:
         print_animated(f"\n{BG_GREEN}{BLACK} VICTORY! {ENDC}", delay=0.05)
         print_animated(f"You defeated the {monster_name}!", LIGHTGREEN, delay=0.03)
-        
+
         # Calculate experience and rewards
         exp_gain = monster["level"] * 20
-        
+
         # Bonus exp for higher level monsters
         if monster["level"] > user_data["level"]:
             level_diff = monster["level"] - user_data["level"]
             exp_bonus = int(exp_gain * (level_diff * 0.2))  # 20% more exp per level difference
             exp_gain += exp_bonus
             print_animated(f"Bonus EXP for defeating a stronger enemy: +{exp_bonus}!", LIGHTCYAN, delay=0.02)
-        
+
         user_data["exp"] += exp_gain
         print_animated(f"Gained {LIGHTCYAN}{exp_gain}{ENDC} experience!", delay=0.02)
 
         # Increment monsters killed count
         user_data["monsters_killed"] += 1
-        
+
         # Increment specific monster type counter
         monster_type = monster.get("type", "unknown")
         if "monster_types_killed" not in user_data:
@@ -8980,12 +9042,12 @@ def fight(monster: Dict) -> None:
         if monster.get("boss", False):
             print_animated(f"{BG_MAGENTA}{WHITE} BOSS DEFEATED! {ENDC}", delay=0.05)
             print_animated(f"Congratulations! You defeated the boss {monster_name}!", LIGHTMAGENTA, delay=0.03)
-            
+
             # Award special boss rewards
             bonus_gold = monster["level"] * 50
             user_data["gold"] += bonus_gold
             print_animated(f"Bonus reward: {LIGHTYELLOW}{bonus_gold} gold{ENDC}!", delay=0.02)
-            
+
             # Initialize adventurer data if it doesn't exist
             if "adventurer" not in user_data:
                 user_data["adventurer"] = {
@@ -8996,23 +9058,23 @@ def fight(monster: Dict) -> None:
                     "bosses_defeated": 0,
                     "reputation": 0
                 }
-            
+
             # Increment boss counter
             user_data["adventurer"]["bosses_defeated"] += 1
-            
+
             # Award adventurer experience (boss level * 20)
             boss_level = monster.get("level", 1)
             adv_exp = boss_level * 20
             add_adventurer_exp(adv_exp)
-            
+
             # Display adventurer rewards
             print_animated(f"\n{CYAN}Adventurer's Guild:{ENDC} Boss defeated!", delay=0.02)
             print_animated(f"{CYAN}+{adv_exp} Adventurer EXP{ENDC}", delay=0.02)
             print_animated(f"{CYAN}Bosses Defeated:{ENDC} {user_data['adventurer']['bosses_defeated']}", delay=0.02)
-            
+
             # Check if rank advancement is available
             check_rank_advancement()
-            
+
             # Check for level up
             check_level_up()
         else:
@@ -9022,11 +9084,11 @@ def fight(monster: Dict) -> None:
                 monster_level = monster.get("level", 1)
                 adv_exp = max(5, monster_level * 2)  # Minimum 5 exp
                 add_adventurer_exp(adv_exp)
-                
+
                 # Only show message if it's at least 10 exp
                 if adv_exp >= 10:
                     print_animated(f"{CYAN}+{adv_exp} Adventurer EXP{ENDC}", delay=0.02)
-            
+
             # Check for level up
             check_level_up()
 
@@ -9036,13 +9098,13 @@ def fight(monster: Dict) -> None:
         print_animated(f"\n{BG_RED}{WHITE} DEFEAT! {ENDC}", delay=0.05)
         print_animated("You were defeated!", LIGHTRED, delay=0.03)
         user_data["health"] = 1  # Prevent death, set to 1 HP
-        
+
         # Lose some gold on defeat
         if user_data["gold"] > 0:
             gold_loss = max(1, int(user_data["gold"] * 0.1))  # Lose 10% of gold
             user_data["gold"] -= gold_loss
             print_animated(f"You lost {LIGHTYELLOW}{gold_loss} gold{ENDC}!", delay=0.02)
-        
+
         print_animated("Rest at an inn or use a healing potion to recover.", LIGHTCYAN, delay=0.02)
 
 # Utility functions for the enhanced combat system
@@ -9050,14 +9112,14 @@ def create_health_bar(percent: float, length: int = 20) -> str:
     """Creates a visual health bar based on percentage"""
     filled_length = int(length * percent)
     empty_length = length - filled_length
-    
+
     if percent > 0.7:
         bar_color = LIGHTGREEN
     elif percent > 0.3:
         bar_color = LIGHTYELLOW
     else:
         bar_color = LIGHTRED
-    
+
     bar = f"{bar_color}{'█' * filled_length}{GREY}{'▒' * empty_length}{ENDC}"
     return bar
 
@@ -9192,34 +9254,34 @@ def delete_save(slot: int) -> None:
 
 def _display_and_select_quests(quest_entries, has_hylit):
     """Helper function to display and select from a list of quest entries.
-    
+
     Args:
         quest_entries: List of quest entries with availability info
         has_hylit: Boolean indicating if player has Hylit companion
-        
+
     Returns:
         Selected quest entry or None if no selection made
     """
     if not quest_entries:
         print("No quests available.")
         return None
-        
+
     available_quests = []
     unavailable_quests = []
-    
+
     # Separate available and unavailable quests
     for entry in quest_entries:
         if entry["prerequisite_met"] and entry["level_met"] and entry["location_available"]:
             available_quests.append(entry)
         else:
             unavailable_quests.append(entry)
-            
+
     # Display available quests first
     if available_quests:
         print(f"\n{GREEN}Available Quests:{ENDC}")
         for i, entry in enumerate(available_quests, 1):
             quest = entry["quest"]
-            
+
             # Enhanced display based on quest type
             if quest.get("story", False):
                 if "story_arc" in quest:
@@ -9228,22 +9290,22 @@ def _display_and_select_quests(quest_entries, has_hylit):
                     print(f"\n{i}. {YELLOW}{quest['name']}{ENDC} [Chapter {quest.get('chapter', '?')}]")
             else:
                 print(f"\n{i}. {quest['name']}")
-                
+
             # Hylit narration for immersion
             if has_hylit:
                 print_animated(f"Hylit whispers: '{quest['description']}'", CYAN)
             else:
                 print(f"   {quest['description']}")
-                
+
             # Quest objective
             target_type, target_count = next(iter(quest["target"].items()))
             print(f"   Objective: {target_type.capitalize()} x {target_count}")
-            
+
             # Rewards with color coding
             print(f"   Rewards: {YELLOW}{quest['reward']['gold']}{ENDC} gold, {GREEN}{quest['reward']['exp']}{ENDC} exp")
             if "item" in quest["reward"]:
                 print(f"           + {MAGENTA}{quest['reward']['item']}{ENDC}")
-                
+
             # Special requirements
             if "requirements" in quest:
                 req = quest["requirements"]
@@ -9259,24 +9321,24 @@ def _display_and_select_quests(quest_entries, has_hylit):
                     prof_match = req["profession"] == user_data.get("profession", "")
                     status = f"{GREEN}✓{ENDC}" if prof_match else f"{RED}✗{ENDC}"
                     print(f"   Required Profession: {req['profession']} {status}")
-                    
+
     # Display unavailable quests with reason
     if unavailable_quests:
         print(f"\n{YELLOW}Unavailable Quests:{ENDC}")
         for i, entry in enumerate(unavailable_quests, len(available_quests) + 1):
             quest = entry["quest"]
             reasons = []
-            
+
             if not entry["prerequisite_met"]:
                 reasons.append(f"{RED}Prerequisite not met{ENDC}")
             if not entry["level_met"]:
                 reasons.append(f"{RED}Requires level {quest.get('level_required', '?')}{ENDC}")
             if not entry["location_available"]:
                 reasons.append(f"{YELLOW}Must travel to: {', '.join(quest.get('travel_locations', []))}{ENDC}")
-                
+
             print(f"\n{i}. {LIGHTGRAY}{quest['name']}{ENDC} ({', '.join(reasons)})")
             print(f"   {LIGHTGRAY}{quest['description']}{ENDC}")
-    
+
     # Prompt for quest selection if any available
     if available_quests:
         choice = input("\nSelect a quest to accept (or 0 to go back): ").strip()
@@ -9284,7 +9346,7 @@ def _display_and_select_quests(quest_entries, has_hylit):
             choice_index = int(choice)
             if choice_index == 0:
                 return None
-                
+
             if 1 <= choice_index <= len(available_quests):
                 return available_quests[choice_index - 1]
             else:
@@ -9302,7 +9364,7 @@ def show_quests() -> None:
 
     # Check if player has Hylit companion for narration
     has_hylit = "Hylit" in user_data["pets"]
-    
+
     # Initialize quest categories
     quest_categories = {
         "main_story": [],      # Main storyline quests
@@ -9314,27 +9376,27 @@ def show_quests() -> None:
         "daily": [],           # Daily quests that reset
         "general": []          # General side quests
     }
-    
+
     # Categorize available quests
     for quest in QUESTS:
         # Skip completed quests
         if quest["id"] in user_data["completed_quests"]:
             continue
-            
+
         # Skip active quests for available quest display
         if quest in user_data["active_quests"]:
             continue
-            
+
         # Check if quest is available based on prerequisites
         prerequisite_met = True
         if "prerequisite" in quest and quest["prerequisite"] not in user_data["completed_quests"]:
             prerequisite_met = False
-            
+
         # Check level requirements
         level_met = True
         if "level_required" in quest and user_data["level"] < quest["level_required"]:
             level_met = False
-            
+
         # Create a quest entry with availability info
         quest_entry = {
             "quest": quest,
@@ -9342,7 +9404,7 @@ def show_quests() -> None:
             "level_met": level_met,
             "location_available": "travel_locations" not in quest or user_data["location"] in quest["travel_locations"]
         }
-        
+
         # Categorize based on quest attributes
         if quest.get("story", False) and not quest.get("story_arc", None):
             quest_categories["main_story"].append(quest_entry)
@@ -9366,7 +9428,7 @@ def show_quests() -> None:
             quest_categories["location"].append(quest_entry)
         else:
             quest_categories["general"].append(quest_entry)
-    
+
     # Define quest menu options
     quest_menu_options = {
         "1": "View Main Story Quests",
@@ -9376,93 +9438,93 @@ def show_quests() -> None:
         "5": "View Completed Quests",
         "0": "Back"
     }
-    
+
     while True:
         print("\nQuest Menu:")
         for key, option in quest_menu_options.items():
             print(f"{key}. {option}")
-            
+
         choice = input("\nSelect an option: ").strip()
-        
+
         if choice == "0":
             return
-            
+
         elif choice == "1":  # Main story quests
             print_header("Main Story Quests")
-            
+
             if not quest_categories["main_story"]:
                 print("No main story quests available at this time.")
                 input("\nPress Enter to continue...")
                 continue
-                
+
             # Sort main story quests by chapter
             quest_categories["main_story"].sort(key=lambda x: x["quest"].get("chapter", 0))
-            
+
             # Display main story quests
             quest_selected = _display_and_select_quests(quest_categories["main_story"], has_hylit)
             if quest_selected:
                 # Accept the quest
                 user_data["active_quests"].append(quest_selected["quest"])
                 print(f"\n{GREEN}Quest '{quest_selected['quest']['name']}' added to your journal!{ENDC}")
-                
+
                 # Special handling for storyline quests - show immersive message
                 chapter = quest_selected["quest"].get("chapter", 0)
                 print_animated(f"\nChapter {chapter} begins...", CYAN)
                 if has_hylit:
                     print_animated("Hylit: 'This is a pivotal moment in your journey. The path ahead may be challenging, but I believe in you!'", CYAN)
-                
+
                 input("\nPress Enter to continue...")
-                
+
         elif choice == "2":  # Story arc quests
             if not quest_categories["story_arcs"]:
                 print("No story arc quests available at this time.")
                 input("\nPress Enter to continue...")
                 continue
-                
+
             # Create story arc menu
             print_header("Story Arcs")
             story_arcs = list(quest_categories["story_arcs"].keys())
-            
+
             for i, arc in enumerate(story_arcs, 1):
                 available_quests = sum(1 for q in quest_categories["story_arcs"][arc] 
                                      if q["prerequisite_met"] and q["level_met"] and q["location_available"])
                 total_quests = len(quest_categories["story_arcs"][arc])
                 print(f"{i}. {arc} ({available_quests}/{total_quests} available)")
-                
+
             arc_choice = input("\nSelect a story arc (or 0 to go back): ").strip()
-            
+
             try:
                 arc_index = int(arc_choice)
                 if arc_index == 0:
                     continue
-                    
+
                 if 1 <= arc_index <= len(story_arcs):
                     selected_arc = story_arcs[arc_index-1]
                     print_header(f"{selected_arc} Quests")
-                    
+
                     # Sort by quest sequence (prerequisite chain)
                     arc_quests = quest_categories["story_arcs"][selected_arc]
                     quest_selected = _display_and_select_quests(arc_quests, has_hylit)
-                    
+
                     if quest_selected:
                         # Accept the quest
                         user_data["active_quests"].append(quest_selected["quest"])
                         print(f"\n{GREEN}Quest '{quest_selected['quest']['name']}' added to your journal!{ENDC}")
-                        
+
                         # Special immersive message for story arcs
                         if has_hylit:
                             if selected_arc == "Weather Mysteries":
                                 print_animated("Hylit: 'The weather holds many secrets. This quest may reveal forgotten knowledge about the elements themselves.'", CYAN)
                             elif selected_arc == "Void Walker":
                                 print_animated("Hylit: 'These dimensional disturbances are concerning. Be cautious as you investigate further.'", CYAN)
-                        
+
                         input("\nPress Enter to continue...")
             except ValueError:
                 print("Invalid choice. Please enter a number.")
-                
+
         elif choice == "3":  # Side quests
             print_header("Available Side Quests")
-            
+
             # Combine all side quest categories
             all_side_quests = (
                 quest_categories["location"] + 
@@ -9472,12 +9534,12 @@ def show_quests() -> None:
                 quest_categories["daily"] + 
                 quest_categories["general"]
             )
-            
+
             if not all_side_quests:
                 print("No side quests available at this time.")
                 input("\nPress Enter to continue...")
                 continue
-                
+
             # Filter options for side quests
             filter_options = {
                 "1": "All Side Quests",
@@ -9488,16 +9550,16 @@ def show_quests() -> None:
                 "6": "Daily Quests",
                 "0": "Back"
             }
-            
+
             print("\nFilter Options:")
             for key, option in filter_options.items():
                 print(f"{key}. {option}")
-                
+
             filter_choice = input("\nSelect a filter: ").strip()
-            
+
             if filter_choice == "0":
                 continue
-                
+
             filtered_quests = []
             if filter_choice == "1":
                 filtered_quests = all_side_quests
@@ -9514,30 +9576,30 @@ def show_quests() -> None:
             else:
                 print("Invalid choice.")
                 continue
-                
+
             if not filtered_quests:
                 print("No quests found with this filter.")
                 input("\nPress Enter to continue...")
                 continue
-                
+
             # Sort side quests by level required
             filtered_quests.sort(key=lambda x: x["quest"].get("level_required", 0))
-            
+
             quest_selected = _display_and_select_quests(filtered_quests, has_hylit)
             if quest_selected:
                 # Accept the quest
                 user_data["active_quests"].append(quest_selected["quest"])
                 print(f"\n{GREEN}Quest '{quest_selected['quest']['name']}' added to your journal!{ENDC}")
                 input("\nPress Enter to continue...")
-                
+
         elif choice == "4":  # Active quests
             print_header("Active Quests")
-            
+
             if not user_data["active_quests"]:
                 print("You have no active quests.")
                 input("\nPress Enter to continue...")
                 continue
-                
+
             # Display active quests with detailed progress
             active_quests = user_data["active_quests"]
             for i, quest in enumerate(active_quests, 1):
@@ -9548,7 +9610,7 @@ def show_quests() -> None:
                         quest_type = f"{quest['story_arc']} Quest"
                     else:
                         quest_type = f"Chapter {quest.get('chapter', '?')} Main Quest"
-                        
+
                 # Format quest header with color based on type
                 if "Chapter" in quest_type:
                     print(f"\n{i}. {YELLOW}{quest['name']}{ENDC} ({quest_type})")
@@ -9556,85 +9618,85 @@ def show_quests() -> None:
                     print(f"\n{i}. {CYAN}{quest['name']}{ENDC} ({quest_type})")
                 else:
                     print(f"\n{i}. {GREEN}{quest['name']}{ENDC} ({quest_type})")
-                    
+
                 print(f"   Description: {quest['description']}")
-                
+
                 # Show quest objective with progress bar
                 target = next(iter(quest["target"].items()))
                 target_type, target_count = target
                 target_progress = user_data.get("quest_progress", {}).get(quest["name"], {}).get(target_type, 0)
-                
+
                 # Calculate progress percentage and create visual progress bar
                 progress_percent = min(100, int((target_progress / target_count) * 100))
                 progress_bar = create_progress_bar(progress_percent/100)
-                
+
                 print(f"   Objective: {target_type.capitalize()} x {target_count}")
                 print(f"   Progress: {progress_bar} {target_progress}/{target_count} ({progress_percent}%)")
-                
+
                 # Show rewards
                 print("   Rewards:")
                 print(f"     - {quest['reward']['gold']} gold")
                 print(f"     - {quest['reward']['exp']} experience")
                 if "item" in quest["reward"]:
                     print(f"     - Item: {quest['reward']['item']}")
-                    
+
                 # Location requirement, if any
                 if "travel_locations" in quest:
                     if user_data["location"] in quest["travel_locations"]:
                         print(f"   {GREEN}You are in the right location to progress this quest.{ENDC}")
                     else:
                         print(f"   {YELLOW}Travel to: {', '.join(quest['travel_locations'])}{ENDC}")
-                        
+
             # Option to abandon a quest
             print("\nOptions:")
             print("1. Return to quest menu")
             print("2. Abandon a quest")
-            
+
             active_choice = input("\nSelect an option: ").strip()
-            
+
             if active_choice == "2":
                 abandon_index = input("Enter the number of the quest to abandon (or 0 to cancel): ").strip()
                 try:
                     abandon_index = int(abandon_index)
                     if abandon_index == 0:
                         continue
-                        
+
                     if 1 <= abandon_index <= len(active_quests):
                         quest_to_abandon = active_quests[abandon_index-1]
-                        
+
                         # Check if it's a main story quest
                         if quest_to_abandon.get("story", False) and not quest_to_abandon.get("story_arc", None):
                             confirm = input(f"{RED}Warning: This is a main story quest. Are you sure you want to abandon it? (y/n): {ENDC}").strip().lower()
                             if confirm != 'y':
                                 continue
-                                
+
                         # Abandon the quest
                         user_data["active_quests"].remove(quest_to_abandon)
                         print(f"{YELLOW}Quest '{quest_to_abandon['name']}' abandoned.{ENDC}")
                 except ValueError:
                     print("Invalid choice. Please enter a number.")
-            
+
         elif choice == "5":  # Completed quests
             print_header("Completed Quests")
-            
+
             # Get all completed quests
             completed_quest_ids = user_data["completed_quests"]
             if not completed_quest_ids:
                 print("You haven't completed any quests yet.")
                 input("\nPress Enter to continue...")
                 continue
-                
+
             # Find quest details for each completed ID
             completed_quests = []
             for quest in QUESTS:
                 if quest["id"] in completed_quest_ids:
                     completed_quests.append(quest)
-                    
+
             # Group by chapter and story arc
             completed_by_chapter = {}
             completed_by_arc = {}
             completed_side = []
-            
+
             for quest in completed_quests:
                 if quest.get("story", False):
                     if "story_arc" in quest:
@@ -9649,7 +9711,7 @@ def show_quests() -> None:
                         completed_by_chapter[chapter].append(quest)
                 else:
                     completed_side.append(quest)
-                    
+
             # Display completed main story quests by chapter
             if completed_by_chapter:
                 print("\nCompleted Main Story Quests:")
@@ -9657,7 +9719,7 @@ def show_quests() -> None:
                     print(f"\nChapter {chapter}:")
                     for quest in completed_by_chapter[chapter]:
                         print(f"  - {YELLOW}{quest['name']}{ENDC}")
-                        
+
             # Display completed story arc quests
             if completed_by_arc:
                 print("\nCompleted Story Arc Quests:")
@@ -9665,21 +9727,21 @@ def show_quests() -> None:
                     print(f"\n{arc}:")
                     for quest in completed_by_arc[arc]:
                         print(f"  - {CYAN}{quest['name']}{ENDC}")
-                        
+
             # Display completed side quests
             if completed_side:
                 print("\nCompleted Side Quests:")
                 for quest in completed_side:
                     print(f"  - {GREEN}{quest['name']}{ENDC}")
-                    
+
             # Show completion statistics
             total_completed = len(completed_quest_ids)
             total_available = len(QUESTS)
             completion_percent = int((total_completed / total_available) * 100)
-            
+
             print("\nQuest Completion Stats:")
             print(f"Total Quests Completed: {total_completed}/{total_available} ({completion_percent}%)")
-            
+
             # Show milestones and achievements based on completion
             if completion_percent >= 10:
                 print(f"{GREEN}Achievement: Quest Beginner{ENDC}")
@@ -9691,9 +9753,9 @@ def show_quests() -> None:
                 print(f"{GREEN}Achievement: Quest Legend{ENDC}")
             if completion_percent == 100:
                 print(f"{CYAN}Achievement: Completionist{ENDC}")
-                
+
             input("\nPress Enter to continue...")
-            
+
         else:
             print("Invalid choice. Please try again.")
 
@@ -9705,7 +9767,7 @@ ABILITY_DESCRIPTIONS = {
     "Protective Stance": "Pet has a 20% chance to block incoming attacks, reducing damage by 30%",
     "Find Treasure": "Pet has a 15% chance to find extra loot after battles",
     "Scouting": "Pet helps you find materials more efficiently (+10% gathering yield)",
-    
+
     # Elemental abilities
     "Flame Burst": "Pet deals Fire elemental damage to enemies (15% of your attack)",
     "Healing Mist": "Pet has a 20% chance to heal you for 10% of your max health each turn",
@@ -9713,7 +9775,7 @@ ABILITY_DESCRIPTIONS = {
     "Swift Movement": "Pet increases your dodge chance by 10% during combat",
     "Shock Strike": "Pet deals Lightning damage with a 15% chance to stun the enemy for 1 turn",
     "Energy Pulse": "Pet releases a burst of energy dealing 12% of your attack as neutral damage",
-    
+
     # Special abilities
     "Scavenge": "Pet may find bonus materials when exploring",
     "Weather Sense": "Pet predicts weather changes, giving warning before severe weather",
@@ -9728,68 +9790,68 @@ def loot(monster: Dict) -> None:
     Includes pet integration for bonus loot
     """
     global user_data
-    
+
     print_animated(f"\n{BG_YELLOW}{BLACK} LOOT DISCOVERED! {ENDC}", delay=0.05)
-    
+
     # Basic monster drops
     base_drops = monster.get("drops", [])
-    
+
     # Calculate additional random drops based on monster level
     monster_level = monster.get("level", 1)
     is_boss = monster.get("boss", False)
-    
+
     # Check for active pet with Find Treasure ability
     active_pet = get_active_pet()
     has_treasure_finder = False
     pet_treasure_bonus = 0
-    
+
     if active_pet:
         pet_name = active_pet["name"]
         pet_abilities = []
-        
+
         # Get the pet's abilities
         if "pet_stats" in user_data and pet_name in user_data["pet_stats"]:
             pet_abilities = user_data["pet_stats"][pet_name].get("abilities", [])
-            
+
             # Check if pet has Find Treasure ability
             if "Find Treasure" in pet_abilities:
                 has_treasure_finder = True
                 pet_level = user_data["pet_stats"][pet_name].get("level", 1)
                 pet_loyalty = user_data["pet_stats"][pet_name].get("loyalty", 50)
-                
+
                 # Higher level and loyalty increase bonus chance
                 pet_treasure_bonus = 0.15  # Base 15% chance
                 pet_treasure_bonus += min(0.05, pet_level * 0.01)  # +1% per level up to 5%
-                
+
                 if pet_loyalty >= 70:
                     pet_treasure_bonus += 0.05  # +5% for high loyalty
-    
+
     # Determine drop quantities and chances
     drop_count = random.randint(1, 3)  # Base drop count
-    
+
     # Bosses give more loot
     if is_boss:
         drop_count += random.randint(2, 4)
-    
+
     # Chance to find a chest
     chest_chance = 0.1 + (monster_level * 0.01)  # 10% base + 1% per monster level
     if is_boss:
         chest_chance += 0.3  # Bosses have higher chest chance
-        
+
     # Apply pet bonuses if available
     if has_treasure_finder and active_pet and "name" in active_pet:
         extra_items = 1  # Always get at least one extra item
         drop_count += extra_items
         chest_chance += pet_treasure_bonus  # Increased chest chance
-        
+
         # Pet found extra treasure notification
         pet_name = active_pet.get("name", "Your pet")
         print_animated(f"{CYAN}{pet_name} found {extra_items} extra treasure(s)!{ENDC}", delay=0.02)
         print_animated(f"{YELLOW}Chest discovery chance increased by {int(pet_treasure_bonus*100)}%{ENDC}", delay=0.02)
-    
+
     # Prepare loot table
     all_drops = []
-    
+
     # Add base drops from monster definition
     for item in base_drops:
         all_drops.append({
@@ -9797,7 +9859,7 @@ def loot(monster: Dict) -> None:
             "type": "base",
             "rarity": "Common" if item != "Gold Coin" else "Currency"
         })
-    
+
     # Check for chest
     found_chest = random.random() < chest_chance
     if found_chest:
@@ -9821,30 +9883,30 @@ def loot(monster: Dict) -> None:
                 chest_tier = "Rare"
             elif rarity_roll < 0.6:
                 chest_tier = "Uncommon"
-            
+
         all_drops.append({
             "name": f"{chest_tier} Chest",
             "type": "chest",
             "rarity": chest_tier
         })
-    
+
     # Add random gold based on monster level
     gold_amount = random.randint(5, 15) * max(1, monster_level // 2)
     if is_boss:
         gold_amount *= 3  # Triple gold for bosses
-    
+
     all_drops.append({
         "name": f"{gold_amount} Gold",
         "type": "gold",
         "rarity": "Currency",
         "amount": gold_amount
     })
-    
+
     # Add random material drops based on area and monster type
     if "type" in monster:
         monster_type = monster["type"]
         material_chance = 0.3 + (monster_level * 0.02)  # 30% base + 2% per level
-        
+
         if random.random() < material_chance:
             if monster_type == "undead":
                 material = random.choice(["Bone Dust", "Spectral Essence", "Grave Soil"])
@@ -9858,27 +9920,27 @@ def loot(monster: Dict) -> None:
                 material = random.choice(["Demon Horn", "Infernal Ash", "Corrupted Essence"])
             else:
                 material = random.choice(["Strange Dust", "Magical Residue", "Creature Part"])
-                
+
             rarity = "Common"
             if random.random() < 0.2:
                 rarity = "Uncommon"
             if random.random() < 0.1:
                 rarity = "Rare"
-                
+
             all_drops.append({
                 "name": material,
                 "type": "material",
                 "rarity": rarity
             })
-    
+
     # Add random equipment drop for higher level monsters or bosses
     equipment_chance = 0.05 + (monster_level * 0.01)  # 5% base + 1% per level
     if is_boss:
         equipment_chance = 0.5 + (monster_level * 0.02)  # 50% base + 2% per level for bosses
-        
+
     if random.random() < equipment_chance:
         equip_type = random.choice(["weapon", "armor", "accessory"])
-        
+
         if equip_type == "weapon":
             weapons = ["Sword", "Axe", "Dagger", "Staff", "Bow", "Wand", "Hammer", "Spear"]
             equip_name = random.choice(weapons)
@@ -9888,7 +9950,7 @@ def loot(monster: Dict) -> None:
         else:  # accessory
             accessories = ["Ring", "Amulet", "Charm", "Bracelet", "Belt", "Earring"]
             equip_name = random.choice(accessories)
-        
+
         # Determine rarity
         rarity_roll = random.random()
         if rarity_roll < 0.05 * (monster_level / 20):  # Higher level = better chance
@@ -9906,7 +9968,7 @@ def loot(monster: Dict) -> None:
         else:
             rarity = "Common"
             prefix = random.choice(["Basic", "Simple", "Standard", "Plain", "Ordinary"])
-        
+
         # Add effects based on rarity
         effect_value = 0
         if rarity == "Legendary":
@@ -9919,19 +9981,19 @@ def loot(monster: Dict) -> None:
             effect_value = 5 + monster_level // 5
         else:
             effect_value = 3 + monster_level // 7
-        
+
         # Sometimes add a random element
         has_element = random.random() < 0.3
         element = None
         if has_element:
             element = random.choice(["Fire", "Water", "Earth", "Air", "Lightning", "Ice", "Light", "Dark"])
-            
+
         # Build the full item name
         if element:
             full_name = f"{prefix} {element} {equip_name}"
         else:
             full_name = f"{prefix} {equip_name}"
-            
+
         all_drops.append({
             "name": full_name,
             "type": "equipment",
@@ -9940,10 +10002,10 @@ def loot(monster: Dict) -> None:
             "effect": effect_value,
             "element": element
         })
-    
+
     # Display all drops with colors based on rarity
     print_animated("\nLoot found:", delay=0.02)
-    
+
     # Group items by type for better display
     grouped_drops = {}
     for i, drop in enumerate(all_drops):
@@ -9953,11 +10015,11 @@ def loot(monster: Dict) -> None:
         # Add the index so we can refer back to the original list
         drop["index"] = i
         grouped_drops[drop_type].append(drop)
-    
+
     # Display loot by category with colors
     current_idx = 1
     display_drops = []
-    
+
     # 1. Equipment (most exciting)
     if "equipment" in grouped_drops:
         print_animated(f"\n{BOLD}Equipment:{ENDC}", delay=0.01)
@@ -9967,7 +10029,7 @@ def loot(monster: Dict) -> None:
             item["display_index"] = current_idx
             display_drops.append(item)
             current_idx += 1
-    
+
     # 2. Chests
     if "chest" in grouped_drops:
         print_animated(f"\n{BOLD}Treasures:{ENDC}", delay=0.01)
@@ -9977,7 +10039,7 @@ def loot(monster: Dict) -> None:
             item["display_index"] = current_idx
             display_drops.append(item)
             current_idx += 1
-    
+
     # 3. Materials
     if "material" in grouped_drops:
         print_animated(f"\n{BOLD}Materials:{ENDC}", delay=0.01)
@@ -9987,7 +10049,7 @@ def loot(monster: Dict) -> None:
             item["display_index"] = current_idx
             display_drops.append(item)
             current_idx += 1
-            
+
     # 4. Basic drops
     if "base" in grouped_drops:
         print_animated(f"\n{BOLD}Other Items:{ENDC}", delay=0.01)
@@ -9997,7 +10059,7 @@ def loot(monster: Dict) -> None:
             item["display_index"] = current_idx
             display_drops.append(item)
             current_idx += 1
-    
+
     # 5. Gold (always shown)
     if "gold" in grouped_drops:
         print_animated(f"\n{BOLD}Currency:{ENDC}", delay=0.01)
@@ -10006,14 +10068,14 @@ def loot(monster: Dict) -> None:
             item["display_index"] = current_idx
             display_drops.append(item)
             current_idx += 1
-            
+
     # 6. Special pet-found items if pet has Find Treasure ability
     if has_treasure_finder and active_pet and "name" in active_pet and "pet_stats" in user_data and active_pet["name"] in user_data["pet_stats"]:
         # Chance for bonus rare materials scales with pet level and loyalty
         pet_level = user_data["pet_stats"][active_pet["name"]].get("level", 1)
         pet_loyalty = user_data["pet_stats"][active_pet["name"]].get("loyalty", 50)
         rare_chance = 0.15 + (pet_level * 0.02) + (pet_loyalty * 0.001)  # 15% base + bonuses
-        
+
         if random.random() < rare_chance:
             # Select a rare bonus material
             rare_bonus_materials = [
@@ -10022,7 +10084,7 @@ def loot(monster: Dict) -> None:
                 "Dragon Scale", "Phoenix Feather", "Enchanted Gem"
             ]
             bonus_material = random.choice(rare_bonus_materials)
-            
+
             # Create the item
             pet_item = {
                 "name": bonus_material,
@@ -10031,22 +10093,22 @@ def loot(monster: Dict) -> None:
                 "rarity": "Rare",
                 "pet_bonus": True  # Mark as pet-found
             }
-            
+
             # Add to display drops
             print_animated(f"\n{BOLD}{MAGENTA}Pet Discovery:{ENDC}", delay=0.01)
             print_animated(f"{current_idx}. {CYAN}[Pet Find] {get_rarity_color('Rare')}{bonus_material}{ENDC} ✨", delay=0.03)
             pet_item["display_index"] = current_idx
             display_drops.append(pet_item)
             current_idx += 1
-    
+
     # Handle loot selection with improved UI
     print_animated(f"\n{BOLD}You can select one item to loot.{ENDC}", delay=0.02)
     print_animated("Type 'all' to take everything or press Enter to skip.", delay=0.02)
-    
+
     while True:
         try:
             choice = input(f"{CYAN}Choose loot (1-{len(display_drops)}, 'all', or press Enter): {ENDC}").strip().lower()
-            
+
             # Take all loot
             if choice == "all":
                 print_animated(f"{BG_GREEN}{BLACK} LOOTING ALL ITEMS {ENDC}", delay=0.02)
@@ -10054,12 +10116,12 @@ def loot(monster: Dict) -> None:
                 for item in display_drops:
                     process_loot_item(item)
                 break
-                
+
             # Skip looting
             elif choice == "":
                 print_animated(f"{YELLOW}No loot taken.{ENDC}", delay=0.02)
                 break
-                
+
             # Take specific item
             else:
                 choice_int = int(choice)
@@ -10071,31 +10133,31 @@ def loot(monster: Dict) -> None:
                         break
                 else:
                     print(f"{YELLOW}Invalid choice, please try again.{ENDC}")
-                    
+
         except ValueError:
             print(f"{YELLOW}Invalid input, please enter a number, 'all', or press Enter to skip.{ENDC}")
 
 def process_loot_item(item):
     """Process a single loot item based on its type"""
     global user_data
-    
+
     item_type = item["type"]
     item_name = item["name"]
-    
+
     # Check if item was found by pet
     pet_bonus = item.get("pet_bonus", False)
     pet_prefix = f"{CYAN}[Pet Find] {ENDC}" if pet_bonus else ""
-    
+
     if item_type == "gold":
         gold_amount = item["amount"]
         user_data["gold"] += gold_amount
         print_animated(f"{pet_prefix}Gained {LIGHTYELLOW}{gold_amount} gold{ENDC}!", delay=0.02)
-        
+
     elif item_type == "chest":
         print_animated(f"{pet_prefix}{CYAN}You've found a {get_rarity_color(item['rarity'])}{item_name}{ENDC}!", delay=0.02)
         # Directly open the chest
         open_chest(item["rarity"])
-        
+
     elif item_type == "equipment":
         # Add equipment to inventory with properties
         equip_item = {
@@ -10106,14 +10168,14 @@ def process_loot_item(item):
         }
         if "element" in item and item["element"]:
             equip_item["element"] = item["element"]
-            
+
         # Check if inventory has equipment section
         if "equipment" not in user_data:
             user_data["equipment"] = []
-            
+
         user_data["equipment"].append(equip_item)
         print_animated(f"{pet_prefix}Added {get_rarity_color(item['rarity'])}{item_name}{ENDC} to your equipment!", delay=0.02)
-        
+
     else:  # base items, materials, etc.
         user_data["inventory"].append(item_name)
         print_animated(f"{pet_prefix}Added {get_rarity_color(item.get('rarity', 'Common'))}{item_name}{ENDC} to inventory!", delay=0.02)
@@ -10339,7 +10401,7 @@ def get_next_rank(current_rank):
         {"name": "Hero", "level_req": 60, "quest_req": 400, "boss_req": 75},
         {"name": "Champion", "level_req": 70, "quest_req": 500, "boss_req": 100}
     ]
-    
+
     for i, rank in enumerate(ranks):
         if rank["name"] == current_rank and i < len(ranks) - 1:
             return ranks[i + 1]
@@ -10364,12 +10426,12 @@ def get_adventurer_level_rewards(level):
         60: {"description": "Dimensional travel discount", "bonuses": {"dimension_discount": 0.50}},
         70: {"description": "Hero's equipment set", "bonuses": {"hero_set": True}}
     }
-    
+
     return rewards.get(level, None)
 
 def add_adventurer_exp(amount):
     """Add experience to the adventurer and check for level up
-    
+
     Args:
         amount: Amount of experience to add
     """
@@ -10383,29 +10445,29 @@ def add_adventurer_exp(amount):
             "bosses_defeated": 0,
             "reputation": 0
         }
-    
+
     adv = user_data["adventurer"]
-    
+
     # Add the experience
     adv["exp"] += amount
-    
+
     # Check for level up
     exp_required = adv["level"] * 100
-    
+
     # While we have enough exp for next level
     while adv["exp"] >= exp_required:
         adv["exp"] -= exp_required
         adv["level"] += 1
         exp_required = adv["level"] * 100
-        
+
         rewards = get_adventurer_level_rewards(adv["level"])
-        
+
         print_animated(f"\n{OKGREEN}◆◆◆ ADVENTURER LEVEL UP! ◆◆◆{ENDC}", delay=0.05)
         print_animated(f"{OKGREEN}You are now level {adv['level']}!{ENDC}", delay=0.05)
-        
+
         if rewards:
             print_animated(f"{OKGREEN}New Reward: {rewards['description']}{ENDC}", delay=0.05)
-        
+
         # Check if new rank is available
         check_rank_advancement()
 
@@ -10413,18 +10475,18 @@ def check_rank_advancement():
     """Check if adventurer qualifies for a rank advancement"""
     adv = user_data["adventurer"]
     next_rank = get_next_rank(adv["rank"])
-    
+
     if next_rank and adv["level"] >= next_rank["level_req"] and \
        adv["total_quests"] >= next_rank["quest_req"] and \
        adv["bosses_defeated"] >= next_rank["boss_req"]:
-        
+
         old_rank = adv["rank"]
         adv["rank"] = next_rank["name"]
-        
+
         print_animated(f"\n{HEADER}▓▓▓ ADVENTURER RANK ADVANCEMENT! ▓▓▓{ENDC}", delay=0.05)
         print_animated(f"{CYAN}You have been promoted from {old_rank} to {next_rank['name']}!{ENDC}", delay=0.05)
         print_animated(f"{YELLOW}Visit the Adventurer's Guild to learn about your new benefits.{ENDC}", delay=0.05)
-        
+
         # Add some gold as a reward
         reward_gold = adv["level"] * 100
         user_data["gold"] += reward_gold
@@ -10455,7 +10517,7 @@ def guild_list() -> None:
         {"name": "The Eternal Vigil", "alignment": "Spirit", "description": "Those who maintain the balance between the living world and spirit realm."},
         {"name": "Techsmith's Guild", "alignment": "Progress", "description": "Inventors and engineers pushing the boundaries of what's possible without magic."}
     ]
-    
+
     # The Old Legacy factions
     print(f"{LIGHTBLUE}Original Factions:{ENDC}")
     print(f"- {CYAN}Warriors Guild{ENDC}: Combat specialists")
@@ -10463,12 +10525,12 @@ def guild_list() -> None:
     print(f"- {YELLOW}Rogues Guild{ENDC}: Masters of stealth")
     print(f"- {OKGREEN}Paladins Guild{ENDC}: Holy warriors")
     print(f"- {LIGHTRED}Hunters Guild{ENDC}: Beast trackers")
-    
+
     # Print the new factions
     print(f"\n{LIGHTMAGENTA}Major World Factions:{ENDC}")
     for faction in factions:
         print(f"- {BOLD}{faction['name']}{ENDC} ({faction['alignment']}): {faction['description']}")
-    
+
     print(f"\n{YELLOW}Note:{ENDC} Factions represent the major powers in the world.")
     print("Your reputation with these factions affects quests, prices, and dialogue options.")
     print("The Adventurer's Guild remains neutral, working with all factions as needed.")
@@ -10501,15 +10563,15 @@ def get_active_pet() -> Optional[Dict]:
     active_pet_name = user_data.get("active_pet", None)
     if not active_pet_name or active_pet_name not in user_data["pets"]:
         return None
-    
+
     pet_info = PETS.get(active_pet_name, None)
     if not pet_info:
         return None
-    
+
     # Initialize additional pet stats if they don't exist yet
     if "pet_stats" not in user_data:
         user_data["pet_stats"] = {}
-    
+
     if active_pet_name not in user_data["pet_stats"]:
         pet_level = 1
         user_data["pet_stats"][active_pet_name] = {
@@ -10520,11 +10582,11 @@ def get_active_pet() -> Optional[Dict]:
             "abilities": [],
             "element": pet_info.get("element", "Nullum")
         }
-    
+
     # Combine base pet info with pet stats
     full_pet_info = {**pet_info, **user_data["pet_stats"][active_pet_name]}
     full_pet_info["name"] = active_pet_name
-    
+
     return full_pet_info
 
 def pet_level_up(pet_name: str) -> bool:
@@ -10533,37 +10595,37 @@ def pet_level_up(pet_name: str) -> bool:
     """
     if pet_name not in user_data["pets"] or pet_name not in user_data.get("pet_stats", {}):
         return False
-    
+
     pet_stats = user_data["pet_stats"][pet_name]
     if pet_stats["exp"] >= pet_stats["exp_next"]:
         pet_stats["level"] += 1
         pet_stats["exp"] = pet_stats["exp"] - pet_stats["exp_next"]
         pet_stats["exp_next"] = 100 * pet_stats["level"]
-        
+
         # Check for new abilities at certain levels
         pet_base = PETS.get(pet_name, {})
         pet_abilities = pet_base.get("abilities", {})
-        
+
         for level, ability in pet_abilities.items():
             if str(pet_stats["level"]) == level and ability not in pet_stats["abilities"]:
                 pet_stats["abilities"].append(ability)
                 print(f"{CYAN}Your pet {pet_name} learned a new ability: {ability}!{ENDC}")
-        
+
         return True
     return False
 
 def train_pet(pet_name: str) -> None:
     """Train your pet to increase its experience and loyalty"""
     print_header("Pet Training")
-    
+
     if pet_name not in user_data["pets"]:
         print(f"You do not own a pet named {pet_name}.")
         return
-    
+
     # Initialize pet stats if needed
     if "pet_stats" not in user_data:
         user_data["pet_stats"] = {}
-    
+
     if pet_name not in user_data["pet_stats"]:
         user_data["pet_stats"][pet_name] = {
             "level": 1,
@@ -10573,9 +10635,9 @@ def train_pet(pet_name: str) -> None:
             "abilities": [],
             "element": PETS.get(pet_name, {}).get("element", "Nullum")
         }
-    
+
     print(f"Training {pet_name}...")
-    
+
     # Training options
     print("\nTraining Activities:")
     print("1. Basic Training (+10 exp, +2 loyalty)")
@@ -10583,38 +10645,38 @@ def train_pet(pet_name: str) -> None:
     print("3. Elemental Focus (+15 exp, chance to unlock elemental ability)")
     print("4. Loyalty Building (+5 exp, +5 loyalty)")
     print("0. Cancel")
-    
+
     choice = input("\nChoose a training activity: ").strip()
-    
+
     if choice == "0":
         return
-    
+
     pet_stats = user_data["pet_stats"][pet_name]
     # We'll use pet stats directly instead of base pet data
     pet_element = pet_stats.get("element", "Nullum")
-    
+
     training_cost = 10  # Base gold cost for training
-    
+
     if user_data["gold"] < training_cost:
         print(f"{RED}You need {training_cost} gold to train your pet.{ENDC}")
         return
-    
+
     user_data["gold"] -= training_cost
-    
+
     if choice == "1":  # Basic Training
         exp_gain = 10
         loyalty_gain = 2
         print(f"{GREEN}You complete basic training with {pet_name}.{ENDC}")
-        
+
     elif choice == "2":  # Advanced Drills
         exp_gain = 25
         loyalty_gain = 1
         print(f"{GREEN}You push {pet_name} through some challenging drills.{ENDC}")
-        
+
     elif choice == "3":  # Elemental Focus
         exp_gain = 15
         loyalty_gain = 0
-        
+
         # If pet doesn't have an element yet, chance to develop one
         if pet_element == "Nullum":
             element_choices = ["Fire", "Water", "Earth", "Air", "Lightning"]
@@ -10635,38 +10697,38 @@ def train_pet(pet_name: str) -> None:
                     "Air": "Swift Movement",
                     "Lightning": "Shock Strike"
                 }
-                
+
                 ability = elemental_abilities.get(pet_element, "Energy Pulse")
                 if ability not in pet_stats["abilities"]:
                     pet_stats["abilities"].append(ability)
                     print(f"{CYAN}{pet_name} learned {ability}!{ENDC}")
-                    
+
     elif choice == "4":  # Loyalty Building
         exp_gain = 5
         loyalty_gain = 5
         print(f"{GREEN}You spend quality time bonding with {pet_name}.{ENDC}")
-        
+
     else:
         print("Invalid choice.")
         return
-    
+
     # Apply experience and loyalty gains
     pet_stats["exp"] += exp_gain
     pet_stats["loyalty"] = min(100, pet_stats["loyalty"] + loyalty_gain)
-    
+
     print(f"Experience gained: {exp_gain}")
     print(f"Current EXP: {pet_stats['exp']}/{pet_stats['exp_next']}")
     print(f"Loyalty: {pet_stats['loyalty']}/100")
-    
+
     # Check for level up
     if pet_level_up(pet_name):
         print(f"{YELLOW}{pet_name} leveled up to level {pet_stats['level']}!{ENDC}")
-    
+
     # Learning chance based on loyalty
     if pet_stats["loyalty"] >= 75 and random.random() < 0.1:  # 10% chance if loyalty is high
         general_abilities = ["Quick Attack", "Protective Stance", "Find Treasure", "Scouting"]
         potential_ability = random.choice(general_abilities)
-        
+
         if potential_ability not in pet_stats["abilities"]:
             pet_stats["abilities"].append(potential_ability)
             print(f"{CYAN}Due to your strong bond, {pet_name} learned {potential_ability}!{ENDC}")
@@ -10674,25 +10736,25 @@ def train_pet(pet_name: str) -> None:
 def equip_pet(pet_name: str = "") -> None:
     """Equip or unequip a pet to accompany you in battle"""
     print_header("Equip Pet")
-    
+
     if pet_name == "":
         # Show available pets
         if not user_data["pets"]:
             print("You have no pets to equip.")
             return
-            
+
         current_pet = user_data.get("active_pet", None)
         if current_pet:
             print(f"Currently equipped: {current_pet}")
         else:
             print("No pet currently equipped.")
-            
+
         print("\nAvailable pets:")
         for i, pet in enumerate(user_data["pets"], 1):
             print(f"{i}. {pet}")
-            
+
         choice = input("\nEnter pet number to equip, or 0 to unequip current pet: ").strip()
-        
+
         if choice == "0":
             if current_pet:
                 user_data["active_pet"] = None
@@ -10700,7 +10762,7 @@ def equip_pet(pet_name: str = "") -> None:
             else:
                 print("No pet is currently equipped.")
             return
-            
+
         try:
             choice_idx = int(choice) - 1
             if 0 <= choice_idx < len(user_data["pets"]):
@@ -10711,16 +10773,16 @@ def equip_pet(pet_name: str = "") -> None:
         except ValueError:
             print("Please enter a valid number.")
             return
-    
+
     # Equip the selected pet
     if pet_name in user_data["pets"]:
         user_data["active_pet"] = pet_name
         print(f"Equipped {pet_name} as your active companion.")
-        
+
         # Initialize pet stats if this is first time equipping
         if "pet_stats" not in user_data:
             user_data["pet_stats"] = {}
-            
+
         if pet_name not in user_data["pet_stats"]:
             user_data["pet_stats"][pet_name] = {
                 "level": 1,
@@ -10736,68 +10798,68 @@ def equip_pet(pet_name: str = "") -> None:
 def show_pets() -> None:
     """Display a detailed view of all owned pets"""
     print_header("Your Pets")
-    
+
     if not user_data["pets"]:
         print("You have no pets.")
         return
-        
+
     active_pet = user_data.get("active_pet", None)
-    
+
     for pet_name in user_data["pets"]:
         pet_info = PETS.get(pet_name, None)
         if not pet_info:
             print(f"{pet_name} - A mysterious companion.")
             continue
-            
+
         # Check if this is the active pet
         active_marker = f" {GREEN}[ACTIVE]{ENDC}" if pet_name == active_pet else ""
-        
+
         # Get color based on pet rarity/type
         pet_color = CYAN if pet_name == "Hylit" else YELLOW if "Dragon" in pet_name or "Phoenix" in pet_name else WHITE
-        
+
         # Display pet name with color and active status
         print(f"\n{pet_color}{pet_name}{ENDC}{active_marker}")
         print(f"Description: {pet_info['description']}")
-        
+
         # Get pet stats if available
         if "pet_stats" in user_data and pet_name in user_data["pet_stats"]:
             pet_stats = user_data["pet_stats"][pet_name]
-            
+
             # Display level and exp
             level = pet_stats["level"]
             exp = pet_stats["exp"]
             exp_next = pet_stats["exp_next"]
             loyalty = pet_stats["loyalty"]
-            
+
             # Create progress bars
             exp_percent = exp / exp_next
             exp_bar = create_progress_bar(exp_percent, 15)
-            
+
             # Set loyalty color based on percentage (without creating unused variable)
             loyalty_color = RED if loyalty < 30 else YELLOW if loyalty < 70 else GREEN
-            
+
             print(f"Level: {level}")
             print(f"EXP: {exp_bar} {exp}/{exp_next}")
             print(f"Loyalty: {loyalty_color}{loyalty}/100{ENDC}")
-            
+
             # Display element if any
             element = pet_stats.get("element", "Nullum")
             if element != "Nullum":
                 element_color = get_element_color(element)
                 print(f"Element: {element_color}{element}{ENDC}")
-            
+
             # Display abilities
             abilities = pet_stats.get("abilities", [])
             if abilities:
                 print("Abilities:")
                 for ability in abilities:
                     print(f"  - {MAGENTA}{ability}{ENDC}")
-        
+
         # Display base stat boosts
         boost_str = ", ".join(f"+{v} {k}" for k, v in pet_info.get("boost", {}).items())
         if boost_str:
             print(f"Stat Bonuses: {boost_str}")
-    
+
     # Display commands for pet interaction
     print("\nPet Commands:")
     print("/equip_pet - Equip a pet for battle")
@@ -10807,46 +10869,46 @@ def show_pets() -> None:
 
 def evolve_pet(pet_name: str) -> None:
     """Evolve a pet to its next form if requirements are met
-    
+
     Args:
         pet_name: The name of the pet to evolve
     """
     print_header("Pet Evolution")
-    
+
     # Check if pet exists
     if pet_name not in user_data["pets"]:
         print(f"{RED}You don't have a pet named '{pet_name}'.{ENDC}")
         return
-    
+
     # Check if adventurer level requirement is met
     if "adventurer" not in user_data or user_data["adventurer"]["level"] < 35:
         print(f"{YELLOW}Pet evolution requires Adventurer Level 35.{ENDC}")
         print(f"Your current level: {user_data.get('adventurer', {}).get('level', 0)}")
         print("Continue advancing in the Adventurer's Guild to unlock this feature.")
         return
-    
+
     # Check if pet has an evolution
     pet_base = PETS.get(pet_name, {})
     next_evolution = pet_base.get("evolution")
-    
+
     if not next_evolution:
         print(f"{YELLOW}{pet_name} cannot evolve further.{ENDC}")
         return
-    
+
     # Get evolution requirements
     if pet_name not in PET_EVOLUTIONS:
         print(f"{RED}Evolution data not found for {pet_name}.{ENDC}")
         return
-    
+
     evolution_data = PET_EVOLUTIONS[pet_name]
     level_req = evolution_data.get("level_required", 0)
     loyalty_req = evolution_data.get("loyalty_required", 0)
     materials_req = evolution_data.get("materials_required", [])
-    
+
     # Initialize pet stats if needed
     if "pet_stats" not in user_data:
         user_data["pet_stats"] = {}
-    
+
     if pet_name not in user_data["pet_stats"]:
         user_data["pet_stats"][pet_name] = {
             "level": 1,
@@ -10856,23 +10918,23 @@ def evolve_pet(pet_name: str) -> None:
             "abilities": [],
             "element": pet_base.get("element", "Nullum")
         }
-    
+
     pet_stats = user_data["pet_stats"][pet_name]
-    
+
     # Check requirements
     print(f"{CYAN}Evolution Target:{ENDC} {next_evolution}")
     print(f"\n{CYAN}Requirements:{ENDC}")
-    
+
     # Level check
     level_ok = pet_stats["level"] >= level_req
     level_status = f"{GREEN}✓{ENDC}" if level_ok else f"{RED}✗{ENDC}"
     print(f"{level_status} Level {pet_stats['level']}/{level_req}")
-    
+
     # Loyalty check
     loyalty_ok = pet_stats["loyalty"] >= loyalty_req
     loyalty_status = f"{GREEN}✓{ENDC}" if loyalty_ok else f"{RED}✗{ENDC}"
     print(f"{loyalty_status} Loyalty {pet_stats['loyalty']}/{loyalty_req}")
-    
+
     # Materials check
     print(f"\n{CYAN}Required Materials:{ENDC}")
     materials_ok = True
@@ -10882,20 +10944,20 @@ def evolve_pet(pet_name: str) -> None:
         print(f"{material_status} {material}: {material_count}/1")
         if material_count < 1:
             materials_ok = False
-    
+
     # Check if all requirements are met
     if not (level_ok and loyalty_ok and materials_ok):
         print(f"\n{YELLOW}Cannot evolve yet. Please meet all requirements first.{ENDC}")
         return
-    
+
     # Confirm evolution
     print(f"\n{CYAN}Your {pet_name} is ready to evolve into {next_evolution}!{ENDC}")
     confirm = input("Proceed with evolution? This will consume the required materials. (y/n): ").lower()
-    
+
     if confirm != 'y':
         print("Evolution cancelled.")
         return
-    
+
     # Process evolution - consume materials
     for material in materials_req:
         # Find and remove one instance of each required material
@@ -10903,73 +10965,73 @@ def evolve_pet(pet_name: str) -> None:
             if item == material:
                 user_data["materials"].pop(i)
                 break
-    
+
     # Replace old pet with evolved form
     user_data["pets"].remove(pet_name)
     user_data["pets"].append(next_evolution)
-    
+
     # Transfer pet stats to evolved form
     evolved_stats = pet_stats.copy()
     evolved_stats["element"] = PETS.get(next_evolution, {}).get("element", evolved_stats["element"])
     user_data["pet_stats"][next_evolution] = evolved_stats
-    
+
     # If pet was active, update active pet
     if user_data.get("active_pet") == pet_name:
         user_data["active_pet"] = next_evolution
-    
+
     # Clear old pet stats
     del user_data["pet_stats"][pet_name]
-    
+
     # Show evolution animation
     print("\n")
     print_animated(f"{HEADER}✧・゚: *✧・゚:* EVOLUTION *:・゚✧*:・゚✧{ENDC}", delay=0.05)
     print_animated(f"{YELLOW}Your {pet_name} is evolving...{ENDC}", delay=0.1)
     time.sleep(1)
-    
+
     for _ in range(5):
         print_animated(".", delay=0.3)
-    
+
     print("\n")
     print_animated(f"{MAGENTA}Congratulations! {pet_name} has evolved into {next_evolution}!{ENDC}", delay=0.05)
-    
+
     # Show new pet abilities
     new_abilities = PETS.get(next_evolution, {}).get("abilities", {})
     print(f"\n{CYAN}New Abilities:{ENDC}")
     for level, ability in new_abilities.items():
         print(f"- Level {level}: {ability}")
-    
+
     # Add achievement
     # This should be added to the achievement system
     print(f"\n{GREEN}Achievement Unlocked: First Evolution{ENDC}")
-    
+
     # Update adventurer experience
     add_adventurer_exp(50)  # Award exp for evolving a pet
 
 def pet_info(pet_name: str) -> None:
     """Display detailed information about a specific pet"""
     print_header("Pet Information")
-    
+
     if pet_name not in user_data["pets"]:
         print(f"You don't have a pet named {pet_name}.")
         return
-        
+
     pet_base = PETS.get(pet_name, {})
     if not pet_base:
         print(f"No information available for {pet_name}.")
         return
-        
+
     # Display pet details
     print(f"{YELLOW}Name:{ENDC} {pet_name}")
     print(f"{YELLOW}Description:{ENDC} {pet_base.get('description', 'A mysterious companion')}")
     print(f"{YELLOW}Rarity:{ENDC} {pet_base.get('rarity', 'Common')}")
     print(f"{YELLOW}Element:{ENDC} {pet_base.get('element', 'Nullum')}")
     print(f"{YELLOW}Combat Style:{ENDC} {pet_base.get('combat_style', 'Balanced')}")
-    
+
     # Display evolution information
     evolution = pet_base.get("evolution")
     if evolution:
         print(f"\n{MAGENTA}Evolution Path:{ENDC} {pet_name} → {evolution}")
-        
+
         if pet_name in PET_EVOLUTIONS:
             evo_data = PET_EVOLUTIONS[pet_name]
             print(f"{MAGENTA}Evolution Requirements:{ENDC}")
@@ -10978,59 +11040,59 @@ def pet_info(pet_name: str) -> None:
             materials = evo_data.get('materials_required', [])
             if materials:
                 print(f"- Materials: {', '.join(materials)}")
-            
+
             # Show adventurer level requirement
             print("- Adventurer Level: 35 (Evolution Feature)")
             print(f"\n{CYAN}Use '/evolve_pet {pet_name}' to evolve this pet when requirements are met.{ENDC}")
     else:
         print(f"\n{YELLOW}Evolution:{ENDC} Max evolution reached")
-    
+
     # Display base stats
     boosts = pet_base.get("boost", {})
     if boosts:
         print(f"\n{YELLOW}Base Stat Bonuses:{ENDC}")
         for stat, value in boosts.items():
             print(f"  {stat.capitalize()}: +{value}")
-    
+
     # Display additional stats if available
     if "pet_stats" in user_data and pet_name in user_data["pet_stats"]:
         pet_stats = user_data["pet_stats"][pet_name]
-        
+
         print(f"\n{YELLOW}Current Stats:{ENDC}")
         print(f"Level: {pet_stats['level']}")
-        
+
         # Calculate actual bonuses based on level
         level_multiplier = 1 + (pet_stats['level'] - 1) * 0.1  # 10% increase per level
         print(f"Stat Multiplier: x{level_multiplier:.1f} (from level)")
-        
+
         print(f"\n{YELLOW}Calculated Combat Bonuses:{ENDC}")
         for stat, base_value in boosts.items():
             actual_value = round(base_value * level_multiplier)
             print(f"  {stat.capitalize()}: +{actual_value}")
-        
+
         # Display element
         element = pet_stats.get("element", "Nullum")
         if element != "Nullum":
             element_color = get_element_color(element)
             print(f"\n{YELLOW}Element:{ENDC} {element_color}{element}{ENDC}")
-        
+
         # Display abilities
         abilities = pet_stats.get("abilities", [])
         if abilities:
             print(f"\n{YELLOW}Abilities:{ENDC}")
             for ability in abilities:
                 print(f"  - {MAGENTA}{ability}{ENDC}")
-                
+
                 # Display ability descriptions
                 ability_desc = ABILITY_DESCRIPTIONS.get(ability, "No description available")
                 print(f"    {ability_desc}")
-        
+
         # Display loyalty and effects
         loyalty = pet_stats.get("loyalty", 0)
         loyalty_color = RED if loyalty < 30 else YELLOW if loyalty < 70 else GREEN
-        
+
         print(f"\n{YELLOW}Loyalty:{ENDC} {loyalty_color}{loyalty}/100{ENDC}")
-        
+
         # Loyalty effects
         if loyalty < 30:
             print("  Low loyalty: Pet may occasionally refuse to use abilities")
@@ -11042,15 +11104,15 @@ def pet_info(pet_name: str) -> None:
 def feed_pet(pet_name: str) -> None:
     """Feed your pet to increase loyalty"""
     print_header("Feed Pet")
-    
+
     if pet_name not in user_data["pets"]:
         print(f"You don't have a pet named {pet_name}.")
         return
-    
+
     # Initialize pet stats if needed
     if "pet_stats" not in user_data:
         user_data["pet_stats"] = {}
-    
+
     if pet_name not in user_data["pet_stats"]:
         user_data["pet_stats"][pet_name] = {
             "level": 1,
@@ -11060,66 +11122,66 @@ def feed_pet(pet_name: str) -> None:
             "abilities": [],
             "element": PETS.get(pet_name, {}).get("element", "Nullum")
         }
-    
+
     # Get food from inventory
     food_items = [item for item in user_data["inventory"] if "Food" in item or "Treat" in item or "Fish" in item or "Meat" in item or "Fruit" in item]
-    
+
     if not food_items:
         print("You don't have any food items to feed your pet.")
         print("You can find food by hunting, fishing, or purchasing from shops.")
         return
-    
+
     print(f"Selected pet: {pet_name}")
     print(f"Current loyalty: {user_data['pet_stats'][pet_name]['loyalty']}/100")
     print("\nAvailable food items:")
-    
+
     for i, food in enumerate(food_items, 1):
         print(f"{i}. {food}")
-    
+
     print("0. Cancel")
-    
+
     choice = input("\nSelect food to give to your pet: ").strip()
-    
+
     if choice == "0":
         return
-    
+
     try:
         choice_idx = int(choice) - 1
         if 0 <= choice_idx < len(food_items):
             selected_food = food_items[choice_idx]
-            
+
             # Remove the food from inventory
             user_data["inventory"].remove(selected_food)
-            
+
             # Calculate loyalty and exp gain based on food type
             loyalty_gain = 5  # Base gain
             exp_gain = 2  # Base gain
-            
+
             if "Premium" in selected_food:
                 loyalty_gain += 10
                 exp_gain += 5
             elif "Rare" in selected_food:
                 loyalty_gain += 7
                 exp_gain += 3
-                
+
             if "Treat" in selected_food:
                 loyalty_gain += 3
             elif "Meat" in selected_food:
                 exp_gain += 2
-                
+
             # Apply gains
             user_data["pet_stats"][pet_name]["loyalty"] = min(100, user_data["pet_stats"][pet_name]["loyalty"] + loyalty_gain)
             user_data["pet_stats"][pet_name]["exp"] += exp_gain
-            
+
             print(f"\n{GREEN}You feed {selected_food} to {pet_name}.{ENDC}")
             print(f"Loyalty increased by {loyalty_gain}!")
             print(f"Experience gained: {exp_gain}")
             print(f"Current loyalty: {user_data['pet_stats'][pet_name]['loyalty']}/100")
-            
+
             # Check for level up
             if pet_level_up(pet_name):
                 print(f"{YELLOW}{pet_name} leveled up to level {user_data['pet_stats'][pet_name]['level']}!{ENDC}")
-            
+
             # Special interactions based on pet
             if pet_name == "Hylit":
                 print(f"{CYAN}Hylit: 'Thank you for the delicious food!'{ENDC}")
@@ -11171,17 +11233,17 @@ def complete_quest(quest_name: str) -> None:
         exp = reward.get("exp", 0)
         user_data["gold"] += gold
         user_data["exp"] += exp
-        
+
         # Add adventurer experience (50% of regular exp, minimum 10)
         adv_exp = max(10, int(exp * 0.5))
         add_adventurer_exp(adv_exp)
-        
+
         # Increment quest counter in adventurer data
         if "adventurer" in user_data:
             user_data["adventurer"]["total_quests"] += 1
             # Check if rank advancement is available
             check_rank_advancement()
-        
+
         print(f"Quest '{quest['name']}' completed! You received {gold} gold and {exp} experience.")
         print(f"{CYAN}Adventurer Guild:{ENDC} +{adv_exp} adventurer exp")
         check_level_up()
@@ -12053,7 +12115,7 @@ CROPS = {
         "tier": "rare",
         "description": "An herb that seems to exist in multiple time periods at once."
     },
-    
+
     # Rare Crops
     "Phoenix Flower": {
         "growth_time": 15, 
@@ -12153,7 +12215,7 @@ CROPS = {
         "tier": "uncommon",
         "description": "Sweet, juicy melons that love hot weather."
     },
-    
+
     # Weather-Dependent Rare Crops
     "Ghost Pepper": {
         "growth_time": 12,
@@ -12196,32 +12258,32 @@ CROPS = {
 def cook_food() -> None:
     """Function to cook food with a chance of failure"""
     print_header("Cooking Station")
-    
+
     # Check if the player is at a suitable location or has the right equipment
     if "camp" not in user_data or "Kitchen" not in user_data.get("camp", {}).get("structures", {}):
         if user_data["current_area"] not in ["Greenwood Village", "Stormhaven", "Dragon's Peak"]:
             print_colored("You need to be in a village with a kitchen or have a Kitchen in your camp to cook!", FAIL)
             return
-    
+
     # Display available recipes
     print_colored("Available Recipes:", HEADER)
     available_recipes = []
-    
+
     for recipe_name, recipe_data in COOKING_RECIPES.items():
         # Check if player has the ingredients
         has_ingredients = True
         missing_ingredients = {}
-        
+
         for ingredient, amount in recipe_data["ingredients"].items():
             if ingredient not in user_data.get("materials", {}) or user_data.get("materials", {}).get(ingredient, 0) < amount:
                 has_ingredients = False
                 current_amount = user_data.get("materials", {}).get(ingredient, 0)
                 missing_ingredients[ingredient] = amount - current_amount
-        
+
         # Display recipe with color based on availability
         color = GREEN if has_ingredients else RED
         print_colored(f"{recipe_name} - {recipe_data['description']}", color)
-        
+
         if has_ingredients:
             available_recipes.append(recipe_name)
             print_colored("  Ingredients: ", YELLOW, end="")
@@ -12240,62 +12302,62 @@ def cook_food() -> None:
             for ingredient, amount in missing_ingredients.items():
                 print(f"{ingredient} x{amount}", end=", ")
             print()
-    
+
     if not available_recipes:
         print_colored("\nYou don't have ingredients for any recipes. Try gathering more materials!", WARNING)
         return
-    
+
     # Recipe selection
     print()
     recipe_choice = input("What would you like to cook? (or press Enter to cancel): ")
-    
+
     if not recipe_choice:
         return
-    
+
     if recipe_choice not in COOKING_RECIPES:
         print_colored("That recipe doesn't exist!", FAIL)
         return
-    
+
     if recipe_choice not in available_recipes:
         print_colored("You don't have the ingredients for that recipe!", FAIL)
         return
-    
+
     selected_recipe = COOKING_RECIPES[recipe_choice]
-    
+
     # Remove ingredients from inventory
     for ingredient, amount in selected_recipe["ingredients"].items():
         user_data["materials"][ingredient] -= amount
         if user_data["materials"][ingredient] <= 0:
             del user_data["materials"][ingredient]
-    
+
     # Cooking animation
     print_colored("\nCooking in progress...", YELLOW)
     cook_time = selected_recipe.get("cook_time", 3)
     for i in range(cook_time):
         time.sleep(0.5)
         print_colored("🔥" * (i+1), YELLOW)
-    
+
     # Determine success or failure based on difficulty
     difficulty = selected_recipe["difficulty"]
     fail_chance = selected_recipe["fail_chance"]
-    
+
     # Profession bonus - reduce fail chance for Chefs
     if user_data.get("profession") == "Chef":
         fail_chance = max(0.01, fail_chance - 0.1)  # Minimum 1% chance to fail
         print_colored("Your Chef skills improve your chances of success!", GREEN)
-    
+
     # Roll for success
     if random.random() < fail_chance:
         # Cooking failed
         failed_result = FAILED_COOKING[difficulty]
         print_colored(f"\nOh no! Your {recipe_choice} turned into a {failed_result['name']}!", FAIL)
         print_colored(f"{failed_result['description']}", WARNING)
-        
+
         # Add failed result to inventory
         if failed_result["name"] not in user_data["inventory"]:
             user_data["inventory"][failed_result["name"]] = 0
         user_data["inventory"][failed_result["name"]] += 1
-        
+
         # Small XP gain even for failure
         exp_gain = int(selected_recipe["experience"] * 0.3)
         user_data["exp"] += exp_gain
@@ -12303,47 +12365,47 @@ def cook_food() -> None:
     else:
         # Cooking succeeded
         print_colored(f"\nSuccess! You've cooked a delicious {recipe_choice}!", SUCCESS)
-        
+
         # Add food to inventory
         if recipe_choice not in user_data["inventory"]:
             user_data["inventory"][recipe_choice] = 0
         user_data["inventory"][recipe_choice] += 1
-        
+
         # XP gain
         exp_gain = selected_recipe["experience"]
         user_data["exp"] += exp_gain
         print_colored(f"You gained {exp_gain} experience!", BLUE)
-        
+
         # Chance for bonus food with Chef profession
         if user_data.get("profession") == "Chef" and random.random() < 0.25:
             user_data["inventory"][recipe_choice] += 1
             print_colored("Your Chef skills allowed you to cook an extra portion!", SUCCESS)
-    
+
     # Check for level up
     check_level_up()
-    
+
     # Add cooking achievements
     if "cooking_stats" not in user_data:
         user_data["cooking_stats"] = {"dishes_cooked": 0, "failures": 0, "by_difficulty": {}}
-    
+
     if random.random() < fail_chance:
         user_data["cooking_stats"]["failures"] += 1
     else:
         user_data["cooking_stats"]["dishes_cooked"] += 1
-        
+
     if difficulty not in user_data["cooking_stats"]["by_difficulty"]:
         user_data["cooking_stats"]["by_difficulty"][difficulty] = 0
     user_data["cooking_stats"]["by_difficulty"][difficulty] += 1
-    
+
     # Check cooking achievements
     if user_data["cooking_stats"]["dishes_cooked"] >= 10:
         achievement_name = "Amateur Chef"
         grant_achievement_rewards({"name": achievement_name, "rewards": {"exp": 100, "gold": 50}})
-    
+
     if user_data["cooking_stats"]["dishes_cooked"] >= 50:
         achievement_name = "Experienced Cook"
         grant_achievement_rewards({"name": achievement_name, "rewards": {"exp": 300, "gold": 150}})
-    
+
     if user_data["cooking_stats"]["by_difficulty"].get("hard", 0) >= 20:
         achievement_name = "Master Chef"
         grant_achievement_rewards({"name": achievement_name, "rewards": {"exp": 500, "gold": 300}})
@@ -12382,7 +12444,7 @@ def farming_guide() -> None:
             print_colored(f"Current Season: {game_state['current_season']}", YELLOW)
             print_colored(f"Current Weather: {get_weather_name()}", game_state.get("current_weather_color", CYAN))
             print()
-            
+
             # Allow filtering by tier
             print("Filter by tier:")
             print("1. All Crops")
@@ -12392,16 +12454,16 @@ def farming_guide() -> None:
             print("5. Epic Crops")
             print("6. Legendary Crops")
             print("7. Seasonal Crops (current season)")
-            
+
             tier_filter = input("\nChoose filter (1-7, default 1): ").strip()
-            
+
             # Default to all crops
             if not tier_filter or tier_filter not in "1234567":
                 tier_filter = "1"
-            
+
             filtered_crops = {}
             current_season = game_state['current_season']
-            
+
             for crop, info in CROPS.items():
                 # Apply filters
                 if tier_filter == "2" and info.get("tier") != "common":
@@ -12416,9 +12478,9 @@ def farming_guide() -> None:
                     continue
                 elif tier_filter == "7" and current_season not in info.get("seasons", []) and "All" not in info.get("seasons", []):
                     continue
-                    
+
                 filtered_crops[crop] = info
-            
+
             # Get tiers for color coding
             tier_colors = {
                 "common": WHITE,
@@ -12427,18 +12489,18 @@ def farming_guide() -> None:
                 "epic": PURPLE,
                 "legendary": YELLOW
             }
-            
+
             # Display filtered crops
             for crop, info in filtered_crops.items():
                 tier = info.get("tier", "common")
                 tier_color = tier_colors.get(tier, WHITE)
-                
+
                 print_colored(f"\n{crop} ({tier.capitalize()}):", tier_color)
                 print(f"  Description: {info.get('description', 'No description available')}")
                 print(f"  Growth Time: {info['growth_time']} cycles")
                 print(f"  Seed Cost: {info['seed_cost']} gold")
                 print(f"  Market Price: {info['sell_price']} gold")
-                
+
                 # Display seasonal information
                 seasons = info.get("seasons", [])
                 if "All" in seasons:
@@ -12447,22 +12509,22 @@ def farming_guide() -> None:
                     season_str = ", ".join(seasons)
                     season_color = OKGREEN if current_season in seasons else FAIL
                     print_colored(f"  Seasons: {season_str}", season_color)
-                
+
                 # Display weather preferences
                 optimal_weather = info.get("optimal_weather", [])
                 weak_weather = info.get("weak_weather", [])
-                
+
                 current_weather = game_state["current_weather"]
-                
+
                 optimal_str = ", ".join(optimal_weather)
                 weak_str = ", ".join(weak_weather)
-                
+
                 optimal_color = OKGREEN if current_weather in optimal_weather else LIGHTGRAY
                 weak_color = FAIL if current_weather in weak_weather else LIGHTGRAY
-                
+
                 print_colored(f"  Optimal Weather: {optimal_str}", optimal_color)
                 print_colored(f"  Weak Weather: {weak_str}", weak_color)
-                
+
                 # Show where crop can be grown
                 biomes = info.get("biome", [])
                 print(f"  Biomes: {', '.join(biomes)}")
@@ -12496,7 +12558,7 @@ def farming_guide() -> None:
             print_colored("\n=== Plant Crops ===", GREEN)
             print_colored(f"Current Season: {game_state['current_season']}", YELLOW)
             print_colored(f"Current Weather: {get_weather_name()}", game_state.get("current_weather_color", CYAN))
-            
+
             seeds = [mat for mat in user_data["materials"] if mat.endswith(" seeds")]
 
             if not seeds:
@@ -12505,7 +12567,7 @@ def farming_guide() -> None:
 
             # Get current season for showing compatibility
             current_season = game_state["current_season"]
-            
+
             print("\nYour seeds:")
             for seed in seeds:
                 # Get the actual crop name
@@ -12520,7 +12582,7 @@ def farming_guide() -> None:
                     else:
                         seasons_color = FAIL
                         season_note = "(Out of season - grows slower)"
-                    
+
                     # Show the seed with color-coded seasonal information
                     print(f"{seed}: {user_data['materials'][seed]} ", end="")
                     print_colored(season_note, seasons_color)
@@ -12536,7 +12598,7 @@ def farming_guide() -> None:
             if seed in seeds:
                 crop_name = seed.replace(" seeds", "")
                 crop_data = CROPS.get(crop_name, {})
-                
+
                 # Check season compatibility and warn player if needed
                 if crop_name in CROPS:
                     crop_seasons = crop_data.get("seasons", [])
@@ -12545,7 +12607,7 @@ def farming_guide() -> None:
                         confirm = input("Do you still want to plant it? (y/n): ").lower()
                         if confirm != 'y':
                             continue
-                
+
                 available_plots = user_data["farming"]["unlocked_plots"] - len(user_data["farming"]["plots"])
                 amount = input(f"How many? (max {min(user_data['materials'][seed], available_plots)}): ")
 
@@ -12557,10 +12619,10 @@ def farming_guide() -> None:
                             # Calculate modifiers
                             current_weather = game_state["current_weather"]
                             general_weather_modifier = game_state.get("current_weather_crop_modifier", 1.0)
-                            
+
                             # Get seasons for this crop
                             crop_seasons = crop_data.get("seasons", [])
-                            
+
                             season_modifier = 1.0
                             if "All" in crop_seasons:
                                 season_modifier = 1.2
@@ -12568,23 +12630,23 @@ def farming_guide() -> None:
                                 season_modifier = 1.2  
                             else:
                                 season_modifier = 0.5
-                                
+
                             weather_bonus = 1.0
                             if current_weather in crop_data.get("optimal_weather", []):
                                 weather_bonus = 1.3
                             elif current_weather in crop_data.get("weak_weather", []):
                                 weather_bonus = 0.7
-                                
+
                             total_modifier = general_weather_modifier * season_modifier * weather_bonus
                             days_estimate = int(crop_data["growth_time"] / total_modifier)
-                            
+
                             print_colored(f"Estimated growth time: {days_estimate} days", CYAN)
-                            
+
                             if total_modifier > 1.0:
                                 print_colored("Current conditions are favorable for this crop!", OKGREEN)
                             elif total_modifier < 0.8:
                                 print_colored("Current conditions are poor for this crop. Consider planting something else.", YELLOW)
-                        
+
                         # Plant the crops
                         for _ in range(amount):
                             plot_id = str(len(user_data["farming"]["plots"]))
@@ -12605,7 +12667,7 @@ def farming_guide() -> None:
             print_colored(f"Current Weather: {get_weather_name()}", game_state.get("current_weather_color", CYAN))
             print_colored(f"Weather Description: {get_weather_description()}", LIGHTGRAY)
             print()
-            
+
             if not user_data["farming"]["plots"]:
                 print("No crops planted!")
                 continue
@@ -12614,34 +12676,34 @@ def farming_guide() -> None:
             current_weather = game_state["current_weather"]
             current_season = game_state["current_season"]
             general_weather_modifier = game_state.get("current_weather_crop_modifier", 1.0)
-            
+
             for plot, crop in user_data["farming"]["plots"].items():
                 crop_data = CROPS.get(crop, {})
-                
+
                 # Get growth progress
                 growth = user_data["farming"]["growth"][plot]
                 max_growth = crop_data["growth_time"] * TICKS_PER_DAY // 10  # Scale growth time to ticks
-                
+
                 # Calculate modifiers
                 season_modifier = 1.0
                 crop_seasons = crop_data.get("seasons", [])
-                
+
                 if "All" in crop_seasons:
                     season_modifier = 1.2
                 elif current_season in crop_seasons:
                     season_modifier = 1.2
                 else:
                     season_modifier = 0.5
-                    
+
                 weather_bonus = 1.0
                 if current_weather in crop_data.get("optimal_weather", []):
                     weather_bonus = 1.3
                 elif current_weather in crop_data.get("weak_weather", []):
                     weather_bonus = 0.7
-                    
+
                 total_modifier = general_weather_modifier * season_modifier * weather_bonus
                 modifier_percent = int((total_modifier - 1.0) * 100)
-                
+
                 # Determine status and color
                 if growth >= max_growth:
                     status = "✨ Ready to harvest!"
@@ -12651,7 +12713,7 @@ def farming_guide() -> None:
                     growth_icon = "🌱" if percent_complete < 33 else "🌿" if percent_complete < 66 else "🌾"
                     status = f"{growth_icon} Growing... {percent_complete}% complete"
                     status_color = YELLOW
-                
+
                 # Show crop tier with appropriate color
                 tier = crop_data.get("tier", "common").capitalize()
                 tier_colors = {
@@ -12662,24 +12724,24 @@ def farming_guide() -> None:
                     "Legendary": YELLOW
                 }
                 tier_color = tier_colors.get(tier, WHITE)
-                
+
                 # Display the crop info
                 print_colored(f"Plot {plot}: ", CYAN, end="")
                 print_colored(f"{status} ", status_color, end="")
                 print_colored(f"{crop} ", tier_color, end="")
                 print(f"({growth}/{max_growth} ticks)")
-                
+
                 # Show growth modifiers
                 modifier_color = OKGREEN if modifier_percent > 0 else (FAIL if modifier_percent < 0 else WHITE)
                 modifier_sign = "+" if modifier_percent > 0 else ""
                 print_colored(f"  Growth Rate: {modifier_sign}{modifier_percent}% ", modifier_color, end="")
-                
+
                 # Show weather and season effects
                 if current_weather in crop_data.get("optimal_weather", []):
                     print_colored("(Optimal weather) ", OKGREEN, end="")
                 elif current_weather in crop_data.get("weak_weather", []):
                     print_colored("(Unfavorable weather) ", FAIL, end="")
-                    
+
                 if current_season in crop_seasons:
                     print_colored("(Good season) ", OKGREEN)
                 elif "All" in crop_seasons:
@@ -12795,16 +12857,16 @@ def gather_materials(area: str) -> None:
 
 def craft_item() -> None:
     print_header("Crafting")
-    
+
     # Get player's profession for crafting bonuses
     player_profession = user_data.get("profession", None)
     crafting_bonus = 0
     profession_specializations = user_data.get("profession_specializations", {})
-    
+
     # Apply profession bonuses if applicable
     if player_profession in ["Blacksmith", "Alchemist", "Tailor", "Artificer"]:
         crafting_bonus = 10  # Base 10% bonus for crafting professions
-        
+
         # Apply specialization bonuses
         if player_profession == "Blacksmith" and profession_specializations.get("Master Weaponsmith", False):
             crafting_bonus += 15  # Additional 15% for weapon crafting
@@ -12814,7 +12876,7 @@ def craft_item() -> None:
             crafting_bonus += 15  # Additional 15% for armor crafting
         elif player_profession == "Artificer" and profession_specializations.get("Arcane Engineer", False):
             crafting_bonus += 15  # Additional 15% for magical item crafting
-    
+
     # Filter recipes by type option
     crafting_categories = {
         "1": ("Weapons", "weapon"),
@@ -12824,34 +12886,34 @@ def craft_item() -> None:
         "5": ("Materials", "material"),
         "6": ("All Items", None)
     }
-    
+
     print("\nCrafting Categories:")
     for key, (name, _) in crafting_categories.items():
         print(f"{key}. {name}")
-    
+
     category_choice = input("\nChoose a category (number) or press Enter for all: ").strip()
     if not category_choice:
         category_choice = "6"  # Default to All Items
-    
+
     # Get the category filter
     selected_category = None
     if category_choice in crafting_categories:
         _, selected_category = crafting_categories[category_choice]
-    
+
     # Filter recipes by player level and category if selected
     available_recipes = []
     for name, recipe in CRAFTING_RECIPES.items():
         if user_data["level"] >= recipe["level_required"]:
             if selected_category is None or recipe.get("type") == selected_category:
                 available_recipes.append(name)
-    
+
     # Sort recipes by level required
     available_recipes.sort(key=lambda x: CRAFTING_RECIPES[x]["level_required"])
-    
+
     if not available_recipes:
         print("No recipes available at your level or in this category")
         return
-    
+
     # Check which recipes can be crafted with current materials
     craftable_recipes = []
     for recipe_name in available_recipes:
@@ -12862,17 +12924,17 @@ def craft_item() -> None:
                 can_craft = False
                 break
         craftable_recipes.append((recipe_name, can_craft))
-    
+
     print(f"\nAvailable recipes ({len(available_recipes)}):")
     for i, (recipe_name, can_craft) in enumerate(craftable_recipes, 1):
         recipe = CRAFTING_RECIPES[recipe_name]
-        
+
         # Format based on craftability
         if can_craft:
             status = f"{GREEN}[CRAFTABLE]{ENDC}"
         else:
             status = f"{RED}[MISSING MATERIALS]{ENDC}"
-        
+
         # Format recipe name based on its type
         item_type = recipe.get("type", "")
         if item_type == "weapon":
@@ -12885,7 +12947,7 @@ def craft_item() -> None:
             type_color = MAGENTA
         else:
             type_color = WHITE
-            
+
         # Show item level and effects
         effect_str = ""
         if "effect" in recipe:
@@ -12895,10 +12957,10 @@ def craft_item() -> None:
             effect_str += f" - Element: {element_color}{recipe['element']}{ENDC}"
         if "special" in recipe:
             effect_str += f" - Special: {recipe['special']}"
-            
+
         print(f"\n{i}. {type_color}{recipe_name}{ENDC} {status}{effect_str}")
         print(f"   Type: {item_type.capitalize()}, Level Required: {recipe['level_required']}")
-        
+
         # Show materials with color indicating if you have enough
         print("   Required materials:")
         for material, amount in recipe["materials"].items():
@@ -12908,11 +12970,11 @@ def craft_item() -> None:
             else:
                 material_status = f"{RED}{have_amount}/{amount}{ENDC}"
             print(f"    - {material}: {material_status}")
-    
+
     # Highlight the crafting bonus if applicable
     if crafting_bonus > 0:
         print(f"\n{YELLOW}Crafting Bonus: +{crafting_bonus}% quality from {player_profession} profession{ENDC}")
-    
+
     choice = input("\nChoose item to craft (number) or 0 to cancel: ")
     try:
         choice = int(choice)
@@ -12927,7 +12989,7 @@ def craft_item() -> None:
             for material, amount in recipe["materials"].items():
                 if user_data["materials"].get(material, 0) < amount:
                     missing_materials.append(f"{material} ({user_data['materials'].get(material, 0)}/{amount})")
-            
+
             if missing_materials:
                 print(f"{RED}Cannot craft - missing materials:{ENDC}")
                 for mat in missing_materials:
@@ -12938,18 +13000,18 @@ def craft_item() -> None:
             confirm = input(f"Craft {recipe_name}? (y/n): ").strip().lower()
             if confirm != 'y':
                 return
-                
+
             # Determine if crafting results in a higher quality item based on profession
             quality_bonus = random.randint(0, 100)
             quality_result = "normal"
-            
+
             if quality_bonus < crafting_bonus:
                 # Crafting bonus triggered for better quality
                 if quality_bonus < crafting_bonus * 0.3:  # 30% of bonus chance for exceptional quality
                     quality_result = "exceptional"
                 else:
                     quality_result = "superior"
-            
+
             # Consume materials
             for material, amount in recipe["materials"].items():
                 user_data["materials"][material] -= amount
@@ -12962,17 +13024,17 @@ def craft_item() -> None:
             elif quality_result == "exceptional":
                 crafted_item = f"Exceptional {recipe_name}"
                 print(f"{CYAN}Your mastery as a {player_profession} resulted in an exceptional crafting result!{ENDC}")
-            
+
             user_data["inventory"].append(crafted_item)
-            
+
             # Update any related achievements or stats
             user_data["stats"]["items_crafted"] = user_data["stats"].get("items_crafted", 0) + 1
-            
+
             if recipe.get("type") == "weapon":
                 user_data["stats"]["weapons_crafted"] = user_data["stats"].get("weapons_crafted", 0) + 1
             elif recipe.get("type") == "armor":
                 user_data["stats"]["armor_crafted"] = user_data["stats"].get("armor_crafted", 0) + 1
-            
+
             # Special message based on item type
             item_type = recipe.get("type", "")
             if item_type == "weapon":
@@ -12983,7 +13045,7 @@ def craft_item() -> None:
                 print(f"{YELLOW}Successfully crafted {crafted_item}!{ENDC} This tool will help you gather resources more efficiently.")
             else:
                 print(f"Successfully crafted {crafted_item}!")
-                
+
             # Show item details
             print("\nItem details:")
             if "effect" in recipe:
@@ -12993,13 +13055,13 @@ def craft_item() -> None:
                 print(f"Element: {element_color}{recipe['element']}{ENDC}")
             if "special" in recipe:
                 print(f"Special ability: {recipe['special']}")
-                
+
             # Offer to equip if it's equippable
             if item_type in ["weapon", "armor", "accessory"]:
                 equip_choice = input("\nEquip this item now? (y/n): ").strip().lower()
                 if equip_choice == 'y':
                     equip_item(crafted_item)
-                    
+
         else:
             print("Invalid choice")
     except ValueError:
@@ -13371,7 +13433,7 @@ PETS = {
         "combat_style": "Agile",
         "evolution": "Shadow Cat"
     },
-    
+
     # Evolved Pets
     "Shadow Cat": {
         "price": 0,  # Can only be obtained by evolution
@@ -13393,7 +13455,7 @@ PETS = {
         "combat_style": "Defensive",
         "evolution": "War Hound"
     },
-    
+
     "War Hound": {
         "price": 0,  # Can only be obtained by evolution
         "boost": {"defense": 6, "loyalty": 10, "health": 15}, 
@@ -13414,7 +13476,7 @@ PETS = {
         "combat_style": "Offensive",
         "evolution": "Young Drake"
     },
-    
+
     "Young Drake": {
         "price": 0,  # Can only be obtained by evolution
         "boost": {"attack": 12, "health": 25, "fire_resistance": 50}, 
@@ -13425,7 +13487,7 @@ PETS = {
         "combat_style": "Berserker",
         "evolution": "Adult Dragon"
     },
-    
+
     "Adult Dragon": {
         "price": 0,  # Can only be obtained by evolution
         "boost": {"attack": 25, "health": 50, "fire_resistance": 100, "intimidation": 20}, 
@@ -13745,24 +13807,24 @@ def show_professions() -> None:
     if user_data["has_chosen_profession"]:
         prof = user_data["profession"]
         print(f"{CYAN}Your current profession: {BOLD}{prof}{ENDC}")
-        
+
         if prof in PROFESSIONS:
             profession_info = PROFESSIONS[prof]
-            
+
             # Basic information
             print(f"\n{YELLOW}Special Ability: {ENDC}{profession_info['special_ability']}")
             print(f"{LIGHTGRAY}{profession_info['ability_description']}{ENDC}")
-            
+
             # Bonuses
             print(f"\n{YELLOW}Profession bonuses:{ENDC}")
             print(f"Gathering bonus for: {', '.join(profession_info['gather_bonus'])}")
             print(f"Crafting bonus for: {', '.join(profession_info['craft_bonus'])}")
-            
+
             # Passive bonuses
             print(f"\n{YELLOW}Passive Bonuses:{ENDC}")
             for stat, value in profession_info['passive_bonus'].items():
                 print(f"  {stat.replace('_', ' ').title()}: +{value}")
-            
+
             # Level bonuses
             print(f"\n{YELLOW}Level Milestone Bonuses:{ENDC}")
             for level, bonus in profession_info['level_bonuses'].items():
@@ -13770,7 +13832,7 @@ def show_professions() -> None:
                     print(f"  Level {level}: {OKGREEN}✓{ENDC} {bonus}")
                 else:
                     print(f"  Level {level}: {YELLOW}⊗{ENDC} {bonus} (Locked)")
-            
+
             # Weather bonuses if applicable
             if 'weather_bonuses' in profession_info:
                 print(f"\n{YELLOW}Weather Bonuses:{ENDC}")
@@ -13780,7 +13842,7 @@ def show_professions() -> None:
                         print(f"  {weather}: {OKGREEN}✓{ENDC} {bonus} (Active)")
                     else:
                         print(f"  {weather}: {bonus}")
-            
+
             # Season bonuses if applicable
             if 'season_bonuses' in profession_info:
                 print(f"\n{YELLOW}Seasonal Bonuses:{ENDC}")
@@ -13790,7 +13852,7 @@ def show_professions() -> None:
                         print(f"  {season}: {OKGREEN}✓{ENDC} {bonus} (Active)")
                     else:
                         print(f"  {season}: {bonus}")
-            
+
             # Profession change option
             change = input("\nDo you want to change your profession? (y/n): ").lower()
             if change == 'y':
@@ -13798,20 +13860,20 @@ def show_professions() -> None:
                 print(f"You have abandoned your profession as a {prof}.")
                 show_professions()  # Recursive call to show profession selection
             return
-    
+
     # Display available professions if user hasn't chosen one or wants to change
     print(f"{YELLOW}Available Professions:{ENDC}")
-    
+
     # Group professions by type
     traditional = []
     specialized = []
-    
+
     for prof, info in PROFESSIONS.items():
         if prof in ["Miner", "Herbalist", "Blacksmith", "Alchemist", "Hunter", "Woodcutter", "Fisher", "Archaeologist", "Enchanter"]:
             traditional.append(prof)
         else:
             specialized.append(prof)
-    
+
     # Display traditional professions
     print(f"\n{HEADER}Traditional Professions:{ENDC}")
     for prof in traditional:
@@ -13819,7 +13881,7 @@ def show_professions() -> None:
         print(f"{CYAN}{prof}:{ENDC} {info['ability_description']}")
         print(f"  Special Ability: {info['special_ability']}")
         print(f"  Gathering: {', '.join(info['gather_bonus'][:3])}{'...' if len(info['gather_bonus']) > 3 else ''}")
-    
+
     # Display specialized professions
     print(f"\n{HEADER}Specialized Professions:{ENDC}")
     for prof in specialized:
@@ -13827,24 +13889,24 @@ def show_professions() -> None:
         print(f"{MAGENTA}{prof}:{ENDC} {info['ability_description']}")
         print(f"  Special Ability: {info['special_ability']}")
         print(f"  Gathering: {', '.join(info['gather_bonus'][:3])}{'...' if len(info['gather_bonus']) > 3 else ''}")
-    
+
     # Let player choose a profession
     print(f"\n{YELLOW}To see detailed information about a profession, type its name.{ENDC}")
     print(f"{YELLOW}To select a profession, type 'choose <profession name>'.{ENDC}")
     print(f"{YELLOW}To exit, press Enter.{ENDC}")
-    
+
     choice = input("\nCommand: ").strip()
-    
+
     if not choice:
         return
-    
+
     if choice.lower().startswith("choose "):
         prof_choice = choice[7:].strip().capitalize()
         if prof_choice in PROFESSIONS:
             user_data["profession"] = prof_choice
             user_data["has_chosen_profession"] = True
             print(f"{SUCCESS}You are now a {prof_choice}.{ENDC}")
-            
+
             # Show special message for new profession types
             if prof_choice == "Farmer":
                 print(f"{CYAN}As a Farmer, you gain special bonuses during different seasons and weather conditions.{ENDC}")
@@ -13868,33 +13930,33 @@ def show_professions() -> None:
             print(f"\n{HEADER}Detailed Information: {prof_choice}{ENDC}")
             print(f"{YELLOW}Special Ability:{ENDC} {info['special_ability']}")
             print(f"{LIGHTGRAY}{info['ability_description']}{ENDC}")
-            
+
             print(f"\n{YELLOW}Gathering Bonuses:{ENDC}")
             for resource in info['gather_bonus']:
                 print(f"  • {resource}")
-                
+
             print(f"\n{YELLOW}Crafting Bonuses:{ENDC}")
             for category in info['craft_bonus']:
                 print(f"  • {category}")
-                
+
             print(f"\n{YELLOW}Passive Bonuses:{ENDC}")
             for stat, value in info['passive_bonus'].items():
                 print(f"  • {stat.replace('_', ' ').title()}: +{value}")
-                
+
             print(f"\n{YELLOW}Level Milestone Bonuses:{ENDC}")
             for level, bonus in info['level_bonuses'].items():
                 print(f"  • Level {level}: {bonus}")
-                
+
             if 'weather_bonuses' in info:
                 print(f"\n{YELLOW}Weather Bonuses:{ENDC}")
                 for weather, bonus in info['weather_bonuses'].items():
                     print(f"  • {weather}: {bonus}")
-                    
+
             if 'season_bonuses' in info:
                 print(f"\n{YELLOW}Seasonal Bonuses:{ENDC}")
                 for season, bonus in info['season_bonuses'].items():
                     print(f"  • {season}: {bonus}")
-                    
+
             # Option to choose this profession
             select = input(f"\nDo you want to become a {prof_choice}? (y/n): ").lower()
             if select == 'y':
@@ -13939,26 +14001,26 @@ def search_resources() -> None:
     if search_type == "monster":
         # Get basic area monsters
         area_monsters = [m for m in monsters if m["name"] in LOCATIONS.get(user_data["current_area"], {}).get("monsters", [])]
-        
+
         # Add weather-dependent monsters based on current weather
         current_weather = user_data.get("current_weather", "Sunny")
         weather_monsters = [m for m in monsters if m.get("weather") == current_weather]
-        
+
         # Add seasonal monsters based on current season
         current_season = user_data.get("current_season", "Summer")
         season_monsters = [m for m in monsters if m.get("season") == current_season]
-        
+
         # Combine all possible monster types
         all_possible_monsters = area_monsters.copy()
-        
+
         # 30% chance for weather-specific monster if available
         if weather_monsters and random.random() < 0.3:
             all_possible_monsters.extend(weather_monsters)
-            
+
         # 20% chance for season-specific monster if available
         if season_monsters and random.random() < 0.2:
             all_possible_monsters.extend(season_monsters)
-            
+
         if all_possible_monsters:
             monster = random.choice(all_possible_monsters)
             print(f"You found a {monster['name']}!")
@@ -13966,13 +14028,13 @@ def search_resources() -> None:
             print(f"Health: {monster['health']}")
             print(f"Attack: {monster['attack']}")
             print(f"Possible drops: {', '.join(monster['drops'])}")
-            
+
             # Show special information about weather or seasonal monsters
             if "weather" in monster:
                 print(f"{CYAN}This is a {monster['weather']} weather monster! It appears during {monster['weather']} conditions.{ENDC}")
             if "season" in monster:
                 print(f"{MAGENTA}This is a {monster['season']} seasonal monster! It thrives during the {monster['season']} season.{ENDC}")
-                
+
         else:
             print("No monsters found in this area.")
     else:
@@ -14280,28 +14342,17 @@ def show_postgame_content() -> None:
 
 
 
-# Main loop
-if __name__ == "__main__":
-    # Check for python3 command
-    check_python_command()
-    
-    # Check if launched from the proper launcher
-    launcher_env = os.environ.get("LAUNCHER_ACTIVE")
-    if not launcher_env:
-        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
-        input("Press Enter to exit...")
-        print(f"{Fore.BLUE}Made by andy64lol{Style.RESET_ALL}")
-        sys.exit(0)
-    else:
-        print("\n")  # Add a blank line for spacing
-        print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
-        print_animated(f"{BOLD}{CYAN}     Welcome to Legacies of our Legends RPG!{ENDC}")
-        print_animated(f"{BOLD}{CYAN}===================================================={ENDC}")
-        print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
-        print_animated(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.{ENDC}")
-        print_animated(f"{GREEN}--------------------------------------------------------------------{ENDC}")
-        print_animated(f"{BOLD}{BLUE}Made by andy64lol{ENDC}")
+# Define the main game function
+def main_game():
+    """Main game function that runs the game loop."""
+    print("\n")  # Add a blank line for spacing
+    # Fix color display by passing color codes as parameter instead of in the text
+    print_animated("="*60, BOLD + CYAN)
+    print_animated(" "*14 + "Welcome to Legacies of our Legends RPG!" + " "*14, BOLD + CYAN)
+    print_animated("="*60, BOLD + CYAN)
+    print_animated("-"*68, GREEN)
+    print_animated("Type '/help' for commands or '/new' to create a character.", BOLD + GREEN)
+    print_animated("-"*68, GREEN)
 
     # Auto-save interval in seconds
     AUTO_SAVE_INTERVAL = 300  # 5 minutes
@@ -14325,3 +14376,13 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"{FAIL}Error: {e}{ENDC}")
             print_animated("Type '/help' for available commands.", YELLOW)
+
+# Main loop
+if __name__ == "__main__":
+    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
+        main_game()
+    else:
+        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+        print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
+        input("Press Enter to exit...")
+        sys.exit(0)
