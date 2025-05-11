@@ -26,6 +26,10 @@ python3 launch.py
 3. Extract the contents
 4. Run `launch.py`
 
+#### IMPORTANT!
+
+Launcher protection is enforced,so you're **required** to use a launcher otherwise the games won't allow you to access.
+
 ## 🛠️ Requirements
 - Python 3.11 or higher
 - Required packages will be automatically installed,if not,then manually install them using
