@@ -19,17 +19,6 @@ if __name__ == "__main__":
         print(f"{Fore.BLUE}Made by andy64lol{Style.RESET_ALL}")
         sys.exit(0)
 
-# Check if called with python3 command
-def check_python_command():
-    """Check if script was called with 'python3' command and exit if it was"""
-    program_name = os.path.basename(sys.executable)
-    command = sys.argv[0]
-    
-    if program_name == "python3" or "python3" in command:
-        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
-        print(f"{Fore.YELLOW}Run: python launch.py")
-        sys.exit(0)
-
 # Add GOLD color for trophy/medal display
 if not hasattr(Fore, 'GOLD'):
     setattr(Fore, 'GOLD', Fore.YELLOW)
@@ -48,12 +37,12 @@ def init_database():
     try:
         # Create save directory if it doesn't exist
         os.makedirs(SAVE_DIR, exist_ok=True)
-        
+
         # Create empty champions file if it doesn't exist
         if not os.path.exists(CHAMPIONS_FILE):
             with open(CHAMPIONS_FILE, 'wb') as f:
                 pickle.dump([], f)
-        
+
         return True
     except Exception as e:
         print(f"{Fore.RED}Error initializing save system: {e}{Style.RESET_ALL}")
@@ -2065,13 +2054,13 @@ your monster companions!
                 if not self.player or not hasattr(self.player, 'name'):
                     print(f"{Fore.RED}Cannot load: Player not initialized.{Style.RESET_ALL}")
                     return False
-                    
+
                 save_path = get_save_path(self.player.name, save_name)
-                
+
                 if not os.path.exists(save_path):
                     print(f"{Fore.RED}Save '{save_name}' not found.{Style.RESET_ALL}")
                     return False
-                    
+
                 with open(save_path, 'rb') as f:
                     save_data = pickle.load(f)
             else:
@@ -2098,7 +2087,7 @@ your monster companions!
                 for i, (filename, player, timestamp) in enumerate(saves, 1):
                     save_name = filename.replace('.pickle', '').split('_', 1)[1] if '_' in filename else filename.replace('.pickle', '')
                     print(f"{i}. {save_name} - {player} ({timestamp})")
-                
+
                 choice = input(f"\n{Fore.CYAN}Enter save number to load (or 0 to cancel): {Style.RESET_ALL}")
                 try:
                     save_index = int(choice) - 1
@@ -2114,7 +2103,7 @@ your monster companions!
                 except Exception as e:
                     print(f"{Fore.RED}Error loading save: {e}{Style.RESET_ALL}")
                     return False
-            
+
             # Apply the save data to the current game state
             player = Player(save_data["player_name"])
             player.location = save_data["player_location"]
@@ -2372,7 +2361,7 @@ your monster companions!
             try:
                 # Find player's strongest monster
                 strongest_monster = max(self.player.monsters, key=lambda m: m.level)
-                
+
                 # Read existing champions
                 champions = []
                 if os.path.exists(CHAMPIONS_FILE):
@@ -2382,7 +2371,7 @@ your monster companions!
                     except Exception:
                         # If file is corrupted, start with empty list
                         champions = []
-                
+
                 # Add new champion data
                 champion_data = {
                     "player_name": self.player.name,
@@ -2390,11 +2379,11 @@ your monster companions!
                     "win_date": time.strftime("%Y-%m-%d %H:%M:%S")
                 }
                 champions.append(champion_data)
-                
+
                 # Save to file
                 with open(CHAMPIONS_FILE, 'wb') as f:
                     pickle.dump(champions, f)
-                
+
                 print(f"\n{Fore.GREEN}Your champion {strongest_monster.get_colored_name()} has been recorded in the Hall of Fame!{Style.RESET_ALL}")
             except Exception as e:
                 print(f"Error recording championship: {e}")
@@ -4186,6 +4175,18 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 if __name__ == "__main__":
     # Initialize colorama
     init(autoreset=True)
+
+    try:
+        # Then check if launched through launcher
+        if os.environ.get("LAUNCHED_FROM_LAUNCHER") != "1":
+            print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+            print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
+            input("Press Enter to exit...")
+            sys.exit(0)
+        # No need to call main() since we're starting the game right after
+    except Exception as e:
+        print(f"\n\nAn error during initialization: {e}")
+        sys.exit(1)
 
     try:
         # Start the game
