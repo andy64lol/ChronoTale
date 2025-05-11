@@ -7,17 +7,6 @@ from colorama import init, Fore, Back, Style
 
 init(autoreset=True)
 
-def check_python_command():
-    """Check if script was called with 'python3' command and exit if it was"""
-    # Get the command used to run this script
-    command = sys.argv[0]
-    program_name = os.path.basename(sys.executable)
-    
-    if program_name == "python3" or "python3" in command:
-        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
-        print(f"{Fore.YELLOW}Run: python launch.py")
-        sys.exit(0)
-
 # Game settings
 X_MIN, X_MAX = -50, 50
 Y_MIN, Y_MAX = -50, 50
@@ -698,7 +687,7 @@ class Game:
             name = input("> ").strip()
             if not name:
                 name = "Unknown"
-            
+
             start_z = random.randint(Z_MIN, Z_MAX)
             self.player = Player(name=name, x=0, y=0, z=start_z)
             self.generate_level()
@@ -749,7 +738,7 @@ class Game:
         if len(theme_weights) != len(themes):
             print(Fore.RED + "Warning: Theme weights don't match themes. Using equal weights." + Style.RESET_ALL)
             theme_weights = [1] * len(themes)
-            
+
         self.level_theme = random.choices(themes, weights=theme_weights, k=1)[0]
 
         # Generate the exit far from the player
@@ -1576,14 +1565,11 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    # First check if using python3 command
-    check_python_command()
     
-    # Then check if launched through launcher
     if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
         main()
     else:
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+        print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
         input("Press Enter to exit...")
         sys.exit(0)
