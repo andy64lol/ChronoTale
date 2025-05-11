@@ -17,19 +17,35 @@ import os
 import random
 import sys
 import time
-from colorama import Fore, init
+from colorama import Fore, Style, init
+
+# Initialize colorama early for better color support
+init(autoreset=True)
+
+# Custom print function that handles colors properly
+def print_color(text, color=None, end="\n"):
+    """
+    Print text with color and ensure color reset.
+    
+    Args:
+        text: The text to print
+        color: Colorama color code (e.g., Fore.RED)
+        end: End string (default: newline)
+    """
+    if color:
+        print(f"{color}{text}{Style.RESET_ALL}", end=end)
+    else:
+        print(text, end=end)
 
 # Launcher protection at the very beginning
 if __name__ == "__main__":
 
     # Then check if launched through launcher
     if os.environ.get("LAUNCHED_FROM_LAUNCHER") != "1":
-        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
+        print_color("This game should be launched through the launch.py launcher.", Fore.RED)
+        print_color("Please run 'python3 launch.py' to access all games.", Fore.YELLOW)
         input("Press Enter to exit...")
         sys.exit(0)
-        
-init(autoreset=True)
 
 # Save file locations
 SAVE_SLOTS = ["slot1.json", "slot2.json", "slot3.json"]
@@ -130,7 +146,7 @@ def save_game(slot):
     """
     with open(SAVE_SLOTS[slot], "w") as f:
         json.dump(player, f)
-    print(Fore.GREEN + f"💾 Game saved to Slot {slot+1}!")
+    print_color(f"💾 Game saved to Slot {slot+1}!", Fore.GREEN)
 
 def load_game(slot):
     """Load game state from specified slot.
@@ -141,16 +157,16 @@ def load_game(slot):
         with open(SAVE_SLOTS[slot], "r") as f:
             data = json.load(f)
             player.update(data)
-            print(Fore.YELLOW + f"🎉 Welcome back, {player['name']}!")
+            print_color(f"🎉 Welcome back, {player['name']}!", Fore.YELLOW)
     else:
-        print(Fore.RED + "⚠️ No saved game found in that slot!")
+        print_color("⚠️ No saved game found in that slot!", Fore.RED)
 
 # ------------------------------
 # Achievements
 # ------------------------------
 def award_achievement(name):
     if name not in player["achievements"]:
-        print(Fore.CYAN + f"🏆 Achievement Unlocked: {name}")
+        print_color(f"🏆 Achievement Unlocked: {name}", Fore.CYAN)
         player["achievements"].append(name)
 
 # ------------------------------
@@ -158,7 +174,7 @@ def award_achievement(name):
 # ------------------------------
 def shop():
     clear()
-    print(Fore.LIGHTBLUE_EX + "🏪 Ticket Shop")
+    print_color("🏪 Ticket Shop", Fore.LIGHTBLUE_EX)
     print(f"Your Tickets: {player['tickets']}")
     print(f"Current Costume: {player['equipped_costume']}")
     print("\n[1] Costumes 👕")
@@ -182,7 +198,7 @@ def shop():
 
 def shop_costumes():
     clear()
-    print(Fore.LIGHTBLUE_EX + "👕 Costume Shop")
+    print_color("👕 Costume Shop", Fore.LIGHTBLUE_EX)
     print(f"Your Tickets: {player['tickets']}")
     available_costumes = [(name, data) for name, data in COSTUMES.items() if data["available"]]
 
