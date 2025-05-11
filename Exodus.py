@@ -3158,6 +3158,13 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        # Then check if launched through launcher
+        if os.environ.get("LAUNCHED_FROM_LAUNCHER") != "1":
+            print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+            print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
+            input("Press Enter to exit...")
+            sys.exit(0)
+        else:
+            main()
     except KeyboardInterrupt:
         print("\n\nGame terminated by user. Goodbye!")
