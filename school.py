@@ -11,16 +11,10 @@ from colorama import init, Fore, Back, Style
 os.environ["FORCE_COLOR"] = "1"  # Force colors in environments like Replit
 os.environ["TERM"] = os.environ.get("TERM", "xterm-256color")  # Set terminal type if not defined
 
-# Check if we're running in Replit environment
-if "REPL_ID" in os.environ or "REPLIT_ENVIRONMENT" in os.environ:
-    os.environ["REPLIT_ENVIRONMENT"] = "true"
-    # For Replit, don't do character-by-character printing
-    init(autoreset=False, strip=False)
-# Optimized colorama configuration based on platform
-elif platform.system() == "Windows":
+if platform.system() == "Windows":
     init(autoreset=True, convert=True)
 else:
-    init(autoreset=False, strip=False)  # Don't auto-reset for better color control
+    init(autoreset=False, strip=False) 
 
 # Game Settings
 game_settings = {
@@ -8459,7 +8453,7 @@ def assign_random_traits(count=3):
 def reset_player():
     """Reset player to starting state with default values"""
     global player
-    
+
     # Reset player to starting state
     player["school_year"] = 1
     player["year_progress"] = 0
@@ -18779,9 +18773,6 @@ def apply_graduate_template(template_name):
 
     return True
 
-
-# No longer auto-execute main() when imported
-# This allows the runner scripts to explicitly call main() instead
 if __name__ == "__main__":
     # Check if game was launched from the launcher
     if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
@@ -18792,5 +18783,5 @@ if __name__ == "__main__":
             print(f"{Fore.YELLOW}Game will exit now.{Style.RESET_ALL}")
     else:
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+        print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
         input("Press Enter to exit...")
