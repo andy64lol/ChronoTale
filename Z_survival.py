@@ -21,17 +21,6 @@ from colorama import init, Fore, Style
 # Initialize colorama for cross-platform colored terminal output
 init(autoreset=True)
 
-# Check if called with python3 command
-def check_python_command():
-    """Check if script was called with 'python3' command and exit if it was"""
-    program_name = os.path.basename(sys.executable)
-    command = sys.argv[0]
-    
-    if program_name == "python3" or "python3" in command:
-        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
-        print(f"{Fore.YELLOW}Run: python launch.py")
-        sys.exit(0)
-
 # Setup save folder
 SAVES_FOLDER = "saves"
 MAX_SAVE_SLOTS = 5
@@ -5522,14 +5511,10 @@ class GameState:
 
 # Start the game if run directly
 if __name__ == "__main__":
-    # Check for python3 command
-    check_python_command()
-    
-    # Check if game was launched from the launcher
-    # Check for both environment variables for compatibility
+
     launched_from_launcher = os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1"
     launcher_active = os.environ.get("LAUNCHER_ACTIVE") == "1"
-    
+
     if launched_from_launcher or launcher_active:
         game = GameState()
         game.start_game()
