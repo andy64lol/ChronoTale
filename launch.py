@@ -89,9 +89,9 @@ def launch_game(file_name):
 def games_menu(data):
     """Display games submenu"""
     original_games = [
-        ("Legacies", "Legacies.py"),
+        ("Legacies of our Legends RPG", "Legacies.py"),
         ("Liminal", "Liminal.py"),
-        ("Exodus", "Exodus.py"),
+        ("Last Human: Exodus", "Exodus.py"),
         ("Z_survival", "Z_survival.py"),
         ("My first day here: Campus Life", "school.py")
     ]
