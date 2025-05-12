@@ -24,9 +24,14 @@ MAGENTA = Fore.MAGENTA
 UNDERLINE = Style.BRIGHT  # Closest alternative in colorama (original was '\033[4m')
 SUCCESS = Fore.LIGHTGREEN_EX  # Added for success messages
 HEADER = Fore.MAGENTA + Style.BRIGHT  # Header formatting
-CYAN = Fore.CYAN  # For cyan text
-YELLOW = Fore.YELLOW  # For yellow text
-RED = Fore.RED
+
+# Aliases for consistency
+BLUE = OKBLUE
+GREEN = OKGREEN
+RED = FAIL
+YELLOW = WARNING
+CYAN = LIGHTCYAN
+WHITE = LIGHTGRAY
 GREEN = Fore.GREEN
 BLUE = Fore.BLUE
 WHITE = Fore.WHITE
@@ -6162,34 +6167,45 @@ dungeons = [
 def print_colored(text: str, color_code: str = "", end: str = "\n") -> None:
     """
     Print text with color formatting.
-    
+
     Args:
         text: The text to print
         color_code: Optional color code from colorama
         end: String appended after the last character, default a newline
     """
+    # Reset any previous colors
+    sys.stdout.write("\033[0m")
+    sys.stdout.flush()
+    
     # If text already contains color codes, extract them
     if ENDC in text and not color_code:
         extracted_color, clean_text = extract_color_and_text(text)
         if extracted_color:
             color_code = extracted_color
             text = clean_text
+
+    # Print with explicit color control for more consistent display
+    if color_code:
+        sys.stdout.write(f"{color_code}{text}{ENDC}")
+    else:
+        sys.stdout.write(text)
     
-    print(f"{color_code}{text}{ENDC}" if color_code else text, end=end)
+    sys.stdout.write(end)
+    sys.stdout.flush()
 
 def extract_color_and_text(text: str) -> Tuple[str, str]:
     """
     Extract color codes and clean text from a string that might contain ANSI color codes.
-    
+
     Args:
         text: Text with potential color codes
-        
+
     Returns:
         Tuple of (extracted_color_code, clean_text)
     """
     if ENDC not in text:
         return "", text
-        
+
     # Check for common color patterns
     all_colors = [
         OKBLUE, OKGREEN, WARNING, FAIL, BOLD, LIGHTGRAY, LIGHTCYAN, MAGENTA, 
@@ -6198,32 +6214,32 @@ def extract_color_and_text(text: str) -> Tuple[str, str]:
         LIGHTBLUE, LIGHTMAGENTA, BG_BLACK, BG_RED, BG_GREEN, BG_YELLOW, 
         BG_BLUE, BG_MAGENTA, BG_CYAN, BG_WHITE
     ]
-    
+
     # Search for color codes at the beginning of the text
     found_color = ""
     clean_text = text
-    
+
     # Handle BOLD + COLOR combinations first
     for color in all_colors:
         if BOLD + color in text:
             found_color = BOLD + color
             clean_text = text.replace(found_color, "").replace(ENDC, "")
             return found_color, clean_text
-    
+
     # Handle single color codes
     for color in all_colors:
         if color in text:
             found_color = color
             clean_text = text.replace(found_color, "").replace(ENDC, "")
             return found_color, clean_text
-            
+
     # If no specific color found but ENDC exists, just strip it
     return "", text.replace(ENDC, "")
 
 def print_animated(text: str, color_code: str = "", delay: Optional[float] = None) -> None:
     """
     Print text character by character with an animation effect.
-    
+
     Args:
         text: The text to print
         color_code: Optional color code from colorama
@@ -6235,7 +6251,14 @@ def print_animated(text: str, color_code: str = "", delay: Optional[float] = Non
         if extracted_color:
             color_code = extracted_color
             text = clean_text
-        
+
+    # Ensure colors are displayed properly in all environments
+    if color_code:
+        # Some environments need this explicit reset
+        sys.stdout.write("\033[0m")  # Reset any previous color
+        sys.stdout.flush()
+
+    # Calculate appropriate delay based on text length
     length = len(text)
     actual_delay = 0.01  # Default delay
     if delay is not None:
@@ -6243,6 +6266,7 @@ def print_animated(text: str, color_code: str = "", delay: Optional[float] = Non
     else:
         actual_delay = max(0.005, min(0.03, 1.0 / (length * 10)))
 
+    # Print with proper color handling
     if color_code:
         sys.stdout.write(color_code)
     for char in text:
@@ -14346,13 +14370,20 @@ def show_postgame_content() -> None:
 def main_game():
     """Main game function that runs the game loop."""
     print("\n")  # Add a blank line for spacing
-    # Fix color display by passing color codes as parameter instead of in the text
-    print_animated("="*60, BOLD + CYAN)
-    print_animated(" "*14 + "Welcome to Legacies of our Legends RPG!" + " "*14, BOLD + CYAN)
-    print_animated("="*60, BOLD + CYAN)
-    print_animated("-"*68, GREEN)
-    print_animated("Type '/help' for commands or '/new' to create a character.", BOLD + GREEN)
-    print_animated("-"*68, GREEN)
+    
+    # Direct terminal output for guaranteed color display
+    sys.stdout.write("\033[0m")  # Reset all colors first
+    sys.stdout.flush()
+    
+    # Display welcome header with explicit color codes
+    sys.stdout.write(f"{BOLD}{CYAN}{'='*60}\n")
+    sys.stdout.write(f"{BOLD}{CYAN}{' '*14}Welcome to Legacies of our Legends RPG!{' '*14}\n")
+    sys.stdout.write(f"{BOLD}{CYAN}{'='*60}\n")
+    sys.stdout.write(f"{GREEN}{'-'*68}\n")
+    sys.stdout.write(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.\n")
+    sys.stdout.write(f"{GREEN}{'-'*68}\n")
+    sys.stdout.write(ENDC)  # Reset colors at the end
+    sys.stdout.flush()
 
     # Auto-save interval in seconds
     AUTO_SAVE_INTERVAL = 300  # 5 minutes
@@ -14365,7 +14396,10 @@ def main_game():
                 auto_save()
                 last_save = time.time()
 
-            command = input(f"\n{YELLOW}>> {ENDC}").strip()
+            # Print prompt with consistent color handling
+            sys.stdout.write(f"\n{YELLOW}>> {ENDC}")
+            sys.stdout.flush()
+            command = input().strip()
             # Do not convert to lowercase to preserve command arguments
             handle_command(command.lower())
 
