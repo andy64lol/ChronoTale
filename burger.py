@@ -28,6 +28,9 @@ restaurant_name = "4ndyBurguer"
 current_time_period = "morning"  # current time of day period
 hour = 8  # 24-hour format (8 AM game start)
 minute = 0
+
+# Game settings
+auto_save_enabled = True  # Autosave feature enabled by default
 day_of_week = 1  # 1 = Monday, 7 = Sunday
 week = 1
 time_speed = 1.0  # Time modifier for game speed
@@ -1096,7 +1099,7 @@ def print_header():
 
 # Main menu
 def main_menu():
-    global restaurant_name
+    global restaurant_name, auto_save_enabled
     
     while True:
         print_header()
@@ -1106,9 +1109,10 @@ def main_menu():
         print(f"\n{Fore.YELLOW}1. New Game")
         print(f"{Fore.YELLOW}2. Load Game")
         print(f"{Fore.YELLOW}3. How to Play")
-        print(f"{Fore.YELLOW}4. Quit")
+        print(f"{Fore.YELLOW}4. Options")
+        print(f"{Fore.YELLOW}5. Quit")
         
-        choice = input("\nSelect an option (1-4): ")
+        choice = input("\nSelect an option (1-5): ")
         
         if choice == "1":
             start_new_game()
@@ -1117,6 +1121,8 @@ def main_menu():
         elif choice == "3":
             how_to_play()
         elif choice == "4":
+            game_options()
+        elif choice == "5":
             return
         else:
             print(f"{Fore.RED}Invalid choice. Please try again.")
@@ -1696,6 +1702,7 @@ def business_collaborations_menu():
 def start_new_game():
     global restaurant_name, money, day, reputation, restaurant_level
     global staff, inventory, active_collaborations, active_campaigns
+    global auto_save_enabled
     
     print_header()
     print(f"{Fore.GREEN}=== NEW GAME ===")
@@ -1773,6 +1780,17 @@ def start_new_game():
     print(f"\n{Fore.GREEN}Welcome to {restaurant_name}!")
     print(f"{Fore.CYAN}You have ${money:.2f} to start your business.")
     print(f"{Fore.CYAN}Hire staff, buy ingredients, and serve customers to grow your restaurant.")
+    
+    # Ask about auto-save preference
+    print(f"\n{Fore.YELLOW}Game Auto-Save:")
+    print(f"{Fore.CYAN}Auto-save automatically saves your progress at key moments (new days, major purchases, etc.)")
+    auto_save_choice = input("Would you like to enable auto-save? (Y/n): ").lower()
+    auto_save_enabled = auto_save_choice != 'n'  # Enabled by default unless user types 'n'
+    
+    auto_save_status = f"{Fore.GREEN}Enabled" if auto_save_enabled else f"{Fore.RED}Disabled"
+    print(f"{Fore.YELLOW}Auto-save is now {auto_save_status}{Fore.RESET}")
+    time.sleep(1.5)
+    
     input("\nPress Enter to begin...")
     
     daily_menu()
@@ -1805,7 +1823,8 @@ def get_save_slots():
                     "level": save_data.get("restaurant_level", 1),
                     "location_count": len(save_data.get("owned_locations", [])),
                     "timestamp": save_data.get("timestamp", "Unknown"),
-                    "autosave": True
+                    "autosave": True,
+                    "autosave_reason": save_data.get("autosave_reason", "")
                 })
         except Exception as e:
             # If there's an error loading the autosave, treat it as non-existent
@@ -1866,6 +1885,7 @@ def save_game(slot=None, auto=False, auto_reason=""):
     global staff, inventory, active_collaborations, active_campaigns
     global prices, owned_locations, current_location_index, daily_sales
     global hour, minute, day_of_week, active_celebrity_endorsements
+    global auto_save_enabled
     
     # If auto save, use slot 0 (autosave slot)
     if auto:
@@ -1908,7 +1928,8 @@ def save_game(slot=None, auto=False, auto_reason=""):
         "daily_sales": daily_sales,
         "active_celebrity_endorsements": active_celebrity_endorsements,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "autosave_reason": auto_reason if auto else ""
+        "autosave_reason": auto_reason if auto else "",
+        "auto_save_enabled": auto_save_enabled
     }
     
     # Save to file
@@ -1934,7 +1955,14 @@ def auto_save(reason=""):
     
     Args:
         reason (str): Optional reason for the autosave (e.g., "day change", "level up")
+        
+    Returns:
+        bool: True if save was successful, False otherwise or if autosave is disabled
     """
+    # Skip autosave if feature is disabled
+    if not auto_save_enabled:
+        return False
+        
     return save_game(auto=True, auto_reason=reason)
 
 def show_save_slots():
@@ -1957,7 +1985,10 @@ def show_save_slots():
         if slot_info["exists"]:
             print(f"{Fore.CYAN}{slot_label}: {slot_info['name']} - Day {slot_info['day']}")
             print(f"  Money: ${slot_info['money']:,.2f} | Level: {slot_info['level']} | Locations: {slot_info['location_count']}")
-            print(f"  Saved: {slot_info['timestamp']}")
+            save_time = f"Saved: {slot_info['timestamp']}"
+            if is_autosave and "autosave_reason" in slot_info and slot_info["autosave_reason"]:
+                save_time += f" ({slot_info['autosave_reason']})"
+            print(f"  {save_time}")
         else:
             if "error" in slot_info:
                 print(f"{Fore.RED}{slot_label}: ERROR - {slot_info['error']}")
@@ -1977,6 +2008,7 @@ def load_game(slot=None):
     global staff, inventory, active_collaborations, active_campaigns
     global prices, owned_locations, current_location_index, daily_sales
     global hour, minute, day_of_week, active_celebrity_endorsements
+    global auto_save_enabled
     
     # If no slot specified, show slot selection menu
     if slot is None:
@@ -2028,6 +2060,7 @@ def load_game(slot=None):
         current_location_index = save_data.get("current_location_index", 0)
         daily_sales = save_data.get("daily_sales", {})
         active_celebrity_endorsements = save_data.get("active_celebrity_endorsements", [])
+        auto_save_enabled = save_data.get("auto_save_enabled", True)
         
         print(f"\n{Fore.GREEN}Game loaded successfully from slot {slot}!")
         input("Press Enter to continue...")
@@ -2073,9 +2106,36 @@ def how_to_play():
     
     input("\nPress Enter to return to the main menu...")
 
+def game_options():
+    """Game options menu for configuring settings"""
+    global auto_save_enabled
+    
+    while True:
+        print_header()
+        print(f"{Fore.GREEN}=== GAME OPTIONS ===")
+        
+        # Display current settings
+        auto_save_status = f"{Fore.GREEN}Enabled" if auto_save_enabled else f"{Fore.RED}Disabled"
+        print(f"{Fore.YELLOW}1. Auto-Save: {auto_save_status}")
+        print(f"\n{Fore.YELLOW}9. Return to Main Menu")
+        
+        choice = input("\nSelect an option (1-9): ")
+        
+        if choice == "1":
+            auto_save_enabled = not auto_save_enabled
+            status = "enabled" if auto_save_enabled else "disabled"
+            print(f"{Fore.GREEN}Auto-save has been {status}.")
+            time.sleep(1.5)
+        elif choice == "9":
+            return
+        else:
+            print(f"{Fore.RED}Invalid choice. Please try again.")
+            time.sleep(1)
+
 # Daily menu
 def daily_menu():
     global day, money, current_time_period, hour, minute, day_of_week, active_collaborations
+    global auto_save_enabled
     
     while True:
         print_header()
@@ -2133,10 +2193,12 @@ def daily_menu():
         
         # System Options
         print(f"\n{Fore.GREEN}=== SYSTEM ===")
-        print(f"{Fore.CYAN}14. Save Game")
-        print(f"{Fore.CYAN}15. Return to Main Menu")
+        autosave_status = f"{Fore.GREEN}Enabled" if auto_save_enabled else f"{Fore.RED}Disabled"
+        print(f"{Fore.CYAN}14. Save Game {Fore.YELLOW}(Auto-Save: {autosave_status}{Fore.YELLOW})")
+        print(f"{Fore.CYAN}15. Toggle Auto-Save")
+        print(f"{Fore.CYAN}16. Return to Main Menu")
         
-        choice = input("\nSelect an option (1-15): ")
+        choice = input("\nSelect an option (1-16): ")
         
         if choice == "1":
             open_restaurant()
@@ -2168,6 +2230,17 @@ def daily_menu():
             save_game()
             input("Press Enter to continue...")
         elif choice == "15":
+            # Toggle auto-save
+            auto_save_enabled = not auto_save_enabled
+            status = "enabled" if auto_save_enabled else "disabled"
+            print(f"{Fore.GREEN}Auto-save has been {status}.")
+            
+            # Auto-save the setting change
+            if auto_save_enabled:
+                auto_save("auto-save toggle")
+                
+            input("Press Enter to continue...")
+        elif choice == "16":
             if input(f"{Fore.YELLOW}Return to main menu? Progress since last save will be lost. (y/n): ").lower() == 'y':
                 main_menu()
         else:
