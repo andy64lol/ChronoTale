@@ -151,7 +151,8 @@ def shop_menu(data):
         {"name": "Carnival", "file": "Carnival.py", "cost": 30},
         {"name": "World Of Monsters", "file": "WOM.py", "cost": 30},
         {"name": "Hacker: Digital Hijacker", "file": "hacker.py", "cost": 40},
-        {"name": "4ndyBurger Tycoon", "file": "burger.py", "cost": 40}
+        {"name": "4ndyBurger Tycoon", "file": "burger.py", "cost": 40},
+        {"name": "Deutschland: 1936", "file": "deutschland.py", "cost": 40}
     ]
 
     while True:
