@@ -21,11 +21,423 @@ from colorama import init, Fore, Style
 # Initialize colorama for cross-platform colored terminal output
 init(autoreset=True)
 
+# Python3 restriction removed
+
 # Setup save folder
 SAVES_FOLDER = "saves"
 MAX_SAVE_SLOTS = 5
 
 # Ensure the saves folder exists
+
+# Military grade weapons
+MILITARY_WEAPONS = {
+    "rpg_launcher": {
+        "name": "RPG-7 Launcher",
+        "type": "weapon",
+        "damage": 150,
+        "durability": 50,
+        "ammo": 0,
+        "max_ammo": 1,
+        "area_effect": True,
+        "damage_type": "explosive",
+        "area_damage_radius": 10,
+        "area_damage_percent": 0.8,
+        "rarity": 0.02,
+        "weight": 7.0,
+        "noise_level": 10, # Extremely loud, attracts zombies from very far
+        "military_grade": True,
+        "description": "An RPG-7 rocket-propelled grenade launcher, complete with optical sight and folding grip. This devastating anti-vehicle weapon can obliterate entire zombie hordes with a single shot, though its thunderous explosion will attract every infected within miles. The rare military hardware is nearly impossible to find outside of military bases and is equally difficult to maintain in the apocalypse."
+    },
+    "rpg_rocket": {
+        "name": "RPG Rocket",
+        "type": "ammo",
+        "count": 1,
+        "weight": 2.5,
+        "craftable": True,
+        "rarity": 0.01,
+        "weapon": "rpg_launcher",
+        "crafting_difficulty": "extreme",
+        "crafting_requirements": {
+            "metal_pipe": 1,
+            "gunpowder": 3,
+            "fuel": 1,
+            "explosive_compound": 2,
+            "precision_parts": 2,
+            "tools": 1
+        },
+        "description": "A 40mm rocket-propelled warhead for the RPG-7 launcher. The olive-drab metal casing houses a shaped charge designed to penetrate armored vehicles, though against soft targets like zombies, it creates a devastating blast radius. The propellant and stabilizing fins ensure accurate delivery to the target. These sophisticated munitions require extensive technical knowledge to craft or maintain."
+    },
+    "assault_rifle": {
+        "name": "AK-47 Assault Rifle",
+        "type": "weapon",
+        "damage": 45,
+        "durability": 120,
+        "ammo": 0,
+        "max_ammo": 30,
+        "damage_type": "ballistic",
+        "fire_rate": 3, # Can hit multiple targets or same target multiple times
+        "accuracy": 0.85,
+        "rarity": 0.05,
+        "weight": 4.5,
+        "noise_level": 8,
+        "military_grade": True,
+        "description": "The iconic AK-47, renowned worldwide for its legendary reliability and stopping power. This particular model shows signs of heavy use—the wooden furniture is scratched and worn, while the metal components bear a patina of use rather than neglect. Even in the apocalypse, the rifle's simple, robust design continues to function with minimal maintenance. The distinctive silhouette and unmistakable sound make it both feared and coveted among survivors."
+    },
+    "rifle_ammo": {
+        "name": "7.62mm Rifle Ammunition",
+        "type": "ammo",
+        "count": 30,
+        "weight": 0.7,
+        "craftable": True,
+        "rarity": 0.1,
+        "weapon": "assault_rifle",
+        "crafting_difficulty": "hard",
+        "crafting_requirements": {
+            "bullet_casing": 30,
+            "gunpowder": 2,
+            "metal_scrap": 1,
+            "tools": 1
+        },
+        "description": "A box of 7.62×39mm rifle cartridges, the standard ammunition for AK-pattern rifles. Each round consists of a brass casing, primer, powder charge, and steel-core bullet. The stopping power of these rounds makes them effective against both the living and the undead. Handloaded rounds crafted in the apocalypse lack the factory precision of pre-fall ammunition but will still reliably cycle through a properly maintained weapon."
+    },
+    "lmg": {
+        "name": "M249 Light Machine Gun",
+        "type": "weapon",
+        "damage": 40,
+        "durability": 100,
+        "ammo": 0,
+        "max_ammo": 100,
+        "damage_type": "ballistic",
+        "fire_rate": 5, # High rate of fire, hits multiple targets
+        "accuracy": 0.7,
+        "rarity": 0.01,
+        "weight": 10.0,
+        "noise_level": 9,
+        "military_grade": True,
+        "description": "A belt-fed light machine gun designed for sustained fire support. The heavy barrel allows for extended firing without overheating, though the weapon's considerable weight makes it unwieldy for extended travel. Perfect for defending fixed positions against hordes of undead, its thunderous report will both clear a path and draw more infected from miles around."
+    },
+    "belt_ammo": {
+        "name": "5.56mm Linked Ammunition",
+        "type": "ammo",
+        "count": 100,
+        "weight": 2.5,
+        "craftable": True,
+        "rarity": 0.02,
+        "weapon": "lmg",
+        "crafting_difficulty": "extreme",
+        "crafting_requirements": {
+            "bullet_casing": 100,
+            "gunpowder": 5,
+            "metal_scrap": 2,
+            "tools": 1,
+            "metal_links": 100
+        },
+        "description": "A belt of linked 5.56mm cartridges for machine gun use. The brass casings gleam dully, connected by metal links designed to smoothly feed through the weapon's action before being ejected. Creating a functional ammunition belt in the post-apocalypse represents the pinnacle of survivor craftsmanship, requiring both extensive technical knowledge and specialized components."
+    },
+    "sniper_rifle": {
+        "name": "Military Sniper Rifle",
+        "type": "weapon",
+        "damage": 80,
+        "durability": 90,
+        "ammo": 0,
+        "max_ammo": 5,
+        "damage_type": "ballistic",
+        "range": 3, # Extreme range, can target zombies from 3 locations away
+        "accuracy": 0.95,
+        "critical_chance": 0.4,
+        "critical_multiplier": 3.0,
+        "rarity": 0.02,
+        "weight": 6.0,
+        "noise_level": 7,
+        "military_grade": True,
+        "description": "A precision long-range rifle with telescopic sight and adjustable stock. Once the domain of military and law enforcement specialists, this rifle's ability to eliminate threats from extreme distances makes it invaluable in the zombie-infested landscape. The pristine optical scope offers unparalleled clarity, allowing for precise shot placement even in challenging conditions."
+    }
+}
+
+# Vehicle definitions
+VEHICLES = {
+    "bicycle": {
+        "name": "Mountain Bicycle",
+        "type": "vehicle",
+        "speed": 3, # 3x faster than walking
+        "fuel_type": None, # Doesn't require fuel
+        "durability": 50,
+        "max_durability": 50,
+        "capacity": 1, # Passenger capacity
+        "noise_level": 1,
+        "craftable": True,
+        "crafting_difficulty": "medium",
+        "crafting_requirements": {
+            "metal_pipe": 4,
+            "rubber": 2,
+            "metal_scrap": 2,
+            "chain": 1,
+            "tools": 1
+        },
+        "repair_requirements": {
+            "metal_scrap": 1,
+            "rubber": 1,
+            "tools": 1
+        },
+        "description": "A sturdy mountain bike with patched tires and a makeshift cargo rack. Silent and requiring no fuel, it's perfect for reconnaissance missions or quick escapes. The lack of engine noise makes it ideal for avoiding infected, though the limited cargo capacity restricts extended journeys."
+    },
+    "motorcycle": {
+        "name": "Modified Motorcycle",
+        "type": "vehicle",
+        "speed": 6, # 6x faster than walking
+        "fuel_type": "gasoline",
+        "fuel_capacity": 10,
+        "fuel_consumption": 1, # Units per travel
+        "durability": 70,
+        "max_durability": 70,
+        "capacity": 2,
+        "noise_level": 6,
+        "craftable": True,
+        "crafting_difficulty": "hard",
+        "crafting_requirements": {
+            "engine_parts": 1,
+            "metal_frame": 1,
+            "wheels": 2,
+            "metal_pipe": 4,
+            "rubber": 4,
+            "metal_scrap": 6,
+            "electronics": 1,
+            "tools": 1
+        },
+        "repair_requirements": {
+            "metal_scrap": 2,
+            "rubber": 1,
+            "engine_parts": 1,
+            "tools": 1
+        },
+        "description": "A heavily modified dirt bike with reinforced frame and expanded fuel tank. The engine has been muffled as much as possible without sacrificing too much power, though it's still loud enough to attract infected. Excellent for rapid transit between locations, with enough cargo space for essential supplies."
+    },
+    "car": {
+        "name": "Survivor Sedan",
+        "type": "vehicle",
+        "speed": 5, # 5x faster than walking but more cargo
+        "fuel_type": "gasoline",
+        "fuel_capacity": 40,
+        "fuel_consumption": 3, # Units per travel
+        "durability": 100,
+        "max_durability": 100,
+        "capacity": 4,
+        "cargo_capacity": 10, # Can carry more items
+        "noise_level": 5,
+        "armor": 2, # Provides protection when inside
+        "craftable": False,
+        "repair_requirements": {
+            "metal_scrap": 5,
+            "rubber": 2,
+            "engine_parts": 2,
+            "electronics": 1,
+            "tools": 1
+        },
+        "description": "A four-door sedan modified for apocalyptic conditions. The windows have been reinforced with salvaged metal grating, and the body shows signs of collision repairs with mismatched panels. The back seats have been removed to maximize storage space, and the fuel system modified to accept lower-quality gasoline. More protected than a motorcycle, but lacks the same off-road capabilities."
+    },
+    "truck": {
+        "name": "Reinforced Pickup Truck",
+        "type": "vehicle",
+        "speed": 4, # 4x faster than walking
+        "fuel_type": "diesel",
+        "fuel_capacity": 60,
+        "fuel_consumption": 5, # Units per travel
+        "durability": 150,
+        "max_durability": 150,
+        "capacity": 5,
+        "cargo_capacity": 20, # Significant cargo space
+        "noise_level": 7,
+        "armor": 4, # Good protection
+        "craftable": False,
+        "repair_requirements": {
+            "metal_scrap": 8,
+            "rubber": 4,
+            "engine_parts": 3,
+            "electronics": 2,
+            "tools": 1
+        },
+        "description": "A heavy-duty pickup truck with extensive modifications for survival. The bed has been enclosed with a custom cage of steel pipes and mesh, while the front sports a reinforced bumper capable of clearing infected from the road. The elevated suspension and all-terrain tires allow navigation of debris-strewn streets and off-road detours. The diesel engine is louder than preferred but offers superior torque and fuel efficiency."
+    },
+    "armored_vehicle": {
+        "name": "Military Armored Personnel Carrier",
+        "type": "vehicle",
+        "speed": 3, # 3x faster than walking
+        "fuel_type": "diesel",
+        "fuel_capacity": 150,
+        "fuel_consumption": 12, # Units per travel
+        "durability": 300,
+        "max_durability": 300,
+        "capacity": 8,
+        "cargo_capacity": 40, # Massive cargo space
+        "noise_level": 8,
+        "armor": 10, # Extreme protection
+        "military_grade": True,
+        "craftable": False,
+        "repair_requirements": {
+            "metal_plate": 5,
+            "rubber": 4,
+            "engine_parts": 5,
+            "electronics": 3,
+            "hydraulics": 2,
+            "military_parts": 3,
+            "tools": 1
+        },
+        "description": "A decommissioned military APC with extensive armor plating and reinforced windows. The interior has been stripped of military equipment and repurposed for survival, with added storage compartments and crude living facilities. Near-impervious to infected attacks, it can plow through hordes with minimal damage. The extreme fuel consumption and noise are significant drawbacks, but nothing offers better protection on the move."
+    },
+    "military_humvee": {
+        "name": "Military Humvee",
+        "type": "vehicle",
+        "speed": 5, # 5x faster than walking
+        "fuel_type": "gasoline",
+        "fuel_consumption": 3, # Higher consumption rate
+        "durability": 120,
+        "max_durability": 120,
+        "capacity": 4, # Passenger capacity
+        "noise_level": 3,
+        "armor": 0.6, # Strong protection from zombies
+        "military_origin": True,
+        "craftable": False,
+        "found_at": ["military_base"],
+        "repair_requirements": {
+            "metal_sheet": 2,
+            "tools": 1,
+            "rubber": 2,
+            "industrial_parts": 1
+        },
+        "description": "A High Mobility Multipurpose Wheeled Vehicle (HMMWV) still in military colors, with reinforced frame and bulletproof windows. The overhead weapon mount has been removed, but the vehicle retains excellent all-terrain capability and defensive features. Offers substantial protection against infected attacks with room for passengers and supplies. The military-grade armor plating makes it nearly impervious to regular zombies."
+    },
+    "military_truck": {
+        "name": "Military Transport Truck",
+        "type": "vehicle",
+        "speed": 3.5, # 3.5x faster than walking
+        "fuel_type": "diesel",
+        "fuel_consumption": 4, # Very high consumption rate
+        "durability": 150,
+        "max_durability": 150,
+        "capacity": 8, # High passenger capacity
+        "storage_capacity": 500, # Significant cargo space
+        "noise_level": 4,
+        "armor": 0.4, # Good protection from zombies
+        "military_origin": True,
+        "craftable": False,
+        "found_at": ["military_base"],
+        "repair_requirements": {
+            "metal_sheet": 3,
+            "tools": 1,
+            "rubber": 2,
+            "industrial_parts": 2
+        },
+        "description": "A 5-ton military transport truck with canvas-covered rear cargo area and six-wheel drive. Designed for troop and supply transport in combat zones, it offers exceptional carrying capacity and durability. The large profile attracts significant zombie attention, but the elevated cab and reinforced undercarriage provide good protection. Ideal for relocating groups of survivors and large quantities of supplies."
+    },
+    "armored_personnel_carrier": {
+        "name": "Armored Personnel Carrier",
+        "type": "vehicle",
+        "speed": 4, # 4x faster than walking
+        "fuel_type": "diesel",
+        "fuel_consumption": 5, # Extremely high consumption rate
+        "durability": 200,
+        "max_durability": 200,
+        "capacity": 6, # Good passenger capacity
+        "storage_capacity": 300, # Decent cargo space
+        "noise_level": 5,
+        "armor": 0.8, # Excellent protection from zombies
+        "military_origin": True,
+        "craftable": False,
+        "found_at": ["military_base"],
+        "repair_requirements": {
+            "metal_sheet": 4,
+            "tools": 2,
+            "electronics": 1,
+            "industrial_parts": 3
+        },
+        "description": "A tracked armored fighting vehicle designed to transport infantry into battle and provide fire support. This decommissioned military APC features heavy armor plating, small vision ports with bulletproof glass, and a top hatch. The interior has been stripped of weapons systems but retains seating and storage. Extremely effective at plowing through zombie hordes and nearly impervious to attacks, its main drawbacks are the excessive fuel consumption and noise that attracts infected from considerable distances."
+    }
+}
+
+# New buildings that can be constructed at camp
+BUILDINGS = {
+    "workshop": {
+        "name": "Survivor's Workshop",
+        "level": 1,
+        "max_level": 3,
+        "construction_requirements": {
+            "wood": 20,
+            "metal_scrap": 15,
+            "tools": 1
+        },
+        "upgrade_requirements": {
+            2: {"wood": 30, "metal_scrap": 25, "electronics": 1, "tools": 1},
+            3: {"wood": 50, "metal_scrap": 40, "electronics": 3, "precision_parts": 1, "tools": 2}
+        },
+        "benefits": {
+            1: {"crafting_bonus": 0.1, "repair_bonus": 0.1},
+            2: {"crafting_bonus": 0.2, "repair_bonus": 0.2, "advanced_crafting": True},
+            3: {"crafting_bonus": 0.3, "repair_bonus": 0.3, "advanced_crafting": True, "military_crafting": True}
+        },
+        "description": "A dedicated space for crafting, repairing, and modifying equipment. Higher levels unlock more advanced crafting recipes and improve success rates for complex items."
+    },
+    "garage": {
+        "name": "Vehicle Garage",
+        "level": 1,
+        "max_level": 3,
+        "construction_requirements": {
+            "wood": 30,
+            "metal_scrap": 25,
+            "tools": 1
+        },
+        "upgrade_requirements": {
+            2: {"wood": 45, "metal_scrap": 40, "engine_parts": 1, "tools": 1},
+            3: {"wood": 70, "metal_scrap": 60, "engine_parts": 3, "electronics": 2, "tools": 2}
+        },
+        "benefits": {
+            1: {"vehicle_repair_bonus": 0.1, "vehicle_storage": 1},
+            2: {"vehicle_repair_bonus": 0.2, "vehicle_storage": 2, "vehicle_crafting": True},
+            3: {"vehicle_repair_bonus": 0.3, "vehicle_storage": 3, "vehicle_crafting": True, "military_vehicle_repair": True}
+        },
+        "description": "A covered structure for storing, repairing, and eventually constructing vehicles. Higher levels allow for more complex vehicle modifications and repairs to military vehicles."
+    },
+    "watchtower": {
+        "name": "Observation Tower",
+        "level": 1,
+        "max_level": 3,
+        "construction_requirements": {
+            "wood": 25,
+            "metal_scrap": 10,
+            "rope": 2
+        },
+        "upgrade_requirements": {
+            2: {"wood": 40, "metal_scrap": 20, "tools": 1},
+            3: {"wood": 60, "metal_scrap": 35, "electronics": 1, "tools": 1}
+        },
+        "benefits": {
+            1: {"detection_range": 1, "defense_bonus": 0.1},
+            2: {"detection_range": 2, "defense_bonus": 0.2, "distant_scouting": True},
+            3: {"detection_range": 3, "defense_bonus": 0.3, "distant_scouting": True, "zombie_migration_tracking": True}
+        },
+        "description": "An elevated platform providing visibility of the surrounding area. Helps detect approaching zombie hordes and potential threats. Higher levels increase detection range and enable tracking of zombie migrations."
+    },
+    "armory": {
+        "name": "Survivor Armory",
+        "level": 1,
+        "max_level": 3,
+        "construction_requirements": {
+            "metal_scrap": 30,
+            "wood": 20,
+            "tools": 1,
+            "lock": 1
+        },
+        "upgrade_requirements": {
+            2: {"metal_scrap": 50, "wood": 30, "electronics": 1, "tools": 1},
+            3: {"metal_scrap": 80, "wood": 50, "electronics": 2, "precision_parts": 2, "tools": 2}
+        },
+        "benefits": {
+            1: {"weapon_storage": 10, "ammo_crafting_bonus": 0.1},
+            2: {"weapon_storage": 20, "ammo_crafting_bonus": 0.2, "weapon_repair": True},
+            3: {"weapon_storage": 30, "ammo_crafting_bonus": 0.3, "weapon_repair": True, "military_maintenance": True}
+        },
+        "description": "A secure storage facility for weapons and ammunition. Higher levels allow for weapon maintenance, repairs, and eventually maintenance of military-grade hardware."
+    }
+}
 if not os.path.exists(SAVES_FOLDER):
     os.makedirs(SAVES_FOLDER)
 
@@ -249,7 +661,7 @@ SCAVENGE_AREAS = {
             "weapon": 0.15,
             "medical": 0.2,
         },
-        "special_items": ["pistol", "metal_scrap", "fuel", "tactical_flashlight", "office_supplies"],
+        "special_items": ["pistol", "metal_scrap", "fuel", "tactical_flashlight", "office_supplies", "sonic_disruptor"],
         "special_item_chance": 0.15,
     },
     "residential": {
@@ -263,7 +675,7 @@ SCAVENGE_AREAS = {
             "weapon": 0.1,
             "medical": 0.25,
         },
-        "special_items": ["kitchen_knife", "cloth", "baseball_bat", "canned_food", "family_photo"],
+        "special_items": ["kitchen_knife", "cloth", "baseball_bat", "canned_food", "family_photo", "nail_bat"],
         "special_item_chance": 0.2,
     },
     "commercial": {
@@ -305,7 +717,7 @@ SCAVENGE_AREAS = {
             "weapon": 0.05,
             "medical": 0.05,
         },
-        "special_items": ["wood", "fresh_fruit", "medicinal_herbs", "hunting_knife", "wild_game"],
+        "special_items": ["wood", "fresh_fruit", "medicinal_herbs", "hunting_knife", "wild_game", "crossbow_bolt", "machete"],
         "special_item_chance": 0.3,
     },
     "highway": {
@@ -333,7 +745,7 @@ SCAVENGE_AREAS = {
             "weapon": 0.15,
             "medical": 0.15,
         },
-        "special_items": ["tools", "metal_scrap", "industrial_parts", "protective_gear", "preserved_food"],
+        "special_items": ["tools", "metal_scrap", "industrial_parts", "protective_gear", "preserved_food", "flamethrower", "hazmat_piercer"],
         "special_item_chance": 0.25,
     },
     "school": {
@@ -347,7 +759,7 @@ SCAVENGE_AREAS = {
             "weapon": 0.1,
             "medical": 0.35,
         },
-        "special_items": ["textbooks", "science_equipment", "cafeteria_food", "first_aid_supplies", "sports_equipment"],
+        "special_items": ["textbooks", "science_equipment", "cafeteria_food", "first_aid_supplies", "sports_equipment", "battery_pack"],
         "special_item_chance": 0.35,
     },
     "farm": {
@@ -361,7 +773,7 @@ SCAVENGE_AREAS = {
             "weapon": 0.05,
             "medical": 0.1,
         },
-        "special_items": ["seeds", "fertilizer", "farming_tools", "fresh_produce", "preserved_meats"],
+        "special_items": ["seeds", "fertilizer", "farming_tools", "fresh_produce", "preserved_meats", "fuel_canister"],
         "special_item_chance": 0.4,
     },
     "underground": {
@@ -390,7 +802,7 @@ SCAVENGE_AREAS = {
             "medical": 0.2,
             "ammo": 0.1
         },
-        "special_items": ["riot_shield", "prison_shank", "guard_baton", "pepper_spray", "handcuffs", "taser", "prison_jumpsuit", "antibiotics"],
+        "special_items": ["riot_shield", "prison_shank", "guard_baton", "pepper_spray", "handcuffs", "taser", "prison_jumpsuit", "antibiotics", "tactical_crossbow"],
         "special_item_chance": 0.35,
     }
 }
@@ -544,6 +956,41 @@ CAMP_UPGRADES = {
     }
 }
 
+# Boss zombie types - special high-difficulty encounters
+BOSS_ZOMBIES = {
+    "behemoth": {
+        "name": "Behemoth",
+        "health": 300,
+        "damage": 35,
+        "speed": 0.7,
+        "armor": 0.4,
+        "special_ability": "ground_pound",
+        "special_moves": ["slam", "charge", "roar"],
+        "description": "A colossal infected that towers over others, with muscles grotesquely enlarged and skin hardened into natural armor plates. The Behemoth can crush enemies with devastating physical attacks and shrug off significant damage. Its thunderous roars can stun survivors temporarily."
+    },
+    "patient_zero": {
+        "name": "Patient Zero",
+        "health": 200,
+        "damage": 25,
+        "speed": 1.5,
+        "special_ability": "mutation",
+        "regeneration": True,
+        "special_moves": ["toxic_spray", "call_horde", "mutate"],
+        "description": "One of the first infected, exhibiting unique mutations and retaining fragments of intelligence. Patient Zero can evolve during combat, adapting to attacks and developing new offensive capabilities. It can release pheromones to call other infected and regenerate health over time."
+    },
+    "tank_commander": {
+        "name": "Tank Commander",
+        "health": 250,
+        "damage": 30,
+        "speed": 1.1,
+        "armor": 0.6,
+        "special_ability": "coordinated_attack",
+        "military_origin": True,
+        "special_moves": ["order_attack", "suppressive_fire", "take_cover"],
+        "description": "Formerly a high-ranking military officer infected while inside an armored vehicle. Protected by military-grade body armor and tactical helmet, the Tank Commander retains advanced combat skills and can issue guttural commands that coordinate other military zombies in sophisticated attack patterns."
+    }
+}
+
 LOCATIONS = {
     "camp": {
         "name": "Survivor Camp",
@@ -551,6 +998,13 @@ LOCATIONS = {
         "danger_level": 0,
         "resource_types": ["food", "medical"],
         "sleep_safety": 1.0,  # 100% safe if barricades intact
+        "special_areas": ["trading_post", "medical_tent", "community_garden", "barracks", "workshop", "command_center", "kitchen", "training_area", "lookout_tower"],
+        "special_items": ["medicine", "tools", "seeds", "trading_goods", "survivor_maps"],
+        "special_item_chance": 0.15,  # 15% chance to find special items
+        "encounter_chance": 0.2,  # 20% chance of random encounters (even in camp)
+        "survivor_encounter_chance": 0.7,  # 70% chance to encounter human survivors
+        "animal_types": ["dog", "cat", "chicken", "farm_animal"],  # Domesticated animals
+        "friendly_animals": True,  # Animals here are generally friendly
         "barricades_intact": True  # If False, safety drops to 40%
     },
     "town": {
@@ -565,21 +1019,71 @@ LOCATIONS = {
         "description": "The faded red cross still hangs above the entrance to this once-sacred place of healing, now a labyrinth of dark corridors and blood-stained examination rooms. Medical supplies are abundant, but so are the infected medical staff and patients who never made it out. The emergency generators occasionally flicker to life, creating moments of surreal illumination in this temple of death.",
         "danger_level": 3,
         "resource_types": ["medical", "food"],
-        "sleep_safety": 0.4  # 40% safe for sleeping
+        "sleep_safety": 0.3  # 30% safe for sleeping
+    },
+    "military_base": {
+        "name": "Fort Defiance Military Base",
+        "description": "A sprawling compound of concrete and steel, this former military installation was one of the last holdouts against the infection. High walls and watchtowers surround barracks, armories, and command centers now silent except for the shuffling of infected soldiers still in uniform. Military-grade weapons and supplies remain, guarded by the base's automated security systems and the dangerous remnants of elite combat units that succumbed to the virus.",
+        "danger_level": 5,
+        "resource_types": ["weapons", "military_gear", "food", "fuel"],
+        "sleep_safety": 0.2,  # 20% safe for sleeping
+        "zombie_types": ["military", "hazmat", "screamer", "behemoth"],
+        "special_areas": ["armory", "vehicle_depot", "command_center", "barracks", "research_lab", "training_grounds", "prison_block", "helipad", "communications_center", "medical_wing"],
+        "special_items": ["rpg_launcher", "ak47", "sniper_rifle", "lmg", "military_helmet", "riot_shield", "body_armor", "night_vision", "tactical_crossbow", "flamethrower"],
+        "special_item_chance": 0.25,  # 25% chance to find special items
+        "encounter_chance": 0.6,  # 60% chance of random encounters
+        "survivor_encounter_chance": 0.3  # 30% chance to encounter human survivors
+    },
+    "zoo": {
+        "name": "Oakridge Wildlife Park",
+        "description": "Once a popular attraction showcasing exotic animals from around the world, now a nightmarish menagerie of infected creatures. Twisted metal cages and broken enclosures have allowed many animals to escape, while others remain trapped and have mutated from the virus. The administration building contains medical supplies, while the maintenance shed holds tools and vehicle parts. Beware the infected predators that now roam freely throughout the park.",
+        "danger_level": 5,
+        "resource_types": ["food", "medical", "materials"],
+        "sleep_safety": 0.15,  # 15% safe for sleeping
+        "zombie_types": ["walker", "crawler", "bloater"],
+        "special_areas": ["aquarium_building", "reptile_house", "big_cat_enclosures", "aviary", "primate_sanctuary", "administration_building", "veterinary_clinic"],
+        "special_items": ["tranquilizer_gun", "animal_medicine", "zookeeper_keys", "feeding_tongs", "veterinary_tools"],
+        "special_item_chance": 0.2,  # 20% chance to find special items
+        "encounter_chance": 0.7,  # 70% chance of random encounters
+        "infected_animals": True,  # This location has infected animals
+        "animal_types": ["infected_wolf", "infected_bear", "infected_lion", "infected_tiger", "infected_gorilla", "infected_crocodile"]
+    },
+    "bunker_complex": {
+        "name": "Hawkins Underground Survival Bunker",
+        "description": "A massive government-built fallout shelter buried deep beneath the earth, designed to house important officials during nuclear disaster. Several sections have been compromised by flooding or structural failure, but much of the complex remains intact. The limited-access entry points make it relatively defensible, but the confined spaces create deadly choke points when confronted with infected. The lower levels contain a treasure trove of supplies, weapons, and technology.",
+        "danger_level": 4,
+        "resource_types": ["food", "medical", "weapons", "materials", "fuel"],
+        "sleep_safety": 0.6,  # 60% safe for sleeping - very secure
+        "zombie_types": ["hazmat", "military", "screamer", "walker"],
+        "special_areas": ["command_center", "living_quarters", "hydroponics_lab", "armory", "medical_bay", "communications_room", "power_plant", "flooded_section"],
+        "special_items": ["hazmat_suit", "government_documents", "rare_seeds", "advanced_electronics", "military_rations", "radiation_detector"],
+        "special_item_chance": 0.3,  # 30% chance to find special items
+        "encounter_chance": 0.4,  # 40% chance of random encounters
+        "survivor_encounter_chance": 0.5  # 50% chance to encounter human survivors (many took shelter here)
     },
     "mall": {
         "name": "Northridge Shopping Mall",
         "description": "This massive commercial complex once housed over 200 stores across three sprawling floors. Shattered display windows frame mannequins that stand in silent vigil over the chaos that claimed their shoppers. The central plaza's decorative fountain has long dried up, its basin now filled with the remnants of desperate last stands. The food court still reeks of decay, while the endless echoing halls amplify every sound—including the shuffling of undead feet searching for their next meal.",
         "danger_level": 4,
         "resource_types": ["food", "weapons", "materials", "medical"],
-        "sleep_safety": 0.3  # 30% safe for sleeping
+        "sleep_safety": 0.3,  # 30% safe for sleeping
+        "special_areas": ["food_court", "department_store", "security_office", "clothing_stores", "electronics_shop", "pharmacy", "toy_store", "movie_theater"],
+        "special_items": ["portable_generator", "designer_clothes", "security_card", "electronics_parts", "medicine_cache"],
+        "special_item_chance": 0.25,  # 25% chance to find special items
+        "encounter_chance": 0.5,  # 50% chance of random encounters
+        "survivor_encounter_chance": 0.4,  # 40% chance to encounter human survivors
+        "animal_types": ["dog", "infected_rat"]  # Some animals found here
     },
     "military": {
         "name": "Fort Hyperion Military Base",
         "description": "The fallen bastion of what was supposed to be humanity's last defense. Heavy-duty fences topped with razor wire failed to contain the outbreak that started within. Armored vehicles sit abandoned in perfect formation, their occupants having joined the ranks of the undead. The weapons depot and medical facility remain largely intact—if you can navigate the hordes of military-grade zombies still wearing the tattered remains of their uniforms. High risk, but potentially the most valuable supplies in the region.",
-        "danger_level": 5,
-        "resource_types": ["weapons", "materials", "medical", "food"],
-        "sleep_safety": 0.2  # 20% safe for sleeping
+        "danger_level": 6,  # Extremely dangerous
+        "resource_types": ["weapons", "materials", "medical", "food", "military_grade", "vehicle_parts", "fuel"],
+        "sleep_safety": 0.15,  # 15% safe for sleeping
+        "zombie_types": ["military", "hazmat", "screamer", "tank"],
+        "special_areas": ["armory", "vehicle_depot", "command_center", "barracks", "firing_range"],
+        "special_items": ["rpg_launcher", "assault_rifle", "military_helmet", "tank_parts", "helicopter_blades", "targeting_system", "body_armor", "night_vision", "humvee_keys", "tank_manual"],
+        "special_item_chance": 0.2  # 20% chance to find special items
     },
     "forest": {
         "name": "Whispering Pines Forest",
@@ -630,6 +1134,79 @@ LOCATIONS = {
         "resource_types": ["weapons", "medical", "food", "materials", "ammo"],
         "sleep_safety": 0.25,  # 25% safe for sleeping
         "scavenge_area": "prison"
+    },
+    "research_lab": {
+        "name": "Nexus Biomedical Research Facility",
+        "description": "A sprawling complex of sterile labs and advanced research chambers where the outbreak may have originated. Pristine white walls are now stained with blood and organic matter, while sophisticated equipment sits abandoned mid-experiment. The facility's remote location and extreme containment protocols kept it operational longer than most places, but eventually succumbed. Security measures make navigation challenging, but potentially rewarding. Specialized infected wearing lab coats and protective gear roam the halls, some exhibiting unique mutations not seen elsewhere. The facility's lower levels remain in partial lockdown, containing both extreme hazards and invaluable research materials.",
+        "danger_level": 5,
+        "resource_types": ["medical", "chemicals", "electronics", "scientific_equipment", "documents"],
+        "sleep_safety": 0.2,  # 20% safe for sleeping
+        "special_feature": "may_contain_patient_zero"
+    },
+    "bunker": {
+        "name": "Fallout Survival Bunker",
+        "description": "A massive underground complex built by a doomsday prepper collective before the outbreak. Multiple reinforced levels connected by narrow stairwells contain living quarters, storage rooms, and makeshift medical facilities. The bunker's heavy blast doors were compromised early in the outbreak, allowing the infection to spread through the confined spaces with devastating efficiency. The residents' paranoia meant they were well-stocked with survival supplies, weapons, and long-term food stores, much of which remains untouched. Air filtration systems still function on emergency power, creating an eerie background hum throughout the claustrophobic corridors.",
+        "danger_level": 4,
+        "resource_types": ["food", "weapons", "medical", "ammo", "fuel", "survival_gear"],
+        "sleep_safety": 0.4,  # 40% safe for sleeping
+        "special_feature": "emergency_power"
+    },
+    "amusement_park": {
+        "name": "Wonderland Amusement Park",
+        "description": "Once filled with the sounds of laughter and excitement, this sprawling entertainment complex now stands as a twisted monument to lost joy. Colorful rides sit motionless against the skyline, while concession stands still hold stale treats. The park's mascot characters, now worn and bloodstained costumes inhabited by the infected, wander through abandoned midways in a macabre parody of entertainment. Maintenance areas contain tools and spare parts, while gift shops and restaurants might still hold usable supplies. The park's remote control systems and backup generators could potentially be salvaged for camp upgrades. At night, some rides flicker to life on failing circuits, creating an unsettling carnival atmosphere that attracts the infected from miles around.",
+        "danger_level": 3,
+        "resource_types": ["food", "materials", "electronics", "tools", "fuel"],
+        "sleep_safety": 0.35,  # 35% safe for sleeping
+        "special_feature": "working_generators"
+    },
+    "underground": {
+        "name": "Millfield Underground System",
+        "description": "A labyrinthine network of maintenance tunnels, storm drains, and abandoned subway lines running beneath the city. Perpetual darkness is broken only by your flashlight beam reflecting off stagnant water and rusted infrastructure. The damp environment has accelerated decay, both of infrastructure and of the infected that wander these passages. Some areas flood periodically, while others contain makeshift shelters established by survivors who sought refuge below ground, only to succumb to the infection or starvation. Municipal storage areas contain tools and materials, while forgotten maintenance caches might hold valuable supplies. The darkness provides excellent concealment, but limited visibility makes detecting threats nearly impossible until they're within arm's reach.",
+        "danger_level": 4,
+        "resource_types": ["materials", "tools", "electronics", "chemicals", "scrap"],
+        "sleep_safety": 0.3,  # 30% safe for sleeping
+        "special_feature": "darkness_concealment"
+    },
+    "military_base": {
+        "name": "Fort Defiance Military Base",
+        "description": "A sprawling military installation that was one of the last strongholds to fall. Surrounded by reinforced perimeter walls topped with razor wire, the base contains multiple strategic zones. High-value military equipment and supplies remain, but the base is heavily infested with military personnel who turned while still in uniform and combat gear. Defensive measures, some still active, pose additional hazards to unwary scavengers. Those who brave the dangers might find weapons, ammunition, and equipment unavailable anywhere else.",
+        "danger_level": 5,
+        "resource_types": ["weapons", "ammo", "medical", "electronics", "military_gear"],
+        "sleep_safety": 0.1,  # Only 10% safe for sleeping
+        "special_feature": "military_equipment",
+        "military_zombies": True,
+        "sub_locations": {
+            "command_center": {
+                "name": "Command Center",
+                "description": "The nerve center of Fort Defiance, filled with communication equipment, computer terminals, and strategic maps. Security protocols and reinforced infrastructure make this area difficult to access but potentially rich in intelligence and electronic components.",
+                "loot_quality": "high",
+                "special_zombies": ["military", "tank_commander"]
+            },
+            "armory": {
+                "name": "Armory",
+                "description": "A heavily fortified weapons storage facility with reinforced doors and security systems. If you can breach it, military-grade firearms, ammunition, and equipment await. Most of the best supplies were likely evacuated, but many valuable items remain in secured lockers.",
+                "loot_quality": "very_high",
+                "special_zombies": ["military"]
+            },
+            "barracks": {
+                "name": "Barracks",
+                "description": "Living quarters for base personnel, featuring bunk rooms, recreational areas, and personal storage. While less secure than other areas, the barracks contain everyday items, clothing, and occasionally personal weapons or contraband hidden by soldiers.",
+                "loot_quality": "medium",
+                "special_zombies": ["military", "walker"]
+            },
+            "vehicle_depot": {
+                "name": "Vehicle Depot",
+                "description": "A massive garage and maintenance facility for military vehicles. While most operational vehicles were deployed in evacuation efforts, parts, tools, and fuel remain. Some damaged or abandoned vehicles might be salvageable with enough expertise and resources.",
+                "loot_quality": "high",
+                "special_zombies": ["military", "hazmat"]
+            },
+            "research_lab": {
+                "name": "Research Laboratory",
+                "description": "A classified facility where military scientists studied the infection, seeking vaccines or weapons applications. Hazardous materials and experimental equipment fill the space, along with valuable research data. Containment protocols mean this area may house unique infected specimens.",
+                "loot_quality": "very_high",
+                "special_zombies": ["hazmat", "bloater", "patient_zero"]
+            }
+        }
     }
 }
 
@@ -1188,10 +1765,278 @@ ITEMS = {
             "metal_bar": 1
         },
         "description": "A belt of linked cartridges designed for high-volume automatic fire in machine guns. Creating these rounds represents the pinnacle of post-apocalyptic ammunition crafting—each cartridge must meet exact specifications to avoid jamming the delicate feeding mechanisms. The metal links connecting each round are often salvaged from pre-fall belts and carefully cleaned and inspected. The substantial resources required to produce this ammunition make it among the most valuable currencies in survivor enclaves."
+    },
+    "tactical_crossbow": {
+        "name": "Tactical Crossbow",
+        "type": "weapon",
+        "damage": 40,
+        "durability": 75,
+        "ammo": 0,
+        "max_ammo": 1,
+        "silent": True,
+        "damage_type": "piercing_weapons",
+        "retrievable_ammo": 0.7,
+        "critical_chance": 0.25,
+        "critical_multiplier": 2.0,
+        "hazmat_bonus": 3.0,  # Triple damage against hazmat zombies
+        "description": "A modern compound crossbow with tactical modifications—fiber optic sights, carbon-fiber limbs, and an integrated quiver. The draw mechanism has been carefully maintained, and the string shows recent replacement with paracord. Its near-silent operation and reusable ammunition make it ideal for stealth operations in infected territory. The high-velocity bolts can pierce protective gear, making it especially effective against hazmat zombies. Its precision allows for targeting weak points with devastating critical hits."
+    },
+    "crossbow_bolt": {
+        "name": "Crossbow Bolt",
+        "type": "ammo",
+        "count": 5,
+        "weight": 0.2,
+        "craftable": True,
+        "weapon": "tactical_crossbow",
+        "crafting_requirements": {
+            "metal_scrap": 1,
+            "duct_tape": 1,
+            "wood": 1
+        },
+        "description": "Hand-crafted bolts for crossbows, fashioned from straightened metal rods with improvised fletching. The heads are sharpened to brutal points, some even sporting barbs made from scrap metal. Though lacking the uniformity of manufactured arrows, their lethality against the infected is undiminished—at close range, they can penetrate a zombie's skull with ease."
+    },
+    "nail_bat": {
+        "name": "Nail-Spiked Baseball Bat",
+        "type": "weapon",
+        "damage": 25,
+        "durability": 40,
+        "damage_type": "blunt_heavy",
+        "area_attack": True,
+        "special_effect": "splash_damage",
+        "crawler_bonus": 2.0,  # Double damage against crawlers
+        "description": "A baseball bat transformed into something far more sinister—dozens of nails driven through the barrel create a porcupine-like implement of destruction. The wood is stained with dark patches of dried blood and gore. While crude, it's brutally effective at causing traumatic injuries to the infected, though the nails occasionally catch on bone and clothing, making follow-up swings slower. Particularly effective against crawlers and can hit multiple targets with a wide swing."
+    },
+    "machete": {
+        "name": "Machete",
+        "type": "weapon",
+        "damage": 22,
+        "durability": 70,
+        "damage_type": "slashing",
+        "bloater_bonus": 2.5,  # Extra effective against bloater zombies
+        "dismemberment_chance": 0.35,  # 35% chance to dismember limbs
+        "decapitation_chance": 0.15,  # 15% chance for instant kills via decapitation
+        "sweep_attack": True,  # Can hit multiple targets with a single swing
+        "description": "A heavy-bladed cutting tool with a worn black handle wrapped in electrical tape for grip. The blade shows signs of frequent sharpening, with a serrated section near the handle for sawing. Originally designed for clearing vegetation, it has found a new purpose in the apocalypse as an efficient means of separating zombie heads from shoulders with minimal effort and noise. The blade can sweep through multiple targets and is particularly effective at puncturing bloated infected, releasing the pressure before they can explode."
+    },
+    "riot_shield": {
+        "name": "Riot Shield",
+        "type": "weapon",
+        "damage": 5,
+        "durability": 150,
+        "defense_bonus": 15,
+        "damage_type": "blunt_shield",
+        "defense_type": "physical_barrier",
+        "bloater_protection": True,  # Protects against bloater explosions
+        "screamer_protection": True,  # Reduces impact of screamer sonic attacks
+        "push_back_chance": 0.8,  # 80% chance to push zombies back
+        "explosion_damage_reduction": 0.75,  # Reduces explosion damage by 75%
+        "description": "A transparent polycarbonate shield looted from a police station or military checkpoint. Though scraped and dented from impacts, it remains sturdy enough to create a defensive barrier between you and the infected. The shield is particularly effective at blocking acidic spray from bloaters, deflecting sonic attacks from screamers, and creating distance with a powerful push. Most effective in narrow spaces where it can control the flow of approaching zombies."
+    },
+    "hazmat_piercer": {
+        "name": "Hazmat Piercer",
+        "type": "weapon",
+        "damage": 18,
+        "durability": 60,
+        "hazmat_damage_bonus": 25,
+        "description": "A specialized weapon designed for penetrating hazmat suits and protective gear. Essentially an ice pick with an elongated, reinforced shaft and ergonomic grip, it can punch through the reinforced fabric and plastic of hazmat suits to reach the infected inside. Particularly effective against hazmat zombies, though less impressive against standard infected."
+    },
+    "flamethrower": {
+        "name": "Improvised Flamethrower",
+        "type": "weapon",
+        "damage": 35,
+        "durability": 30,
+        "ammo": 0,
+        "max_ammo": 10,
+        "area_effect": True,
+        "damage_type": "fire",
+        "fire_damage": 10,
+        "bloater_bonus": 3.0,  # Triple damage against bloaters due to gas ignition
+        "area_damage_percent": 0.7,  # 70% of primary damage applies to nearby zombies
+        "continuous_damage": 5,  # Zombies continue to take damage for 2 turns after being hit
+        "continuous_turns": 2,
+        "horde_control": True,  # Creates a temporary barrier of flames
+        "attraction_radius": 3,  # Attracts zombies from 3 zones away
+        "crawler_bonus": 1.5,  # Extra effective against crawlers
+        "screamer_panic": True,  # Causes screamers to panic and flee
+        "description": "A jury-rigged contraption consisting of a pressurized tank, pump mechanism, and ignition system. Though dangerous to the user and limited in capacity, it creates a devastating cone of flame that can incinerate multiple infected at once. Particularly devastating against bloaters whose gas ignites explosively, and effective at creating a wall of flame that temporarily blocks zombie movements. The bright flame and distinct roar will draw every zombie for miles, but sometimes a tactical retreat requires scorching the earth behind you."
+    },
+    "fuel_canister": {
+        "name": "Fuel Canister",
+        "type": "ammo",
+        "count": 2,
+        "weight": 3.0,
+        "craftable": True,
+        "weapon": "flamethrower",
+        "crafting_requirements": {
+            "fuel": 3,
+            "alcohol": 1,
+            "duct_tape": 1
+        },
+        "description": "A pressurized canister filled with a volatile mixture of scavenged fuels, oils, and alcohols. The resulting concoction burns with an intense, sticky flame ideal for anti-infected operations. Each canister provides enough fuel for several bursts from an improvised flamethrower, though the inconsistent mixture sometimes leads to clogs or unexpected flare-ups."
+    },
+    "sonic_disruptor": {
+        "name": "Sonic Disruptor",
+        "type": "weapon",
+        "damage": 10,
+        "durability": 40,
+        "ammo": 0,
+        "max_ammo": 5,
+        "screamer_damage_bonus": 30,
+        "stun_effect": True,
+        "description": "A modified audio device that generates targeted high-frequency sound waves. Originally equipment from a research facility studying zombie behavior, it has minimal effect on most infected but proves devastating against screamers and other noise-sensitive mutations. The device emits a barely audible high-pitched whine when powered, with lights indicating its charged status."
+    },
+    "tactical_crossbow": {
+        "name": "Tactical Crossbow",
+        "type": "weapon",
+        "damage": 45,
+        "durability": 80,
+        "ammo": 0,
+        "max_ammo": 1,
+        "silent": True,
+        "critical_hit_chance": 0.25,
+        "hazmat_penetration": 0.85,
+        "description": "A modern, military-grade crossbow with carbon-fiber frame and integrated sighting system. Offers exceptional penetration against armored targets like hazmat zombies, and its silent operation makes it perfect for stealth approaches. Each bolt can be retrieved from defeated enemies, making this a highly sustainable option for the resourceful survivor."
+    },
+    "m4_carbine": {
+        "name": "M4 Carbine",
+        "type": "weapon",
+        "damage": 40,
+        "durability": 120,
+        "ammo": 0,
+        "max_ammo": 30,
+        "military_origin": True,
+        "burst_fire": True,
+        "description": "Standard issue military assault rifle with select-fire capability. This weapon features a modular design with rails for attachments, offering excellent reliability and firepower. Its lightweight design allows for quick target acquisition and handling, while the burst fire mode conserves ammunition against multiple threats. Extremely effective but the noise attracts significant zombie attention."
+    },
+    "riot_shield": {
+        "name": "Tactical Riot Shield",
+        "type": "weapon",
+        "damage": 15,
+        "durability": 150,
+        "defense_bonus": 25,
+        "block_chance": 0.35,
+        "military_origin": True,
+        "description": "A heavy-duty polycarbonate shield used by military and law enforcement for riot control. Provides substantial protection against zombie attacks, allowing for defensive combat strategies. The shield's transparent design gives full visibility while maintaining protection, and its reinforced edges can be used to push back or stun attackers."
+    },
+    "flamethrower": {
+        "name": "M9 Flamethrower",
+        "type": "weapon",
+        "damage": 35,
+        "area_damage": True,
+        "durability": 40,
+        "ammo": 0,
+        "max_ammo": 100,
+        "military_origin": True,
+        "bloater_damage_bonus": 50,
+        "crawler_damage_bonus": 40,
+        "description": "Military-grade incendiary weapon that projects a stream of flammable liquid. Particularly effective against groups of zombies and special types like bloaters and crawlers. The intense heat can neutralize multiple threats at once, creating temporary barriers of flame. Requires fuel canisters to operate and makes stealth impossible, but few weapons match its area-denial capabilities."
+    },
+    "machete": {
+        "name": "Military Combat Machete",
+        "type": "weapon",
+        "damage": 35,
+        "durability": 100,
+        "bloater_damage_bonus": 30,
+        "dismemberment_chance": 0.3,
+        "military_origin": True,
+        "description": "High-carbon steel machete with tactical grip, originally designed for jungle warfare. The weighted blade provides exceptional cutting power against bloaters and can potentially dismember limbs from other zombie types. Silent, reliable, and never needs reloading, making it an excellent backup weapon or primary for stealthy approaches."
+    },
+    "battery_pack": {
+        "name": "High-Capacity Battery Pack",
+        "type": "ammo",
+        "count": 1,
+        "weight": 1.0,
+        "craftable": True,
+        "weapon": "sonic_disruptor",
+        "crafting_requirements": {
+            "electronics": 2,
+            "metal_scrap": 1,
+            "wire": 2
+        },
+        "description": "A cobbled-together power source for electronic devices, combining salvaged batteries with rudimentary charging circuits. The exposed wiring and jury-rigged connections look precarious, but the pack delivers a stable current when needed. The clear plastic casing reveals the mess of components inside, some still bearing labels from consumer electronics."
+    },
+    "carbon_fiber_bolts": {
+        "name": "Carbon-Fiber Tactical Bolts",
+        "type": "ammo",
+        "count": 5,
+        "weight": 0.5,
+        "craftable": True,
+        "weapon": "tactical_crossbow",
+        "hazmat_penetration_bonus": 0.15,
+        "crafting_requirements": {
+            "metal_scrap": 1,
+            "wood": 1,
+            "duct_tape": 1
+        },
+        "description": "Military-grade crossbow bolts with carbon-fiber shafts and hardened steel tips. The streamlined design provides excellent penetration against armored targets like hazmat zombies. Each bolt is balanced for accuracy and features a retrievable design that allows them to be recovered from defeated enemies with minimal damage."
+    },
+    "5.56mm_rounds": {
+        "name": "5.56mm NATO Rounds",
+        "type": "ammo",
+        "count": 30,
+        "weight": 0.8,
+        "weapon": "m4_carbine",
+        "military_origin": True,
+        "description": "Standard military-issue 5.56×45mm NATO rounds in a box. These bullets are designed for use with the M4 Carbine and similar assault rifles. Each cartridge features a full metal jacket over a lead core, providing excellent terminal ballistics against both soft and moderately armored targets. The military-grade manufacturing ensures reliable feeding and firing even in adverse conditions."
+    },
+    "fuel_canister_military": {
+        "name": "Military-Grade Fuel Canister",
+        "type": "ammo",
+        "count": 100,
+        "weight": 5.0,
+        "weapon": "flamethrower",
+        "military_origin": True,
+        "area_damage_bonus": 0.2,
+        "description": "A pressurized military-grade canister containing a specialized napalm-based fuel mixture. This formulation burns hotter and more consistently than civilian alternatives, with additives to increase adhesion to targets. The built-in pressure regulation system ensures constant flow rate even as the canister empties, providing reliable performance throughout combat operations."
     }
 }
 
 ZOMBIE_TYPES = {
+    "screamer": {
+        "name": "Screamer",
+        "health": 25,
+        "damage": 8,
+        "speed": 1.5,
+        "sound_detection": 2.5,
+        "can_attract": True,
+        "description": "A zombie with a grotesquely deformed jaw and throat that emits piercing screams to attract other infected. While not particularly strong, its ability to call hordes makes it a priority target. Extremely sensitive to sonic weapons."
+    },
+    "hazmat": {
+        "name": "Hazmat Zombie",
+        "health": 40,
+        "damage": 12,
+        "speed": 0.9,
+        "armor": 0.3,
+        "weakness": "piercing",
+        "description": "Formerly a hazardous materials worker or military personnel, this zombie is partially protected by remnants of a hazmat suit. The degraded protective gear provides partial immunity to blunt and slashing weapons, but is vulnerable to piercing attacks like crossbow bolts."
+    },
+    "crawler": {
+        "name": "Crawler",
+        "health": 15,
+        "damage": 8,
+        "speed": 0.7,
+        "stealth": 0.8,
+        "prone_attack": True,
+        "description": "A zombie with damaged or missing legs that crawls along the ground. Often overlooked until it's too late, crawlers can attack from unexpected angles and are particularly vulnerable to area-effect weapons like flamethrowers."
+    },
+    "bloater": {
+        "name": "Bloater",
+        "health": 60,
+        "damage": 15,
+        "speed": 0.6,
+        "toxic_burst": True,
+        "weakness": "blades",
+        "description": "A grotesquely swollen infected filled with toxic gases and fluids. Slow-moving but dangerous in close quarters, bloaters explode when killed with ballistic weapons, releasing a cloud of toxic gas. Blade weapons like machetes can dispatch them safely by releasing pressure gradually."
+    },
+    "military": {
+        "name": "Military Zombie",
+        "health": 45,
+        "damage": 14,
+        "speed": 1.2,
+        "armor": 0.25,
+        "tactical": True,
+        "description": "Formerly military personnel infected while in combat gear. Partial body armor provides protection, and residual combat training manifests in more coordinated attacks. These zombies often appear in groups and exhibit rudimentary tactical behavior."
+    },
     "walker": {
         "name": "Walker",
         "health": 30,
@@ -1221,6 +2066,49 @@ ZOMBIE_TYPES = {
         "speed": 2,
         "description": "Can attack from a distance with acidic projectiles."
     },
+    "screamer": {
+        "name": "Screamer",
+        "health": 35,
+        "damage": 12,
+        "speed": 2,
+        "special_ability": "call_horde",
+        "description": "Emits ear-piercing screams that can attract more zombies. Vulnerable to sonic weapons."
+    },
+    "hazmat": {
+        "name": "Hazmat Zombie",
+        "health": 50,
+        "damage": 20,
+        "speed": 1,
+        "special_ability": "toxic_cloud",
+        "special_resistance": "toxic",
+        "weakness": "penetration",
+        "description": "Former CDC workers in damaged hazmat suits. Leaks toxic fumes when damaged and is immune to chemical attacks. Vulnerable to piercing weapons that breach the suit."
+    },
+    "crawler": {
+        "name": "Crawler",
+        "health": 15,
+        "damage": 8,
+        "speed": 2,
+        "special_ability": "hard_to_hit",
+        "description": "Missing lower limbs, these zombies crawl along the ground and are difficult to hit. Often attack in groups."
+    },
+    "bloater": {
+        "name": "Bloater",
+        "health": 60,
+        "damage": 18,
+        "speed": 1,
+        "special_ability": "explode",
+        "weakness": "blades",
+        "description": "Swollen with gases and toxic fluids. Explodes when killed, causing splash damage. Vulnerable to bladed weapons."
+    },
+    "military": {
+        "name": "Military Zombie",
+        "health": 55,
+        "damage": 20,
+        "speed": 2,
+        "special_ability": "armored",
+        "description": "Former soldiers wearing damaged body armor. More resistant to attacks but vulnerable to armor-piercing rounds."
+    },
     "stalker": {
         "name": "Forest Stalker",
         "health": 35,
@@ -1228,6 +2116,51 @@ ZOMBIE_TYPES = {
         "speed": 2,
         "stealth": 3,
         "description": "Camouflaged zombie that lurks in wooded areas. Hard to spot until it's too late."
+    },
+    "banshee": {
+        "name": "Banshee",
+        "health": 30,
+        "damage": 12,
+        "speed": 2,
+        "special_ability": "call_horde",
+        "description": "Emits piercing screams that can attract more zombies to your location. Kill it quickly!"
+    },
+    "screamer": {
+        "name": "Screamer",
+        "health": 25,
+        "damage": 8,
+        "speed": 3,
+        "special_ability": "sonic_attack",
+        "weakness": "sonic_weapons",
+        "description": "A zombie with deformed vocal cords that can emit high-pitched sonic attacks capable of disorienting humans. Their heightened sensitivity to sound makes them vulnerable to sonic weapons. Often found in packs, coordinating with each other through sound."
+    },
+    "hazmat": {
+        "name": "Hazmat Zombie",
+        "health": 50,
+        "damage": 15,
+        "speed": 1,
+        "armor": 15,
+        "weakness": "piercing_weapons",
+        "special_ability": "toxic_cloud",
+        "description": "Former hazardous materials worker still wearing fully intact protective gear. The suit protects it from conventional attacks, but is vulnerable to piercing weapons that can breach the suit. Releases toxic gas when damaged, causing ongoing damage to survivors in the vicinity."
+    },
+    "crawler": {
+        "name": "Crawler",
+        "health": 15,
+        "damage": 20,
+        "speed": 1,
+        "stealth": 5,
+        "special_ability": "sudden_lunge",
+        "description": "Missing its legs but incredibly dangerous. Their low profile makes them extremely difficult to spot in tall grass or debris. They can suddenly lunge at victims with surprising range, using their abnormally strong arms to drag survivors down before ripping into them with savage bites. Their unusual movement pattern can confuse standard combat tactics."
+    },
+    "bloater": {
+        "name": "Bloater",
+        "health": 65,
+        "damage": 25,
+        "speed": 1,
+        "special_ability": "toxic_explosion",
+        "weakness": "fire_weapons",
+        "description": "Grotesquely swollen with toxic gases produced by advanced decomposition. Their distended bodies are filled with corrosive fluids and explosive gases. When severely damaged, they rupture violently, releasing a cloud of toxic gas and acidic fluids that can damage equipment and cause ongoing injuries. Their unstable biology makes them especially vulnerable to fire weapons, which can cause them to detonate prematurely."
     },
 
     # Boss zombies
@@ -1241,8 +2174,8 @@ ZOMBIE_TYPES = {
         "special_ability": "armor",
         "description": "A massive zombie covered in hardened skin. Takes reduced damage from all attacks."
     },
-    "screamer": {
-        "name": "Screamer",
+    "banshee": {
+        "name": "Banshee",
         "health": 120,
         "damage": 20,
         "speed": 2,
@@ -1271,14 +2204,288 @@ ZOMBIE_TYPES = {
     },
     "behemoth": {
         "name": "Behemoth",
+        "health": 350,
+        "damage": 40,
+        "speed": 1,
+        "armor": 8,
+        "is_boss": True,
+        "special_ability": "ground_pound",
+        "description": "A colossal zombie that towers over others. Its massive fists can create shockwaves when slammed into the ground."
+    },
+    "infected_scientist": {
+        "name": "Patient Zero",
+        "health": 180,
+        "damage": 25,
+        "speed": 2,
+        "is_boss": True,
+        "special_ability": "mutation",
+        "description": "One of the original scientists infected by the Necroa_A virus. Can rapidly adapt during combat, changing its attack patterns."
+    },
+    "titan": {
+        "name": "Titan",
         "health": 300,
         "damage": 40,
         "speed": 1,
         "is_boss": True,
         "special_ability": "rage",
         "description": "A colossal zombie that gets stronger as it takes damage. The final challenge for any survivor."
+    },
+    "behemoth": {
+        "name": "Behemoth",
+        "health": 350,
+        "damage": 45,
+        "speed": 1,
+        "armor": 15,
+        "is_boss": True,
+        "special_ability": "charge_attack",
+        "weakness": "explosives",
+        "description": "A monstrous zombie of unprecedented size, standing over twelve feet tall with massively overdeveloped musculature. Its thick hide is resistant to most conventional weapons, though explosive weapons can penetrate its defenses. The Behemoth can unleash devastating charge attacks that can shatter barricades and walls. Survivors report seeing these rare mutations demolish entire survivor compounds single-handedly."
+    },
+    "infected_scientist": {
+        "name": "Patient Zero",
+        "health": 200,
+        "damage": 25,
+        "speed": 3,
+        "is_boss": True,
+        "special_ability": "mutation_cloud",
+        "weakness": "fire_weapons",
+        "description": "A uniquely intelligent infected wearing the tattered remains of a laboratory coat. Unlike other zombies, this one displays tactical intelligence and can coordinate attacks. It can release spores that temporarily mutate nearby zombies, enhancing their abilities. Research notes suggest this may be one of the original test subjects from the facility where the outbreak began. Its brain appears partially intact, making it significantly more dangerous than typical infected."
     }
 }
+
+# Define infected animals for the game
+INFECTED_ANIMALS = {
+    "infected_wolf": {
+        "name": "Infected Wolf",
+        "health": 120,
+        "damage": 25,
+        "speed": 1.7,
+        "animal": True,
+        "pack_hunter": True,
+        "description": "Once a proud predator, now twisted by the infection into something far more vicious. The wolf's fur has fallen out in patches, revealing lesions and exposed muscle. Its eyes glow with an unnatural yellow-green hue, and saliva constantly drips from elongated fangs. These creatures maintain their pack hunting instincts but have lost all fear, making them relentlessly aggressive."
+    },
+    "infected_bear": {
+        "name": "Infected Grizzly",
+        "health": 200,
+        "damage": 40,
+        "speed": 1.1,
+        "animal": True,
+        "armored": True,
+        "description": "A massive bear corrupted by the infection, standing nearly ten feet tall when on its hind legs. The infection has caused tumorous growths along its back and shoulders, forming natural armor plates. Its claws have grown to extraordinary length, capable of tearing through metal with frightening ease. What remains of its fur is matted with dried blood and pus from weeping sores."
+    },
+    "infected_lion": {
+        "name": "Infected Lion",
+        "health": 170,
+        "damage": 35,
+        "speed": 1.5,
+        "animal": True,
+        "ambush": True,
+        "description": "This once-magnificent big cat now resembles a nightmare, with patchy fur and exposed ribs visible through necrotic flesh. The infection has enhanced its already formidable hunting abilities, allowing it to stalk prey with uncanny patience before lunging with explosive speed. Unlike normal lions, these infected cats hunt alone and target humans preferentially."
+    },
+    "infected_tiger": {
+        "name": "Infected Tiger",
+        "health": 180,
+        "damage": 40,
+        "speed": 1.6,
+        "animal": True,
+        "ambush": True,
+        "swimming": True,
+        "description": "Formerly a Siberian tiger, this enormous feline predator has been grotesquely transformed by the infection. Its distinctive stripes are still visible on patches of remaining fur, but much of its skin is exposed and covered in pulsating veins. The tiger retains its hunting prowess and stealth, but now displays an intelligence that borders on cunning when stalking human prey."
+    },
+    "infected_gorilla": {
+        "name": "Infected Silverback",
+        "health": 250,
+        "damage": 45,
+        "speed": 1.2,
+        "animal": True,
+        "armored": True,
+        "climber": True,
+        "description": "A nightmarish evolution of what was once a powerful silverback gorilla. The infection has increased its muscle mass to grotesque proportions, with arms capable of tearing humans apart with minimal effort. Its face is barely recognizable, with most of the skin torn away to reveal a permanent grimace of exposed teeth and gums. Unlike regular gorillas, the infected version is territorial and aggressively hunts humans."
+    },
+    "infected_crocodile": {
+        "name": "Infected Crocodile",
+        "health": 160,
+        "damage": 50,
+        "speed": 0.6,
+        "swimming_speed": 1.8,
+        "animal": True,
+        "ambush": True,
+        "swimming": True,
+        "description": "An already prehistoric predator made even more terrifying by the infection. Its scaled hide has split in places to reveal bulging musculature and throbbing organs. The crocodile's jaw has expanded beyond normal proportions, allowing it to crush even reinforced materials with ease. Most dangerous in water, but capable of surprising bursts of speed on land when pursuing prey."
+    },
+    "infected_rat": {
+        "name": "Infected Rat Swarm",
+        "health": 100,
+        "damage": 15,
+        "speed": 1.4,
+        "animal": True,
+        "swarm": True,
+        "climber": True,
+        "description": "What appears to be a single entity is actually dozens of diseased rats moving as a coordinated unit. Each rodent's eyes glow an eerie green, and their fur has mostly fallen away. They pour through small openings and overwhelm prey through sheer numbers, capable of stripping flesh to bone in minutes. The swarm seems to share a hive mind, reacting instantaneously to threats and opportunities."
+    }
+}
+
+# Define friendly animal companions
+FRIENDLY_ANIMALS = {
+    "dog": {
+        "name": "Survivor Dog",
+        "health": 80,
+        "damage": 20,
+        "speed": 1.6,
+        "animal": True,
+        "friendly": True,
+        "companion_potential": True,
+        "detection_bonus": 0.3,  # 30% bonus to detect threats
+        "description": "A resilient canine that has somehow avoided infection, this German Shepherd mix shows signs of previous domestication. Though cautious, it responds positively to kind treatment and food offerings. With patience, such dogs can become loyal companions, offering protection and assistance in detecting nearby threats."
+    },
+    "cat": {
+        "name": "Survivor Cat",
+        "health": 40,
+        "damage": 10,
+        "speed": 1.5,
+        "animal": True,
+        "friendly": True,
+        "stealth": True,
+        "stealth_bonus": 0.2,  # 20% bonus to stealth
+        "description": "This feline has survived through stealth and cunning, avoiding infected by staying high and quiet. Though not as immediately useful as dogs, cats provide companionship and can serve as early warning systems, reacting to approaching threats before humans can detect them."
+    },
+    "chicken": {
+        "name": "Chicken",
+        "health": 10,
+        "damage": 1,
+        "speed": 0.8,
+        "animal": True,
+        "friendly": True,
+        "farm_animal": True,
+        "food_production": True,
+        "description": "A common barnyard chicken that has survived the apocalypse. Though seemingly insignificant, chickens provide a renewable food source through eggs and can be raised in secure areas of settlements."
+    },
+    "farm_animal": {
+        "name": "Livestock",
+        "health": 100,
+        "damage": 5,
+        "speed": 0.7,
+        "animal": True,
+        "friendly": True,
+        "farm_animal": True,
+        "food_production": True,
+        "description": "Surviving domesticated animals like goats, sheep, or pigs that can provide sustainable food sources for survivor communities. These animals require protection and resources but offer significant benefits to long-term survival."
+    }
+}
+
+# Define human survivors that can be encountered
+SURVIVOR_TYPES = {
+    "hostile_bandit": {
+        "name": "Hostile Bandit",
+        "health_range": [70, 120],
+        "damage_range": [15, 30],
+        "speed_range": [0.9, 1.3],
+        "hostile": True,
+        "loot_quality": "medium",
+        "description": "A desperate survivor who has turned to violence and theft to survive. Heavily armed and dangerous, they view other survivors as walking supply caches rather than potential allies. Years of fighting for survival have left them paranoid and quick to attack.",
+        "dialogue": {
+            "greeting": ["Back off! This is my territory!", "Hand over your supplies and nobody gets hurt!", "One more step and you're dead!"],
+            "aggressive": ["I'm gonna enjoy taking your stuff!", "Should've just walked away!", "Time to die, fresh meat!"],
+            "retreat": ["This isn't worth it! I'm out!", "Too much heat! Falling back!", "Live to fight another day!"]
+        }
+    },
+    "cautious_survivor": {
+        "name": "Cautious Survivor",
+        "health_range": [60, 90],
+        "damage_range": [10, 20],
+        "speed_range": [0.8, 1.1],
+        "hostile": False,
+        "cautious": True,
+        "recruit_difficulty": "medium",
+        "skill_potential": ["medical", "crafting", "scavenging"],
+        "loot_quality": "low",
+        "description": "A survivor who has managed to stay alive by avoiding conflict whenever possible. Though wary of strangers, they might be convinced to cooperate if approached carefully. They've developed specialized skills to compensate for avoiding direct combat.",
+        "dialogue": {
+            "greeting": ["Stay where you are! I'm not looking for trouble.", "Who are you? What do you want?", "I've got nothing worth taking, so please just move along."],
+            "friendly": ["Maybe we can help each other out.", "I've got some medical training if you need it.", "I know where to find supplies if we work together."],
+            "joining": ["Strength in numbers, I guess.", "I'll join you, but I'm watching my back.", "I can contribute to your group if you'll have me."]
+        }
+    },
+    "friendly_trader": {
+        "name": "Friendly Trader",
+        "health_range": [50, 80],
+        "damage_range": [8, 15],
+        "speed_range": [0.7, 1.0],
+        "hostile": False,
+        "trader": True,
+        "recruit_difficulty": "hard",
+        "loot_quality": "high",
+        "description": "A rare sight in the wasteland - someone who still believes in rebuilding civilization through commerce. They travel between survivor enclaves trading goods and information. While not the best in combat, they have access to rare items and valuable knowledge about the region.",
+        "dialogue": {
+            "greeting": ["Hello there! Looking to trade?", "Ah, another survivor! I've got goods if you've got something to barter with.", "Well met, friend! Care to see my wares?"],
+            "trade": ["I've got some special items you won't find easily.", "These medical supplies will cost you, but they're worth it.", "Information has value too - I can mark locations on your map for the right price."],
+            "joining": ["Travel with you? Well, having protection would be nice...", "I suppose my trading network could benefit your group.", "I'll join you, but I expect to continue my trading operations."]
+        }
+    },
+    "skilled_hunter": {
+        "name": "Skilled Hunter",
+        "health_range": [80, 110],
+        "damage_range": [20, 35],
+        "speed_range": [1.0, 1.4],
+        "hostile": False,
+        "recruit_difficulty": "medium",
+        "skill_potential": ["hunting", "stealth", "tracking"],
+        "loot_quality": "medium",
+        "description": "A survivor who has mastered living off the land. Expert at tracking, hunting, and moving silently, they prefer the wilderness to the dangerous ruins of civilization. They've learned to read the environment and can detect threats long before others.",
+        "dialogue": {
+            "greeting": ["Freeze. Been tracking you for half a mile.", "You're making enough noise to attract every infected in the county.", "Hmm, you're not infected. That's something at least."],
+            "friendly": ["I know where all the game trails are. Never go hungry with me around.", "I can teach you to move without being heard.", "The infected can't track what they can't see or smell."],
+            "joining": ["The lone hunter routine gets old. Might be nice to hunt with a pack again.", "I'll join, but when we're in the wild, you follow my lead.", "I can keep your group fed and safe in the wilderness."]
+        }
+    },
+    "military_veteran": {
+        "name": "Military Veteran",
+        "health_range": [100, 150],
+        "damage_range": [25, 40],
+        "speed_range": [0.9, 1.2],
+        "hostile": False,
+        "recruit_difficulty": "hard",
+        "skill_potential": ["combat", "tactics", "leadership"],
+        "loot_quality": "high",
+        "description": "A former soldier who survived the initial outbreak due to superior training and equipment. Disciplined and combat-hardened, they approach survival with military precision. Though the chain of command is long gone, they still maintain a strict code of conduct.",
+        "dialogue": {
+            "greeting": ["Identify yourself!", "State your business, civilian.", "Hands where I can see them. Standard procedure."],
+            "friendly": ["My unit was overrun during the early days. Been solo ever since.", "I've got combat training that could help your group survive.", "Military discipline is what keeps people alive in this hellscape."],
+            "joining": ["Your group could use some proper tactical training.", "I'll join, but we need clear protocols and chain of command.", "Roger that. Consider me your new security specialist."]
+        }
+    },
+    "engineering_expert": {
+        "name": "Engineering Expert",
+        "health_range": [60, 90],
+        "damage_range": [10, 20],
+        "speed_range": [0.7, 1.0],
+        "hostile": False,
+        "recruit_difficulty": "very_hard",
+        "skill_potential": ["engineering", "electronics", "vehicle_repair"],
+        "loot_quality": "medium",
+        "description": "A survivor with extensive technical knowledge who has repurposed their skills for the apocalypse. They can repair vehicles, improve weapons, and build sophisticated traps. Their expertise makes them highly valued among survivor groups, though they're often not the best in direct combat.",
+        "dialogue": {
+            "greeting": ["Don't shoot! I'm more valuable alive than dead!", "I could fix that weapon you're pointing at me. Looks misaligned.", "Engineering solution: Neither of us wants violence, so let's cooperate."],
+            "friendly": ["I can modify your equipment to work 30% more efficiently.", "That vehicle of yours? I could double its fuel efficiency.", "Give me some parts and I can build defenses that will keep the infected out."],
+            "joining": ["Your group needs technical expertise. I'm it.", "I'll join if I get space to set up a workshop.", "Together we can build something that lasts in this broken world."]
+        }
+    }
+}
+
+# List of first and last names for randomly generating survivor identities
+SURVIVOR_FIRST_NAMES = [
+    "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", 
+    "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen",
+    "Ahmed", "Wei", "Carlos", "Fatima", "Hiroshi", "Olga", "Jamal", "Aisha", "Miguel", "Priya", 
+    "Dmitri", "Lakshmi", "Javier", "Sofia", "Tenzin", "Amara", "Kwame", "Leila", "Chen", "Zara"
+]
+
+SURVIVOR_LAST_NAMES = [
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Wilson",
+    "Anderson", "Taylor", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Moore", "Young",
+    "Kim", "Nguyen", "Singh", "Patel", "Zhang", "Ivanov", "Diaz", "Okafor", "Nakamura", "Kowalski",
+    "Gonzalez", "Gupta", "Santos", "Ibrahim", "Müller", "Tanaka", "Cohen", "Osei", "Fernandez", "Chen"
+]
 
 MISSIONS = {
     "tutorial": {
@@ -2221,6 +3428,41 @@ class GameState:
 
     def spawn_zombie(self, specific_boss=None, specific_type=None):
         """Create a random zombie based on location danger level or spawn a specific boss/type."""
+        
+        # Boss zombie dictionaries - moved here temporarily until we can properly add a BOSS_ZOMBIES constant
+        BOSS_ZOMBIES = {
+            "behemoth": {
+                "name": "Behemoth",
+                "health": 300,
+                "damage": 40,
+                "speed": 1,
+                "armor": 20,
+                "special_ability": "ground_pound",
+                "special_moves": ["charge", "ground_pound", "throw_debris"],
+                "description": "A massive, hulking monster standing over 8 feet tall. Former military personnel mutated by experimental treatments at Fort Defiance. Its skin has hardened into armor-like plates with military gear fused to its body. Can tear concrete barriers apart and throw debris as projectiles."
+            },
+            "infected_scientist": {
+                "name": "Patient Zero",
+                "health": 200,
+                "damage": 25,
+                "speed": 2,
+                "special_ability": "mutation_cloud",
+                "special_moves": ["call_infected", "mutation_cloud", "rapid_attack"],
+                "vulnerability": "headshots",
+                "description": "A uniquely intelligent infected wearing tattered remains of a laboratory coat. Unlike other zombies, it displays tactical intelligence and can coordinate attacks. Can release spores that temporarily enhance nearby zombies. Research notes suggest this may be one of the original test subjects where the outbreak began."
+            },
+            "tank_commander": {
+                "name": "Armored Tank Commander",
+                "health": 250,
+                "damage": 35,
+                "speed": 1,
+                "armor": 30,
+                "special_ability": "howitzer_arm",
+                "special_moves": ["cannon_blast", "machine_gun_spray", "armor_charge"],
+                "weakness": "exposed_back",
+                "description": "A grotesque fusion of man and machine, this former tank commander is partially merged with tank armor plating. Its right arm has morphed into a cannon-like appendage capable of firing explosive blasts, while its left arm resembles a machine gun. Despite its heavy armor, the creature's back remains exposed where the mutation is incomplete."
+            }
+        }
         location = LOCATIONS[self.player["location"]]
         danger = location["danger_level"]
 
@@ -2240,10 +3482,44 @@ class GameState:
 
         # Check if we need to spawn a specific boss for a mission
         elif specific_boss:
-            if specific_boss in ZOMBIE_TYPES:
+            # First check if it's in our BOSS_ZOMBIES dictionary
+            if specific_boss in BOSS_ZOMBIES:
+                boss_data = BOSS_ZOMBIES[specific_boss]
+                zombie = {
+                    "name": boss_data["name"],
+                    "health": boss_data["health"],
+                    "max_health": boss_data["health"],
+                    "damage": boss_data["damage"],
+                    "speed": boss_data.get("speed", 1),
+                    "is_boss": True,
+                    "type": specific_boss,
+                    "special_ability": boss_data.get("special_ability", None),
+                    "special_moves": boss_data.get("special_moves", []),
+                    "description": boss_data.get("description", "A powerful zombie boss.")
+                }
+                
+                # Add any specific attributes
+                for key in ["armor", "vulnerability", "weakness"]:
+                    if key in boss_data:
+                        zombie[key] = boss_data[key]
+                
+                # Apply level scaling
+                level_factor = 1 + (self.player["level"] - 1) * 0.15
+                zombie["health"] = int(zombie["health"] * level_factor)
+                zombie["max_health"] = zombie["health"]
+                zombie["damage"] = int(zombie["damage"] * level_factor)
+                
+                print(f"\n*** BOSS ENCOUNTER: {zombie['name']} ***")
+                print(zombie["description"])
+                print("This is no ordinary zombie. Prepare for a tough fight!")
+                return zombie
+                
+            # Fallback to ZOMBIE_TYPES for backward compatibility
+            elif specific_boss in ZOMBIE_TYPES:
                 zombie = ZOMBIE_TYPES[specific_boss].copy()
                 zombie["type"] = specific_boss
                 zombie["max_health"] = zombie["health"]
+                zombie["is_boss"] = True
 
                 # Enhanced boss stats based on player level
                 level_factor = 1 + (self.player["level"] - 1) * 0.15
@@ -2260,10 +3536,34 @@ class GameState:
         # Higher danger levels have more dangerous zombies
         zombie_types = [z_type for z_type in ZOMBIE_TYPES.keys() 
                        if not ZOMBIE_TYPES[z_type].get("is_boss", False)]  # Filter out boss zombies
+                       
+        # Adjust zombie type weights based on location
+        location_id = self.player["location"]
+        current_hour = self.player["hours_passed"] % 24
+        is_night = 18 <= current_hour or current_hour < 6
+                       
+        # In the military base, add special zombie types with higher probability
+        if location_id == "military_base":
+            # More likely to encounter military, hazmat, and screamer zombies
+            military_base_zombies = {
+                "military": 8,    # Very common
+                "hazmat": 5,      # Common
+                "screamer": 4,    # Somewhat common
+                "walker": 3,      # Less common than usual
+                "runner": 3,
+                "brute": 3,
+                "spitter": 2,
+                "crawler": 2,
+                "bloater": 2
+            }
+            
+            # Also small chance to encounter a boss
+            if random.random() < 0.05:  # 5% chance for boss
+                boss_type = random.choice(["behemoth", "tank_commander"])
+                return self.spawn_zombie(specific_boss=boss_type)
         weights = []
 
         # Location-specific zombie spawning
-        location_id = self.player["location"]
 
         # Check if it's night time for difficulty adjustment
         current_hour = self.player["hours_passed"] % 24
@@ -3490,48 +4790,427 @@ class GameState:
             print("Inventory full! Couldn't add crafted item.")
 
     def cmd_go(self, *args):
-        """Travel to a different location."""
-        if not args:
-            print("Usage: /go [location]")
+        """Travel to a different location, optionally using a vehicle."""
+        # Handle argument parsing with more options
+        if not args or (len(args) >= 1 and args[0] == "help"):
+            print("Usage: /go [location] (optional: using [vehicle_id])")
             print("Available locations:")
             for loc_id, loc_data in LOCATIONS.items():
                 if loc_id != self.player["location"]:
                     print(f"- {loc_id} ({loc_data['name']})")
+            
+            # Show available vehicles if player has any
+            vehicles = self.get_player_vehicles()
+            if vehicles:
+                print("\nAvailable vehicles:")
+                for vehicle_id, vehicle_data in vehicles.items():
+                    fuel_status = ""
+                    if vehicle_data.get("fuel_type"):
+                        current_fuel = vehicle_data.get("current_fuel", 0)
+                        max_fuel = vehicle_data.get("fuel_capacity", 0)
+                        fuel_status = f" - Fuel: {current_fuel}/{max_fuel}"
+                    
+                    print(f"- {vehicle_id} ({vehicle_data['name']}) - Speed: {vehicle_data.get('speed', 1)}x{fuel_status}")
             return
 
+        # Parse destination
         destination = args[0].lower()
+        
+        # Parse vehicle if provided
+        vehicle_id = None
+        if len(args) >= 3 and args[1].lower() == "using":
+            vehicle_id = args[2].lower()
+        
         if destination in LOCATIONS:
             if destination == self.player["location"]:
                 print("You are already there.")
                 return
 
-            # Check if player has enough stamina
-            if self.player["stamina"] < 10:
-                print("You're too exhausted to travel. Rest or use items to restore stamina.")
+            # Check if player has enough stamina (only if not using vehicle)
+            if not vehicle_id and self.player["stamina"] < 10:
+                print("You're too exhausted to travel on foot. Rest, use items to restore stamina, or use a vehicle.")
                 return
+            
+            # Check if the vehicle exists and is available
+            vehicle_data = None
+            travel_speed_multiplier = 1  # Default walking speed
+            fuel_consumption = 0
+            vehicle_protection = 0
+            
+            if vehicle_id:
+                vehicles = self.get_player_vehicles()
+                if not vehicles or vehicle_id not in vehicles:
+                    print(f"You don't have access to a {vehicle_id}.")
+                    return
+                
+                vehicle_data = vehicles[vehicle_id]
+                
+                # Check fuel if the vehicle requires it
+                if vehicle_data.get("fuel_type"):
+                    current_fuel = vehicle_data.get("current_fuel", 0)
+                    fuel_consumption = vehicle_data.get("fuel_consumption", 1)
+                    
+                    if current_fuel < fuel_consumption:
+                        # Safely get fuel type and vehicle name
+                        fuel_type = "fuel" if vehicle_data is None else vehicle_data.get("fuel_type", "fuel")
+                        vehicle_name = "vehicle" if vehicle_data is None else vehicle_data.get("name", "vehicle")
+                        print(f"Not enough {fuel_type} in your {vehicle_name} for this journey.")
+                        return
+                
+                # Get travel speed multiplier and protection
+                travel_speed_multiplier = vehicle_data.get("speed", 1)
+                vehicle_protection = vehicle_data.get("armor", 0)
+                
+                print(f"You're traveling using your {vehicle_data['name']}.")
+            else:
+                print("You're traveling on foot.")
 
-            # Check for random encounter while traveling
+            # Calculate encounter chance based on vehicle and danger level
             danger_level = LOCATIONS[destination]["danger_level"]
-            if danger_level > 0 and random.random() < (0.2 * danger_level):
-                print("\nWhile traveling, you encounter a zombie!")
+            base_encounter_chance = 0.2 * danger_level
+            
+            # Vehicles reduce encounter chance and provide protection
+            if vehicle_data:
+                # Louder vehicles attract more zombies but higher speed may avoid them
+                noise_level = vehicle_data.get("noise_level", 1)
+                encounter_chance = base_encounter_chance * (noise_level / 10)
+                # Faster vehicles can avoid some encounters
+                encounter_chance = encounter_chance / travel_speed_multiplier
+            else:
+                encounter_chance = base_encounter_chance
+            
+            # Check for random encounter while traveling
+            if danger_level > 0 and random.random() < encounter_chance:
+                if vehicle_data and vehicle_data.get("noise_level", 0) > 5:
+                    print("\nThe noise of your vehicle has attracted zombies during your journey!")
+                else:
+                    print("\nWhile traveling, you encounter zombies!")
+                
+                # Vehicle provides protection
+                if vehicle_protection > 0 and vehicle_data:
+                    print(f"Your {vehicle_data.get('name', 'vehicle')} provides some protection.")
+                
                 self.current_zombie = self.spawn_zombie()
                 self.start_combat()
                 if not self.game_running:  # Player died in combat
                     return
 
+            # Update location
             self.player["location"] = destination
             print(f"\nYou have traveled to {LOCATIONS[destination]['name']}.")
-            self.player["stamina"] = max(self.player["stamina"] - 10, 0)  # Traveling costs stamina
+            
+            # Consume resources based on travel method
+            if vehicle_id:
+                # Consume fuel
+                if fuel_consumption > 0:
+                    # Get vehicles reference again to be sure
+                    vehicles = self.get_player_vehicles()
+                    current_fuel = vehicles[vehicle_id].get("current_fuel", 0)
+                    vehicles[vehicle_id]["current_fuel"] = current_fuel - fuel_consumption
+                    # Use default fuel type if vehicle_data is None
+                    fuel_type = "fuel" if vehicle_data is None else vehicle_data.get("fuel_type", "fuel")
+                    print(f"Consumed {fuel_consumption} units of {fuel_type}. Remaining: {vehicles[vehicle_id]['current_fuel']}")
+                
+                # Small stamina cost for driving
+                self.player["stamina"] = max(self.player["stamina"] - 3, 0)
+            else:
+                # Higher stamina cost for walking
+                self.player["stamina"] = max(self.player["stamina"] - 10, 0)
 
             # Check mission progress
             self.check_mission_progress("location", destination)
 
-            # Travel is a heavy action that takes significant time
-            self.advance_time("heavy_action")
-
-            self.cmd_look()
+            # Travel time adjusted by vehicle speed
+            if vehicle_id:
+                # Vehicle travel is still a medium_action, but takes less time due to speed
+                travel_hours = random.uniform(1, 3) / travel_speed_multiplier
+                self.advance_time("medium_action", travel_hours)
+            else:
+                # On foot travel is a heavy action that takes significant time
+                self.advance_time("heavy_action")
+    
+    def get_player_vehicles(self):
+        """Get all vehicles the player currently has access to."""
+        if "vehicles" not in self.player:
+            self.player["vehicles"] = {}
+        return self.player["vehicles"]
+    
+    def has_item(self, item_id, amount=1):
+        """Check if the player has a specific item in their inventory.
+        
+        Args:
+            item_id (str): The ID of the item to check for
+            amount (int): The required amount of the item
+            
+        Returns:
+            bool: True if the player has at least the required amount, False otherwise
+        """
+        for item in self.player["inventory"]:
+            if item["id"] == item_id:
+                return item.get("count", 1) >= amount
+        return False
+        
+    def find_item_index(self, item_id):
+        """Find the index of an item in the player's inventory.
+        
+        Args:
+            item_id (str): The ID of the item to find
+            
+        Returns:
+            int: The index of the item in the inventory list, or -1 if not found
+        """
+        for i, item in enumerate(self.player["inventory"]):
+            if item["id"] == item_id:
+                return i
+        return -1
+    
+    def cmd_vehicles(self, *args):
+        """View, repair, or manage the player's vehicles."""
+        if not args:
+            print("Usage: /vehicles [list|repair|refuel|status] (vehicle_id)")
+            return
+        
+        command = args[0].lower()
+        vehicles = self.get_player_vehicles()
+        
+        if command == "list":
+            if not vehicles:
+                print("You don't have any vehicles.")
+                return
+            
+            print("==================================================")
+            print("                YOUR VEHICLES                     ")
+            print("==================================================")
+            
+            for vehicle_id, vehicle_data in vehicles.items():
+                print(f"- {vehicle_data['name']} ({vehicle_id})")
+                print(f"  Condition: {vehicle_data.get('durability', 0)}/{vehicle_data.get('max_durability', 100)}")
+                
+                if vehicle_data.get("fuel_type"):
+                    current_fuel = vehicle_data.get("current_fuel", 0)
+                    max_fuel = vehicle_data.get("fuel_capacity", 0)
+                    print(f"  Fuel ({vehicle_data['fuel_type']}): {current_fuel}/{max_fuel}")
+                
+                print(f"  Speed: {vehicle_data.get('speed', 1)}x travel speed")
+                if vehicle_data.get("armor", 0) > 0:
+                    print(f"  Protection: {vehicle_data.get('armor', 0)}")
+                print(f"  Noise Level: {vehicle_data.get('noise_level', 1)}/10")
+                print(f"  Capacity: {vehicle_data.get('capacity', 1)} passengers")
+                
+                if vehicle_data.get("cargo_capacity", 0) > 0:
+                    print(f"  Cargo Space: {vehicle_data.get('cargo_capacity')} units")
+                
+                print("")
+        
+        elif command == "repair" and len(args) >= 2:
+            vehicle_id = args[1].lower()
+            if vehicle_id not in vehicles:
+                print(f"You don't have a {vehicle_id}.")
+                return
+            
+            vehicle_data = vehicles[vehicle_id]
+            durability = vehicle_data.get("durability", 0)
+            max_durability = vehicle_data.get("max_durability", 100)
+            
+            if durability >= max_durability:
+                print(f"Your {vehicle_data['name']} is already in perfect condition.")
+                return
+            
+            # Check for repair requirements
+            repair_reqs = vehicle_data.get("repair_requirements", {})
+            if not repair_reqs:
+                print(f"You don't know how to repair this vehicle.")
+                return
+            
+            # Check if player has the required items
+            can_repair = True
+            missing_items = []
+            
+            for item_id, amount in repair_reqs.items():
+                if not self.has_item(item_id, amount):
+                    can_repair = False
+                    missing_items.append(f"{amount}x {item_id}")
+            
+            if not can_repair:
+                print(f"You need the following items to repair your {vehicle_data['name']}:")
+                for item in missing_items:
+                    print(f"- {item}")
+                return
+            
+            # Perform the repair
+            for item_id, amount in repair_reqs.items():
+                self.remove_from_inventory(self.find_item_index(item_id), amount)
+            
+            repair_amount = int(max_durability * 0.25)  # Repair 25% of max durability
+            vehicles[vehicle_id]["durability"] = min(durability + repair_amount, max_durability)
+            
+            print(f"You've repaired your {vehicle_data['name']}. New condition: {vehicles[vehicle_id]['durability']}/{max_durability}")
+            
+            # Repairing is a medium action
+            self.advance_time("medium_action")
+        
+        elif command == "refuel" and len(args) >= 2:
+            vehicle_id = args[1].lower()
+            if vehicle_id not in vehicles:
+                print(f"You don't have a {vehicle_id}.")
+                return
+            
+            vehicle_data = vehicles[vehicle_id]
+            
+            # Check if vehicle uses fuel
+            # Safely get fuel type
+            fuel_type = None if vehicle_data is None else vehicle_data.get("fuel_type")
+            if not fuel_type:
+                print(f"This vehicle doesn't require fuel.")
+                return
+            
+            current_fuel = vehicle_data.get("current_fuel", 0)
+            max_fuel = vehicle_data.get("fuel_capacity", 0)
+            
+            if current_fuel >= max_fuel:
+                print(f"Your {vehicle_data['name']} is already full of {fuel_type}.")
+                return
+            
+            # Check if player has fuel
+            fuel_item = None
+            if fuel_type == "gasoline":
+                fuel_item = "fuel"
+            elif fuel_type == "diesel":
+                fuel_item = "diesel_fuel"
+            else:
+                fuel_item = fuel_type
+            
+            fuel_index = self.find_item_index(fuel_item)
+            if fuel_index == -1:
+                print(f"You don't have any {fuel_type}.")
+                return
+            
+            # Calculate how much fuel to add
+            fuel_item_data = self.player["inventory"][fuel_index]
+            fuel_amount = fuel_item_data.get("count", 1)
+            fuel_needed = max_fuel - current_fuel
+            fuel_to_use = min(fuel_amount, fuel_needed)
+            
+            # Refuel the vehicle
+            vehicles[vehicle_id]["current_fuel"] = current_fuel + fuel_to_use
+            
+            # Remove used fuel from inventory
+            self.remove_from_inventory(fuel_index, fuel_to_use)
+            
+            print(f"You've added {fuel_to_use} units of {fuel_type} to your {vehicle_data['name']}.")
+            print(f"Fuel level: {vehicles[vehicle_id]['current_fuel']}/{max_fuel}")
+            
+            # Refueling is a light action
+            self.advance_time("light_action")
+        
+        elif command == "status" and len(args) >= 2:
+            vehicle_id = args[1].lower()
+            if vehicle_id not in vehicles:
+                print(f"You don't have a {vehicle_id}.")
+                return
+            
+            vehicle_data = vehicles[vehicle_id]
+            
+            print(f"==== {vehicle_data['name']} Status ====")
+            print(f"Condition: {vehicle_data.get('durability', 0)}/{vehicle_data.get('max_durability', 100)}")
+            
+            if vehicle_data.get("fuel_type"):
+                current_fuel = vehicle_data.get("current_fuel", 0)
+                max_fuel = vehicle_data.get("fuel_capacity", 0)
+                fuel_range = current_fuel / vehicle_data.get("fuel_consumption", 1)
+                print(f"Fuel ({vehicle_data['fuel_type']}): {current_fuel}/{max_fuel}")
+                print(f"Estimated Range: {int(fuel_range)} trips")
+            
+            print(f"Speed: {vehicle_data.get('speed', 1)}x travel speed")
+            print(f"Protection: {vehicle_data.get('armor', 0)}")
+            print(f"Description: {vehicle_data.get('description', 'No description available.')}")
+        
         else:
-            print(f"Unknown location: {destination}")
+            print("Unknown vehicle command. Use /vehicles for help.")
+    
+    def cmd_craft_vehicle(self, *args):
+        """Craft a vehicle from materials."""
+        if not args or args[0] == "help":
+            print("Usage: /craft_vehicle [vehicle_id]")
+            print("Craftable vehicles:")
+            
+            for vehicle_id, vehicle_data in VEHICLES.items():
+                if vehicle_data.get("craftable", False):
+                    print(f"- {vehicle_id} ({vehicle_data['name']})")
+            return
+        
+        vehicle_id = args[0].lower()
+        
+        # Check if this vehicle exists and is craftable
+        if vehicle_id not in VEHICLES:
+            print(f"There is no vehicle called '{vehicle_id}'.")
+            return
+        
+        vehicle_data = VEHICLES[vehicle_id]
+        if not vehicle_data.get("craftable", False):
+            print(f"You cannot craft a {vehicle_data['name']}. You must find one instead.")
+            return
+        
+        # Check crafting difficulty against player skills
+        difficulty = vehicle_data.get("crafting_difficulty", "medium")
+        player_level = self.player.get("level", 1)
+        
+        if difficulty == "extreme" and player_level < 10:
+            print(f"Crafting a {vehicle_data['name']} requires level 10 mechanics skill. Your level: {player_level}")
+            return
+        elif difficulty == "hard" and player_level < 5:
+            print(f"Crafting a {vehicle_data['name']} requires level 5 mechanics skill. Your level: {player_level}")
+            return
+        
+        # Check for crafting requirements
+        crafting_reqs = vehicle_data.get("crafting_requirements", {})
+        if not crafting_reqs:
+            print(f"You don't know how to craft this vehicle.")
+            return
+        
+        # Check if player has the required items
+        can_craft = True
+        missing_items = []
+        
+        for item_id, amount in crafting_reqs.items():
+            if not self.has_item(item_id, amount):
+                can_craft = False
+                missing_items.append(f"{amount}x {item_id}")
+        
+        if not can_craft:
+            print(f"You need the following items to craft a {vehicle_data['name']}:")
+            for item in missing_items:
+                print(f"- {item}")
+            return
+        
+        # Consume resources
+        for item_id, amount in crafting_reqs.items():
+            self.remove_from_inventory(self.find_item_index(item_id), amount)
+        
+        # Initialize vehicle with default values
+        new_vehicle = vehicle_data.copy()
+        
+        # Set initial fuel level if applicable
+        if new_vehicle.get("fuel_type"):
+            new_vehicle["current_fuel"] = 0
+        
+        # Add vehicle to player's collection
+        if "vehicles" not in self.player:
+            self.player["vehicles"] = {}
+        
+        # Use an incrementing ID if player already has this type of vehicle
+        base_id = vehicle_id
+        i = 1
+        while vehicle_id in self.player["vehicles"]:
+            vehicle_id = f"{base_id}_{i}"
+            i += 1
+        
+        self.player["vehicles"][vehicle_id] = new_vehicle
+        
+        print(f"You have successfully crafted a {new_vehicle['name']}!")
+        
+        # Crafting a vehicle is a heavy action
+        self.advance_time("heavy_action", 5)  # Takes 5 hours
 
     def cmd_explore(self, *args):
         """Explore the area for resources."""
@@ -3580,67 +5259,176 @@ class GameState:
 
         # Exploration is a medium action that takes a fair amount of time
         self.advance_time("medium_action")
-
-        # Chance of zombie encounter
+        
+        # Random encounter system - determine what type of encounter happens
+        encounter_happened = False
+        
+        # Get location-specific encounter chances
         danger_level = location["danger_level"]
-        if danger_level > 0 and random.random() < (0.15 * danger_level):
-            print("\nWhile exploring, you encounter a zombie!")
-            self.current_zombie = self.spawn_zombie()
-            self.start_combat()
+        base_encounter_chance = location.get("encounter_chance", 0.3)  # Default 30% if not specified
+        
+        # Calculate final encounter chance (higher in dangerous areas)
+        encounter_chance = base_encounter_chance * (1 + (danger_level * 0.1))
+        
+        if random.random() < encounter_chance:
+            # Determine encounter type
+            encounter_type = random.choices(
+                ["zombie", "animal", "survivor"], 
+                weights=[0.6, 0.25, 0.15],  # Default weights
+                k=1
+            )[0]
+            
+            # Location-specific adjustments
+            if location.get("infected_animals", False):
+                # More likely to encounter animals in locations with specified animal types
+                encounter_type = random.choices(
+                    ["zombie", "animal", "survivor"],
+                    weights=[0.4, 0.5, 0.1],
+                    k=1
+                )[0]
+            
+            if location.get("survivor_encounter_chance", 0):
+                # Use location's specific survivor encounter chance
+                survivor_chance = location.get("survivor_encounter_chance", 0)
+                if survivor_chance > 0:
+                    encounter_type = random.choices(
+                        ["zombie", "animal", "survivor"],
+                        weights=[max(0.1, 0.7 - (survivor_chance * 0.5)), 0.3, survivor_chance],
+                        k=1
+                    )[0]
+            
+            # Handle the encounter based on type
+            if encounter_type == "zombie":
+                print("\nWhile exploring, you encounter a zombie!")
+                self.current_zombie = self.spawn_zombie()
+                self.start_combat()
+                encounter_happened = True
+            
+            elif encounter_type == "animal":
+                encounter_happened = self.encounter_animal()
+            
+            elif encounter_type == "survivor":
+                encounter_happened = self.encounter_survivor()
+                
+        # Special items in location's special areas (if not in combat)
+        if not encounter_happened and "special_areas" in location and "special_items" in location:
+            special_item_chance = location.get("special_item_chance", 0.1)  # Default 10% if not specified
+            
+            if random.random() < special_item_chance:
+                special_area = random.choice(location["special_areas"])
+                special_item_id = random.choice(location["special_items"])
+                
+                print(f"\nYou discover {special_area} within {location['name']}.")
+                
+                if self.add_to_inventory(special_item_id):
+                    special_item = ITEMS[special_item_id]
+                    print(f"Inside, you find: {special_item['name']}!")
+                    print(special_item["description"])
+                else:
+                    print(f"You found a {ITEMS[special_item_id]['name']}, but your inventory is full!")
 
         # Mission progress for exploration-type missions
         self.check_mission_progress("explore", self.player["location"])
 
     def start_combat(self):
-        """Initialize combat with a zombie."""
+        """Initialize combat with a zombie, animal, or hostile survivor."""
         if not self.current_zombie:
             return
 
         self.in_combat = True
-        zombie = self.current_zombie
+        enemy = self.current_zombie
 
-        # Check time of day for combat adjustments
-        current_hour = self.player["hours_passed"] % 24
-        is_night = current_hour in NIGHT_HOURS
-        is_dawn_dusk = current_hour in DAWN_DUSK_HOURS
-
-        # Day/night color coding
+        # Initialize variables
         time_color = Colors.YELLOW
-        if is_night:
-            time_color = Colors.BLUE
-        elif is_dawn_dusk:
-            time_color = Colors.MAGENTA
+        combat_color = Colors.RED
+        is_night = False
+        is_dawn_dusk = False
+        damage_boost = 0
+        
+        # Check if this is a non-zombie enemy (animal or survivor)
+        enemy_type = "zombie"  # Default
+        if "animal" in enemy and enemy["animal"]:
+            enemy_type = "animal"
+            # Set specialized display for animals
+            combat_color = Colors.GREEN
+            time_color = combat_color
+        elif "hostile" in enemy and enemy["hostile"] is True:
+            enemy_type = "survivor"
+            # Set specialized display for hostile survivors
+            combat_color = Colors.YELLOW
+            time_color = combat_color
+        else:
+            # Regular zombie
+            combat_color = Colors.RED
+            
+            # Check time of day for combat adjustments (zombies only)
+            current_hour = self.player["hours_passed"] % 24
+            is_night = current_hour in NIGHT_HOURS
+            is_dawn_dusk = current_hour in DAWN_DUSK_HOURS
 
-        # Apply night combat modifier
-        damage_boost = 0  # Initialize variable to prevent unbound error
-        if is_night and NIGHT_ZOMBIE_DAMAGE_MODIFIER > 1.0:
-            original_damage = zombie["damage"]
-            zombie["damage"] = int(zombie["damage"] * NIGHT_ZOMBIE_DAMAGE_MODIFIER)
-            damage_boost = zombie["damage"] - original_damage
+            # Day/night color coding
+            time_color = Colors.YELLOW
+            if is_night:
+                time_color = Colors.BLUE
+            elif is_dawn_dusk:
+                time_color = Colors.MAGENTA
 
+            # Apply night combat modifier to zombies
+            if is_night and NIGHT_ZOMBIE_DAMAGE_MODIFIER > 1.0:
+                original_damage = enemy["damage"]
+                enemy["damage"] = int(enemy["damage"] * NIGHT_ZOMBIE_DAMAGE_MODIFIER)
+                damage_boost = enemy["damage"] - original_damage
+        
         print("\n" + Colors.colorize("="*50, time_color))
-        print(Colors.colorize(f"COMBAT: {zombie['name']} appears!", Colors.BOLD + Colors.RED))
+        
+        # Different combat messages based on enemy type
+        if enemy_type == "animal":
+            print(Colors.colorize(f"COMBAT: {enemy['name']} attacks!", Colors.BOLD + combat_color))
+        elif enemy_type == "survivor":
+            print(Colors.colorize(f"COMBAT: {enemy['name']} attacks!", Colors.BOLD + combat_color))
+        else:
+            print(Colors.colorize(f"COMBAT: {enemy['name']} appears!", Colors.BOLD + combat_color))
+        
         print(Colors.colorize("="*50, time_color))
 
         # Show health with colors
-        zombie_health_color = Colors.health_color(zombie["health"], zombie["max_health"])
+        enemy_health_color = Colors.health_color(enemy["health"], enemy["max_health"])
         player_health_color = Colors.health_color(self.player["health"], self.player["max_health"])
 
-        zombie_health = zombie["health"]
-        zombie_max_health = zombie["max_health"]
+        enemy_health = enemy["health"]
+        enemy_max_health = enemy["max_health"]
         player_health = self.player["health"]
         player_max_health = self.player["max_health"]
 
-        print(f"Zombie Health: {Colors.colorize(f'{zombie_health}/{zombie_max_health}', zombie_health_color)}")
+        # Different display based on enemy type
+        if enemy_type == "animal":
+            print(f"Animal Health: {Colors.colorize(f'{enemy_health}/{enemy_max_health}', enemy_health_color)}")
+        elif enemy_type == "survivor":
+            print(f"Survivor Health: {Colors.colorize(f'{enemy_health}/{enemy_max_health}', enemy_health_color)}")
+        else:
+            print(f"Zombie Health: {Colors.colorize(f'{enemy_health}/{enemy_max_health}', enemy_health_color)}")
+            
         print(f"Your Health: {Colors.colorize(f'{player_health}/{player_max_health}', player_health_color)}")
 
-        # Show day/night status effects
-        if is_night:
-            print(Colors.colorize("\nNight Combat: Zombies deal more damage and are harder to hit!", Colors.BOLD + Colors.BLUE))
-            if 'damage_boost' in locals():
-                print(Colors.colorize(f"The darkness gives the zombie +{damage_boost} attack damage!", Colors.RED))
-        elif is_dawn_dusk:
-            print(Colors.colorize("\nDusk/Dawn Combat: Limited visibility affects combat.", Colors.MAGENTA))
+        # Show day/night status effects for zombies only
+        if enemy_type == "zombie":
+            if is_night:
+                print(Colors.colorize("\nNight Combat: Zombies deal more damage and are harder to hit!", Colors.BOLD + Colors.BLUE))
+                if damage_boost > 0:
+                    print(Colors.colorize(f"The darkness gives the zombie +{damage_boost} attack damage!", Colors.RED))
+            elif is_dawn_dusk:
+                print(Colors.colorize("\nDusk/Dawn Combat: Limited visibility affects combat.", Colors.MAGENTA))
+        
+        # Special messages for different enemy types
+        if enemy_type == "animal":
+            if "pack_hunter" in enemy and enemy.get("pack_attack", False):
+                print(Colors.colorize(f"\nThe {enemy['name']} is hunting in a pack! They coordinate their attacks.", Colors.BOLD + Colors.GREEN))
+            if "ambush" in enemy and enemy.get("ambush", False):
+                print(Colors.colorize(f"\nThe {enemy['name']} is an ambush predator! Watch for surprise attacks.", Colors.BOLD + Colors.GREEN))
+        elif enemy_type == "survivor":
+            if "skills" in enemy and enemy["skills"]:
+                skill_list = ", ".join(enemy["skills"])
+                print(Colors.colorize(f"\nThis survivor has skills in: {skill_list}", Colors.BOLD + Colors.YELLOW))
 
         # Apply weather effects to combat
         current_weather = self.player.get("current_weather", "clear")
@@ -3666,14 +5454,21 @@ class GameState:
         # Combat loop handled by the main game loop and combat commands
 
     def cmd_attack(self, *args):
-        """Attack the current zombie in combat."""
+        """Attack the current enemy in combat."""
         if not self.in_combat or not self.current_zombie:
             print(Colors.colorize("You are not in combat.", Colors.YELLOW))
             return
 
         # Player attacks first
-        zombie = self.current_zombie
+        enemy = self.current_zombie
         hardcore_mode = self.player.get("hardcore_mode", False)
+        
+        # Determine enemy type
+        enemy_type = "zombie"  # Default
+        if "animal" in enemy and enemy["animal"]:
+            enemy_type = "animal"
+        elif "hostile" in enemy and enemy["hostile"] is True:
+            enemy_type = "survivor"
 
         # Check if player has equipped weapon
         weapon = None
@@ -3729,27 +5524,109 @@ class GameState:
                 damage = int(damage * (1 - damage_reduction))
 
             # Special weapon effects
-            weapon_id = weapon.get("id", "")
-
-            # Handle Molotov Cocktail (area effect weapon)
-            if weapon_id == "molotov" or weapon.get("aoe", False):
-                print(Colors.colorize(f"You throw the {weapon['name']} at the zombies!", Colors.YELLOW))
+            weapon_id = self.player["equipped_weapon"]  # This is the inventory key
+            inventory_idx = self.player["equipped_weapon"]
+            
+            # Different handling based on enemy type
+            weakness_bonus = 1.0
+            
+            if enemy_type == "zombie":
+                # Check zombie type for weaknesses
+                enemy_subtype = enemy.get("type", "walker")
+                zombie_weakness = ZOMBIE_TYPES.get(enemy_subtype, {}).get("weakness", None)
+                
+                # Apply bonus damage if the weapon exploits zombie weakness
+                if zombie_weakness and weapon.get("damage_type", None) == zombie_weakness:
+                    weakness_bonus = 2.0  # Double damage against vulnerable zombies
+                    print(Colors.colorize(f"Your {weapon['name']} is extremely effective against this type of zombie!", Colors.GREEN))
+            
+            elif enemy_type == "animal":
+                # Check animal type for weaknesses or resistances
+                animal_type = enemy.get("animal_type", "dog")
+                
+                # Some weapons are better against certain animals
+                if animal_type in ["bear", "boar"] and weapon.get("damage_type") == "piercing":
+                    weakness_bonus = 1.5  # Piercing weapons better against large animals
+                    print(Colors.colorize(f"Your {weapon['name']} cuts deep into the {animal_type}!", Colors.GREEN))
+                elif animal_type in ["rat", "crow"] and weapon.get("damage_type") == "blunt":
+                    weakness_bonus = 0.7  # Blunt weapons less effective against small, quick animals
+                    print(Colors.colorize(f"The {animal_type} is too quick for your {weapon['name']} to hit solidly!", Colors.YELLOW))
+                
+            elif enemy_type == "survivor":
+                # Check if the survivor has armor
+                if enemy.get("armor", 0) > 0:
+                    if weapon.get("damage_type") == "piercing":
+                        weakness_bonus = 1.3  # Piercing weapons better against armored survivors
+                        print(Colors.colorize(f"Your {weapon['name']} finds a weak spot in their armor!", Colors.GREEN))
+                    elif weapon.get("damage_type") == "blunt":
+                        weakness_bonus = 0.8  # Blunt weapons less effective against armor
+                        print(Colors.colorize(f"Their armor absorbs some of the impact from your {weapon['name']}!", Colors.YELLOW))
+                
+            # Check for special weapon properties
+            # Handle area effect weapons (Molotov, Flamethrower)
+            if weapon_id == "molotov" or weapon.get("area_effect", False):
+                if weapon_id == "flamethrower":
+                    print(Colors.colorize(f"You unleash a stream of fire from your {weapon['name']}!", Colors.YELLOW))
+                else:
+                    if enemy_type == "zombie":
+                        print(Colors.colorize(f"You throw the {weapon['name']} at the zombies!", Colors.YELLOW))
+                    elif enemy_type == "animal":
+                        print(Colors.colorize(f"You throw the {weapon['name']} at the {enemy['name']}!", Colors.YELLOW))
+                    else:
+                        print(Colors.colorize(f"You throw the {weapon['name']} at the survivor!", Colors.YELLOW))
+                        
                 print(Colors.colorize("The area erupts in flames!", Colors.RED))
 
-                # Deal damage to primary zombie
-                zombie["health"] -= damage
-                print(f"The {zombie['name']} takes {Colors.colorize(str(damage), Colors.RED)} damage from the flames!")
+                # Deal damage to primary enemy (with possible weakness bonus)
+                actual_damage = int(damage * weakness_bonus)
+                enemy["health"] -= actual_damage
+                print(f"The {enemy['name']} takes {Colors.colorize(str(actual_damage), Colors.RED)} damage from the flames!")
 
-                # Chance to attract more zombies but also damage them
-                if random.random() < 0.5:
-                    extra_damage = damage // 2
-                    print(Colors.colorize("The fire spreads, damaging nearby zombies!", Colors.YELLOW))
-                    print(f"All zombies in the area take an additional {Colors.colorize(str(extra_damage), Colors.RED)} damage.")
-                    zombie["health"] -= extra_damage
+                # Different effects based on enemy type
+                if enemy_type == "zombie":
+                    # Extra effective against bloaters
+                    enemy_subtype = enemy.get("type", "walker")
+                    if enemy_subtype == "bloater" and random.random() < 0.6:
+                        print(Colors.colorize("The bloater's gas ignites in a violent explosion!", Colors.RED))
+                        explosion_damage = damage * 2
+                        enemy["health"] -= explosion_damage
+                        print(f"The bloater takes an additional {Colors.colorize(str(explosion_damage), Colors.RED)} damage!")
+                    
+                    # Chance to attract more zombies but also damage them
+                    if random.random() < 0.5:
+                        extra_damage = damage // 2
+                        print(Colors.colorize("The fire spreads, damaging nearby zombies!", Colors.YELLOW))
+                        print(f"All zombies in the area take an additional {Colors.colorize(str(extra_damage), Colors.RED)} damage.")
+                        enemy["health"] -= extra_damage
+                        
+                elif enemy_type == "animal":
+                    # Animals may panic when on fire
+                    if random.random() < 0.7:
+                        print(Colors.colorize(f"The {enemy['name']} panics in the flames!", Colors.YELLOW))
+                        enemy["skip_turn"] = True
+                        
+                elif enemy_type == "survivor":
+                    # Survivors might try to put the fire out
+                    if random.random() < 0.5:
+                        print(Colors.colorize("The survivor tries to extinguish the flames!", Colors.YELLOW))
+                        dodge_penalty = 15  # Makes it harder for them to dodge next turn
 
+                # Flamethrower uses fuel
+                if weapon_id == "flamethrower" and "ammo" in weapon:
+                    weapon["ammo"] = max(0, weapon["ammo"] - 1)
+                    print(Colors.colorize(f"Fuel remaining: {weapon['ammo']}/{weapon['max_ammo']}", Colors.YELLOW))
+                    
+                    if weapon["ammo"] <= 0:
+                        print(Colors.colorize("Your flamethrower is out of fuel!", Colors.RED))
+                
                 # Molotov is single-use
-                self.remove_from_inventory(self.player["equipped_weapon"])
-                self.player["equipped_weapon"] = None
+                if weapon_id == "molotov":
+                    self.remove_from_inventory(self.player["equipped_weapon"])
+                    self.player["equipped_weapon"] = None
+                else:
+                    # Reduce durability for other weapons
+                    if "durability" in weapon:
+                        weapon["durability"] = max(0, weapon["durability"] - 1)
 
                 # Skip the normal attack flow
                 if zombie["health"] <= 0:
@@ -3758,6 +5635,399 @@ class GameState:
 
                 # Skip to zombie's attack
                 print(Colors.colorize("\nThe flames die down...", Colors.YELLOW))
+                
+            # Handle flamethrower separately (it's an area weapon but reusable)
+            elif weapon_id == "flamethrower":
+                # Check if it has ammo
+                if weapon["ammo"] <= 0:
+                    print(Colors.colorize(f"Your {weapon['name']} is out of fuel!", Colors.RED))
+                    print(Colors.colorize("You'll need to find fuel canisters to use it again.", Colors.YELLOW))
+                else:
+                    print(Colors.colorize(f"You unleash a stream of fire from your {weapon['name']}!", Colors.RED))
+                    
+                    # Get zombie type to check for special effects
+                    zombie_type = zombie.get("type", "walker")
+                    
+                    # Apply additional fire damage
+                    fire_damage = weapon.get("fire_damage", 0)
+                    total_damage = damage + fire_damage
+                    
+                    # Check for zombie type bonuses
+                    if zombie_type == "bloater":
+                        bloater_bonus = weapon.get("bloater_bonus", 3.0)
+                        print(Colors.colorize("The bloater's gas ignites in a violent explosion!", Colors.RED + Colors.BOLD))
+                        explosion_damage = int(total_damage * bloater_bonus)
+                        total_damage += explosion_damage
+                        print(Colors.colorize(f"BONUS EXPLOSION DAMAGE: {explosion_damage}!", Colors.RED + Colors.BOLD))
+                    elif zombie_type == "crawler":
+                        crawler_bonus = weapon.get("crawler_bonus", 1.5)
+                        print(Colors.colorize("The crawler is completely engulfed in flames!", Colors.YELLOW))
+                        total_damage = int(total_damage * crawler_bonus)
+                    elif zombie_type == "screamer" and weapon.get("screamer_panic", False):
+                        print(Colors.colorize("The screamer panics at the sight of the flames!", Colors.GREEN))
+                        # 50% chance the screamer will flee instead of attacking this turn
+                        if random.random() < 0.5:
+                            # Add skip_zombie_turn flag to zombie instead of combat_data
+                            zombie["skip_turn"] = True
+                            print(Colors.colorize("The screamer is too terrified to attack this turn!", Colors.GREEN))
+                    
+                    # Deal damage to primary zombie
+                    zombie["health"] -= total_damage
+                    print(f"The {zombie['name']} takes {Colors.colorize(str(total_damage), Colors.RED)} damage from the intense flames!")
+                    
+                    # Apply burn effect to the zombie
+                    if "effects" not in zombie:
+                        zombie["effects"] = {}
+                    
+                    # Add a burning effect that will deal damage over time
+                    continuous_damage = weapon.get("continuous_damage", 5)
+                    continuous_turns = weapon.get("continuous_turns", 2)
+                    
+                    zombie["effects"]["burning"] = {
+                        "damage_per_turn": continuous_damage,
+                        "turns_remaining": continuous_turns,
+                        "description": "On fire! Taking damage each turn."
+                    }
+                    
+                    print(Colors.colorize(f"The {zombie['name']} is now on fire and will take {continuous_damage} damage for {continuous_turns} more turns!", Colors.YELLOW))
+                    
+                    # Chance to damage nearby zombies
+                    area_damage_percent = weapon.get("area_damage_percent", 0.7)
+                    area_damage = int(total_damage * area_damage_percent)
+                    print(Colors.colorize("The fire spreads, damaging nearby zombies!", Colors.YELLOW))
+                    print(f"All zombies in the area take an additional {Colors.colorize(str(area_damage), Colors.RED)} damage.")
+                    zombie["health"] -= area_damage  # This simulates other zombies in the area also taking damage
+                    
+                    # Create a temporary barrier of flames if the weapon has horde control
+                    if weapon.get("horde_control", False):
+                        print(Colors.colorize("A wall of flames temporarily blocks the path, controlling the zombie horde!", Colors.YELLOW))
+                        if "temporary_effects" not in self.player:
+                            self.player["temporary_effects"] = {}
+                        
+                        self.player["temporary_effects"]["flame_barrier"] = {
+                            "turns": 2,
+                            "defense_bonus": 10,
+                            "description": "A wall of flame provides temporary protection"
+                        }
+                    
+                    # Use ammo
+                    weapon["ammo"] -= 1
+                    print(Colors.colorize(f"Fuel remaining: {weapon['ammo']}/{weapon['max_ammo']}", Colors.CYAN))
+                    
+                    # Skip the normal attack flow if zombie is defeated
+                    if zombie["health"] <= 0:
+                        self.end_combat(True)
+                        return
+                    
+                    # Chance to attract additional zombies based on attraction radius
+                    attraction_radius = weapon.get("attraction_radius", 3)
+                    attraction_chance = min(0.1 * attraction_radius, 0.7)  # Up to 70% chance based on radius
+                    
+                    if random.random() < attraction_chance:
+                        print(Colors.colorize(f"\nThe noise and flames have attracted more zombies from up to {attraction_radius} zones away!", Colors.RED))
+                        # This could be expanded to actually spawn more zombies in future combat rounds
+                    
+                    # Skip to zombie's attack
+                    print(Colors.colorize("\nThe flames die down...", Colors.YELLOW))
+                    
+            # Handle sonic disruptor (especially effective against screamers)
+            elif weapon_id == "tactical_crossbow":
+                # Check if it has ammo
+                if weapon["ammo"] <= 0:
+                    print(Colors.colorize(f"Your {weapon['name']} is not loaded!", Colors.RED))
+                    print(Colors.colorize("You'll need carbon-fiber bolts to use it.", Colors.YELLOW))
+                else:
+                    print(Colors.colorize(f"You take careful aim with your {weapon['name']} and fire!", Colors.CYAN))
+                    
+                    # Get zombie type for bonus damage
+                    zombie_type = zombie.get("type", "walker")
+                    critical_hit = False
+                    bonus_damage = 0
+                    
+                    # Check for critical hit
+                    if random.random() < weapon.get("critical_hit_chance", 0.25):
+                        critical_hit = True
+                        print(Colors.colorize("Critical hit! The bolt strikes a vital area!", Colors.GREEN))
+                        bonus_damage += int(damage * 0.5)  # 50% bonus damage
+                    
+                    # Extra effective against hazmat zombies
+                    if zombie_type == "hazmat":
+                        penetration = weapon.get("hazmat_penetration", 0.85)
+                        if random.random() < penetration:
+                            print(Colors.colorize("The bolt penetrates the hazmat suit's protection!", Colors.GREEN))
+                            bonus_damage += int(damage * 0.75)  # 75% bonus damage
+                    
+                    # Apply damage with any bonuses
+                    actual_damage = damage + bonus_damage
+                    zombie["health"] -= actual_damage
+                    print(f"The {zombie['name']} takes {Colors.colorize(str(actual_damage), Colors.RED)} damage!")
+                    
+                    # Reduce ammo
+                    weapon["ammo"] = max(0, weapon["ammo"] - 1)
+                    print(Colors.colorize(f"Bolts remaining: {weapon['ammo']}/{weapon['max_ammo']}", Colors.YELLOW))
+                    
+                    # Chance to recover the bolt
+                    if random.random() < 0.7:  # 70% chance
+                        print(Colors.colorize("You'll be able to recover this bolt after combat.", Colors.GREEN))
+                        # Will add 1 bolt back to inventory after combat
+                        self.player["temp_recovered_bolts"] = self.player.get("temp_recovered_bolts", 0) + 1
+                    
+            elif weapon_id == "machete":
+                print(Colors.colorize(f"You swing your {weapon['name']} in a wide arc!", Colors.CYAN))
+                
+                # Get zombie type for bonus damage
+                zombie_type = zombie.get("type", "walker")
+                bonus_damage = 0
+                
+                # Extra effective against bloater zombies
+                if zombie_type == "bloater":
+                    bonus_damage = weapon.get("bloater_damage_bonus", 30)
+                    print(Colors.colorize("The blade slices deeply into the bloater's distended form!", Colors.GREEN))
+                
+                # Check for dismemberment chance
+                if random.random() < weapon.get("dismemberment_chance", 0.3):
+                    print(Colors.colorize("You sever a limb with your precise strike!", Colors.GREEN))
+                    bonus_damage += int(damage * 0.4)  # 40% bonus damage for dismemberment
+                
+                # Apply damage with any bonuses
+                actual_damage = damage + bonus_damage
+                zombie["health"] -= actual_damage
+                print(f"The {zombie['name']} takes {Colors.colorize(str(actual_damage), Colors.RED)} damage!")
+                    
+            elif weapon_id == "m4_carbine":
+                # Check if it has ammo
+                if weapon["ammo"] <= 0:
+                    print(Colors.colorize(f"Your {weapon['name']} is out of ammunition!", Colors.RED))
+                    print(Colors.colorize("You'll need 5.56mm rounds to use it again.", Colors.YELLOW))
+                else:
+                    print(Colors.colorize(f"You fire a burst from your {weapon['name']}!", Colors.CYAN))
+                    
+                    # Burst fire gives multiple hits
+                    hits = random.randint(1, 3)  # 1-3 hits per burst
+                    total_damage = 0
+                    
+                    for i in range(hits):
+                        hit_damage = damage
+                        zombie["health"] -= hit_damage
+                        total_damage += hit_damage
+                        
+                    print(f"The {hits}-round burst hits the {zombie['name']} for {Colors.colorize(str(total_damage), Colors.RED)} total damage!")
+                    
+                    # Reduce ammo (3 rounds per burst)
+                    ammo_used = min(3, weapon["ammo"])
+                    weapon["ammo"] = max(0, weapon["ammo"] - ammo_used)
+                    print(Colors.colorize(f"Ammunition remaining: {weapon['ammo']}/{weapon['max_ammo']}", Colors.YELLOW))
+                    
+                    # Loud gunfire attracts more zombies
+                    if random.random() < 0.4:  # 40% chance
+                        print(Colors.colorize("The gunfire echoes in the distance, possibly attracting more zombies...", Colors.RED))
+                        # Logic to potentially spawn more zombies after combat
+                        self.player["attracted_zombies"] = True
+                        
+            elif weapon_id == "flamethrower":
+                # Check if it has ammo
+                if weapon["ammo"] <= 0:
+                    print(Colors.colorize(f"Your {weapon['name']} is out of fuel!", Colors.RED))
+                    print(Colors.colorize("You'll need military-grade fuel canisters to use it again.", Colors.YELLOW))
+                else:
+                    print(Colors.colorize(f"You unleash a stream of fire from your {weapon['name']}!", Colors.YELLOW))
+                    print(Colors.colorize("The area erupts in flames!", Colors.RED))
+                    
+                    # Get zombie type for bonus damage
+                    zombie_type = zombie.get("type", "walker")
+                    bonus_damage = 0
+                    
+                    # Extra effective against bloaters and crawlers
+                    if zombie_type == "bloater":
+                        bonus_damage = weapon.get("bloater_damage_bonus", 50)
+                        print(Colors.colorize("The bloater's gas ignites in a violent explosion!", Colors.RED))
+                    elif zombie_type == "crawler":
+                        bonus_damage = weapon.get("crawler_damage_bonus", 40)
+                        print(Colors.colorize("The flames completely engulf the low-lying crawler!", Colors.RED))
+                    
+                    # Apply area effect damage
+                    base_damage = damage + bonus_damage
+                    actual_damage = base_damage
+                    
+                    # Area effect damage to primary target
+                    zombie["health"] -= actual_damage
+                    print(f"The {zombie['name']} takes {Colors.colorize(str(actual_damage), Colors.RED)} damage from the flames!")
+                    
+                    # Chance for area effect to hit additional targets
+                    if random.random() < 0.6:  # 60% chance
+                        area_damage = int(base_damage * 0.7)  # 70% damage to area
+                        print(Colors.colorize("The fire spreads, damaging nearby zombies!", Colors.YELLOW))
+                        print(f"Surrounding zombies take {Colors.colorize(str(area_damage), Colors.RED)} damage.")
+                        # Additional damage to main target to simulate multiple zombies
+                        zombie["health"] -= area_damage // 2
+                    
+                    # Reduce fuel
+                    fuel_used = random.randint(2, 5)  # Variable fuel consumption
+                    weapon["ammo"] = max(0, weapon["ammo"] - fuel_used)
+                    print(Colors.colorize(f"Fuel remaining: {weapon['ammo']}/{weapon['max_ammo']}", Colors.YELLOW))
+                    
+            elif weapon_id == "riot_shield":
+                print(Colors.colorize(f"You brace behind your {weapon['name']} and push forward!", Colors.CYAN))
+                
+                # Riot shield provides defensive bonus
+                defense_bonus = weapon.get("defense_bonus", 25)
+                self.player["temp_defense_bonus"] = defense_bonus
+                print(Colors.colorize(f"Your defensive stance grants +{defense_bonus} protection against zombie attacks!", Colors.GREEN))
+                
+                # Stunning effect
+                if random.random() < 0.4:  # 40% chance to stun
+                    print(Colors.colorize("You bash the zombie with your shield, stunning it momentarily!", Colors.GREEN))
+                    self.player["temp_stun_enemy"] = True
+                
+                # Apply damage (less than other weapons but still effective)
+                zombie["health"] -= damage
+                print(f"The {zombie['name']} takes {Colors.colorize(str(damage), Colors.RED)} damage from the shield bash!")
+                    
+            elif weapon_id == "sonic_disruptor":
+                # Check if it has ammo
+                if weapon["ammo"] <= 0:
+                    print(Colors.colorize(f"Your {weapon['name']} has no power!", Colors.RED))
+                    print(Colors.colorize("You'll need to find battery packs to use it again.", Colors.YELLOW))
+                else:
+                    print(Colors.colorize(f"You activate the {weapon['name']}, sending out high-frequency sound waves!", Colors.CYAN))
+                    
+                    # Check if target is a screamer type for bonus damage
+                    bonus_damage = 0
+                    stun_effect = weapon.get("stun_effect", False)
+                    zombie_type = zombie.get("type", "walker")
+                    
+                    # Extra effective against screamer types (both normal and boss variants)
+                    if zombie_type in ["screamer", "banshee"]:
+                        bonus_damage = weapon.get("screamer_damage_bonus", 40)  # Increased bonus damage
+                        print(Colors.colorize(f"The sound waves are extremely effective against this sound-sensitive zombie!", Colors.GREEN))
+                        print(Colors.colorize("The screamer's own sonic abilities are disrupted!", Colors.GREEN))
+                        stun_effect = True
+                        
+                        # Prevent the screamer from summoning reinforcements
+                        if "summoned_help" in zombie:
+                            zombie["summoned_help"] = True
+                    # Still effective but less powerful against other zombie types
+                    else:
+                        stun_effect = True  # All zombies can be stunned by sonic weapons
+                        
+                        # More effective against crawler zombie type (sensitive to vibrations)
+                        if zombie_type == "crawler":
+                            bonus_damage = 20
+                            print(Colors.colorize("The sonic waves throw off the crawler's sensory perception!", Colors.GREEN))
+                    
+                    total_damage = damage + bonus_damage
+                    zombie["health"] -= total_damage
+                    print(f"The {zombie['name']} takes {Colors.colorize(str(total_damage), Colors.RED)} damage from the sonic attack!")
+                    
+                    # Apply stun effect if applicable
+                    if stun_effect and random.random() < 0.7:  # 70% chance to stun
+                        print(Colors.colorize(f"The {zombie['name']} is stunned by the sound waves!", Colors.GREEN))
+                        print(Colors.colorize("It won't be able to attack this turn!", Colors.GREEN))
+                        
+                        # Skip the zombie's attack turn
+                        if zombie["health"] <= 0:
+                            self.end_combat(True)
+                        return
+                    
+                    # Use ammo
+                    weapon["ammo"] -= 1
+                    print(Colors.colorize(f"Power remaining: {weapon['ammo']}/{weapon['max_ammo']}", Colors.CYAN))
+                    
+                    # Skip to zombie's attack if not stunned and not defeated
+                    if zombie["health"] <= 0:
+                        self.end_combat(True)
+                        return
+                        
+            # Handle hazmat piercer (especially effective against hazmat zombies)
+            elif weapon_id == "hazmat_piercer":
+                print(Colors.colorize(f"You thrust the {weapon['name']} forward with precision!", Colors.CYAN))
+                
+                # Check if target is a hazmat zombie for bonus damage
+                bonus_damage = 0
+                if "hazmat" in zombie.get("id", "").lower():
+                    bonus_damage = weapon.get("hazmat_damage_bonus", 25)
+                    print(Colors.colorize(f"The piercer punctures through the protective suit with ease!", Colors.GREEN))
+                
+                total_damage = damage + bonus_damage
+                zombie["health"] -= total_damage
+                print(f"The {zombie['name']} takes {Colors.colorize(str(total_damage), Colors.RED)} damage!")
+                
+                # Skip to zombie's attack if not defeated
+                if zombie["health"] <= 0:
+                    self.end_combat(True)
+                    return
+                    
+            # Handle tactical crossbow (silent weapon with retrievable ammo)
+            elif weapon_id == "tactical_crossbow":
+                # Check if it has ammo
+                if weapon["ammo"] <= 0:
+                    print(Colors.colorize(f"Your {weapon['name']} is not loaded!", Colors.RED))
+                    print(Colors.colorize("You'll need to find crossbow bolts to use it again.", Colors.YELLOW))
+                else:
+                    print(Colors.colorize(f"You aim the {weapon['name']} carefully and fire!", Colors.CYAN))
+                    
+                    # Get zombie type to check for special effects
+                    zombie_type = zombie.get("type", "walker")
+                    
+                    # Check for zombie weakness
+                    weakness_bonus = 1.0
+                    if zombie_type == "hazmat" or zombie.get("weakness", "") == "piercing_weapons":
+                        weakness_bonus = weapon.get("hazmat_bonus", 3.0)  # Triple damage against hazmat zombies
+                        print(Colors.colorize("The bolt pierces straight through the hazmat suit's protective material!", Colors.GREEN))
+                        
+                        # Special effect for hazmat zombies - toxic gas leak
+                        if zombie_type == "hazmat":
+                            print(Colors.colorize("Toxic gas leaks from the punctured suit!", Colors.GREEN))
+                    
+                    # Critical hit chance with this precision weapon
+                    crit_chance = weapon.get("critical_chance", 0.25)  # 25% chance
+                    crit_multiplier = weapon.get("critical_multiplier", 2.0)
+                    
+                    if random.random() < crit_chance:
+                        print(Colors.colorize("CRITICAL HIT! The bolt strikes a vital point!", Colors.RED + Colors.BOLD))
+                        total_damage = int(damage * crit_multiplier * weakness_bonus)
+                    else:
+                        total_damage = damage
+                    
+                    zombie["health"] -= total_damage
+                    print(f"The {zombie['name']} takes {Colors.colorize(str(total_damage), Colors.RED)} damage from the bolt!")
+                    
+                    # Retrievable ammo chance
+                    if zombie["health"] <= 0 and random.random() < weapon.get("retrievable_ammo", 0.5):
+                        print(Colors.colorize("You were able to retrieve your bolt from the zombie's corpse.", Colors.GREEN))
+                    else:
+                        # Use ammo
+                        weapon["ammo"] -= 1
+                        print(Colors.colorize(f"Bolts remaining: {weapon['ammo']}/{weapon['max_ammo']}", Colors.CYAN))
+                    
+                    # Silent weapon - less chance of attracting more zombies
+                    if weapon.get("silent", False) and random.random() < 0.9:
+                        print(Colors.colorize("The silent attack doesn't attract any additional attention.", Colors.GREEN))
+                    
+                    # Skip to zombie's attack if not defeated
+                    if zombie["health"] <= 0:
+                        self.end_combat(True)
+                        return
+                        
+            # Handle riot shield (defensive weapon with less damage but defense bonus)
+            elif weapon_id == "riot_shield":
+                print(Colors.colorize(f"You bash forward with your {weapon['name']}!", Colors.CYAN))
+                
+                # Apply damage
+                zombie["health"] -= damage
+                print(f"The {zombie['name']} takes {Colors.colorize(str(damage), Colors.RED)} damage!")
+                
+                # Apply defense bonus for zombie's counterattack
+                defense_bonus = weapon.get("defense_bonus", 15)
+                print(Colors.colorize(f"You brace behind your shield, reducing incoming damage by {defense_bonus}!", Colors.GREEN))
+                
+                # Remember the defense bonus for the zombie's attack phase
+                self.combat_defense_bonus = defense_bonus
+                
+                # Skip to zombie's attack if not defeated
+                if zombie["health"] <= 0:
+                    self.end_combat(True)
+                    return
 
             # Check if weapon uses ammo
             elif "ammo" in weapon:
@@ -3915,6 +6185,13 @@ class GameState:
             if weapon and weapon.get("reach", 0) > 1:
                 dodge_bonus = 0.15  # Harder for zombie to hit you if you have a reach weapon
 
+            # Check if zombie is stunned from riot shield or other sources
+            if self.player.get("temp_stun_enemy", False):
+                print(Colors.colorize("The zombie is stunned and cannot attack this turn!", Colors.GREEN))
+                # Reset the stun flag after this turn
+                self.player["temp_stun_enemy"] = False
+                return
+                
             # Zombie attack chance calculation
             hit_chance = 0.6 + 0.1 * zombie.get("speed", 1) - dodge_bonus
 
@@ -3990,6 +6267,25 @@ class GameState:
                         if random.random() < 0.7:
                             self.player["infected"] = True
                             print(Colors.colorize("The toxic bile infects your wounds!", Colors.RED))
+
+                # Apply defense bonus from riot shield or other sources
+                defense_bonus = self.player.get("temp_defense_bonus", 0)
+                if defense_bonus > 0:
+                    original_damage = damage
+                    damage = max(1, damage - defense_bonus)  # Ensure at least 1 damage
+                    damage_reduced = original_damage - damage
+                    print(Colors.colorize(f"Your defensive equipment absorbs {damage_reduced} damage!", Colors.GREEN))
+                
+                # Apply military vehicle protection if in a vehicle
+                if self.player.get("in_vehicle", False) and self.player.get("current_vehicle"):
+                    vehicle = self.player.get("current_vehicle")
+                    if vehicle.get("id") in ["humvee", "transport_truck", "apc"]:
+                        vehicle_protection = vehicle.get("protection", 0)
+                        if vehicle_protection > 0:
+                            original_damage = damage
+                            damage = max(1, damage - vehicle_protection)  # Ensure at least 1 damage
+                            damage_reduced = original_damage - damage
+                            print(Colors.colorize(f"Your {vehicle.get('name', 'vehicle')} absorbs {damage_reduced} damage!", Colors.GREEN))
 
                 # Apply damage to player
                 self.player["health"] -= damage
@@ -4087,7 +6383,17 @@ class GameState:
             return
 
         hardcore_mode = self.player.get("hardcore_mode", False)    
-        zombie = self.current_zombie
+        enemy = self.current_zombie
+        
+        # Determine enemy type
+        enemy_type = "zombie"  # Default
+        if "animal" in enemy and enemy["animal"]:
+            enemy_type = "animal"
+        elif "hostile" in enemy and enemy["hostile"] is True:
+            enemy_type = "survivor"
+            
+        # Default flee chance initialization
+        flee_chance = 0.5
 
         # Stamina affects escape chance in hardcore mode
         stamina_penalty = 0
@@ -4114,13 +6420,60 @@ class GameState:
                 stamina_penalty += 0.15  # Mental stress affects decision making
                 print(Colors.colorize("Your panicked mind can't focus on escape routes!", Colors.MAGENTA))
 
-        # Base flee chance calculation
-        flee_chance = 0.5 - 0.1 * zombie.get("speed", 1) + 0.05 * self.player["level"] - stamina_penalty
-
-        # Boss zombies are harder to flee from
-        if zombie.get("boss", False):
-            flee_chance -= 0.2
-            print(Colors.colorize("The powerful zombie makes escape difficult!", Colors.RED))
+        # Base flee chance calculation with different formulas based on enemy type
+        if enemy_type == "zombie":
+            flee_chance = 0.5 - 0.1 * enemy.get("speed", 1) + 0.05 * self.player["level"] - stamina_penalty
+            
+            # Boss zombies are harder to flee from
+            if enemy.get("boss", False):
+                flee_chance -= 0.2
+                print(Colors.colorize("The powerful zombie makes escape difficult!", Colors.RED))
+                
+        elif enemy_type == "animal":
+            # Animals have different flee mechanics based on type
+            animal_type = enemy.get("animal_type", "dog")
+            
+            # Base animal flee chance
+            flee_chance = 0.6 - 0.1 * enemy.get("speed", 1) + 0.05 * self.player["level"] - stamina_penalty
+            
+            # Adjust based on animal type
+            if animal_type in ["bear", "boar"]:
+                flee_chance -= 0.15  # Large animals are harder to flee from
+                print(Colors.colorize(f"The large {animal_type} makes escape difficult!", Colors.RED))
+            elif animal_type in ["wolf", "dog"]:
+                flee_chance -= 0.1  # Canines are quick but not as intimidating
+                print(Colors.colorize(f"The {animal_type} is quick and might catch you!", Colors.YELLOW))
+            elif animal_type in ["rat", "crow"]:
+                flee_chance += 0.2  # Small animals are easy to flee from
+                print(Colors.colorize(f"The small {animal_type} shouldn't be hard to escape from.", Colors.GREEN))
+                
+            # Special animal traits affect flee chance
+            if "pack_hunter" in enemy and enemy.get("pack_attack", False):
+                flee_chance -= 0.1  # Pack animals coordinate to cut off escape
+                print(Colors.colorize("The pack is trying to surround you!", Colors.RED))
+            if "ambush" in enemy and enemy.get("ambush", False):
+                flee_chance -= 0.05  # Ambush predators are good at pursuit
+                print(Colors.colorize("The predator is agile in pursuit!", Colors.RED))
+                
+        elif enemy_type == "survivor": 
+            # Survivors have equipment that affects flee chance
+            flee_chance = 0.5 - 0.05 * enemy.get("speed", 1) + 0.05 * self.player["level"] - stamina_penalty
+            
+            # Armed survivors are more dangerous to flee from
+            if "weapon" in enemy and enemy["weapon"]:
+                weapon_type = enemy["weapon"].get("type", "melee")
+                if weapon_type == "ranged":
+                    flee_chance -= 0.15  # Ranged weapons make fleeing harder
+                    print(Colors.colorize("The survivor has a ranged weapon and might shoot you as you flee!", Colors.RED))
+                    
+            # Skilled survivors are harder to escape
+            if "skills" in enemy and enemy["skills"]:
+                if "tracking" in enemy["skills"]:
+                    flee_chance -= 0.1
+                    print(Colors.colorize("The survivor has tracking skills!", Colors.RED))
+                if "marksmanship" in enemy["skills"]:
+                    flee_chance -= 0.05
+                    print(Colors.colorize("The survivor is an excellent marksman!", Colors.RED))
 
         # Apply weather effects to flee chance
         current_weather = self.player.get("current_weather", "clear")
@@ -4158,7 +6511,14 @@ class GameState:
 
         # Process flee attempt
         if random.random() < flee_chance:
-            print(Colors.colorize("\nYou successfully escape from the zombie!", Colors.GREEN))
+            # Different success messages based on enemy type
+            if enemy_type == "zombie":
+                print(Colors.colorize("\nYou successfully escape from the zombie!", Colors.GREEN))
+            elif enemy_type == "animal":
+                animal_type = enemy.get("animal_type", "animal")
+                print(Colors.colorize(f"\nYou successfully escape from the {animal_type}!", Colors.GREEN))
+            elif enemy_type == "survivor":
+                print(Colors.colorize("\nYou successfully escape from the hostile survivor!", Colors.GREEN))
 
             # In hardcore mode, there's still a risk when fleeing
             if hardcore_mode:
@@ -4196,31 +6556,86 @@ class GameState:
         else:
             print(Colors.colorize("\nYou fail to escape!", Colors.RED))
 
-            # Zombie gets a more powerful attack due to failed escape
-            damage = zombie["damage"]
-
-            # In hardcore mode, failed escapes are more dangerous
-            if hardcore_mode:
-                damage_modifier = 1.25  # 25% more damage on failed escape
-                damage = int(damage * damage_modifier)
-
-                print(Colors.colorize("The zombie catches you from behind as you try to run!", Colors.RED))
-
-            # Apply damage to player
-            self.player["health"] -= damage
-            print(Colors.colorize(f"The {zombie['name']} hits you for {damage} damage!", Colors.RED))
-
-            # Special effects on failed escape in hardcore mode
-            if hardcore_mode:
-                # Higher infection chance when caught fleeing
-                if not self.player.get("infected", False) and random.random() < INFECTION_CHANCE * 1.5:
-                    self.player["infected"] = True
-                    print(Colors.colorize("The zombie's attack has infected you!", Colors.RED))
-
-                # Higher bleeding chance when caught fleeing
-                if not self.player.get("bleeding", False) and random.random() < 0.25:
-                    self.player["bleeding"] = True
-                    print(Colors.colorize("The zombie's attack has caused you to start bleeding!", Colors.RED))
+            # Enemy gets a more powerful attack due to failed escape
+            damage = enemy["damage"]
+            
+            # Different failure messages and effects based on enemy type
+            if enemy_type == "zombie":
+                # In hardcore mode, failed escapes are more dangerous
+                if hardcore_mode:
+                    damage_modifier = 1.25  # 25% more damage on failed escape
+                    damage = int(damage * damage_modifier)
+                    print(Colors.colorize("The zombie catches you from behind as you try to run!", Colors.RED))
+                else:
+                    print(Colors.colorize("The zombie lunges at you as you turn to run!", Colors.RED))
+                
+                # Apply damage to player
+                self.player["health"] -= damage
+                print(Colors.colorize(f"The {enemy['name']} hits you for {damage} damage!", Colors.RED))
+                
+                # Special effects on failed escape in hardcore mode (zombie-specific)
+                if hardcore_mode:
+                    # Higher infection chance when caught fleeing
+                    if not self.player.get("infected", False) and random.random() < INFECTION_CHANCE * 1.5:
+                        self.player["infected"] = True
+                        print(Colors.colorize("The zombie's attack has infected you!", Colors.RED))
+                    
+                    # Higher bleeding chance when caught fleeing
+                    if not self.player.get("bleeding", False) and random.random() < 0.25:
+                        self.player["bleeding"] = True
+                        print(Colors.colorize("The zombie's attack has caused you to start bleeding!", Colors.RED))
+                        
+            elif enemy_type == "animal":
+                animal_type = enemy.get("animal_type", "animal")
+                
+                # Different attack messages based on animal type
+                if animal_type in ["bear", "boar"]:
+                    # Large animals hit harder when you're running
+                    damage_modifier = 1.3
+                    damage = int(damage * damage_modifier)
+                    print(Colors.colorize(f"The {animal_type} charges at you as you try to escape!", Colors.RED))
+                elif animal_type in ["wolf", "dog"]:
+                    print(Colors.colorize(f"The {animal_type} leaps at your legs as you turn to run!", Colors.RED))
+                else:
+                    print(Colors.colorize(f"The {animal_type} catches you as you try to escape!", Colors.RED))
+                
+                # Apply damage to player
+                self.player["health"] -= damage
+                print(Colors.colorize(f"The {enemy['name']} hits you for {damage} damage!", Colors.RED))
+                
+                # Special effects for animals
+                if hardcore_mode and animal_type in ["wolf", "bear"] and not self.player.get("bleeding", False):
+                    if random.random() < 0.3:  # 30% chance of bleeding from predator attack
+                        self.player["bleeding"] = True
+                        print(Colors.colorize(f"The {animal_type}'s attack has caused you to start bleeding!", Colors.RED))
+                        
+            elif enemy_type == "survivor":
+                # Survivor attack mechanics
+                if "weapon" in enemy and enemy["weapon"]:
+                    weapon_type = enemy["weapon"].get("type", "melee")
+                    weapon_name = enemy["weapon"].get("name", "weapon")
+                    
+                    if weapon_type == "ranged" and random.random() < 0.4:  # 40% chance of getting shot while fleeing
+                        # Ranged weapons do more damage when fleeing
+                        damage_modifier = 1.5
+                        damage = int(damage * damage_modifier)
+                        print(Colors.colorize(f"The survivor shoots you with their {weapon_name} as you run away!", Colors.RED))
+                    else:
+                        print(Colors.colorize(f"The survivor strikes you with their {weapon_name} as you try to escape!", Colors.RED))
+                else:
+                    print(Colors.colorize("The survivor lunges at you as you try to escape!", Colors.RED))
+                
+                # Apply damage to player
+                self.player["health"] -= damage
+                print(Colors.colorize(f"The hostile survivor hits you for {damage} damage!", Colors.RED))
+                
+                # Special effects for survivors
+                if hardcore_mode and "weapon" in enemy and enemy["weapon"]:
+                    weapon_damage_type = enemy["weapon"].get("damage_type", "blunt")
+                    if weapon_damage_type == "piercing" and not self.player.get("bleeding", False):
+                        if random.random() < 0.2:  # 20% chance of bleeding from piercing weapons
+                            self.player["bleeding"] = True
+                            print(Colors.colorize("The survivor's attack has caused you to start bleeding!", Colors.RED))
 
                 # Mental trauma from failed escape
                 insanity_increase = random.randint(3, 8)
@@ -4237,9 +6652,21 @@ class GameState:
                 if self.player.get("hardcore_mode", False):
                     if self.death_log is None:
                         self.death_log = self.load_death_log()
-                    # Get zombie name for death cause
-                    zombie_name = zombie.get("name", "Zombie")
-                    self.record_death(f"Killed while fleeing from {zombie_name}")
+                    
+                    # Get appropriate death message based on enemy type
+                    enemy_name = enemy.get("name", "enemy")
+                    
+                    if enemy_type == "zombie":
+                        death_cause = f"Killed while fleeing from {enemy_name}"
+                    elif enemy_type == "animal":
+                        animal_type = enemy.get("animal_type", "animal")
+                        death_cause = f"Killed while fleeing from a {animal_type}"
+                    elif enemy_type == "survivor":
+                        death_cause = f"Killed while fleeing from a hostile survivor ({enemy_name})"
+                    else:
+                        death_cause = f"Killed while fleeing from {enemy_name}"
+                        
+                    self.record_death(death_cause)
 
                     # Delete save file in permadeath mode
                     if PERMADEATH:
@@ -4253,23 +6680,45 @@ class GameState:
                                 print(f"Error removing save file: {e}")
                                 pass
 
-                print(Colors.colorize("\n💀 You have died while trying to escape... Game over.", Colors.BOLD + Colors.RED))
+                # Different death messages based on enemy type
+                if enemy_type == "zombie":
+                    print(Colors.colorize("\n💀 You have died while trying to escape from the zombie... Game over.", Colors.BOLD + Colors.RED))
+                elif enemy_type == "animal":
+                    animal_type = enemy.get("animal_type", "animal")
+                    print(Colors.colorize(f"\n💀 You have died while trying to escape from the {animal_type}... Game over.", Colors.BOLD + Colors.RED))
+                elif enemy_type == "survivor":
+                    print(Colors.colorize("\n💀 You have died while trying to escape from the hostile survivor... Game over.", Colors.BOLD + Colors.RED))
+                else:
+                    print(Colors.colorize("\n💀 You have died while trying to escape... Game over.", Colors.BOLD + Colors.RED))
+                    
                 self.end_combat(False)
                 self.game_running = False
                 return
 
-            # Display combat status with color
-            health_color = Colors.health_color(zombie["health"], zombie["max_health"])
+            # Display combat status with color based on enemy type
+            health_color = Colors.health_color(enemy["health"], enemy["max_health"])
             player_health_color = Colors.health_color(self.player["health"], self.player["max_health"])
 
-            zombie_health_text = f"{zombie['health']}/{zombie['max_health']}"
-            print(f"\nZombie Health: {Colors.colorize(zombie_health_text, health_color)}")
+            # Display appropriate enemy health information
+            enemy_health_text = f"{enemy['health']}/{enemy['max_health']}"
+            
+            if enemy_type == "zombie":
+                print(f"\nZombie Health: {Colors.colorize(enemy_health_text, health_color)}")
+            elif enemy_type == "animal":
+                animal_type = enemy.get("animal_type", "animal")
+                print(f"\n{animal_type.capitalize()} Health: {Colors.colorize(enemy_health_text, health_color)}")
+            elif enemy_type == "survivor":
+                print(f"\nHostile Survivor Health: {Colors.colorize(enemy_health_text, health_color)}")
+            else:
+                print(f"\nEnemy Health: {Colors.colorize(enemy_health_text, health_color)}")
 
+            # Display player health
             player_health_text = f"{self.player['health']}/{self.player['max_health']}"
             print(f"Your Health: {Colors.colorize(player_health_text, player_health_color)}")
 
             # Display additional info in hardcore mode
             if hardcore_mode:
+                # Stamina
                 stamina_color = Colors.health_color(self.player["stamina"], self.player["max_stamina"])
                 stamina_text = f"{self.player['stamina']}/{self.player['max_stamina']}"
                 print(f"Stamina: {Colors.colorize(stamina_text, stamina_color)}")
@@ -4287,6 +6736,16 @@ class GameState:
 
                 if status_effects:
                     print(f"Status: {', '.join(status_effects)}")
+                    
+                # Enemy-specific status displays
+                if enemy_type == "zombie" and enemy.get("special_abilities", []):
+                    abilities = ", ".join(enemy["special_abilities"])
+                    print(f"Zombie Abilities: {Colors.colorize(abilities, Colors.RED)}")
+                elif enemy_type == "animal" and enemy.get("pack_attack", False):
+                    print(f"Animal Trait: {Colors.colorize('Pack Hunter', Colors.RED)}")
+                elif enemy_type == "survivor" and "skills" in enemy:
+                    skills = ", ".join(enemy["skills"])
+                    print(f"Survivor Skills: {Colors.colorize(skills, Colors.YELLOW)}")
 
             # Fleeing takes time (medium action)
             self.advance_time("medium_action")
@@ -4294,60 +6753,230 @@ class GameState:
     def end_combat(self, victory):
         """End combat state and apply results."""
         self.in_combat = False
+        
+        if not self.current_zombie:
+            return
 
-        if victory and self.current_zombie is not None:
-            # Base XP gain is influenced by zombie speed
-            xp_gain = 20 + 10 * self.current_zombie.get("speed", 1)
+        # Determine enemy type
+        enemy = self.current_zombie
+        enemy_type = "zombie"  # Default
+        if "animal" in enemy and enemy["animal"]:
+            enemy_type = "animal"
+        elif "hostile" in enemy and enemy["hostile"] is True:
+            enemy_type = "survivor"
 
-            # Special zombie types give more XP
-            zombie_type = self.current_zombie.get("type") if self.current_zombie else None
-            if zombie_type == "stalker":
-                xp_gain += 15  # Forest stalkers are worth more XP
+        if victory:
+            # Base XP gain is influenced by enemy's stats
+            xp_gain = 20 + 10 * enemy.get("speed", 1)
+            
+            # Different victory messages and rewards based on enemy type
+            if enemy_type == "zombie":
+                # Special zombie types give more XP
+                zombie_subtype = enemy.get("type") if enemy else None
+                if zombie_subtype == "stalker":
+                    xp_gain += 15  # Forest stalkers are worth more XP
 
-            print(f"\nYou defeated the {self.current_zombie['name']}!")
-            print(f"Gained {xp_gain} XP!")
+                print(f"\nYou defeated the {enemy['name']}!")
+                print(f"Gained {xp_gain} XP!")
 
-            self.player["xp"] += xp_gain
-            self.player["zombies_killed"] += 1
+                self.player["xp"] += xp_gain
+                
+                # Track zombie kills
+                if "zombies_killed" not in self.player:
+                    self.player["zombies_killed"] = 0
+                self.player["zombies_killed"] += 1
 
-            # Check for mission progress related to killing specific zombie types
-            self.check_mission_progress("kill", self.current_zombie)
+                # Check for mission progress related to killing specific zombie types
+                self.check_mission_progress("kill", enemy)
 
-            # Check for level up
+                # Chance to find items depends on zombie type
+                loot_chance = 0.3  # Base 30% chance
+
+                # Special zombie types have better loot
+                if enemy.get("type") == "brute":
+                    loot_chance = 0.5  # Brutes have more loot
+                elif enemy.get("type") == "stalker":
+                    loot_chance = 0.6  # Forest stalkers have the best loot chance
+
+                if random.random() < loot_chance:
+                    # Different zombie types tend to have different loot
+                    item_types = ["food", "medical", "material"]
+
+                    # Forest stalkers might drop crafting materials
+                    if enemy.get("type") == "stalker":
+                        item_types = ["material", "material", "food", "medical"]  # Weight toward materials
+
+                    item_type = random.choice(item_types)
+
+                    matching_items = [item_id for item_id, item in ITEMS.items() 
+                                    if item["type"] == item_type]
+
+                    if matching_items:
+                        found_item_id = random.choice(matching_items)
+                        found_item = ITEMS[found_item_id]
+
+                        # Add item to inventory
+                        if self.add_to_inventory(found_item_id):
+                            print(f"You found {found_item['name']} on the zombie!")
+                
+            elif enemy_type == "animal":
+                # Animal victory
+                xp_gain += 10  # Animals give slightly more XP than regular zombies
+                
+                # Bigger animals give more XP
+                animal_type = enemy.get("animal_type", "dog")
+                if animal_type in ["bear", "boar"]:
+                    xp_gain += 20  # Dangerous large animals worth more XP
+                
+                print(f"\nYou defeated the {enemy['name']}!")
+                print(f"Gained {xp_gain} XP!")
+                
+                self.player["xp"] += xp_gain
+                
+                # Track animal kills
+                if "animals_killed" not in self.player:
+                    self.player["animals_killed"] = 0
+                self.player["animals_killed"] += 1
+                
+                # Check for mission progress
+                self.check_mission_progress("kill_animal", animal_type)
+                
+                # Animal loot - meat, hide, etc.
+                if random.random() < 0.7:  # 70% chance to get animal loot
+                    animal_loot = {
+                        "dog": ["raw_meat"],
+                        "wolf": ["raw_meat", "wolf_pelt"],
+                        "bear": ["raw_meat", "bear_pelt", "bear_claw"],
+                        "deer": ["raw_meat", "deer_hide", "antlers"],
+                        "boar": ["raw_meat", "boar_tusk"],
+                        "rat": ["raw_meat"],
+                        "crow": ["feathers"]
+                    }
+                    
+                    if animal_type in animal_loot:
+                        loot_options = animal_loot[animal_type]
+                        loot = random.choice(loot_options)
+                        
+                        # Add to inventory
+                        if self.add_to_inventory(loot):
+                            print(Colors.colorize(f"You harvested: {ITEMS.get(loot, {'name': loot})['name']}", Colors.YELLOW))
+                
+            elif enemy_type == "survivor":
+                # Survivor victory
+                xp_gain += 25  # Survivors give more XP than zombies or animals
+                
+                # Skilled survivors give more XP
+                if "skills" in enemy and enemy["skills"]:
+                    xp_gain += 5 * len(enemy["skills"])
+                
+                print(f"\nYou defeated the hostile survivor {enemy['name']}!")
+                print(f"Gained {xp_gain} XP!")
+                
+                self.player["xp"] += xp_gain
+                
+                # Track survivor kills
+                if "survivors_killed" not in self.player:
+                    self.player["survivors_killed"] = 0
+                self.player["survivors_killed"] += 1
+                
+                # Check for mission progress
+                self.check_mission_progress("kill_survivor", "hostile")
+                
+                # Survivor loot - weapons, supplies, etc.
+                print(Colors.colorize("You search the survivor's belongings:", Colors.YELLOW))
+                
+                # Get survivor equipment and add to inventory with chances
+                loot_found = False
+                
+                # Weapon loot
+                if "weapon" in enemy and enemy["weapon"] and random.random() < 0.4:
+                    weapon_id = enemy["weapon"].get("id", "knife")
+                    if self.add_to_inventory(weapon_id):
+                        print(Colors.colorize(f"- {ITEMS.get(weapon_id, {'name': weapon_id})['name']}", Colors.YELLOW))
+                        loot_found = True
+                    
+                    # Ammo for ranged weapons
+                    if "ammo" in enemy["weapon"] and enemy["weapon"]["ammo"] > 0 and random.random() < 0.6:
+                        ammo_amount = random.randint(1, enemy["weapon"]["ammo"])
+                        ammo_id = enemy["weapon"].get("ammo_type", "pistol_ammo")
+                        for _ in range(ammo_amount):
+                            self.add_to_inventory(ammo_id)
+                        print(Colors.colorize(f"- {ammo_amount}x {ITEMS.get(ammo_id, {'name': ammo_id})['name']}", Colors.YELLOW))
+                
+                # Supply loot
+                standard_supplies = ["bandage", "painkillers", "canned_food", "water_bottle", "lighter"]
+                for _ in range(random.randint(0, 2)):
+                    if random.random() < 0.5:
+                        supply = random.choice(standard_supplies)
+                        if self.add_to_inventory(supply):
+                            print(Colors.colorize(f"- {ITEMS.get(supply, {'name': supply})['name']}", Colors.YELLOW))
+                            loot_found = True
+                
+                if not loot_found:
+                    print(Colors.colorize("Nothing useful found.", Colors.YELLOW))
+            
+            # Check for level up for all enemy types
             self.level_up()
+                        
+            # Handle recovered crossbow bolts if player was victorious
+            if self.player.get("temp_recovered_bolts", 0) > 0:
+                recovered_bolts = self.player.get("temp_recovered_bolts", 0)
+                print(Colors.colorize(f"You recover {recovered_bolts} crossbow bolt(s) from the battlefield.", Colors.GREEN))
+                
+                # Find carbon-fiber bolts in inventory and add the recovered bolts
+                bolt_found = False
+                for item_idx, item in enumerate(self.player["inventory"]):
+                    if item.get("id") == "carbon_fiber_bolts":
+                        bolt_found = True
+                        self.player["inventory"][item_idx]["count"] += recovered_bolts
+                        break
+                
+                # If player doesn't have the bolts item, add it to inventory
+                if not bolt_found:
+                    self.add_to_inventory("carbon_fiber_bolts", recovered_bolts)
+                
+                # Reset the recovered bolts counter
+                self.player["temp_recovered_bolts"] = 0
+            
+            # Handle attracted zombies from loud weapons - all enemy types can attract zombies
+            if self.player.get("attracted_zombies", False):
+                # Reset the flag
+                self.player["attracted_zombies"] = False
+                
+                # 30% chance of immediate followup encounter
+                if random.random() < 0.3:
+                    print(Colors.colorize("\nThe sound of combat has attracted zombies!", Colors.RED))
+                    print("Prepare for another encounter!")
+                    
+                    # Force a new encounter after a short pause
+                    time.sleep(1.5)
+                    self.spawn_zombie()  # Create a new zombie
+                    self.start_combat()  # Start combat with the new zombie
+                    return
+        else:
+            # Player was defeated
+            print(Colors.colorize("\nYou have been defeated!", Colors.RED))
+            
+            # Different defeat messages based on enemy type
+            if enemy_type == "zombie":
+                print(Colors.colorize("You were overwhelmed by the zombie!", Colors.RED + Colors.BOLD))
+            elif enemy_type == "animal":
+                animal_type = enemy.get("animal_type", "animal")
+                print(Colors.colorize(f"The {animal_type} was too much for you to handle!", Colors.RED + Colors.BOLD))
+            elif enemy_type == "survivor":
+                print(Colors.colorize("The hostile survivor got the better of you!", Colors.RED + Colors.BOLD))
+                
+            # Record death in hardcore mode with proper cause
+            if self.player.get("hardcore_mode", False):
+                if self.death_log is None:
+                    self.death_log = self.load_death_log()
+                enemy_name = enemy.get("name", "enemy")
+                self.record_death(f"Killed by {enemy_name}")
 
-            # Chance to find items depends on zombie type
-            loot_chance = 0.3  # Base 30% chance
-
-            # Special zombie types have better loot
-            if self.current_zombie and self.current_zombie.get("type") == "brute":
-                loot_chance = 0.5  # Brutes have more loot
-            elif self.current_zombie and self.current_zombie.get("type") == "stalker":
-                loot_chance = 0.6  # Forest stalkers have the best loot chance
-
-            if random.random() < loot_chance:
-                # Different zombie types tend to have different loot
-                item_types = ["food", "medical", "material"]
-
-                # Forest stalkers might drop crafting materials
-                if self.current_zombie and self.current_zombie.get("type") == "stalker":
-                    item_types = ["material", "material", "food", "medical"]  # Weight toward materials
-
-                item_type = random.choice(item_types)
-
-                matching_items = [item_id for item_id, item in ITEMS.items() 
-                                 if item["type"] == item_type]
-
-                if matching_items:
-                    found_item_id = random.choice(matching_items)
-                    found_item = ITEMS[found_item_id]
-
-                    # Add item to inventory
-                    if self.add_to_inventory(found_item_id):
-                        print(f"You found {found_item['name']} on the zombie!")
-
-        # Reset combat state
+        # Reset combat state and temporary combat attributes
         self.current_zombie = None
+        self.player["temp_defense_bonus"] = 0
+        self.player["temp_stun_enemy"] = False
 
     def cmd_missions(self, *args):
         """Show active and available missions."""
@@ -5508,18 +8137,709 @@ class GameState:
             farewell = "Thanks for playing Zombie Survival RPG!"
             Animations.type_text(Colors.colorize(farewell, Colors.BOLD + Colors.GREEN))
             self.game_running = False
+            
+    def generate_random_name(self):
+        """Generate a random name for survivors.
+        
+        Returns:
+            str: A randomly generated full name
+        """
+        first_name = random.choice(SURVIVOR_FIRST_NAMES)
+        last_name = random.choice(SURVIVOR_LAST_NAMES)
+        return f"{first_name} {last_name}"
+        
+    def spawn_survivor(self, specific_type=None):
+        """Create a random survivor based on location.
+        
+        Args:
+            specific_type: Optional specific survivor type to spawn
+            
+        Returns:
+            dict: A survivor instance with randomized attributes
+        """
+        location = LOCATIONS[self.player["location"]]
+        
+        # Determine survivor type
+        if specific_type and specific_type in SURVIVOR_TYPES:
+            survivor_type = specific_type
+        else:
+            # Higher chance of hostile survivors in dangerous areas
+            danger_level = location["danger_level"]
+            hostile_chance = min(0.2 + (danger_level * 0.1), 0.7)  # 20-70% chance based on danger
+            
+            if random.random() < hostile_chance:
+                survivor_type = "hostile_bandit"
+            else:
+                non_hostile_types = [s_type for s_type, data in SURVIVOR_TYPES.items() 
+                                    if not data.get("hostile", False)]
+                survivor_type = random.choice(non_hostile_types)
+        
+        # Base survivor from template
+        survivor_template = SURVIVOR_TYPES[survivor_type].copy()
+        survivor = {
+            "id": f"survivor_{int(time.time())}_{random.randint(1000, 9999)}", # Unique ID
+            "type": survivor_type,
+            "name": self.generate_random_name(),
+            "base_type": survivor_template["name"],
+            "description": survivor_template["description"],
+            "hostile": survivor_template.get("hostile", False),
+            "trader": survivor_template.get("trader", False),
+            "cautious": survivor_template.get("cautious", False)
+        }
+        
+        # Randomize stats within ranges
+        health_range = survivor_template.get("health_range", [70, 100])
+        damage_range = survivor_template.get("damage_range", [10, 20])
+        speed_range = survivor_template.get("speed_range", [0.8, 1.2])
+        
+        survivor["health"] = random.randint(health_range[0], health_range[1])
+        survivor["max_health"] = survivor["health"]
+        survivor["damage"] = random.randint(damage_range[0], damage_range[1])
+        survivor["speed"] = round(random.uniform(speed_range[0], speed_range[1]), 1)
+        
+        # Equipment and skills
+        survivor["equipped_weapon"] = None
+        survivor["skills"] = []
+        
+        if "skill_potential" in survivor_template:
+            potential_skills = survivor_template["skill_potential"]
+            # Give the survivor 1-2 skills from their potential list
+            num_skills = random.randint(1, min(2, len(potential_skills)))
+            survivor["skills"] = random.sample(potential_skills, num_skills)
+        
+        # Determine loot quality
+        survivor["loot_quality"] = survivor_template.get("loot_quality", "low")
+        
+        # Dialogue options
+        survivor["dialogue"] = survivor_template.get("dialogue", {})
+        
+        # Recruitment difficulty
+        survivor["recruit_difficulty"] = survivor_template.get("recruit_difficulty", "hard")
+        
+        return survivor
+
+    def spawn_animal(self, is_friendly=None, specific_type=None):
+        """Create a random animal based on location.
+        
+        Args:
+            is_friendly: Override to spawn a friendly or hostile animal
+            specific_type: Optional specific animal type to spawn
+            
+        Returns:
+            dict: An animal instance with attributes
+        """
+        location = LOCATIONS[self.player["location"]]
+        
+        # Check if this location has specific animal types
+        location_animals = location.get("animal_types", [])
+        
+        # Determine if friendly or infected
+        if is_friendly is None:
+            # Use location's default (if specified)
+            if location.get("friendly_animals", False):
+                is_friendly = True
+            elif location.get("infected_animals", False):
+                is_friendly = False
+            else:
+                # Default behavior: 30% chance of friendly animals
+                is_friendly = random.random() < 0.3
+        
+        # Select animal type
+        if specific_type:
+            if is_friendly and specific_type in FRIENDLY_ANIMALS:
+                animal_type = specific_type
+            elif not is_friendly and specific_type in INFECTED_ANIMALS:
+                animal_type = specific_type
+            else:
+                # Fallback if specified type doesn't match friendly/hostile status
+                animal_type = self._select_random_animal_type(is_friendly, location_animals)
+        else:
+            animal_type = self._select_random_animal_type(is_friendly, location_animals)
+        
+        # Get the template
+        if is_friendly:
+            animal_template = FRIENDLY_ANIMALS[animal_type].copy()
+        else:
+            animal_template = INFECTED_ANIMALS[animal_type].copy()
+        
+        # Create the animal instance
+        animal = animal_template.copy()
+        animal["id"] = f"animal_{int(time.time())}_{random.randint(1000, 9999)}"  # Unique ID
+        
+        # Some variation in health/damage for variety
+        animal["health"] = int(animal["health"] * random.uniform(0.9, 1.1))
+        animal["max_health"] = animal["health"]
+        animal["damage"] = int(animal["damage"] * random.uniform(0.9, 1.1))
+        
+        # Add any special behavior based on the animal type
+        if not is_friendly and animal.get("pack_hunter", False):
+            # Pack hunters have a chance to call others of their kind
+            animal["calls_pack"] = True
+            animal["pack_size"] = random.randint(2, 4)
+        
+        return animal
+    
+    def _select_random_animal_type(self, is_friendly, location_animals):
+        """Helper function to select a random animal type.
+        
+        Args:
+            is_friendly: Whether to select a friendly animal
+            location_animals: List of animal types available in this location
+            
+        Returns:
+            str: Animal type ID
+        """
+        # Filter animals based on the location's available types (if specified)
+        if location_animals:
+            if is_friendly:
+                available_types = [animal for animal in location_animals 
+                                 if animal in FRIENDLY_ANIMALS]
+                if not available_types:  # Fallback if no matching friendly animals
+                    available_types = list(FRIENDLY_ANIMALS.keys())
+            else:
+                available_types = [animal for animal in location_animals 
+                                 if animal in INFECTED_ANIMALS]
+                if not available_types:  # Fallback if no matching infected animals
+                    available_types = list(INFECTED_ANIMALS.keys())
+        else:
+            # No location-specific animals, use all available
+            if is_friendly:
+                available_types = list(FRIENDLY_ANIMALS.keys())
+            else:
+                available_types = list(INFECTED_ANIMALS.keys())
+        
+        return random.choice(available_types)
+    
+    def encounter_survivor(self):
+        """Handle an encounter with another survivor.
+        
+        Returns:
+            bool: True if combat started, False otherwise
+        """
+        survivor = self.spawn_survivor()
+        
+        print("\n" + Colors.colorize("="*50, Colors.YELLOW))
+        print(Colors.colorize("SURVIVOR ENCOUNTER", Colors.YELLOW + Colors.BOLD))
+        print(Colors.colorize("="*50, Colors.YELLOW))
+        
+        # Display survivor info
+        print(f"You encounter {survivor['name']}, a {survivor['base_type']}.")
+        print(f"{survivor['description']}")
+        
+        # Randomly select a greeting dialogue
+        if "greeting" in survivor["dialogue"]:
+            greeting = random.choice(survivor["dialogue"]["greeting"])
+            print(f"\n{survivor['name']} says: \"{greeting}\"")
+        
+        # Handle hostile survivors differently
+        if survivor["hostile"]:
+            print(Colors.colorize("\nThis survivor seems hostile and is preparing to attack!", Colors.RED))
+            
+            # Give player a chance to avoid combat with charisma
+            if "charisma" in self.player.get("skills", []) and random.random() < 0.4:
+                print(Colors.colorize("Your charisma helps you de-escalate the situation.", Colors.GREEN))
+                print(f"{survivor['name']} lowers their weapon and backs away cautiously.")
+                return False
+            
+            print("\nThe hostile survivor attacks!")
+            
+            # Add survivor to current combat enemy
+            self.current_zombie = survivor  # Reuse zombie combat system
+            self.start_combat()
+            return True
+        
+        # For non-hostile survivors, give interaction options
+        print("\nHow do you want to interact?")
+        print("1. Approach peacefully")
+        print("2. Offer to trade")
+        print("3. Try to recruit them")
+        print("4. Keep your distance and move on")
+        print("5. Attack")
+        
+        choice = input("> ")
+        
+        if choice == "1":
+            # Peaceful approach
+            print("\nYou approach with your hands visible, showing you mean no harm.")
+            if survivor["cautious"] and random.random() < 0.3:
+                print(f"{survivor['name']} remains wary but shares some information with you.")
+                self.peaceful_survivor_interaction(survivor)
+            else:
+                print(f"{survivor['name']} seems relieved to meet another friendly face.")
+                if "friendly" in survivor["dialogue"]:
+                    friendly_line = random.choice(survivor["dialogue"]["friendly"])
+                    print(f"\n{survivor['name']} says: \"{friendly_line}\"")
+                self.peaceful_survivor_interaction(survivor)
+        
+        elif choice == "2":
+            # Trading
+            if survivor["trader"] or random.random() < 0.4:
+                print(f"\n{survivor['name']} agrees to trade with you.")
+                self.trade_with_survivor(survivor)
+            else:
+                print(f"\n{survivor['name']} doesn't have anything to trade.")
+                self.peaceful_survivor_interaction(survivor)
+        
+        elif choice == "3":
+            # Recruitment attempt
+            self.try_recruit_survivor(survivor)
+        
+        elif choice == "4":
+            # Move on
+            print("\nYou decide it's safer to keep your distance and continue on your way.")
+            print(f"{survivor['name']} watches you leave, then disappears into the ruins.")
+        
+        elif choice == "5":
+            # Attack (turn a non-hostile encounter hostile)
+            print("\nYou decide to attack the survivor, catching them by surprise!")
+            self.current_zombie = survivor  # Reuse zombie combat system
+            self.start_combat()
+            return True
+        
+        else:
+            print("\nYou hesitate, unsure how to respond.")
+            print(f"{survivor['name']} gives you a cautious nod and continues on their way.")
+        
+        return False
+    
+    def peaceful_survivor_interaction(self, survivor):
+        """Handle peaceful interaction with a non-hostile survivor.
+        
+        Args:
+            survivor: The survivor data
+        """
+        # Chance to give player useful information
+        print("\nYou exchange stories about surviving in this harsh world.")
+        
+        info_types = [
+            ("location", "tells you about a nearby location that might have supplies"),
+            ("zombie", "warns you about a dangerous zombie type in the area"),
+            ("safe_spot", "shares the location of a relatively safe place to rest"),
+            ("crafting", "gives you a tip about crafting something useful")
+        ]
+        
+        info_type, desc = random.choice(info_types)
+        print(f"{survivor['name']} {desc}.")
+        
+        if info_type == "location":
+            # Reveal a random location on the map
+            unknown_locations = [loc for loc in LOCATIONS.keys() 
+                               if loc != "camp" and loc not in self.player["discovered_locations"]]
+            if unknown_locations:
+                new_loc = random.choice(unknown_locations)
+                self.player["discovered_locations"].append(new_loc)
+                print(Colors.colorize(f"You've discovered {LOCATIONS[new_loc]['name']}!", Colors.GREEN))
+        
+        elif info_type == "zombie":
+            zombie_types = list(ZOMBIE_TYPES.keys())
+            zombie_type = random.choice(zombie_types)
+            zombie_info = ZOMBIE_TYPES[zombie_type]
+            print(f"They describe the {zombie_info['name']} - {zombie_info['description'][:100]}...")
+            if "weakness" in zombie_info:
+                print(Colors.colorize(f"Importantly, they mention it has a weakness to {zombie_info['weakness']}.", Colors.GREEN))
+        
+        elif info_type == "safe_spot":
+            # Increase sleep safety temporarily at current location
+            self.player["temporary_sleep_bonus"] = 0.2
+            print(Colors.colorize("Your next rest will be 20% safer thanks to this information.", Colors.GREEN))
+        
+        elif info_type == "crafting":
+            # Instead of revealing a recipe, just give general crafting advice
+            crafting_tips = [
+                "You can create improvised weapons by combining everyday items with tape and tools.",
+                "Food preservation techniques can help food last longer during your journeys.",
+                "Scrap electronics are useful for crafting advanced items like radios or sensors.",
+                "Medical supplies can be crafted from common plants if you know what to look for.",
+                "Reinforcing your armor with materials from car parts can provide extra protection.",
+                "Makeshift traps can be created using scrap materials and basic mechanics."
+            ]
+            
+            print(Colors.colorize(f"They share some crafting advice: {random.choice(crafting_tips)}", Colors.GREEN))
+    
+    def trade_with_survivor(self, survivor):
+        """Trading interface with a survivor.
+        
+        Args:
+            survivor: The survivor data
+        """
+        print("\n" + Colors.colorize("="*50, Colors.CYAN))
+        print(Colors.colorize("TRADING", Colors.CYAN + Colors.BOLD))
+        print(Colors.colorize("="*50, Colors.CYAN))
+        
+        # Generate a small selection of items based on survivor type and loot quality
+        item_count = random.randint(3, 6)
+        quality = survivor["loot_quality"]
+        
+        if quality == "low":
+            item_chance = {"common": 0.7, "uncommon": 0.25, "rare": 0.05}
+        elif quality == "medium":
+            item_chance = {"common": 0.4, "uncommon": 0.5, "rare": 0.1}
+        else:  # high
+            item_chance = {"common": 0.2, "uncommon": 0.6, "rare": 0.2}
+        
+        # Trader specialization based on survivor type
+        if survivor["type"] == "friendly_trader":
+            # Broad selection
+            item_types = ["weapon", "medical", "food", "materials", "tool"]
+        elif survivor["type"] == "military_veteran":
+            # Military focus
+            item_types = ["weapon", "medical", "military_gear"]
+        elif survivor["type"] == "skilled_hunter":
+            # Survival focus
+            item_types = ["weapon", "food", "materials", "tool"]
+        elif survivor["type"] == "engineering_expert":
+            # Technical focus
+            item_types = ["tool", "materials", "electronics"]
+        else:
+            # Default mix
+            item_types = ["weapon", "medical", "food", "materials"]
+        
+        # Generate items
+        trade_items = []
+        for _ in range(item_count):
+            rarity = random.choices(list(item_chance.keys()), 
+                                   weights=list(item_chance.values()))[0]
+            
+            # Get items matching type and rarity
+            matching_items = [item_id for item_id, item in ITEMS.items()
+                             if item.get("rarity", "common") == rarity and
+                                item.get("type") in item_types]
+            
+            if matching_items:
+                item_id = random.choice(matching_items)
+                price = ITEMS[item_id].get("value", 10) * 1.5  # Markup
+                trade_items.append((item_id, int(price)))
+        
+        # Display trade items
+        print(f"{survivor['name']} offers these items for trade:")
+        for i, (item_id, price) in enumerate(trade_items, 1):
+            item = ITEMS[item_id]
+            print(f"{i}. {item['name']} - {price} supplies")
+        
+        print(f"\nYou have {self.player['supplies']} supplies.")
+        print("Enter the number of the item you want to buy, or 0 to exit.")
+        
+        while True:
+            choice = input("> ")
+            if choice == "0" or choice.lower() == "exit":
+                print("\nYou end the trading session.")
+                break
+            
+            try:
+                choice = int(choice)
+                if 1 <= choice <= len(trade_items):
+                    item_id, price = trade_items[choice-1]
+                    if self.player['supplies'] >= price:
+                        # Purchase the item
+                        self.player['supplies'] -= price
+                        self.add_to_inventory(item_id)
+                        print(Colors.colorize(f"You purchased {ITEMS[item_id]['name']} for {price} supplies.", Colors.GREEN))
+                        print(f"You have {self.player['supplies']} supplies remaining.")
+                    else:
+                        print(Colors.colorize("You don't have enough supplies for that item.", Colors.RED))
+                else:
+                    print("Invalid selection.")
+            except ValueError:
+                print("Please enter a number.")
+    
+    def try_recruit_survivor(self, survivor):
+        """Attempt to recruit a survivor to join your group.
+        
+        Args:
+            survivor: The survivor data
+            
+        Returns:
+            bool: True if recruitment successful, False otherwise
+        """
+        print(f"\nYou ask {survivor['name']} if they'd like to join your group.")
+        
+        # Determine difficulty based on survivor type
+        difficulty = survivor["recruit_difficulty"]
+        
+        if difficulty == "easy":
+            base_chance = 0.7
+        elif difficulty == "medium":
+            base_chance = 0.5
+        elif difficulty == "hard":
+            base_chance = 0.3
+        else:  # very_hard
+            base_chance = 0.2
+        
+        # Charisma bonus
+        if "charisma" in self.player.get("skills", []):
+            base_chance += 0.2
+        
+        # Location danger impact - survivors more likely to join in dangerous areas
+        location = LOCATIONS[self.player["location"]]
+        danger_bonus = location["danger_level"] * 0.05
+        
+        # Group size penalty - large groups are harder to convince to join
+        companion_count = len(self.player.get("companions", []))
+        group_penalty = companion_count * 0.05
+        
+        final_chance = max(0.1, min(0.9, base_chance + danger_bonus - group_penalty))
+        
+        if random.random() < final_chance:
+            # Success
+            print(Colors.colorize(f"{survivor['name']} agrees to join your group!", Colors.GREEN))
+            
+            if "joining" in survivor["dialogue"]:
+                joining_line = random.choice(survivor["dialogue"]["joining"])
+                print(f"\n{survivor['name']} says: \"{joining_line}\"")
+            
+            # Add to companions list
+            if "companions" not in self.player:
+                self.player["companions"] = []
+            
+            # Set some additional companion properties
+            survivor["loyalty"] = 50  # Base loyalty
+            survivor["days_with_group"] = 0
+            
+            self.player["companions"].append(survivor)
+            
+            # Apply any skill benefits
+            self.apply_companion_skills(survivor)
+            
+            return True
+        else:
+            # Failure
+            print(Colors.colorize(f"{survivor['name']} declines your offer to join.", Colors.RED))
+            
+            reasons = [
+                "I prefer to work alone.",
+                "I don't know if I can trust your group yet.",
+                "I have my own mission to complete.",
+                "I need to find someone I lost.",
+                "Your group draws too much attention."
+            ]
+            
+            print(f"\n{survivor['name']}: \"{random.choice(reasons)}\"")
+            
+            # Small chance they might give you something anyway
+            if random.random() < 0.3:
+                # Generate a small gift
+                common_items = [item_id for item_id, item in ITEMS.items() 
+                               if item.get("rarity", "common") == "common" and
+                                  item.get("value", 10) < 15]
+                
+                if common_items:
+                    gift_id = random.choice(common_items)
+                    self.add_to_inventory(gift_id)
+                    print(f"\n{survivor['name']} gives you a {ITEMS[gift_id]['name']} before leaving.")
+            
+            return False
+    
+    def apply_companion_skills(self, companion):
+        """Apply skills and bonuses from a companion.
+        
+        Args:
+            companion: The companion data
+        """
+        skills = companion.get("skills", [])
+        
+        for skill in skills:
+            if skill == "medical":
+                self.player["medical_bonus"] = self.player.get("medical_bonus", 0) + 0.2
+                print(Colors.colorize("Your group's medical effectiveness has improved.", Colors.GREEN))
+            
+            elif skill == "crafting":
+                self.player["crafting_bonus"] = self.player.get("crafting_bonus", 0) + 0.15
+                print(Colors.colorize("Your group's crafting efficiency has improved.", Colors.GREEN))
+            
+            elif skill == "hunting":
+                self.player["food_find_bonus"] = self.player.get("food_find_bonus", 0) + 0.25
+                print(Colors.colorize("Your group will find more food while exploring.", Colors.GREEN))
+            
+            elif skill == "combat":
+                self.player["combat_bonus"] = self.player.get("combat_bonus", 0) + 0.15
+                print(Colors.colorize("Your group's combat effectiveness has improved.", Colors.GREEN))
+            
+            elif skill == "stealth":
+                self.player["stealth_bonus"] = self.player.get("stealth_bonus", 0) + 0.2
+                print(Colors.colorize("Your group can move more quietly now.", Colors.GREEN))
+            
+            elif skill == "engineering":
+                self.player["repair_bonus"] = self.player.get("repair_bonus", 0) + 0.3
+                print(Colors.colorize("Your group's repair and building capabilities have improved.", Colors.GREEN))
+    
+    def encounter_animal(self):
+        """Handle an encounter with an animal.
+        
+        Returns:
+            bool: True if combat started, False otherwise
+        """
+        animal = self.spawn_animal()
+        is_friendly = animal.get("friendly", False)
+        
+        print("\n" + Colors.colorize("="*50, Colors.GREEN))
+        print(Colors.colorize("ANIMAL ENCOUNTER", Colors.GREEN + Colors.BOLD))
+        print(Colors.colorize("="*50, Colors.GREEN))
+        
+        print(f"You encounter a {animal['name']}!")
+        print(f"{animal['description']}")
+        
+        if is_friendly:
+            # Handle friendly animal encounter
+            if animal.get("companion_potential", False):
+                print("\nThis animal could potentially become a companion.")
+                print("1. Try to befriend it")
+                print("2. Leave it alone")
+                print("3. Try to hunt it for food")
+                
+                choice = input("> ")
+                
+                if choice == "1":
+                    # Try to befriend
+                    success_chance = 0.6
+                    
+                    # Bonus if player has food
+                    food_items = [item_idx for item_idx, item in enumerate(self.player["inventory"]) 
+                                 if ITEMS[item["id"]].get("type") == "food"]
+                    
+                    if food_items:
+                        print("\nYou can offer food to increase your chances:")
+                        for i, idx in enumerate(food_items):
+                            item = ITEMS[self.player["inventory"][idx]["id"]]
+                            print(f"{i+1}. {item['name']}")
+                        print("0. Don't offer food")
+                        
+                        food_choice = input("> ")
+                        try:
+                            food_idx = int(food_choice) - 1
+                            if food_idx >= 0 and food_idx < len(food_items):
+                                item_idx = food_items[food_idx]
+                                item = ITEMS[self.player["inventory"][item_idx]["id"]]
+                                print(f"\nYou offer the {item['name']} to the {animal['name']}.")
+                                success_chance += 0.3  # Significant bonus for food
+                                self.remove_from_inventory(item_idx)
+                        except ValueError:
+                            pass
+                    
+                    if random.random() < success_chance:
+                        # Success
+                        print(Colors.colorize(f"The {animal['name']} cautiously approaches and accepts your friendship!", Colors.GREEN))
+                        
+                        # Add as companion
+                        if "animal_companions" not in self.player:
+                            self.player["animal_companions"] = []
+                        
+                        # Give the animal a random name
+                        pet_names = ["Buddy", "Max", "Charlie", "Cooper", "Luna", "Bella", "Rocky", "Shadow", 
+                                    "Scout", "Rusty", "Daisy", "Bear", "Duke", "Sadie", "Rosie", "Pepper"]
+                        animal["given_name"] = random.choice(pet_names)
+                        
+                        print(f"You decide to call it {animal['given_name']}.")
+                        
+                        self.player["animal_companions"].append(animal)
+                        
+                        # Apply animal bonuses
+                        if animal.get("detection_bonus"):
+                            self.player["detection_bonus"] = self.player.get("detection_bonus", 0) + animal["detection_bonus"]
+                            print(Colors.colorize(f"{animal['given_name']} will help detect threats before they notice you.", Colors.GREEN))
+                        
+                        if animal.get("stealth_bonus"):
+                            self.player["stealth_bonus"] = self.player.get("stealth_bonus", 0) + animal["stealth_bonus"]
+                            print(Colors.colorize(f"{animal['given_name']} will help you move more quietly.", Colors.GREEN))
+                    else:
+                        # Failure
+                        print(Colors.colorize(f"The {animal['name']} is too cautious and backs away.", Colors.RED))
+                
+                elif choice == "2":
+                    # Leave alone
+                    print(f"\nYou decide to leave the {animal['name']} alone.")
+                    print("It watches you for a moment, then disappears.")
+                
+                elif choice == "3":
+                    # Hunt it - turn friendly encounter hostile
+                    print(f"\nYou decide to hunt the {animal['name']} for food.")
+                    animal["friendly"] = False
+                    self.current_zombie = animal  # Reuse combat system
+                    self.start_combat()
+                    return True
+            
+            elif animal.get("farm_animal", False):
+                print("\nThis animal could provide a sustainable food source if kept at your camp.")
+                print("1. Try to capture it and bring it back to camp")
+                print("2. Leave it alone")
+                print("3. Hunt it for immediate food")
+                
+                choice = input("> ")
+                
+                if choice == "1":
+                    # Try to capture for camp
+                    camp_upgrade_level = self.player.get("camp_upgrades", {}).get("livestock_pen", 0)
+                    
+                    if camp_upgrade_level > 0:
+                        # Can capture if livestock pen exists
+                        print(f"\nYou manage to secure the {animal['name']} and plan to bring it back to camp.")
+                        
+                        if "farm_animals" not in self.player:
+                            self.player["farm_animals"] = []
+                        
+                        self.player["farm_animals"].append(animal["name"].lower())
+                        print(Colors.colorize(f"When you return to camp, the {animal['name']} will be added to your livestock pen.", Colors.GREEN))
+                        
+                        if animal.get("food_production", False):
+                            print(Colors.colorize("This will provide a steady source of food.", Colors.GREEN))
+                    else:
+                        print(Colors.colorize("You don't have a livestock pen at your camp. You need to build one first.", Colors.RED))
+                        print(f"The {animal['name']} wanders away.")
+                
+                elif choice == "2":
+                    # Leave alone
+                    print(f"\nYou decide to leave the {animal['name']} alone.")
+                
+                elif choice == "3":
+                    # Hunt
+                    print(f"\nYou decide to hunt the {animal['name']} for immediate food.")
+                    animal["friendly"] = False
+                    self.current_zombie = animal  # Reuse combat system
+                    self.start_combat()
+                    return True
+            
+            else:
+                # Generic friendly animal
+                print(f"\nThe {animal['name']} doesn't seem interested in you and soon moves on.")
+        
+        else:
+            # Infected/hostile animal
+            print(Colors.colorize(f"\nThe {animal['name']} appears aggressive and infected!", Colors.RED))
+            
+            # Special case for pack hunters
+            if animal.get("pack_hunter", False) and animal.get("calls_pack", False):
+                pack_size = animal.get("pack_size", 3)
+                print(Colors.colorize(f"You realize this isn't just one {animal['name']} - it's a pack of {pack_size}!", Colors.RED))
+                print("The infected animals begin to circle you, coordinating their attack.")
+                
+                # Increase difficulty for pack animals
+                animal["damage"] = int(animal["damage"] * 1.2)
+                animal["health"] = int(animal["health"] * pack_size * 0.7)  # Not full multiplier to keep it balanced
+                animal["pack_attack"] = True
+            
+            # Special case for ambush predators
+            if animal.get("ambush", False) and random.random() < 0.7:
+                print(Colors.colorize(f"The {animal['name']} lunges at you before you can react!", Colors.RED))
+                # Ambush gives them a first attack
+                damage = int(animal["damage"] * 0.7)  # Reduced first strike
+                self.player["health"] -= damage
+                print(Colors.colorize(f"You take {damage} damage from the surprise attack!", Colors.RED))
+            
+            # Start combat
+            self.current_zombie = animal  # Reuse combat system
+            self.start_combat()
+            return True
+        
+        return False
 
 # Start the game if run directly
 if __name__ == "__main__":
-
-    launched_from_launcher = os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1"
-    launcher_active = os.environ.get("LAUNCHER_ACTIVE") == "1"
-
-    if launched_from_launcher or launcher_active:
-        game = GameState()
-        game.start_game()
-    else:
-        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
-        input(f"{Fore.CYAN}Press Enter to exit...{Style.RESET_ALL}")
-        sys.exit(0)
+    
+if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
+    game = GameState()
+    game.start_game()
+else:
+    print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
+    print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
+    input("Press Enter to exit...")
+    game = GameState()
+    game.start_game()
