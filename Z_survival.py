@@ -8841,5 +8841,3 @@ else:
     print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
     print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
     input("Press Enter to exit...")
-    game = GameState()
-    game.start_game()
