@@ -15,7 +15,6 @@ import json
 import math
 import sys
 from datetime import datetime
-from typing import Dict, List, Optional, Union
 from colorama import init, Fore, Style
 
 # Initialize colorama for cross-platform colored terminal output
@@ -8785,25 +8784,24 @@ class GameState:
                     self.player["equipped_weapon"] = None
                 return True  # Weapon is broken
         return False  # Weapon is not broken
-        
+
     def _apply_stamina_effects(self, hardcore_mode, stamina_percent, damage):
         """Handle stamina and exhaustion effects in combat.
-        
+
         Args:
             hardcore_mode (bool): Whether hardcore mode is enabled
             stamina_percent (float): Current stamina percentage
             damage (int): Base damage value
-            
+
         Returns:
             tuple: (stamina_penalty, damage_reduction)
         """
         stamina_penalty = 0
         damage_reduction = 0
-        
+
         if hardcore_mode and stamina_percent < 0.3:
             stamina_penalty = 0.2  # 20% penalty to hit chance when exhausted
             damage_reduction = 0.3  # 30% reduction to damage when exhausted
-            
             print(
                 Colors.colorize(
                     "\n⚠️ You're exhausted! Your attacks are less effective.",
@@ -8820,23 +8818,21 @@ class GameState:
                 # Update exhaustion level in hardcore mode
                 current_exhaustion = self.player.get("exhaustion", 0)
                 self.player["exhaustion"] = min(100, current_exhaustion + 5)
-                
+
         return stamina_penalty, damage_reduction
-        
     def _apply_mental_stress_effects(self, hardcore_mode):
         """Handle mental stress effects in combat.
-        
+
         Args:
             hardcore_mode (bool): Whether hardcore mode is enabled
-            
+
         Returns:
             float: Penalty to hit chance from mental stress
         """
         insanity_penalty = 0
-        
+
         if not hardcore_mode or not self.player or not isinstance(self.player, dict):
             return insanity_penalty
-            
         if self.player.get("insanity", 0) > 50:
             insanity_penalty = 0.1  # 10% additional penalty when mentally stressed
             print(
@@ -8875,35 +8871,33 @@ class GameState:
                         f"\n  {random.choice(hallucinations)}", Colors.MAGENTA
                     )
                 )
-                
+
         return insanity_penalty
-        
+
     def _handle_chain_lightning_effect(self, weapon, enemy_name):
         """Handle chain lightning effect from Pulse Gauntlet.
-        
+
         Args:
             weapon (dict): Weapon data
             enemy_name (str): Name of primary enemy
         """
         if not hasattr(self, "nearby_enemies") or not isinstance(self.nearby_enemies, list):
             return
-            
+
         # Get chain targets with safety
         chain_targets = min(weapon.get("chain_targets", 3), len(self.nearby_enemies))
         if chain_targets <= 0:
             return
-            
         # Calculate damage with safety
         base_damage = weapon.get("damage", 10)
         chain_damage = int(base_damage * 0.6)  # 60% damage to chained targets
-        
+
         # Safe weapon name access
         weapon_name = weapon.get("name", "weapon")
         print(Colors.colorize(
             f"Electricity arcs from your {weapon_name}, chaining to {chain_targets} nearby enemies!",
             Colors.YELLOW
         ))
-        
         for i in range(chain_targets):
             if i < len(self.nearby_enemies):
                 target = self.nearby_enemies[i]
@@ -8914,10 +8908,10 @@ class GameState:
                         f"  → Chain lightning strikes a {target_name} for {chain_damage} damage!",
                         Colors.YELLOW
                     ))
-                    
+
     def _handle_acid_effect(self, weapon, enemy, enemy_name, weapon_name):
         """Handle acid effect from Chemical Thrower.
-        
+
         Args:
             weapon (dict): Weapon data
             enemy (dict): Enemy data
@@ -8927,25 +8921,24 @@ class GameState:
         # Initialize status_effects if needed
         if "status_effects" not in enemy:
             enemy["status_effects"] = {}
-        
+
         # Get damage over time values with defaults
         dot_damage = weapon.get("dot_damage", 5)
         dot_duration = weapon.get("dot_duration", 3)
-        
+
         # Apply the status effect
         enemy["status_effects"]["acid"] = {
             "damage": dot_damage,
             "turns": dot_duration
         }
-        
+
         print(Colors.colorize(
             f"Corrosive chemicals from your {weapon_name} begin eating through the {enemy_name}'s flesh!",
             Colors.GREEN
         ))
-        
     def _handle_area_effect_weapon(self, weapon, weapon_id, enemy, enemy_type, damage, weakness_bonus):
         """Handle area effect weapons like Molotov cocktails and flamethrowers.
-        
+
         Args:
             weapon (dict): Weapon data
             weapon_id (str): Weapon identifier
@@ -8956,10 +8949,10 @@ class GameState:
         """
         if not enemy or not isinstance(enemy, dict):
             return
-            
+
         weapon_name = weapon.get("name", "weapon") if weapon and isinstance(weapon, dict) else "weapon"
         enemy_name = enemy.get("name", "enemy")
-        
+
         # Display appropriate message based on weapon and enemy type
         if weapon_id == "flamethrower":
             print(Colors.colorize(f"You unleash a stream of fire from your {weapon_name}!", Colors.YELLOW))
@@ -8970,7 +8963,6 @@ class GameState:
                 print(Colors.colorize(f"You throw the {weapon_name} at the {enemy_name}!", Colors.YELLOW))
             else:
                 print(Colors.colorize(f"You throw the {weapon_name} at the survivor!", Colors.YELLOW))
-                
         print(Colors.colorize("The area erupts in flames!", Colors.RED))
 
         # Deal damage to primary enemy (with possible weakness bonus)
@@ -8981,13 +8973,13 @@ class GameState:
         # Different effects based on enemy type
         if enemy_type == "zombie":
             self._handle_area_zombie_effects(enemy, damage)
-                
+            
         elif enemy_type == "animal":
             # Animals may panic when on fire
             if random.random() < 0.7:
                 print(Colors.colorize(f"The {enemy_name} panics in the flames!", Colors.YELLOW))
                 enemy["skip_turn"] = True
-                
+            
         elif enemy_type == "survivor":
             # Survivors might try to put the fire out
             if random.random() < 0.5:
@@ -9018,7 +9010,7 @@ class GameState:
 
         # Skip to enemy's attack
         print(Colors.colorize("\nThe flames die down...", Colors.YELLOW))
-            
+        
     def _handle_area_zombie_effects(self, enemy, damage):
         """Handle area effects specifically for zombie enemies.
         
@@ -9028,7 +9020,6 @@ class GameState:
         """
         if not enemy or not isinstance(enemy, dict):
             return
-            
         # Extra effective against bloaters
         enemy_subtype = enemy.get("type", "walker")
         if enemy_subtype == "bloater" and random.random() < 0.6:
@@ -9060,7 +9051,7 @@ class GameState:
         # Safely check required data
         if not enemy or not weapon or not isinstance(enemy, dict) or not isinstance(weapon, dict):
             return weakness_bonus
-            
+        
         weapon_type = weapon.get("type", "melee")
         
         if enemy_type == "zombie":
@@ -9070,57 +9061,54 @@ class GameState:
             # Fire weapons effective against all zombies
             if weapon_type == "fire":
                 weakness_bonus = 1.5
-                
             # Blade weapons extra effective against walkers
             if zombie_type == "walker" and weapon_type == "blade":
                 weakness_bonus = 1.3
-                
+            
             # Blunt weapons effective against crawlers
             elif zombie_type == "crawler" and weapon_type == "blunt":
                 weakness_bonus = 1.4
-                
+            
             # Ranged weapons effective against spitters
             elif zombie_type == "spitter" and weapon_type == "ranged":
                 weakness_bonus = 1.5
-                
+            
             # Explosives effective against bloaters
             elif zombie_type == "bloater" and weapon_type == "explosive":
                 weakness_bonus = 2.0
-                
+            
         elif enemy_type == "animal":
             # Animal weaknesses based on size
             animal_size = enemy.get("size", "medium")
-            
             # Ranged weapons more effective against large animals
             if animal_size == "large" and weapon_type == "ranged":
                 weakness_bonus = 1.3
-                
+            
             # Blade weapons more effective against medium animals
             elif animal_size == "medium" and weapon_type == "blade":
                 weakness_bonus = 1.4
-                
+            
             # Small animals weak to blunt weapons
             elif animal_size == "small" and weapon_type == "blunt":
                 weakness_bonus = 1.5
-                
+            
         elif enemy_type == "survivor":
             # Survivor weaknesses
             armor_type = enemy.get("armor", "none")
-            
             # Blunt weapons effective against light armor
             if armor_type == "light" and weapon_type == "blunt":
                 weakness_bonus = 1.2
-                
+            
             # Ranged weapons effective against unarmored
             elif armor_type == "none" and weapon_type == "ranged":
                 weakness_bonus = 1.3
-                
+            
             # Explosives effective against heavy armor
             elif armor_type == "heavy" and weapon_type == "explosive":
                 weakness_bonus = 1.5
-                
+            
         return weakness_bonus
-        
+    
     def _handle_special_effect_weapon(self, weapon, enemy, enemy_type):
         """Handle special effect weapons and their unique abilities.
         
@@ -9128,22 +9116,21 @@ class GameState:
             weapon (dict): Weapon data
             enemy (dict): Enemy data
             enemy_type (str): Type of enemy (zombie, animal, survivor)
-            
+        
         Returns:
             bool: True if normal attack should be skipped, False otherwise
         """
         # Safety checks
         if not weapon or not enemy or not isinstance(weapon, dict) or not isinstance(enemy, dict):
             return False
-            
+        
         special_effect = weapon.get("special_effect")
         if not special_effect:
             return False
-            
+        
         # Get safe names
         weapon_name = weapon.get("name", "weapon")
         enemy_name = enemy.get("name", "enemy")
-        
         # Handle special weapons with unique effects
         if special_effect == "emp" and enemy_type == "survivor":
             # EMP weapons disable survivor electronics
@@ -9254,24 +9241,34 @@ class GameState:
         
         # Handle special effect weapons (like experimental weapons)
         skip_normal_attack = False
-        if weapon and isinstance(weapon, dict) and "special_effect" in weapon:
+        if weapon and isinstance(weapon, dict) and weapon.get("special_effect") is not None:
             skip_normal_attack = self._handle_special_effect_weapon(weapon, enemy, enemy_type)
         
         # Handle area effect weapons
         if not skip_normal_attack and isinstance(weapon, dict):
             # Safely determine weapon_id
             weapon_id = self.player.get("equipped_weapon") if isinstance(self.player, dict) else None
-            
+
             if (weapon_id in ["molotov", "flamethrower"]) or weapon.get("area_effect", False):
-                self._handle_area_effect_weapon(weapon, weapon_id, enemy, enemy_type, damage, weakness_bonus)
+                self._handle_area_effect_weapon(
+                    weapon, weapon_id, enemy, enemy_type, damage, weakness_bonus
+                )
                 return  # Area effect weapons end the attack function after their effect
-                
+
         # Calculate and execute normal attack
-        self._execute_normal_attack(enemy, enemy_type, weapon, damage, weakness_bonus, stamina_penalty, insanity_penalty, companion_damage_bonus, hardcore_mode, stamina_percent)
-        
-    def _execute_normal_attack(self, enemy, enemy_type, weapon, damage, weakness_bonus, stamina_penalty, insanity_penalty, companion_damage_bonus, hardcore_mode=False, stamina_percent=1.0):
+        self._execute_normal_attack(
+            enemy, enemy_type, weapon, damage, weakness_bonus,
+            stamina_penalty, insanity_penalty, companion_damage_bonus,
+            hardcore_mode, stamina_percent
+        )
+
+    def _execute_normal_attack(
+        self, enemy, enemy_type, weapon, damage, weakness_bonus,
+        stamina_penalty, insanity_penalty, companion_damage_bonus,
+        hardcore_mode=False, stamina_percent=1.0
+    ):
         """Execute a normal attack against the enemy.
-        
+
         Args:
             enemy (dict): Enemy data
             enemy_type (str): Type of enemy
@@ -9286,10 +9283,9 @@ class GameState:
         """
         if not enemy or not isinstance(enemy, dict):
             return
-            
+
         # Get enemy name safely
         enemy_name = enemy.get("name", "enemy")
-        
         # Ensure weapon has name with fallback
         weapon_name = "weapon"
         if weapon and isinstance(weapon, dict):
@@ -9301,25 +9297,19 @@ class GameState:
                 if "status_effects" not in enemy:
                     enemy["status_effects"] = {}
                 enemy["status_effects"]["stunned"] = 2  # Stun for 2 turns
-                print(
-                    Colors.colorize(
-                        f"Your {weapon_name} emits a concentrated sonic burst, stunning the {enemy_name}!",
-                        Colors.CYAN
-                    )
-                )
-            
+                print(Colors.colorize(
+                    f"Your {weapon_name} emits a concentrated sonic burst, "
+                    f"stunning the {enemy_name}!", Colors.CYAN))
+
             # Cryo Rifle freeze effect
             elif special_effect == "freeze":
                 if "status_effects" not in enemy:
                     enemy["status_effects"] = {}
                 enemy["status_effects"]["frozen"] = 3  # Freeze for 3 turns
                 # Apply immediate damage plus slow effect
-                print(
-                    Colors.colorize(
-                        f"Your {weapon_name} freezes the {enemy_name}, severely limiting its mobility!",
-                        Colors.BLUE
-                    )
-                )
+                print(Colors.colorize(
+                    f"Your {weapon_name} freezes the {enemy_name}, "
+                    f"severely limiting its mobility!", Colors.BLUE))
 
             # Pulse Gauntlet chain lightning effect (with null safety)
             elif special_effect == "chain_lightning" and isinstance(weapon, dict):
@@ -9353,7 +9343,8 @@ class GameState:
                         weapon_name = weapon.get("name", "weapon")
                         print(
                             Colors.colorize(
-                                f"Your {weapon_name} is extremely effective against this type of zombie!",
+                                f"Your {weapon_name} is extremely effective "
+                                f"against this type of zombie!",
                                 Colors.GREEN,
                             )
                         )
@@ -9384,10 +9375,12 @@ class GameState:
                             animal_type in ["rat", "crow"]
                             and weapon_damage_type == "blunt"
                         ):
-                            weakness_bonus = 0.7  # Blunt weapons less effective against small, quick animals
+                            # Blunt weapons less effective against small, quick animals
+                            weakness_bonus = 0.7
                             print(
                                 Colors.colorize(
-                                    f"The {animal_type} is too quick for your {weapon_name} to hit solidly!",
+                                    f"The {animal_type} is too quick for your "
+                                    f"{weapon_name} to hit solidly!",
                                     Colors.YELLOW,
                                 )
                             )
@@ -9456,24 +9449,18 @@ class GameState:
                         else "enemy"
                     )
 
-                    print(
-                        Colors.colorize(
-                            f"The {weapon_name} emits a concentrated sonic pulse that disrupts {enemy_name}'s neurology!",
-                            Colors.CYAN,
-                        )
-                    )
+                    print(Colors.colorize(
+                        f"The {weapon_name} emits a concentrated sonic pulse that "
+                        f"disrupts {enemy_name}'s neurology!", Colors.CYAN))
 
                     # Only add status effect if enemy is a valid dict
                     if isinstance(enemy, dict):
                         if "status_effects" not in enemy:
                             enemy["status_effects"] = {}
                         enemy["status_effects"]["stunned"] = 2  # Stunned for 2 turns
-                        print(
-                            Colors.colorize(
-                                f"{enemy_name} is stunned and will miss its next attack!",
-                                Colors.GREEN,
-                            )
-                        )
+                        print(Colors.colorize(
+                            f"{enemy_name} is stunned and will miss its next attack!",
+                            Colors.GREEN))
 
                 elif special_effect == "freeze" and enemy is not None:
                     # Safe access to weapon and enemy properties
@@ -9486,7 +9473,8 @@ class GameState:
 
                     print(
                         Colors.colorize(
-                            f"The {weapon_name} coats {enemy_name} in a rapidly expanding cryo-compound!",
+                            f"The {weapon_name} coats {enemy_name} in a rapidly "
+                            f"expanding cryo-compound!",
                             Colors.CYAN,
                         )
                     )
@@ -9496,12 +9484,9 @@ class GameState:
                         if "status_effects" not in enemy:
                             enemy["status_effects"] = {}
                         enemy["status_effects"]["frozen"] = 3  # Frozen for 3 turns
-                        print(
-                            Colors.colorize(
-                                f"{enemy_name}'s movement is severely restricted by ice formation!",
-                                Colors.BLUE,
-                            )
-                        )
+                        print(Colors.colorize(
+                            f"{enemy_name}'s movement is severely restricted by ice formation!",
+                            Colors.BLUE))
 
                 elif special_effect == "chain_lightning" and isinstance(weapon, dict):
                     # Safe access to experimental weapon properties with complete null safety
@@ -9528,18 +9513,12 @@ class GameState:
                         # Safe access to weapon name
                         weapon_name = weapon.get("name", "weapon")
 
-                        print(
-                            Colors.colorize(
-                                f"Electrical current from the {weapon_name} arcs to nearby threats!",
-                                Colors.CYAN,
-                            )
-                        )
-                        print(
-                            Colors.colorize(
-                                f"The chain lightning causes {chain_damage} additional damage!",
-                                Colors.YELLOW,
-                            )
-                        )
+                        print(Colors.colorize(
+                            f"Electrical current from the {weapon_name} arcs to nearby threats!",
+                            Colors.CYAN))
+                        print(Colors.colorize(
+                            f"The chain lightning causes {chain_damage} additional damage!",
+                            Colors.YELLOW))
 
                         # In real combat, this would hit multiple enemies, but in single-target we just add damage
                         if "damage" in locals():
