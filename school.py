@@ -2,6 +2,7 @@ import random
 import time
 import json
 import os
+import sys
 import platform
 import re
 from datetime import datetime, timedelta
@@ -14,7 +15,7 @@ os.environ["TERM"] = os.environ.get("TERM", "xterm-256color")  # Set terminal ty
 if platform.system() == "Windows":
     init(autoreset=True, convert=True)
 else:
-    init(autoreset=False, strip=False) 
+    init(autoreset=False, strip=False)  # Don't auto-reset for better color control
 
 # Game Settings
 game_settings = {
@@ -31,47 +32,56 @@ game_settings = {
 }
 
 # Character Name Lists
-male_first_names = [
-    "Haruki", "Kenji", "Akira", "Daichi", "Ryo", "Kenta", "Sora", "Yuki", "Takeshi", "Hiroshi", 
-    "Kazuki", "Haru", "Takumi", "Hayato", "Tsubasa", "Kaito", "Haruto", "Minato", "Ren", "Sota", 
-    "Yuto", "Yusei", "Shota", "Jin", "Tatsuya", "Kosei", "Ryota", "Eiji", "Yuji", "Naoki", 
-    "Kazuya", "Shinichi", "Taro", "Takuya", "Shota", "Kohei", "Shun", "Daisuke", "Yuma", "Kosuke"
-]
+name_data = {
+    "japanese": {
+        "male": [
+            "Haruki", "Kenji", "Akira", "Daichi", "Ryo", "Kenta", "Sora", "Yuki", "Takeshi", "Hiroshi",
+            "Kazuki", "Haru", "Takumi", "Hayato", "Tsubasa", "Kaito", "Haruto", "Minato", "Ren", "Sota",
+            "Yuto", "Yusei", "Shota", "Jin", "Tatsuya", "Kosei", "Ryota", "Eiji", "Yuji", "Naoki",
+            "Kazuya", "Shinichi", "Taro", "Takuya", "Kohei", "Shun", "Daisuke", "Yuma", "Kosuke", "Riku",
+            "Masaki", "Sho", "Makoto", "Itsuki", "Natsuki", "Ryohei", "Seiji", "Masaru", "Manabu", "Nobu",
+            "Hikaru", "Taichi", "Arata", "Shohei", "Kenshin", "Souta", "Yudai", "Tetsuya", "Atsushi", "Kiyoshi"
+        ],
+        "female": [
+            "Emi", "Mika", "Yuna", "Kaori", "Hana", "Sakura", "Rei", "Yuki", "Aiko", "Midori",
+            "Yui", "Hinata", "Haruka", "Aoi", "Akane", "Misaki", "Nao", "Ayaka", "Nanami", "Rin",
+            "Mio", "Saki", "Karin", "Ai", "Kokoro", "Miyu", "Hina", "Ichika", "Mai", "Kotone",
+            "Risa", "Ayane", "Kana", "Yuka", "Reina", "Maya", "Momoka", "Yuzuki", "Sumire", "Chihiro",
+            "Nozomi", "Sayaka", "Asuka", "Megumi", "Tomoyo", "Noriko", "Yuriko", "Eri", "Satomi", "Riko",
+            "Fumika", "Yurina", "Airi", "Tsumugi", "Ririka", "Mizuki", "Ayumi", "Kasumi", "Nao", "Yume"
+        ],
+        "last": [
+            "Takahashi", "Yamamoto", "Kobayashi", "Tanaka", "Sasaki", "Fujimoto", "Hoshino", "Shimizu",
+            "Nakamura", "Suzuki", "Sato", "Kato", "Ito", "Watanabe", "Yamada", "Matsumoto", "Inoue",
+            "Kimura", "Hayashi", "Saito", "Yamaguchi", "Nakajima", "Matsui", "Ikeda", "Yoshida",
+            "Yamashita", "Yamazaki", "Ogawa", "Ishikawa", "Maeda", "Hasegawa", "Murata", "Kojima",
+            "Fujita", "Abe", "Okamoto", "Kondo", "Imai", "Tsunoda", "Shibata", "Kaneko", "Ueda", "Kurata"
+        ]
+    },
+    "international": {
+        "male": [
+            "Li", "Wei", "Chen", "Ming", "John", "Michael", "William", "David", "James",
+            "Raj", "Arun", "Vikram", "Carlos", "Miguel", "Ahmed", "Mohammad", "Omar",
+            "Daniel", "Lucas", "Noah", "Oliver", "Leon", "Mateo", "Luis", "Tariq", "Zayd",
+            "Isaac", "Elijah", "Amir", "Alex", "Ethan", "Yusuf", "Ibrahim"
+        ],
+        "female": [
+            "Jing", "Emma", "Olivia", "Priya", "Divya", "Maria", "Ana", "Sofia", "Fatima", "Aisha",
+            "Emily", "Luna", "Zara", "Maya", "Isabella", "Amira", "Chloe", "Lea", "Aria", "Nina",
+            "Elsa", "Nora", "Lara", "Hana", "Grace", "Tara", "Lucia", "Ines", "Layla", "Freya"
+        ],
+        "last": [
+            "Wang", "Zhang", "Liu", "Chen", "Yang", "Kim", "Lee", "Park", "Choi", "Kang",
+            "Smith", "Johnson", "Brown", "Williams", "Jones", "Patel", "Sharma", "Singh", "Kumar", "Shah",
+            "Rodriguez", "Garcia", "Martinez", "Gonzalez", "Lopez", "Ali", "Hassan", "Khan", "Ahmed", "Mahmoud",
+            "Nguyen", "Tran", "Silva", "Fernandez", "Torres", "Moreno", "Díaz", "Costa", "Rossi", "Greco"
+        ]
+    }
+}
 
-female_first_names = [
-    "Emi", "Mika", "Yuna", "Kaori", "Hana", "Sakura", "Rei", "Yuki", "Aiko", "Midori", 
-    "Yui", "Hinata", "Haruka", "Aoi", "Akane", "Misaki", "Nao", "Ayaka", "Nanami", "Rin", 
-    "Mio", "Saki", "Karin", "Ai", "Yuna", "Kokoro", "Miyu", "Hina", "Sora", "Ichika", 
-    "Mai", "Kotone", "Risa", "Ayane", "Kana", "Yuka", "Reina", "Maya", "Momoka", "Yuzuki"
-]
 
-last_names = [
-    "Takahashi", "Yamamoto", "Kobayashi", "Tanaka", "Sasaki", "Fujimoto", "Hoshino", "Shimizu", 
-    "Nakamura", "Suzuki", "Sato", "Kato", "Ito", "Watanabe", "Yamada", "Matsumoto", "Inoue", 
-    "Kimura", "Hayashi", "Saito", "Yamaguchi", "Nakajima", "Matsui", "Ikeda", "Yoshida", 
-    "Yamashita", "Sasaki", "Yamazaki", "Ogawa", "Ishikawa", "Maeda", "Hasegawa", "Murata", 
-    "Kobayashi", "Kojima", "Kondo", "Ishii", "Abe", "Harada", "Fujita", "Aoki", "Hashimoto", 
-    "Okada", "Sakamoto", "Mori", "Endo", "Fukuda", "Goto", "Nishimura", "Takagi"
-]
-
-# More diverse international student names
-international_first_names = [
-    "Li", "Wei", "Chen", "Ming", "Jing",  # Chinese
-    "Kim", "Park", "Lee", "Choi", "Jung",  # Korean
-    "John", "Emma", "Michael", "Olivia", "William",  # Western
-    "Raj", "Priya", "Arun", "Divya", "Vikram",  # Indian
-    "Maria", "Carlos", "Ana", "Miguel", "Sofia",  # Latino
-    "Ahmed", "Fatima", "Mohammad", "Aisha", "Omar"  # Middle Eastern
-]
-
-international_last_names = [
-    "Wang", "Zhang", "Liu", "Chen", "Yang",  # Chinese
-    "Kim", "Lee", "Park", "Choi", "Kang",  # Korean
-    "Smith", "Johnson", "Brown", "Williams", "Jones",  # Western
-    "Patel", "Sharma", "Singh", "Kumar", "Shah",  # Indian
-    "Rodriguez", "Garcia", "Martinez", "Gonzalez", "Lopez",  # Latino
-    "Ali", "Hassan", "Khan", "Ahmed", "Mahmoud"  # Middle Eastern
-]
+# Remove access aliases - we'll access name_data directly
+# This comment preserved to document the change for future reference
 
 # School Staff and Special NPCs
 school_staff = [
@@ -90,37 +100,16 @@ club_presidents = [
 
 # Function to manage game settings
 def settings_menu():
-    # No need for global statement since we're only reading game_settings
     while True:
-        print("\n{0}===== GAME SETTINGS ====={1}".format(Fore.CYAN, Style.RESET_ALL))
-        print("{0}1. Content Settings{1}".format(Fore.YELLOW, Style.RESET_ALL))
-        print(
-            "{0}2. Game Difficulty:{1} {2}".format(
-                Fore.GREEN, Style.RESET_ALL, game_settings["difficulty"].capitalize()
-            )
-        )
-        print(
-            "{0}3. Text Speed:{1} {2}".format(
-                Fore.BLUE, Style.RESET_ALL, game_settings["text_speed"].capitalize()
-            )
-        )
-        print(
-            "{0}4. Enable Cheats:{1} {2}".format(
-                Fore.MAGENTA,
-                Style.RESET_ALL,
-                "Yes" if game_settings["enable_cheats"] else "No",
-            )
-        )
-        print(
-            "{0}5. Show Tutorial:{1} {2}".format(
-                Fore.CYAN,
-                Style.RESET_ALL,
-                "Yes" if game_settings.get("show_tutorial", True) else "No",
-            )
-        )
-        print("{0}6. Save Settings{1}".format(Fore.GREEN, Style.RESET_ALL))
-        print("{0}7. Reset Settings to Default{1}".format(Fore.RED, Style.RESET_ALL))
-        print("{0}8. Return to Main Menu{1}".format(Fore.YELLOW, Style.RESET_ALL))
+        print(f"\n{Fore.CYAN}===== GAME SETTINGS ====={Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}1. Content Settings{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}2. Game Difficulty:{Style.RESET_ALL} {game_settings['difficulty'].capitalize()}")
+        print(f"{Fore.BLUE}3. Text Speed:{Style.RESET_ALL} {game_settings['text_speed'].capitalize()}")
+        print(f"{Fore.MAGENTA}4. Enable Cheats:{Style.RESET_ALL} {'Yes' if game_settings['enable_cheats'] else 'No'}")
+        print(f"{Fore.CYAN}5. Show Tutorial:{Style.RESET_ALL} {'Yes' if game_settings.get('show_tutorial', True) else 'No'}")
+        print(f"{Fore.GREEN}6. Save Settings{Style.RESET_ALL}")
+        print(f"{Fore.RED}7. Reset Settings to Default{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}8. Return to Main Menu{Style.RESET_ALL}")
 
         choice = input("\nSelect an option (1-8): ")
 
@@ -132,20 +121,10 @@ def settings_menu():
             toggle_setting("text_speed", ["slow", "normal", "fast"])
         elif choice == "4":
             game_settings["enable_cheats"] = not game_settings["enable_cheats"]
-            print(
-                "Cheats {0}.".format(
-                    "enabled" if game_settings["enable_cheats"] else "disabled"
-                )
-            )
+            print(f"Cheats {'enabled' if game_settings['enable_cheats'] else 'disabled'}.")
         elif choice == "5":
-            game_settings["show_tutorial"] = not game_settings.get(
-                "show_tutorial", True
-            )
-            print(
-                "Tutorial hints {0}.".format(
-                    "enabled" if game_settings["show_tutorial"] else "disabled"
-                )
-            )
+            game_settings["show_tutorial"] = not game_settings.get("show_tutorial", True)
+            print(f"Tutorial hints {'enabled' if game_settings['show_tutorial'] else 'disabled'}.")
         elif choice == "6":
             save_settings()
             print("Settings saved successfully!")
@@ -991,6 +970,122 @@ CLOTHING_ITEMS = {
         "charisma": 15,
         "reputation_boost": 5,
     },
+    
+    # Cosplay Outfits
+    "Anime Hero Cosplay": {
+        "description": "A detailed costume of a popular anime hero with spiky hair",
+        "price": 8500,
+        "type": "cosplay",
+        "appropriate_for": ["anime club", "convention", "cosplay event", "cultural festival"],
+        "charisma": 12,
+        "confidence_boost": 10,
+    },
+    "Magical Girl Cosplay": {
+        "description": "Frilly dress with magical accessories and a wand",
+        "price": 7800,
+        "type": "cosplay",
+        "appropriate_for": ["anime club", "convention", "cosplay event", "cultural festival"],
+        "charisma": 11,
+        "special_effect": "Chance to dazzle others with 'magical' performances",
+    },
+    "Fantasy Knight Cosplay": {
+        "description": "Medieval knight armor with a decorative sword and shield",
+        "price": 9500,
+        "type": "cosplay",
+        "appropriate_for": ["cosplay event", "convention", "cultural festival", "theater club"],
+        "charisma": 10,
+        "courage_boost": 15,
+    },
+    "Space Explorer Cosplay": {
+        "description": "Futuristic space suit with glowing accents and helmet",
+        "price": 10000,
+        "type": "cosplay",
+        "appropriate_for": ["cosplay event", "convention", "science fiction club"],
+        "charisma": 12,
+        "knowledge_boost": 5,
+    },
+    "Traditional Maid Costume": {
+        "description": "Classic black and white maid uniform with frilly apron",
+        "price": 6500,
+        "type": "cosplay",
+        "appropriate_for": ["maid cafe", "cultural festival", "cosplay event"],
+        "charisma": 8,
+        "service_boost": 10,
+    },
+    "Ninja Cosplay": {
+        "description": "Stealthy all-black outfit with face mask and toy throwing stars",
+        "price": 7200,
+        "type": "cosplay",
+        "appropriate_for": ["cosplay event", "convention", "cultural festival"],
+        "charisma": 9,
+        "stealth_boost": 15,
+    },
+    
+    # Additional Fashion Styles
+    "Harajuku Street Fashion": {
+        "description": "Bold, colorful outfit with mixed patterns and unique accessories",
+        "price": 8500,
+        "type": "fashion",
+        "appropriate_for": ["free time", "weekend", "shopping", "Harajuku district"],
+        "charisma": 13,
+        "creativity_boost": 10,
+    },
+    "Lolita Style Outfit": {
+        "description": "Elegant Victorian-inspired dress with lace and frills",
+        "price": 9200,
+        "type": "fashion",
+        "appropriate_for": ["tea party", "shopping", "special event"],
+        "charisma": 12,
+        "elegance_boost": 15,
+    },
+    "Punk Rock Style": {
+        "description": "Edgy outfit with leather, studs, and chains",
+        "price": 7500,
+        "type": "fashion",
+        "appropriate_for": ["concert", "music club", "weekend"],
+        "charisma": 10,
+        "rebellion_boost": 15,
+    },
+    "Preppy Academy Look": {
+        "description": "Clean-cut outfit with blazer, tie, and polished shoes",
+        "price": 6800,
+        "type": "fashion",
+        "appropriate_for": ["school event", "debate club", "student council"],
+        "charisma": 9,
+        "academic_boost": 10,
+    },
+    "Streetwear Collection": {
+        "description": "Urban style with brand logos, sneakers, and casual comfort",
+        "price": 8000,
+        "type": "fashion",
+        "appropriate_for": ["free time", "weekend", "shopping", "hangout"],
+        "charisma": 11,
+        "urban_cred_boost": 10,
+    },
+    "Traditional Yukata": {
+        "description": "Lightweight cotton kimono for summer festivals",
+        "price": 9000,
+        "type": "traditional",
+        "appropriate_for": ["summer festival", "fireworks viewing", "traditional event"],
+        "charisma": 14,
+        "cultural_appreciation_boost": 15,
+    },
+    "Goth Style Outfit": {
+        "description": "Dark Victorian-inspired clothing with mysterious accessories",
+        "price": 8800,
+        "type": "fashion",
+        "appropriate_for": ["free time", "weekend", "shopping", "concert"],
+        "charisma": 11,
+        "mystery_boost": 10,
+    },
+    "Business Casual Attire": {
+        "description": "Professional yet comfortable outfit for internships",
+        "price": 7500,
+        "type": "work",
+        "appropriate_for": ["internship", "job interview", "office"],
+        "charisma": 8,
+        "professionalism_boost": 15,
+    },
 }
 
 # Locations where clothing can be changed
@@ -1156,6 +1251,118 @@ def apply_clothing_effects(clothing_name, apply=True):
         player["reputation"]["students"] = max(
             0, min(100, player["reputation"]["students"] + rep_boost)
         )
+        
+    # New effects for cosplay outfits
+    if "confidence_boost" in clothing:
+        modifier = 1 if apply else -1
+        confidence_boost = clothing["confidence_boost"] * modifier
+        # Create confidence stat if it doesn't exist
+        if "confidence" not in player:
+            player["confidence"] = 50
+        player["confidence"] = max(0, min(100, player["confidence"] + confidence_boost))
+        
+    if "courage_boost" in clothing:
+        modifier = 1 if apply else -1
+        courage_boost = clothing["courage_boost"] * modifier
+        # Create courage stat if it doesn't exist
+        if "courage" not in player:
+            player["courage"] = 50
+        player["courage"] = max(0, min(100, player["courage"] + courage_boost))
+        
+    if "knowledge_boost" in clothing:
+        modifier = 1 if apply else -1
+        knowledge_boost = clothing["knowledge_boost"] * modifier
+        # Apply to academics
+        if "academics" in player:
+            for subject in player["academics"]:
+                player["academics"][subject]["skill"] = max(
+                    0, min(100, player["academics"][subject]["skill"] + knowledge_boost)
+                )
+                
+    if "service_boost" in clothing:
+        modifier = 1 if apply else -1
+        service_boost = clothing["service_boost"] * modifier
+        # Apply to work stats if they exist
+        if "part_time_jobs" in player and "cafe" in player["part_time_jobs"]:
+            player["part_time_jobs"]["cafe"]["skill"] = max(
+                0, min(100, player["part_time_jobs"]["cafe"]["skill"] + service_boost)
+            )
+            
+    if "stealth_boost" in clothing:
+        modifier = 1 if apply else -1
+        stealth_boost = clothing["stealth_boost"] * modifier
+        # Create stealth stat if it doesn't exist
+        if "stealth" not in player:
+            player["stealth"] = 50
+        player["stealth"] = max(0, min(100, player["stealth"] + stealth_boost))
+        
+    # New effects for fashion styles
+    if "creativity_boost" in clothing:
+        modifier = 1 if apply else -1
+        creativity_boost = clothing["creativity_boost"] * modifier
+        # Apply to art club or creative skills if they exist
+        if "clubs" in player and "Art Club" in player["clubs"]:
+            player["clubs"]["Art Club"]["skill"] = max(
+                0, min(100, player["clubs"]["Art Club"]["skill"] + creativity_boost)
+            )
+            
+    if "elegance_boost" in clothing:
+        modifier = 1 if apply else -1
+        elegance_boost = clothing["elegance_boost"] * modifier
+        # Apply to social charisma
+        player["charisma"]["social"] = max(
+            0, min(100, player["charisma"]["social"] + elegance_boost)
+        )
+        
+    if "rebellion_boost" in clothing:
+        modifier = 1 if apply else -1
+        rebellion_boost = clothing["rebellion_boost"] * modifier
+        # Create rebellion stat if it doesn't exist
+        if "rebellion" not in player:
+            player["rebellion"] = 50
+        player["rebellion"] = max(0, min(100, player["rebellion"] + rebellion_boost))
+        
+    if "academic_boost" in clothing:
+        modifier = 1 if apply else -1
+        academic_boost = clothing["academic_boost"] * modifier
+        # Apply to academics
+        if "academics" in player:
+            for subject in player["academics"]:
+                player["academics"][subject]["skill"] = max(
+                    0, min(100, player["academics"][subject]["skill"] + academic_boost)
+                )
+                
+    if "urban_cred_boost" in clothing:
+        modifier = 1 if apply else -1
+        urban_cred_boost = clothing["urban_cred_boost"] * modifier
+        # Apply to street reputation
+        if "street_cred" not in player:
+            player["street_cred"] = 50
+        player["street_cred"] = max(0, min(100, player["street_cred"] + urban_cred_boost))
+        
+    if "cultural_appreciation_boost" in clothing:
+        modifier = 1 if apply else -1
+        cultural_boost = clothing["cultural_appreciation_boost"] * modifier
+        # Apply to cultural knowledge
+        if "cultural_knowledge" not in player:
+            player["cultural_knowledge"] = 50
+        player["cultural_knowledge"] = max(0, min(100, player["cultural_knowledge"] + cultural_boost))
+        
+    if "mystery_boost" in clothing:
+        modifier = 1 if apply else -1
+        mystery_boost = clothing["mystery_boost"] * modifier
+        # Apply to mystery stat
+        if "mystery" not in player:
+            player["mystery"] = 50
+        player["mystery"] = max(0, min(100, player["mystery"] + mystery_boost))
+        
+    if "professionalism_boost" in clothing:
+        modifier = 1 if apply else -1
+        professionalism_boost = clothing["professionalism_boost"] * modifier
+        # Apply to professionalism stat
+        if "professionalism" not in player:
+            player["professionalism"] = 50
+        player["professionalism"] = max(0, min(100, player["professionalism"] + professionalism_boost))
 
 
 # ----- FESTIVAL SYSTEM -----
@@ -3510,6 +3717,118 @@ personalities = {
         "relationship_loss": 4,
         "special_trait": "Dark, brooding personality. Hard to get close to but has a strong sense of justice.",
     },
+    "gloomy": {
+        "homework_mult": 1.0,
+        "grade_mult": 0.7,
+        "romance_compatibility": 0.4,
+        "relationship_gain": 1,
+        "relationship_loss": 4,
+        "special_trait": "Has a negative aura but surprising depth. Hard to connect with at first, but meaningful once close."
+    },
+    "senpai": {
+        "homework_mult": 1.1,
+        "grade_mult": 1.2,
+        "romance_compatibility": 0.9,
+        "relationship_gain": 3,
+        "relationship_loss": 2,
+        "special_trait": "Cool, admired upperclassman figure. Inspires others and often acts as a mentor."
+    },
+    "gyaru": {
+        "homework_mult": 0.6,
+        "grade_mult": 1.0,
+        "romance_compatibility": 0.8,
+        "relationship_gain": 4,
+        "relationship_loss": 3,
+        "special_trait": "Trendy and fashionable. Often underestimated academically, but excels with social influence."
+    },
+    "idol": {
+        "homework_mult": 1.0,
+        "grade_mult": 1.1,
+        "romance_compatibility": 1.0,
+        "relationship_gain": 5,
+        "relationship_loss": 4,
+        "special_trait": "Popular and adored by many. Charismatic, but fame brings jealousy and pressure."
+    },
+    "hikikomori": {
+        "homework_mult": 1.3,
+        "grade_mult": 1.0,
+        "romance_compatibility": 0.3,
+        "relationship_gain": 1,
+        "relationship_loss": 5,
+        "special_trait": "Reclusive and introverted. Difficult to form bonds, but deeply loyal once trust is earned."
+    },
+    "maid-type": {
+        "homework_mult": 1.1,
+        "grade_mult": 1.0,
+        "romance_compatibility": 0.9,
+        "relationship_gain": 4,
+        "relationship_loss": 2,
+        "special_trait": "Kind, devoted, and hardworking. Loves to care for others, often at the cost of their own well-being."
+    },
+    "beastkin": {
+        "homework_mult": 0.9,
+        "grade_mult": 0.8,
+        "romance_compatibility": 0.7,
+        "relationship_gain": 3,
+        "relationship_loss": 3,
+        "special_trait": "Animal-eared character with instincts and quirks. Loyal and playful, but impulsive."
+    },
+    "senile-genius": {
+        "homework_mult": 1.5,
+        "grade_mult": 1.4,
+        "romance_compatibility": 0.5,
+        "relationship_gain": 1,
+        "relationship_loss": 3,
+        "special_trait": "Brilliant but forgetful. Often lost in thought or ideas, making socializing difficult."
+    },
+    "idol-fanatic": {
+        "homework_mult": 0.7,
+        "grade_mult": 0.9,
+        "romance_compatibility": 0.6,
+        "relationship_gain": 2,
+        "relationship_loss": 3,
+        "special_trait": "Lives and breathes idol culture. Bonds well with others who share their interests."
+    },
+    "silent-type": {
+        "homework_mult": 1.0,
+        "grade_mult": 1.0,
+        "romance_compatibility": 0.5,
+        "relationship_gain": 2,
+        "relationship_loss": 3,
+        "special_trait": "Rarely speaks but observes everything. Often misunderstood, yet deeply perceptive."
+    },
+    "trickster": {
+        "homework_mult": 0.6,
+        "grade_mult": 1.0,
+        "romance_compatibility": 0.6,
+        "relationship_gain": 4,
+        "relationship_loss": 5,
+        "special_trait": "Master of jokes, lies, and manipulation. Endearing and dangerous in equal measure."
+    },
+    "stoic": {
+        "homework_mult": 1.2,
+        "grade_mult": 1.0,
+        "romance_compatibility": 0.6,
+        "relationship_gain": 2,
+        "relationship_loss": 2,
+        "special_trait": "Calm and composed under pressure. Emotionally reserved but dependable."
+    },
+    "daydreamer": {
+        "homework_mult": 0.7,
+        "grade_mult": 0.9,
+        "romance_compatibility": 0.9,
+        "relationship_gain": 4,
+        "relationship_loss": 2,
+        "special_trait": "Lost in their own world. Very creative and emotionally warm, but struggles with focus."
+    },
+    "perfectionist": {
+        "homework_mult": 1.5,
+        "grade_mult": 1.3,
+        "romance_compatibility": 0.6,
+        "relationship_gain": 2,
+        "relationship_loss": 4,
+        "special_trait": "Strives for flawlessness in everything. Often self-critical and hard to please."
+    }
 }
 
 # Part-time jobs
@@ -7906,30 +8225,14 @@ def generate_family_members():
     # Generate 1-2 parents
     num_parents = random.randint(1, 2)
 
-    last_names = [
-        "Tanaka",
-        "Yamamoto",
-        "Sato",
-        "Suzuki",
-        "Watanabe",
-        "Ito",
-        "Nakamura",
-        "Kobayashi",
-        "Takahashi",
-        "Kato",
-        "Yoshida",
-        "Sasaki",
-        "Yamaguchi",
-        "Matsumoto",
-        "Inoue",
-    ]
+    # Using the centralized name data structure for last names
 
-    # Use player's last name if available, or randomly select one
+    # Use player's last name if available, or randomly select one from centralized data
     player_name_parts = player["name"].split()
     if len(player_name_parts) > 1:
         family_last_name = player_name_parts[-1]
     else:
-        family_last_name = random.choice(last_names)
+        family_last_name = random.choice(name_data['japanese']['last_names'])
 
     parent_personalities = [
         "caring",
@@ -7956,34 +8259,9 @@ def generate_family_members():
         "store manager",
     ]
 
-    mother_first_names = [
-        "Akiko",
-        "Haruka",
-        "Yui",
-        "Emi",
-        "Sakura",
-        "Misaki",
-        "Hana",
-        "Aiko",
-        "Yumiko",
-        "Naomi",
-    ]
-    father_first_names = [
-        "Kenji",
-        "Hiroshi",
-        "Takashi",
-        "Akira",
-        "Yuki",
-        "Daichi",
-        "Kazuki",
-        "Satoshi",
-        "Ryo",
-        "Taro",
-    ]
-
     # Generate mother (if needed)
     if num_parents > 0:
-        mom_name = f"{random.choice(mother_first_names)} {family_last_name}"
+        mom_name = f"{random.choice(name_data['japanese']['female'])} {family_last_name}"
         mom_personality = random.choice(parent_personalities)
         mom_occupation = random.choice(parent_occupations)
 
@@ -8001,7 +8279,7 @@ def generate_family_members():
 
     # Generate father (if two parents)
     if num_parents > 1:
-        dad_name = f"{random.choice(father_first_names)} {family_last_name}"
+        dad_name = f"{random.choice(name_data['japanese']['male'])} {family_last_name}"
         dad_personality = random.choice(parent_personalities)
         dad_occupation = random.choice(parent_occupations)
 
@@ -8020,30 +8298,7 @@ def generate_family_members():
     # Decide if player has siblings (0-2)
     num_siblings = random.randint(0, 2)
 
-    sibling_first_names_male = [
-        "Sota",
-        "Hayato",
-        "Ryota",
-        "Haruto",
-        "Yuto",
-        "Kota",
-        "Sora",
-        "Minato",
-        "Ren",
-        "Kaito",
-    ]
-    sibling_first_names_female = [
-        "Yuna",
-        "Hinata",
-        "Hina",
-        "Koharu",
-        "Mei",
-        "Rin",
-        "Miyu",
-        "Aoi",
-        "Ichika",
-        "Sana",
-    ]
+    # Using the centralized name data structure for siblings
 
     sibling_personalities = [
         "friendly",
@@ -8077,15 +8332,15 @@ def generate_family_members():
         else:
             age_status = "older" if age_diff < 0 else "younger"
 
-        # Choose name based on gender
+        # Choose name based on gender using the centralized name data structure
         if sibling_gender == "M":
             sibling_name = (
-                f"{random.choice(sibling_first_names_male)} {family_last_name}"
+                f"{random.choice(name_data['japanese']['male'])} {family_last_name}"
             )
             relation = f"{age_status} brother"
         else:
             sibling_name = (
-                f"{random.choice(sibling_first_names_female)} {family_last_name}"
+                f"{random.choice(name_data['japanese']['female'])} {family_last_name}"
             )
             relation = f"{age_status} sister"
 
@@ -8453,7 +8708,7 @@ def assign_random_traits(count=3):
 def reset_player():
     """Reset player to starting state with default values"""
     global player
-
+    
     # Reset player to starting state
     player["school_year"] = 1
     player["year_progress"] = 0
@@ -8604,15 +8859,18 @@ def reset_player():
     # Apply initial clothing effects
     apply_clothing_effects("School Uniform", apply=True)
 
-    # Accommodation selection
-    slow_print(f"\n{Fore.YELLOW}=== Choose Your Accommodation ==={Style.RESET_ALL}")
-    slow_print("You can either live in a student dormitory or commute from home.")
-    slow_print(
-        f"{Fore.CYAN}Dormitory{Style.RESET_ALL}: Close to campus, less commute time, more freedom. No family interaction."
+    # Accommodation selection - Making this section more prominent
+    print("\n" + "=" * 50)
+    print(f"{Fore.YELLOW}{Style.BRIGHT}        CHOOSE YOUR ACCOMMODATION{Style.RESET_ALL}")
+    print("=" * 50)
+    print("You can either live in a student dormitory or commute from home.")
+    print(
+        f"{Fore.CYAN}{Style.BRIGHT}Option 1: Dormitory{Style.RESET_ALL}: Close to campus, less commute time, more freedom."
     )
-    slow_print(
-        f"{Fore.CYAN}Home{Style.RESET_ALL}: Further from campus, more commute time, family interactions, less freedom."
+    print(
+        f"{Fore.GREEN}{Style.BRIGHT}Option 2: Home{Style.RESET_ALL}: Further from campus, family interactions, less freedom."
     )
+    print("=" * 50)
 
     # Check if we're in non-interactive mode
     if _non_interactive:
@@ -8620,16 +8878,16 @@ def reset_player():
         choice = "1"
         print(f"\n{Fore.YELLOW}Auto-selecting dormitory accommodation for non-interactive mode.{Style.RESET_ALL}")
     else:
-        print("\nWill you stay in student accommodation?")
-        print("1. Yes (Dormitory)")
-        print("2. No (Live at home)")
+        print(f"\n{Fore.YELLOW}Where will you stay during the school year?{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}1. Student Dormitory{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}2. Live at Home{Style.RESET_ALL}")
 
         while True:
             try:
-                choice = input("Select an option (1-2): ")
+                choice = input(f"\n{Fore.WHITE}{Style.BRIGHT}Select an option (1-2): {Style.RESET_ALL}")
                 if choice in ["1", "2"]:
                     break
-                print("Please select a valid option (1-2).")
+                print(f"{Fore.RED}Please select a valid option (1 or 2).{Style.RESET_ALL}")
             except EOFError:
                 # Default to option 1 (dorm) if we get an EOF error
                 choice = "1"
@@ -8644,9 +8902,13 @@ def reset_player():
         player["accommodation_type"] = "dorm"
         # Assign random dorm number
         player["dorm_number"] = random.randint(100, 999)
-        slow_print(
-            f"You'll be staying in the student dormitory, room {player['dorm_number']}."
-        )
+        
+        print("\n" + "=" * 50)
+        print(f"{Fore.CYAN}{Style.BRIGHT}        DORMITORY SELECTED{Style.RESET_ALL}")
+        print("=" * 50)
+        slow_print("You've chosen to live in the school dormitory.")
+        slow_print("This will give you more freedom and time on campus, but less family interaction.")
+        slow_print(f"You'll be staying in the student dormitory, room {player['dorm_number']}.")
         player["current_location"] = "Dorm Room"
 
         # No need for detailed family if living in dorm
@@ -8657,7 +8919,7 @@ def reset_player():
 
         # Brief family description
         slow_print(
-            "\nYour family lives far from the school, so you'll only see them during holidays."
+            f"\n{Fore.YELLOW}Your family lives far from the school, so you'll only see them during holidays.{Style.RESET_ALL}"
         )
         for parent in family["parents"]:
             slow_print(
@@ -8679,6 +8941,13 @@ def reset_player():
         player["accommodation_type"] = "home"
         player["home_location"] = "Living Room"  # Start at home's living room
         player["current_location"] = "Living Room"
+        
+        print("\n" + "=" * 50)
+        print(f"{Fore.GREEN}{Style.BRIGHT}       HOME LIVING SELECTED{Style.RESET_ALL}")
+        print("=" * 50)
+        slow_print("You've chosen to live at home and commute to school.")
+        slow_print("This will give you more family interaction but require daily commute time.")
+        slow_print("Your starting location will be your family home's living room.")
 
         # Generate detailed family for daily interactions
         family, family_relationship = generate_family_members()
@@ -8781,9 +9050,7 @@ def reset_player():
     player["electives"] = chosen_electives
 
     # Show the chosen electives
-    slow_print(
-        f"\n{Fore.GREEN}Your electives for Year 1 are: {', '.join(chosen_electives)}{Style.RESET_ALL}"
-    )
+    slow_print(f"\n{Fore.GREEN}Your electives for Year 1 are: {', '.join(chosen_electives)}{Style.RESET_ALL}")
 
     # Create list of core subjects
     core_subjects = []
@@ -8802,9 +9069,9 @@ def reset_player():
     for subject_name, subject_data in subjects_data.items():
         gender = random.choice(["M", "F"])
         first_name = random.choice(
-            male_first_names if gender == "M" else female_first_names
+            name_data['japanese']['male'] if gender == "M" else name_data['japanese']['female']
         )
-        name = f"{first_name} {random.choice(last_names)}"
+        name = f"{first_name} {random.choice(name_data['japanese']['last_names'])}"
         personality = random.choice(list(personalities.keys()))
         teachers.append(
             {
@@ -8817,27 +9084,8 @@ def reset_player():
         )
         player["grades"][subject_name] = "C"  # Starting grade
 
-    # Create international student names lists
-    international_first_names_male = [
-        "John", "Michael", "William", "David", "James", "Robert", "Daniel", "Thomas", "Alex", "Richard",
-        "Carlos", "Juan", "Miguel", "Luis", "Pedro", "Antonio", "Jose", "Francisco", "Javier", "Alejandro",
-        "Li", "Wei", "Chen", "Zhang", "Wang", "Liu", "Yang", "Huang", "Zhou", "Wu",
-        "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Han"
-    ]
-
-    international_first_names_female = [
-        "Mary", "Jennifer", "Sarah", "Elizabeth", "Emily", "Emma", "Olivia", "Sophia", "Isabella", "Charlotte",
-        "Maria", "Sofia", "Valentina", "Camila", "Lucia", "Isabella", "Gabriela", "Victoria", "Ana", "Elena",
-        "Li", "Wang", "Zhang", "Liu", "Chen", "Yang", "Huang", "Wu", "Zhou", "Zhao",
-        "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Ha", "Yoon", "Seo", "Jang"
-    ]
-
-    international_last_names = [
-        "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor",
-        "Garcia", "Rodriguez", "Martinez", "Lopez", "Hernandez", "Gonzalez", "Perez", "Sanchez", "Ramirez", "Torres",
-        "Wang", "Li", "Zhang", "Liu", "Chen", "Yang", "Huang", "Zhao", "Wu", "Zhou",
-        "Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim"
-    ]
+    # We're now using the centralized name data structure directly
+    # No need for maintaining separate name lists as we access name_data directly
 
     # Create random students for the player's year
     for _ in range(15):
@@ -8847,22 +9095,34 @@ def reset_player():
         gender = random.choice(["M", "F"])
 
         if is_international:
-            # Choose a random nationality
-            nationality = random.choice(["American", "Chinese", "Korean", "Mexican", "Spanish", "British", "French", "German", "Brazilian", "Indian"])
-
-            # Select name based on nationality and gender
+            # Map nationality to name data keys
+            nationality_mapping = {
+                "American": "american",
+                "Chinese": "chinese", 
+                "Korean": "korean",
+                "Spanish": "spanish",
+                "Indian": "indian",
+                "Russian": "russian",
+                "Middle Eastern": "middle_eastern"
+            }
+            
+            # Choose a random nationality from available options in our name data
+            nationality = random.choice(list(nationality_mapping.keys()))
+            name_data_key = nationality_mapping[nationality]
+            
+            # Select name based on nationality and gender from centralized name data
             if gender == "M":
-                first_name = random.choice(international_first_names_male)
+                first_name = random.choice(name_data[name_data_key]['male'])
             else:
-                first_name = random.choice(international_first_names_female)
+                first_name = random.choice(name_data[name_data_key]['female'])
 
-            last_name = random.choice(international_last_names)
+            last_name = random.choice(name_data[name_data_key]['last_names'])
         else:
             # Japanese student
             first_name = random.choice(
-                male_first_names if gender == "M" else female_first_names
+                name_data['japanese']['male'] if gender == "M" else name_data['japanese']['female']
             )
-            last_name = random.choice(last_names)
+            last_name = random.choice(name_data['japanese']['last_names'])
             nationality = "Japanese"
 
         name = first_name + " " + last_name
@@ -8885,7 +9145,7 @@ def reset_player():
             # Assume club presidents are in their 3rd or 4th year
             year = random.randint(3, 4)
             # Assume gender based on name (simple approach)
-            gender = "M" if president["name"].split()[0] in male_first_names else "F"
+            gender = "M" if president["name"].split()[0] in name_data['japanese']['male'] else "F"
 
             # 10% chance for club president to be international
             is_international = random.random() < 0.10
@@ -9242,27 +9502,8 @@ def generate_full_student_list():
     # Generate a random number between 500 and 600
     total_students = random.randint(500, 600)
 
-    # Create international student names lists
-    international_first_names_male = [
-        "John", "Michael", "William", "David", "James", "Robert", "Daniel", "Thomas", "Alex", "Richard",
-        "Carlos", "Juan", "Miguel", "Luis", "Pedro", "Antonio", "Jose", "Francisco", "Javier", "Alejandro",
-        "Li", "Wei", "Chen", "Zhang", "Wang", "Liu", "Yang", "Huang", "Zhou", "Wu",
-        "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Han"
-    ]
-
-    international_first_names_female = [
-        "Mary", "Jennifer", "Sarah", "Elizabeth", "Emily", "Emma", "Olivia", "Sophia", "Isabella", "Charlotte",
-        "Maria", "Sofia", "Valentina", "Camila", "Lucia", "Isabella", "Gabriela", "Victoria", "Ana", "Elena",
-        "Li", "Wang", "Zhang", "Liu", "Chen", "Yang", "Huang", "Wu", "Zhou", "Zhao",
-        "Kim", "Park", "Lee", "Choi", "Jung", "Kang", "Ha", "Yoon", "Seo", "Jang"
-    ]
-
-    international_last_names = [
-        "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor",
-        "Garcia", "Rodriguez", "Martinez", "Lopez", "Hernandez", "Gonzalez", "Perez", "Sanchez", "Ramirez", "Torres",
-        "Wang", "Li", "Zhang", "Liu", "Chen", "Yang", "Huang", "Zhao", "Wu", "Zhou",
-        "Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim"
-    ]
+    # We're now using the centralized name data structure directly
+    # No need for maintaining separate name lists as we access name_data directly
 
     # Tags that can be assigned to students
     tags = [
@@ -9280,22 +9521,34 @@ def generate_full_student_list():
         gender = random.choice(["M", "F"])
 
         if is_international:
-            # Choose a random nationality
-            nationality = random.choice(["American", "Chinese", "Korean", "Mexican", "Spanish", "British", "French", "German", "Brazilian", "Indian"])
-
-            # Select name based on nationality and gender
+            # Map nationality to name data keys
+            nationality_mapping = {
+                "American": "american",
+                "Chinese": "chinese", 
+                "Korean": "korean",
+                "Spanish": "spanish",
+                "Indian": "indian",
+                "Russian": "russian",
+                "Middle Eastern": "middle_eastern"
+            }
+            
+            # Choose a random nationality from available options in our name data
+            nationality = random.choice(list(nationality_mapping.keys()))
+            name_data_key = nationality_mapping[nationality]
+            
+            # Use the appropriate names from our centralized structure based on nationality
             if gender == "M":
-                first_name = random.choice(international_first_names_male)
+                first_name = random.choice(name_data[name_data_key]['male'])
             else:
-                first_name = random.choice(international_first_names_female)
+                first_name = random.choice(name_data[name_data_key]['female'])
 
-            last_name = random.choice(international_last_names)
+            last_name = random.choice(name_data[name_data_key]['last_names'])
         else:
             # Japanese student
             first_name = random.choice(
-                male_first_names if gender == "M" else female_first_names
+                name_data['japanese']['male'] if gender == "M" else name_data['japanese']['female']
             )
-            last_name = random.choice(last_names)
+            last_name = random.choice(name_data['japanese']['last_names'])
             nationality = "Japanese"
 
         name = first_name + " " + last_name
@@ -9351,6 +9604,7 @@ def show_help():
 /homework           - Check your homework
 /quests             - Show current quests
 /achievements       - Show your achievements
+/collectibles       - View your collection of campus souvenirs
 /relationship       - View your relationships
 /year               - Show academic year information
 /rumors             - Check campus gossip and rumors
@@ -9489,6 +9743,9 @@ def go_location(args):
 
         # Update player location
         player["current_location"] = destination_match
+
+        # Check for strange occurrences
+        check_for_strange_occurrences()
 
         # Energy cost for movement
         player["energy"] = max(0, player["energy"] - 2)
@@ -9962,10 +10219,25 @@ def have_family_breakfast():
         if personality == "mischievous":
             conversations = [
                 f'"Did you use my stuff without asking again?" your {relation} asks accusingly.',
-                f"Your {relation} teases you about your school friends.",
-                f'"Want to prank our parents later?" whispers your {relation} with a grin.',
-                f"Your {relation} is hiding something under the table and gives you a wink.",
-                f'"Cover for me tonight, I\'m sneaking out," your {relation} says quietly.',
+                    f"Your {relation} teases you about your school friends.",
+                    f'"Want to prank our parents later?" whispers your {relation} with a grin.',
+                    f"Your {relation} is hiding something under the table and gives you a wink.",
+                    f'"Cover for me tonight, I\'m sneaking out," your {relation} says quietly.',
+                    f'"Don’t tell Mom I broke the vase, and I’ll owe you one," your {relation} bargains.',
+                    f"Your {relation} smirks, holding your diary just out of reach. 'Guess what I found?'",
+                    f'"If you do my chores, I’ll make sure your secret stays safe," says your {relation} with a sly tone.',
+                    f"Your {relation} is giggling in their room, and you hear something crash... again.",
+                    f'"Let’s switch report cards just for fun," your {relation} suggests, obviously joking—or are they?',
+                    f"Your {relation} walks in wearing your clothes. 'What? You weren’t using them!' they protest.",
+                    f'"You owe me big time for what I just covered for," your {relation} mutters, eyes gleaming.',
+                    f"Your {relation} is setting up a booby trap near the door and gestures for silence.",
+                    f'"I may or may not have hacked your game account," your {relation} says, not looking even a little guilty.',
+                    f'"Last one to the kitchen does dishes for a week!" your {relation} shouts, sprinting off.',
+                    f"Your {relation} pulls you aside and whispers, 'Operation Cookie Jar is a go. You in?'",
+                    f'"I dare you to sneak into the attic tonight," your {relation} says, eyes full of challenge.',
+                    f'"If anyone asks, we were together all night, alright?" says your {relation} quickly.',
+                    f"Your {relation} waves a mysterious note. 'Found this in Mom’s drawer. You *have* to read it!'",
+                    f"Your {relation} is grinning suspiciously. 'Remember that embarrassing video of you...?'",
             ]
         else:  # default/other personalities
             conversations = [
@@ -10453,7 +10725,7 @@ def interact_student(args):
         if student_status.get(name, "") == "Dating" and game_settings.get(
             "allow_nsfw", False
         ):
-            print(f"{Fore.MAGENTA}11. Suggest private time{Style.RESET_ALL}")
+            print(f"{Fore.MAGENTA}11. Suggest ummmm... private time{Style.RESET_ALL}")
 
         # Flirting options based on relationship level
         if relationship.get(name, 0) >= 30 and found["gender"] != player["gender"]:
@@ -13762,13 +14034,218 @@ def create_custom_rumor(content, rumor_type="social", target=None):
     return new_rumor
 
 
-def generate_random_rumor():
-    """Generate a random rumor to add to the rumor mill"""
+# Handle mundane and strange occurrences on campus
+def check_for_strange_occurrences():
+    """Randomly trigger strange or mundane occurrences as the player explores campus"""
+    # Only check occasionally 
+    # 15% chance for any occurrence (10% mundane, 5% strange)
+    occurrence_roll = random.random()
+    if occurrence_roll > 0.15:
+        return
+    
+    # Determine if this should be a mundane or strange occurrence
+    is_mundane = occurrence_roll <= 0.10
+        
+    # List of possible strange occurrences without time conditions
+    strange_occurrences = [
+        # Mysterious sounds
+        {"event": "You hear a faint melody coming from somewhere nearby, but can't identify the source.", 
+         "locations": ["any"]},
+        {"event": "A strange tapping sound echoes through the hallway, but there's no one around.", 
+         "locations": ["School Hallway", "Library", "Old School Building"]},
+        {"event": "You hear what sounds like distant laughter from an empty classroom.",
+         "locations": ["School Hallway", "Classroom"]},
+         
+        # Visual anomalies
+        {"event": "For a split second, you think you see someone watching you from the corner, but when you look again, there's nobody there.", 
+         "locations": ["any"]},
+        {"event": "The lights flicker briefly, casting strange shadows on the wall.", 
+         "locations": ["any"]},
+        {"event": "You notice your reflection in the window seems to move a fraction of a second after you do.", 
+         "locations": ["any"]},
+         
+        # Physical sensations
+        {"event": "A sudden cold breeze passes through the room, raising goosebumps on your arms.", 
+         "locations": ["any"]},
+        {"event": "You feel like someone just walked past you, but there's no one else around.", 
+         "locations": ["any"]},
+        {"event": "The temperature drops noticeably for a moment, then returns to normal.", 
+         "locations": ["any"]},
+         
+        # Strange objects
+        {"event": "You find a handwritten note on the ground that says 'Meet me where we first saw the lights' but it doesn't seem to be addressed to anyone.", 
+         "locations": ["School Grounds", "School Hallway", "Classroom"]},
+        {"event": "An old-fashioned pocket watch sits on a nearby table. When you approach to examine it, it's gone.", 
+         "locations": ["Library", "Student Lounge", "Cafeteria"]},
+        {"event": "You notice a worn yearbook open to a page with a photo where all the faces are oddly blurred.", 
+         "locations": ["Library", "Student Council Room"]},
+         
+        # Clock tower related
+        {"event": "The clock tower chimes an extra time after striking the hour.", 
+         "locations": ["School Grounds", "Courtyard"]},
+        {"event": "The clock tower shows a different time than your watch.", 
+         "locations": ["School Grounds", "Courtyard"]},
+         
+        # Location-specific occurrences
+        {"event": "While washing your hands in the bathroom, you swear the mirror showed someone standing behind you, but when you turned around, you were alone.", 
+         "locations": ["Boys' Bathroom", "Girls' Bathroom"]},
+        {"event": "A book falls from the shelf behind you. When you pick it up, it's open to a page describing exactly where you're standing.", 
+         "locations": ["Library"]},
+        {"event": "You hear the piano in the music room play a single note, despite the room being empty.", 
+         "locations": ["Music Room", "School Hallway"]},
+        {"event": "The cherry blossom tree in the courtyard drops a single petal that lands perfectly on your shoulder, despite there being no breeze.", 
+         "locations": ["Courtyard"]},
+         
+        # Misc phenomena
+        {"event": "Your watch stops for exactly one minute, then continues as if nothing happened.", 
+         "locations": ["any"]},
+        {"event": "The setting sun casts a shadow that seems to point directly at a specific stone in the courtyard wall.", 
+         "locations": ["School Grounds", "Courtyard"]},
+        {"event": "You hear the distant sound of a bell that isn't the school's clock tower.", 
+         "locations": ["any"]},
+    ]
+    
+    # List of mundane occurrences for everyday campus life
+    mundane_occurrences = [
+        # Student activities
+        {"event": "A group of students walks by discussing an upcoming exam.", 
+         "locations": ["any"]},
+        {"event": "Two students are comparing notes from the last lecture.", 
+         "locations": ["Library", "Cafeteria", "Student Lounge"]},
+        {"event": "Someone is putting up posters for the upcoming cultural festival.", 
+         "locations": ["School Hallway", "Bulletin Board", "School Grounds"]},
+        {"event": "A lost first-year student asks you for directions to their classroom.", 
+         "locations": ["School Hallway", "School Grounds"]},
+        {"event": "A couple of students are practicing a dance routine for the upcoming talent show.", 
+         "locations": ["Gymnasium", "Courtyard", "Music Room"]},
+        
+        # Background details
+        {"event": "The janitor is mopping the floor and humming a catchy tune.", 
+         "locations": ["School Hallway", "Bathroom"]},
+        {"event": "The school gardener is carefully trimming the hedges.", 
+         "locations": ["School Grounds", "Courtyard"]},
+        {"event": "A delivery person arrives with boxes of new textbooks.", 
+         "locations": ["School Grounds", "Main Entrance"]},
+        {"event": "The cafeteria staff is preparing today's lunch. It smells delicious.", 
+         "locations": ["Cafeteria", "School Hallway"]},
+        {"event": "A teacher rushes past, arms full of exam papers about to be graded.", 
+         "locations": ["School Hallway", "Staff Room"]},
+        
+        # Environmental details
+        {"event": "A bicycle bell rings as someone navigates through students on the pathway.", 
+         "locations": ["School Grounds", "Bike Rack"]},
+        {"event": "Leaves rustle in the gentle breeze coming through an open window.", 
+         "locations": ["Classroom", "Library"]},
+        {"event": "The school clock ticks loudly in the quiet hallway.", 
+         "locations": ["School Hallway", "Library"]},
+        {"event": "Distant laughter can be heard from the sports field.", 
+         "locations": ["School Grounds", "Classroom"]},
+        {"event": "The scent of freshly cut grass drifts in from the sports field.", 
+         "locations": ["School Grounds", "Classroom", "School Hallway"]},
+        
+        # Technology
+        {"event": "A student curses quietly as their phone battery dies.", 
+         "locations": ["any"]},
+        {"event": "Someone's laptop makes the distinctive 'you've got mail' sound in the quiet library.", 
+         "locations": ["Library", "Computer Lab"]},
+        {"event": "The old printer jams again, causing a small line to form.", 
+         "locations": ["Library", "Computer Lab", "Student Council Room"]},
+        {"event": "A group of students compare their latest phone models and apps.", 
+         "locations": ["Cafeteria", "Student Lounge", "School Grounds"]},
+        {"event": "The science lab's computer is running some kind of complex simulation.", 
+         "locations": ["Science Lab"]},
+        
+        # Food and drinks
+        {"event": "The smell of coffee wafts from a teacher's travel mug.", 
+         "locations": ["Classroom", "Staff Room", "School Hallway"]},
+        {"event": "Someone unwraps a noisy snack package during a quiet moment.", 
+         "locations": ["Classroom", "Library"]},
+        {"event": "A student drops their lunch tray with a loud clatter, causing everyone to look.", 
+         "locations": ["Cafeteria"]},
+        {"event": "The vending machine makes a satisfying 'clunk' as it dispenses a drink.", 
+         "locations": ["Student Lounge", "School Hallway"]},
+        {"event": "A group of friends share a box of homemade cookies between classes.", 
+         "locations": ["School Hallway", "Courtyard", "Cafeteria"]},
+        
+        # Personal items
+        {"event": "Someone left behind a colorful pencil case on a desk.", 
+         "locations": ["Classroom", "Library"]},
+        {"event": "A lost umbrella leans against the wall, waiting for its owner.", 
+         "locations": ["School Hallway", "Main Entrance"]},
+        {"event": "A student frantically searches through their backpack for a missing assignment.", 
+         "locations": ["Classroom", "School Hallway"]},
+        {"event": "Someone's cute animal-shaped eraser rolled under a desk.", 
+         "locations": ["Classroom", "Library"]},
+        {"event": "A forgotten jacket hangs on the back of a chair.", 
+         "locations": ["Classroom", "Cafeteria", "Library"]}
+    ]
+    
+    # Select which occurrence list to use based on mundane vs strange
+    if is_mundane:
+        occurrence_list = mundane_occurrences
+        text_color = Fore.CYAN  # Subtle color for mundane occurrences
+    else:
+        occurrence_list = strange_occurrences
+        text_color = Fore.MAGENTA  # Distinctive color for strange occurrences
+    
+    # Filter occurrences by location
+    possible_occurrences = []
+    for occurrence in occurrence_list:
+        locations = occurrence["locations"]
+        
+        # Check if location matches
+        location_match = False
+        if "any" in locations:
+            location_match = True
+        elif player["current_location"] in locations:
+            location_match = True
+                
+        if location_match:
+            possible_occurrences.append(occurrence)
+    
+    # If we have eligible occurrences, select one
+    if possible_occurrences:
+        selected_occurrence = random.choice(possible_occurrences)
+        # Display the event with appropriate formatting
+        slow_print(f"\n{text_color}{selected_occurrence['event']}{Style.RESET_ALL}")
+        
+        # For strange occurrences only, add chance of urban legend and stress
+        if not is_mundane:
+            # Add a small chance to hear about an urban legend after experiencing a strange occurrence
+            if random.random() < 0.3:
+                generate_random_rumor(force_type="urban_legend")
+                
+            # Small chance to affect player's mood or stress
+            if random.random() < 0.5:
+                # Increase stress slightly
+                player["stress"] = min(100, player["stress"] + random.randint(1, 3))
+                
+        # For mundane occurrences, occasionally add a small positive effect
+        else:
+            if random.random() < 0.2:
+                # Random small positive effect (energy, mood, etc.)
+                effect_type = random.choice(["energy", "mood", "stress"])
+                if effect_type == "energy":
+                    player["energy"] = min(100, player["energy"] + random.randint(1, 2))
+                elif effect_type == "mood":
+                    player["mood"] = min(100, player["mood"] + random.randint(1, 2))
+                elif effect_type == "stress":
+                    player["stress"] = max(0, player["stress"] - random.randint(1, 2))
+
+def generate_random_rumor(force_type=None):
+    """Generate a random rumor to add to the rumor mill
+    
+    Args:
+        force_type: If provided, forces the rumor to be of this type
+    """
     if "rumors" not in player:
         player["rumors"] = []
 
     # Decide on rumor type
-    rumor_type = random.choice(["romantic", "academic", "social", "scandal"])
+    if force_type:
+        rumor_type = force_type
+    else:
+        rumor_type = random.choice(["romantic", "academic", "social", "scandal", "urban_legend"])
 
     # Generate content based on type
     content = ""
@@ -13815,6 +14292,26 @@ def generate_random_rumor():
             content = random.choice(scandal_types)
         else:
             content = "The cafeteria is going to stop serving the popular curry dish next month."
+            
+    elif rumor_type == "urban_legend":
+        urban_legends = [
+            "If you confess your love under the old cherry tree at midnight during a full moon, your love will be reciprocated.",
+            "Room 404 on the fourth floor is haunted by the ghost of a student who failed all their exams.",
+            "There's a secret tunnel under the library that leads to an abandoned bunker from World War II.",
+            "The clock tower stops exactly at 3:33 AM every third day of the month, and anyone who sees it will have good luck.",
+            "The statue in the courtyard changes its facial expression when no one is looking.",
+            "If you study in the west corner of the library at midnight, a ghostly librarian will help you find answers.",
+            "The old piano in the music room sometimes plays by itself, but only songs that were popular 50 years ago.",
+            "There's a vending machine in the basement that occasionally gives out vintage sodas from the 1980s.",
+            "The third bathroom stall in the east wing girls' bathroom has a small door that leads to a hidden room.",
+            "If you walk backwards around the school fountain three times while reciting the school anthem, you'll ace your next exam.",
+            "The reflection pool near the science building sometimes shows visions of the future if you look at it under a crescent moon.",
+            "The faculty lounge has a secret door that leads to a teacher-only hot spring.",
+            "There's a club photo from 1975 where everyone in the picture disappeared under mysterious circumstances.",
+            "The old cherry tree in the courtyard is over 300 years old and can grant wishes if you tie a special knot on its branches.",
+            "At exactly 2:22 PM every Tuesday, the shadow of the school flagpole aligns perfectly with a hidden treasure map engraved in the courtyard stone.",
+        ]
+        content = random.choice(urban_legends)
 
     # Create the rumor
     if content:
@@ -16243,6 +16740,80 @@ def show_achievements():
     for name, details in achievements.items():
         if name not in player["achievements"]:
             print(f"? {details['description']}")
+            
+# Display player's collectibles
+def show_collectibles():
+    """Display the player's collection of campus souvenirs and collectibles"""
+    if "collectibles" not in player or not player["collectibles"]:
+        slow_print("You haven't found any collectibles yet. Explore the campus to find items!")
+        return
+        
+    # Define collection categories
+    collections = {
+        "Stickers": ["cute animal sticker", "school mascot sticker", "motivational quote sticker", 
+                     "music band sticker", "sparkly star sticker", "computer club sticker"],
+        
+        "School Memorabilia": ["commemorative coin", "school anniversary button", "sports team pennant", 
+                               "vintage school photo", "drama club ticket stub", "chess club bookmark",
+                               "science club badge"],
+        
+        "Nature Finds": ["perfect autumn leaf", "unusual smooth stone", "beautiful flower", 
+                          "shiny conker", "pressed snowflake", "cherry blossom petal"],
+        
+        "Seasonal Items": ["festival flyer", "sports day ribbon", "cherry blossom petal", 
+                            "perfect autumn leaf", "pressed snowflake"]
+    }
+    
+    # Define special set bonuses for completing collections
+    set_bonuses = {
+        "Stickers": "Sticker Collector: +5% Charisma when interacting with other collectors",
+        "School Memorabilia": "School Spirit: +10% Reputation gain with teachers and staff",
+        "Nature Finds": "Nature Lover: -5% Stress when visiting outdoor locations",
+        "Seasonal Items": "Seasonal Awareness: +10% Mood boost during seasonal events"
+    }
+    
+    slow_print(f"\n{Fore.YELLOW}=== YOUR COLLECTION OF CAMPUS SOUVENIRS ==={Style.RESET_ALL}")
+    
+    # Display collectibles by category
+    total_collectibles = 0
+    total_found = 0
+    
+    for category, items in collections.items():
+        slow_print(f"\n{Fore.CYAN}{category}:{Style.RESET_ALL}")
+        
+        category_total = len(items)
+        category_found = 0
+        
+        for item in items:
+            if item in player["collectibles"]:
+                print(f"{Fore.GREEN}✓ {item}{Style.RESET_ALL}")
+                category_found += 1
+                total_found += 1
+            else:
+                print(f"{Fore.RED}✗ ???{Style.RESET_ALL}")
+            
+        total_collectibles += category_total
+        
+        # Calculate completion percentage
+        completion_pct = (category_found / category_total) * 100
+        print(f"Collection progress: {category_found}/{category_total} ({int(completion_pct)}%)")
+        
+        # Check for complete sets
+        if category_found == category_total:
+            print(f"{Fore.YELLOW}COMPLETE SET! {set_bonuses[category]}{Style.RESET_ALL}")
+    
+    # Show overall collection status
+    overall_pct = (total_found / total_collectibles) * 100
+    slow_print(f"\n{Fore.YELLOW}Overall Collection: {total_found}/{total_collectibles} ({int(overall_pct)}%){Style.RESET_ALL}")
+    
+    # Special reward for collecting everything
+    if total_found == total_collectibles:
+        slow_print(f"\n{Fore.MAGENTA}Congratulations! You've collected every campus souvenir!")
+        slow_print(f"Memento Master: Your perfect knowledge of campus life grants +5% to all stats!{Style.RESET_ALL}")
+        
+    # Hint about where to find more collectibles
+    if total_found < total_collectibles:
+        slow_print("\nHint: Continue exploring different campus locations to find more collectibles!")
 
 
 def show_rumors():
@@ -16377,10 +16948,24 @@ def change_clothes_command(args=None):
 # Function for random events based on location
 def random_location_event(location):
     """Trigger random events specific to the current location"""
-    # 30% chance of a location-specific event
-    if random.random() > 0.3:
+    # Decide what type of event happens (standard, lost item, or collectible)
+    event_roll = random.random()
+    
+    # 30% chance of a standard location-specific event
+    if event_roll < 0.3:
+        trigger_standard_event(location)
+    # 15% chance of finding a lost item
+    elif event_roll < 0.45:
+        check_for_lost_items(location)
+    # 15% chance of finding a collectible
+    elif event_roll < 0.6:
+        check_for_collectibles(location)
+    # 40% chance of no event
+    else:
         return
 
+def trigger_standard_event(location):
+    """Handle original event system"""
     # Generic events for all locations
     generic_events = [
         {
@@ -16428,7 +17013,7 @@ def random_location_event(location):
         "Cafeteria": [
             {
                 "description": "Someone shares their food with you.",
-                "effect": lambda: increase_hunger(random.randint(10, 20)),
+                "effect": lambda: decrease_hunger(random.randint(10, 20)),
             },
             {
                 "description": "You join a lively table conversation.",
@@ -16452,7 +17037,7 @@ def random_location_event(location):
         "Student Room 364": [
             {
                 "description": "Your roommate left a snack for you.",
-                "effect": lambda: increase_hunger(random.randint(5, 15)),
+                "effect": lambda: decrease_hunger(random.randint(5, 15)),
             },
             {
                 "description": "The comfort of your room helps you relax.",
@@ -16470,6 +17055,178 @@ def random_location_event(location):
     event = random.choice(all_events)
     slow_print(f"\n{Fore.CYAN}Event: {event['description']}{Style.RESET_ALL}")
     event["effect"]()
+    
+def check_for_lost_items(location):
+    """Check if player finds a lost item in current location"""
+    # List of possible lost items that can be found in different locations
+    lost_items = [
+        # School supplies
+        {"item": "expensive fountain pen", "value": 15, "locations": ["Classroom", "Library", "Staff Room"]},
+        {"item": "scientific calculator", "value": 20, "locations": ["Classroom", "Library", "Science Lab"]},
+        {"item": "paintbrush set", "value": 12, "locations": ["Art Room", "Classroom"]},
+        {"item": "fancy notebook", "value": 8, "locations": ["any"]},
+        
+        # Technology
+        {"item": "USB drive", "value": 10, "locations": ["Computer Lab", "Library", "Classroom"]},
+        {"item": "phone charger", "value": 15, "locations": ["Cafeteria", "Student Lounge", "Library"]},
+        {"item": "wireless earbuds", "value": 30, "locations": ["Gym", "School Grounds", "Student Lounge"]},
+        {"item": "power bank", "value": 25, "locations": ["Library", "Cafeteria"]},
+        
+        # Accessories
+        {"item": "stylish scarf", "value": 18, "locations": ["Classroom", "Cafeteria", "School Hallway"]},
+        {"item": "umbrella", "value": 12, "locations": ["School Entrance", "School Hallway"]},
+        {"item": "sunglasses", "value": 22, "locations": ["School Grounds", "Courtyard", "Cafeteria"]},
+        {"item": "knitted gloves", "value": 15, "locations": ["School Entrance", "Classroom"]},
+        
+        # Miscellaneous
+        {"item": "student ID card", "value": 5, "locations": ["any"]},
+        {"item": "house keys", "value": 3, "locations": ["any"]},
+        {"item": "lunch box", "value": 8, "locations": ["Cafeteria", "Classroom", "School Grounds"]},
+        {"item": "water bottle", "value": 10, "locations": ["Gym", "School Grounds", "Classroom"]},
+        
+        # Seasonal
+        {"item": "beach towel", "value": 14, "locations": ["Gym", "Pool", "School Grounds"], "season": "summer"},
+        {"item": "warm hat", "value": 16, "locations": ["School Entrance", "School Hallway"], "season": "winter"},
+        {"item": "exam study guide", "value": 25, "locations": ["Library", "Classroom"], "season": "spring"},
+        {"item": "festival ticket", "value": 30, "locations": ["School Hallway", "Student Lounge"], "season": "fall"}
+    ]
+    
+    # Filter items by location and current season
+    current_season = get_current_season()
+    possible_items = []
+    
+    for item in lost_items:
+        # Check location match
+        location_match = False
+        if "any" in item["locations"] or location in item["locations"]:
+            location_match = True
+            
+        # Check season match if item has season requirement
+        season_match = True
+        if "season" in item and item["season"] != current_season:
+            season_match = False
+            
+        if location_match and season_match:
+            possible_items.append(item)
+    
+    # If we have any eligible items, select one
+    if possible_items:
+        found_item = random.choice(possible_items)
+        
+        # Create a dialog for finding the item
+        slow_print(f"\n{Fore.GREEN}You notice a {found_item['item']} that someone must have left behind.{Style.RESET_ALL}")
+        
+        # Options for the player
+        slow_print("\nWhat would you like to do?")
+        slow_print("1. Take it")
+        slow_print("2. Turn it in to lost and found")
+        slow_print("3. Leave it where it is")
+        
+        choice = input("> ").strip()
+        
+        if choice == "1":
+            # Take the item (slightly decreases reputation but gives money)
+            slow_print(f"You put the {found_item['item']} in your bag.")
+            player["money"] += found_item["value"]
+            slow_print(f"You could sell this for ${found_item['value']}.")
+            # Small reputation decrease
+            player["reputation"]["general"] = max(0, player["reputation"]["general"] - 1)
+            
+        elif choice == "2":
+            # Turn it in (increases reputation)
+            slow_print(f"You take the {found_item['item']} to the school's lost and found.")
+            slow_print("The staff thanks you for your honesty.")
+            # Reputation increase
+            player["reputation"]["general"] = min(100, player["reputation"]["general"] + 3)
+            # Small reward chance
+            if random.random() < 0.3:
+                small_reward = max(1, int(found_item["value"] * 0.2))
+                player["money"] += small_reward
+                slow_print(f"They give you a small reward of ${small_reward} for your honesty.")
+                
+        else:
+            # Leave it
+            slow_print(f"You leave the {found_item['item']} where you found it.")
+            slow_print("Maybe the owner will come back for it.")
+    
+def check_for_collectibles(location):
+    """Check if player finds a collectible item in the current location"""
+    # List of possible collectibles at different locations
+    collectibles = [
+        # Stickers
+        {"item": "cute animal sticker", "locations": ["any"]},
+        {"item": "school mascot sticker", "locations": ["School Store", "School Hallway", "Gym"]},
+        {"item": "motivational quote sticker", "locations": ["Library", "Classroom"]},
+        {"item": "music band sticker", "locations": ["Music Room", "Cafeteria", "Student Lounge"]},
+        {"item": "sparkly star sticker", "locations": ["Art Room", "Classroom"]},
+        
+        # School memorabilia
+        {"item": "commemorative coin", "locations": ["School Grounds", "Main Office"]},
+        {"item": "school anniversary button", "locations": ["School Hallway", "School Store"]},
+        {"item": "sports team pennant", "locations": ["Gym", "Trophy Case"]},
+        {"item": "vintage school photo", "locations": ["Library", "Old School Building"]},
+        
+        # Nature items
+        {"item": "perfect autumn leaf", "locations": ["School Grounds", "Courtyard"], "season": "fall"},
+        {"item": "unusual smooth stone", "locations": ["School Grounds", "Courtyard"]},
+        {"item": "beautiful flower", "locations": ["School Grounds", "Courtyard"], "season": "spring"},
+        {"item": "shiny conker", "locations": ["School Grounds", "Courtyard"], "season": "fall"},
+        
+        # Club-related
+        {"item": "science club badge", "locations": ["Science Lab", "Club Room"]},
+        {"item": "chess club bookmark", "locations": ["Club Room", "Library"]},
+        {"item": "drama club ticket stub", "locations": ["Auditorium", "School Hallway"]},
+        {"item": "computer club sticker", "locations": ["Computer Lab", "Club Room"]},
+        
+        # Seasonal
+        {"item": "pressed snowflake", "locations": ["School Grounds"], "season": "winter"},
+        {"item": "festival flyer", "locations": ["School Hallway", "Bulletin Board"]},
+        {"item": "sports day ribbon", "locations": ["Gym", "Field"], "season": "summer"},
+        {"item": "cherry blossom petal", "locations": ["Courtyard", "School Grounds"], "season": "spring"}
+    ]
+    
+    # Filter items by location and current season
+    current_season = get_current_season()
+    possible_items = []
+    
+    for item in collectibles:
+        # Check location match
+        location_match = False
+        if "any" in item["locations"] or location in item["locations"]:
+            location_match = True
+            
+        # Check season match if item has season requirement
+        season_match = True
+        if "season" in item and item["season"] != current_season:
+            season_match = False
+            
+        if location_match and season_match:
+            possible_items.append(item)
+    
+    # Check if player already has collectibles dictionary
+    if "collectibles" not in player:
+        player["collectibles"] = {}
+    
+    # If we have any eligible items, select one
+    if possible_items:
+        found_item = random.choice(possible_items)
+        
+        item_name = found_item["item"]
+        
+        # Check if player already has this collectible
+        if item_name in player["collectibles"]:
+            # Already has it - don't show anything
+            return
+            
+        # Create a dialog for finding the collectible
+        slow_print(f"\n{Fore.CYAN}You found a {item_name}!{Style.RESET_ALL}")
+        slow_print("You decide to keep it as a souvenir of your school days.")
+        
+        # Add to player's collection
+        player["collectibles"][item_name] = True
+        
+        # Small mood boost
+        player["mood"] = min(100, player["mood"] + random.randint(1, 3))
 
 
 # Helper functions for player stats
@@ -17825,6 +18582,46 @@ exam_questions = {
             "answer": "12",
             "options": ["10", "11", "12", "14"],
         },
+        {
+            "question": "What is the value of π (pi) up to two decimal places?",
+            "answer": "3.14",
+            "options": ["3.12", "3.13", "3.14", "3.15"],
+        },
+        {
+            "question": "What is the area of a circle with radius 5?",
+            "answer": "78.5",
+            "options": ["25", "50", "78.5", "100"],
+        },
+        {
+            "question": "What is the limit of (sin x)/x as x approaches 0?",
+            "answer": "1",
+            "options": ["0", "1", "Infinity", "Undefined"],
+        },
+        {
+            "question": "What is the determinant of a 2x2 matrix [[a, b], [c, d]]?",
+            "answer": "ad - bc",
+            "options": ["ab - cd", "ad - bc", "a + d", "a - d"],
+        },
+        {
+            "question": "What is the value of the infinite geometric series 1 + 1/2 + 1/4 + 1/8 + ...?",
+            "answer": "2",
+            "options": ["1", "2", "Infinite", "3"],
+        },
+        {
+            "question": "If f(x) = e^x, what is f''(x)?",
+            "answer": "e^x",
+            "options": ["0", "x*e^x", "e^x", "x^2"],
+        },
+        {
+            "question": "Solve for x: ln(x) = 3",
+            "answer": "e^3",
+            "options": ["3", "e^3", "ln(3)", "e"],
+        },
+        {
+            "question": "What is the eigenvalue of a 2x2 identity matrix?",
+            "answer": "1",
+            "options": ["0", "1", "2", "-1"],
+        },
     ],
     "Science": [
         {
@@ -17851,6 +18648,56 @@ exam_questions = {
             "question": "What is the process of plants making food called?",
             "answer": "Photosynthesis",
             "options": ["Respiration", "Photosynthesis", "Digestion", "Absorption"],
+        },
+        {
+            "question": "What gas do humans exhale?",
+            "answer": "Carbon dioxide",
+            "options": ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
+        },
+        {
+            "question": "What part of the cell contains genetic material?",
+            "answer": "Nucleus",
+            "options": ["Cytoplasm", "Nucleus", "Membrane", "Ribosome"],
+        },
+        {
+            "question": "What is the atomic number of Oxygen?",
+            "answer": "8",
+            "options": ["6", "7", "8", "9"],
+        },
+        {
+            "question": "What is Newton's Third Law?",
+            "answer": "Every action has an equal and opposite reaction",
+            "options": [
+                "F=ma",
+                "Objects in motion stay in motion",
+                "Equal and opposite reaction",
+                "Gravitational force",
+            ],
+        },
+        {
+            "question": "What is the pH of pure water at room temperature?",
+            "answer": "7",
+            "options": ["6", "7", "8", "Neutral"],
+        },
+        {
+            "question": "What subatomic particle defines the atomic number?",
+            "answer": "Proton",
+            "options": ["Electron", "Neutron", "Proton", "Photon"],
+        },
+        {
+            "question": "What phenomenon explains why light splits in a prism?",
+            "answer": "Refraction",
+            "options": ["Reflection", "Diffraction", "Dispersion", "Refraction"],
+        },
+        {
+            "question": "Which fundamental force is responsible for radioactive decay?",
+            "answer": "Weak nuclear force",
+            "options": [
+                "Gravity",
+                "Electromagnetic",
+                "Strong nuclear force",
+                "Weak nuclear force",
+            ],
         },
     ],
     "Literature": [
@@ -17883,6 +18730,51 @@ exam_questions = {
             "question": "What is alliteration?",
             "answer": "Same sound at start",
             "options": ["Rhyming", "Same sound at start", "Opposites", "Comparison"],
+        },
+        {
+            "question": "Who is the author of '1984'?",
+            "answer": "George Orwell",
+            "options": ["George Orwell", "Aldous Huxley", "Ray Bradbury", "J.K. Rowling"],
+        },
+        {
+            "question": "What is the genre of 'To Kill a Mockingbird'?",
+            "answer": "Southern Gothic",
+            "options": ["Fantasy", "Sci-Fi", "Southern Gothic", "Romance"],
+        },
+        {
+            "question": "Who wrote 'Crime and Punishment'?",
+            "answer": "Fyodor Dostoevsky",
+            "options": ["Tolstoy", "Chekhov", "Dostoevsky", "Pushkin"],
+        },
+        {
+            "question": "Which epic begins with 'Sing, O Muse, of the rage of Achilles'?",
+            "answer": "The Iliad",
+            "options": ["The Odyssey", "The Iliad", "Aeneid", "Beowulf"],
+        },
+        {
+            "question": "What literary device is used in 'The wind whispered through the trees'?",
+            "answer": "Personification",
+            "options": ["Metaphor", "Simile", "Personification", "Alliteration"],
+        },
+        {
+            "question": "In literature, what is a 'foil' character?",
+            "answer": "A character who contrasts with another",
+            "options": [
+                "A villain",
+                "A narrator",
+                "A comic relief",
+                "A contrasting character",
+            ],
+        },
+        {
+            "question": "Which novel features the character 'Holden Caulfield'?",
+            "answer": "The Catcher in the Rye",
+            "options": ["1984", "The Catcher in the Rye", "Fahrenheit 451", "Brave New World"],
+        },
+        {
+            "question": "Who coined the term 'stream of consciousness' in literature?",
+            "answer": "William James",
+            "options": ["James Joyce", "Virginia Woolf", "William James", "Freud"],
         },
     ],
     "History": [
@@ -17921,6 +18813,61 @@ exam_questions = {
                 "Emperor Akihito",
             ],
         },
+        {
+            "question": "Who discovered America in 1492?",
+            "answer": "Christopher Columbus",
+            "options": ["Leif Erikson", "Christopher Columbus", "Marco Polo", "Magellan"],
+        },
+        {
+            "question": "What war was fought between the North and South in the U.S.?",
+            "answer": "Civil War",
+            "options": ["Revolutionary War", "Civil War", "Vietnam War", "Cold War"],
+        },
+        {
+            "question": "What was the name of the ship on which the Pilgrims traveled to America?",
+            "answer": "Mayflower",
+            "options": ["Santa Maria", "Mayflower", "Beagle", "Endeavour"],
+        },
+        {
+            "question": "Who wrote the Communist Manifesto?",
+            "answer": "Karl Marx and Friedrich Engels",
+            "options": [
+                "Karl Marx and Engels",
+                "Lenin and Stalin",
+                "Mao and Marx",
+                "Marx and Trotsky",
+            ],
+        },
+        {
+            "question": "What event started World War I?",
+            "answer": "Assassination of Archduke Franz Ferdinand",
+            "options": [
+                "Sinking of Lusitania",
+                "Invasion of Belgium",
+                "Franz Ferdinand’s assassination",
+                "Treaty of Versailles",
+            ],
+        },
+        {
+            "question": "What empire was ruled by Suleiman the Magnificent?",
+            "answer": "Ottoman Empire",
+            "options": ["Persian Empire", "Roman Empire", "Ottoman Empire", "Mughal Empire"],
+        },
+        {
+            "question": "Who was the last Tsar of Russia?",
+            "answer": "Nicholas II",
+            "options": ["Alexander II", "Nicholas II", "Ivan IV", "Peter the Great"],
+        },
+        {
+            "question": "Which treaty ended the Thirty Years’ War?",
+            "answer": "Treaty of Westphalia",
+            "options": [
+                "Treaty of Paris",
+                "Treaty of Versailles",
+                "Treaty of Tordesillas",
+                "Treaty of Westphalia",
+            ],
+        },
     ],
     "Art": [
         {
@@ -17957,6 +18904,46 @@ exam_questions = {
             "question": "What medium is used in fresco painting?",
             "answer": "Wet plaster",
             "options": ["Canvas", "Wood", "Wet plaster", "Paper"],
+        },
+        {
+            "question": "Who painted 'The Persistence of Memory'?",
+            "answer": "Salvador Dalí",
+            "options": ["Pablo Picasso", "Salvador Dalí", "Frida Kahlo", "Matisse"],
+        },
+        {
+            "question": "Which artist is known for cutting off his ear?",
+            "answer": "Vincent van Gogh",
+            "options": ["Leonardo da Vinci", "Vincent van Gogh", "Monet", "Cézanne"],
+        },
+        {
+            "question": "Which artist cut off part of his own ear?",
+            "answer": "Vincent van Gogh",
+            "options": ["Monet", "Picasso", "Van Gogh", "Dali"],
+        },
+        {
+            "question": "What does 'Impressionism' primarily focus on?",
+            "answer": "Light and color",
+            "options": ["Emotion", "Form", "Light and color", "Perspective"],
+        },
+        {
+            "question": "What sculpture technique involves carving into a surface?",
+            "answer": "Relief",
+            "options": ["Molding", "Relief", "Casting", "Modeling"],
+        },
+        {
+            "question": "Which artist is known for melting clocks?",
+            "answer": "Salvador Dalí",
+            "options": ["Picasso", "Dalí", "Kandinsky", "Matisse"],
+        },
+        {
+            "question": "What movement was Marcel Duchamp associated with?",
+            "answer": "Dadaism",
+            "options": ["Surrealism", "Cubism", "Dadaism", "Impressionism"],
+        },
+        {
+            "question": "Which ancient civilization created the Parthenon?",
+            "answer": "Greeks",
+            "options": ["Romans", "Greeks", "Egyptians", "Babylonians"],
         },
     ],
 }
@@ -18774,8 +19761,10 @@ def apply_graduate_template(template_name):
     return True
 
 if __name__ == "__main__":
-    # Check if game was launched from the launcher
-    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
+    launched_from_launcher = os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1"
+    launcher_active = os.environ.get("LAUNCHER_ACTIVE") == "1"
+
+    if launched_from_launcher or launcher_active:
         try:
             main()
         except Exception as e:
@@ -18784,4 +19773,5 @@ if __name__ == "__main__":
     else:
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
         print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
-        input("Press Enter to exit...")
+        input(f"{Fore.CYAN}Press Enter to exit...{Style.RESET_ALL}")
+        sys.exit(0)
