@@ -4,12 +4,17 @@ import json
 import os
 import time
 import math
-from typing import List, Dict, Optional, Tuple, Any, Union, Mapping
+import textwrap
+from typing import List, Dict, Optional, Tuple, Any
 from datetime import datetime
 from colorama import Fore, Back, Style, init
 
 # Initialize colorama
 init(autoreset=True)
+
+def clear_screen():
+    """Clear the terminal screen"""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 # Color constants - using colorama named colors for cross-platform compatibility
 OKBLUE = Fore.BLUE
@@ -86,7 +91,10 @@ TICK_COMMANDS = {
     '/dungeon': (8, 15),
     '/travel': (5, 10),
     '/search': (2, 4),
-    '/find_key': (3, 6)
+    '/find_key': (3, 6),
+    '/excavate': (4, 7),
+    '/dig': (3, 6),
+    '/analyze': (2, 4)
 }
 
 # Commands that don't take time
@@ -96,7 +104,8 @@ NO_TICK_COMMANDS = {'/help', '/stats', '/h', '/s_t', '/inventory', '/i', '/mater
                    '/professions', '/dungeon_list', '/mobs', '/tip', '/codes',
                    '/support', '/exit', '/x', '/dimensions', '/dim', '/camp',
                    '/camp_build', '/camp_repair', '/camp_use', '/camp_demolish', '/camp_info',
-                   '/return_home', '/weather', '/season'}
+                   '/return_home', '/weather', '/season', '/archaeology', '/arch',
+                   '/artifacts', '/relics', '/ancient_knowledge'}
 
 # Game time tracking
 # Weather system
@@ -1903,6 +1912,482 @@ user_data = {
     "home_location": "Camp"
 }
 
+# Load literature data from JSON file
+try:
+    with open('Legacies_Literature.json', 'r') as f:
+        LITERATURE_DATA = json.load(f)
+except FileNotFoundError:
+    LITERATURE_DATA = {"books": {}, "scrolls": {}, "notes": {}}
+
+# Literature quests - unlocked by reading specific books, scrolls, or notes
+LITERATURE_QUESTS = [
+    {
+        "id": "the_whispering_crown",
+        "name": "The Whispering Crown",
+        "description": "Investigate the strange behavior of the king after discovering an ancient curse in the royal wizard's diary.",
+        "level_requirement": 15,
+        "location_requirement": "Royal Castle",
+        "unlock_requirements": {
+            "literature": ["Notes:Personal Journals:Diary of a Court Wizard"]
+        },
+        "objectives": [
+            {
+                "type": "examine",
+                "target": "Royal Crown",
+                "description": "Examine the king's crown without raising suspicion",
+                "location": "Royal Castle"
+            },
+            {
+                "type": "find",
+                "target": "Book of Counter-Enchantments",
+                "description": "Find the Book of Counter-Enchantments in the Royal Archives",
+                "location": "Royal Archives"
+            },
+            {
+                "type": "defeat",
+                "target": "Crown Guardian",
+                "description": "Defeat the magical guardian protecting the crown",
+                "location": "Royal Castle"
+            },
+            {
+                "type": "use",
+                "target": "Counter-Enchantment",
+                "description": "Use the counter-enchantment on the crown",
+                "location": "Royal Castle"
+            }
+        ],
+        "rewards": {
+            "gold": 1500,
+            "exp": 2000,
+            "items": ["Royal Gratitude", "Arcane Tome of Silence"],
+            "reputation": {
+                "Kingdom": 100
+            }
+        }
+    },
+    {
+        "id": "the_sunken_treasury",
+        "name": "The Sunken Treasury",
+        "description": "Follow an ancient map to recover treasures from a ship that sank centuries ago.",
+        "level_requirement": 10,
+        "location_requirement": "Coastal Town",
+        "unlock_requirements": {
+            "literature": ["Scrolls:Ancient Maps:Map to the Sunken Treasury"]
+        },
+        "objectives": [
+            {
+                "type": "travel",
+                "target": "Offshore Location",
+                "description": "Travel to the marked location during the twin moons alignment",
+                "location": "Coastal Waters"
+            },
+            {
+                "type": "defeat",
+                "target": "Sea Guardian",
+                "description": "Defeat the guardian protecting the sunken ship",
+                "location": "Coastal Waters"
+            },
+            {
+                "type": "collect",
+                "target": "Royal Chest",
+                "description": "Recover the royal chest from the captain's quarters",
+                "location": "Sunken Ship"
+            },
+            {
+                "type": "return",
+                "target": "Coastal Town",
+                "description": "Return safely to the coastal town with the treasure",
+                "location": "Coastal Town"
+            }
+        ],
+        "rewards": {
+            "gold": 2500,
+            "exp": 1800,
+            "items": ["Trident of the Seas", "Water Breathing Amulet"],
+            "reputation": {
+                "Coastal Town": 75
+            }
+        }
+    },
+    {
+        "id": "the_silent_watchtower",
+        "name": "The Silent Watchtower",
+        "description": "Investigate what happened to the border patrol after finding an ominous warning letter.",
+        "level_requirement": 12,
+        "location_requirement": "Eastern Border",
+        "unlock_requirements": {
+            "literature": ["Notes:Letters:Warning from the Watchtower"]
+        },
+        "objectives": [
+            {
+                "type": "travel",
+                "target": "Abandoned Watchtower",
+                "description": "Travel to the abandoned watchtower at the eastern border",
+                "location": "Eastern Border"
+            },
+            {
+                "type": "investigate",
+                "target": "Patrol Records",
+                "description": "Search for patrol records and clues",
+                "location": "Abandoned Watchtower"
+            },
+            {
+                "type": "defeat",
+                "target": "Shadow Creatures",
+                "description": "Defeat the strange creatures lurking in the watchtower",
+                "location": "Abandoned Watchtower"
+            },
+            {
+                "type": "rescue",
+                "target": "Survivors",
+                "description": "Find and rescue any survivors",
+                "location": "Abandoned Watchtower"
+            },
+            {
+                "type": "report",
+                "target": "Eastern Garrison",
+                "description": "Report your findings to the Eastern Garrison",
+                "location": "Eastern Garrison"
+            }
+        ],
+        "rewards": {
+            "gold": 1200,
+            "exp": 1600,
+            "items": ["Scout's Bow", "Shadow Essence"],
+            "reputation": {
+                "Kingdom": 60,
+                "Eastern Garrison": 100
+            }
+        }
+    },
+    {
+        "id": "seeking_the_guardian_beasts",
+        "name": "Seeking the Guardian Beasts",
+        "description": "Track down the mythical guardian beasts to seek their blessings.",
+        "level_requirement": 20,
+        "location_requirement": "Deep Forest",
+        "unlock_requirements": {
+            "literature": ["Books:Mythical Legends:The Guardian Beasts"]
+        },
+        "objectives": [
+            {
+                "type": "travel",
+                "target": "Volcanic Crown",
+                "description": "Journey to the Volcanic Crown mountains to seek the Phoenix",
+                "location": "Volcanic Crown"
+            },
+            {
+                "type": "offer",
+                "target": "Phoenix Tribute",
+                "description": "Present a worthy offering to the Phoenix",
+                "location": "Phoenix Nest"
+            },
+            {
+                "type": "travel",
+                "target": "Forgotten Sea",
+                "description": "Travel to the depths of the Forgotten Sea to find the Leviathan",
+                "location": "Forgotten Sea"
+            },
+            {
+                "type": "offer",
+                "target": "Rare Pearls",
+                "description": "Offer rare pearls to the Leviathan",
+                "location": "Abyssal Depths"
+            },
+            {
+                "type": "travel",
+                "target": "Whispering Woods",
+                "description": "Find the Great Elk in the heart of the Whispering Woods",
+                "location": "Whispering Woods"
+            },
+            {
+                "type": "offer",
+                "target": "Forest Tribute",
+                "description": "Present an offering of preserved ancient seeds",
+                "location": "Hidden Grove"
+            }
+        ],
+        "rewards": {
+            "gold": 3000,
+            "exp": 5000,
+            "items": ["Phoenix Feather", "Leviathan Scale", "Elk Antler Fragment"],
+            "abilities": ["Beast Communication", "Elemental Harmony"],
+            "reputation": {
+                "Natural World": 200
+            }
+        }
+    },
+    {
+        "id": "bandit_elimination",
+        "name": "Forest Bandits Bounty",
+        "description": "Eliminate the bandit leader 'Shadowstep' and his crew who are harassing travelers.",
+        "level_requirement": 8,
+        "location_requirement": "Eastern Forest Road",
+        "unlock_requirements": {
+            "literature": ["Scrolls:Royal Decrees:Bounty on the Forest Bandits"]
+        },
+        "objectives": [
+            {
+                "type": "travel",
+                "target": "Eastern Forest Road",
+                "description": "Patrol the Eastern Forest Road for signs of bandit activity",
+                "location": "Eastern Forest Road"
+            },
+            {
+                "type": "track",
+                "target": "Bandit Camp",
+                "description": "Follow the bandit tracks to locate their hidden camp",
+                "location": "Deep Forest"
+            },
+            {
+                "type": "defeat",
+                "target": "Bandit Guards",
+                "description": "Defeat the bandit sentries",
+                "location": "Bandit Camp"
+            },
+            {
+                "type": "defeat",
+                "target": "Shadowstep",
+                "description": "Defeat the bandit leader 'Shadowstep'",
+                "location": "Bandit Camp"
+            },
+            {
+                "type": "collect",
+                "target": "Proof of Completion",
+                "description": "Collect Shadowstep's signature dagger as proof",
+                "location": "Bandit Camp"
+            },
+            {
+                "type": "return",
+                "target": "Royal Guard Captain",
+                "description": "Present the proof to the Royal Guard Captain",
+                "location": "Kingdom Capital"
+            }
+        ],
+        "rewards": {
+            "gold": 500,
+            "exp": 1000,
+            "items": ["Shadowstep's Cloak", "Royal Commendation"],
+            "reputation": {
+                "Kingdom": 50,
+                "Merchants Guild": 75
+            }
+        }
+    }
+]
+
+# New locations related to the literature system
+NEW_LOCATIONS = [
+    {
+        "id": "village_library",
+        "name": "Village Library",
+        "description": "A quaint building housing scrolls and books collected by the villagers over generations.",
+        "level_range": [1, 3],
+        "enemies": [],
+        "literature": [
+            "Books:Crafting Guides:Alchemy of Growth", 
+            "Notes:Recipes:Grandmother's Healing Stew"
+        ],
+        "points_of_interest": [
+            "Librarian's Desk",
+            "Reading Nook",
+            "Children's Section",
+            "Local History Shelf"
+        ],
+        "npcs": [
+            {
+                "name": "Eliza Pagebinder",
+                "role": "Village Librarian",
+                "dialogue": [
+                    "Welcome to our humble library! Feel free to browse our collection.",
+                    "We have many practical books on farming and crafting that the villagers find useful.",
+                    "If you're interested in local legends, check the shelf by the window. Some fascinating stories there!",
+                    "The children love story time. I read to them every evening before sunset."
+                ]
+            }
+        ]
+    },
+    {
+        "id": "royal_archives",
+        "name": "Royal Archives",
+        "description": "The kingdom's vast repository of knowledge, accessible only to those with special permission.",
+        "level_range": [15, 20],
+        "enemies": ["Royal Guard", "Scholar"],
+        "literature": [
+            "Books:Ancient Tomes:The Lost Kingdom",
+            "Scrolls:Royal Decrees:Charter of Exploration"
+        ],
+        "points_of_interest": [
+            "Restricted Section",
+            "Royal Historians' Study",
+            "Map Room",
+            "Ancient Manuscripts Vault"
+        ],
+        "npcs": [
+            {
+                "name": "Archivist Thaddeus",
+                "role": "Royal Archivist",
+                "dialogue": [
+                    "State your business. The Royal Archives are not open to the general public.",
+                    "Every document here is cataloged and accounted for. Nothing leaves without proper authorization.",
+                    "The restricted section? That requires approval from the Royal Council itself.",
+                    "Some of these documents date back to the founding of the kingdom itself. Handle with utmost care!"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "great_library",
+        "name": "Great Library",
+        "description": "An ancient library from a forgotten age, containing knowledge from civilizations long past.",
+        "level_range": [18, 25],
+        "enemies": ["Animated Book", "Ink Elemental", "Knowledge Seeker"],
+        "literature": [
+            "Books:Mythical Legends:The Divine Concordance",
+            "Books:Ancient Tomes:Elemental Harmonies"
+        ],
+        "points_of_interest": [
+            "Infinite Stacks",
+            "Whispering Gallery",
+            "Constellation Chamber",
+            "Forbidden Tomes Section"
+        ],
+        "npcs": [
+            {
+                "name": "The Keeper",
+                "role": "Ancient Guardian",
+                "dialogue": [
+                    "Few find their way here. What knowledge do you seek, wanderer?",
+                    "The library exists in many places and times at once. Be careful where you step.",
+                    "Books here are not merely read—they experience you as much as you experience them.",
+                    "Some knowledge was never meant to be found again. Heed the warnings on sealed texts."
+                ]
+            }
+        ]
+    },
+    {
+        "id": "abandoned_study",
+        "name": "Abandoned Study",
+        "description": "The private study of a powerful wizard, left untouched for centuries and filled with arcane texts.",
+        "level_range": [20, 30],
+        "enemies": ["Animated Quill", "Book Mimic", "Arcane Construct"],
+        "literature": [
+            "Scrolls:Spell Scrolls:Scroll of Teleportation"
+        ],
+        "points_of_interest": [
+            "Wizard's Desk",
+            "Experimental Apparatus",
+            "Arcane Circle",
+            "Personal Library"
+        ],
+        "npcs": [
+            {
+                "name": "Echo of Archmagus Valorian",
+                "role": "Magical Remnant",
+                "dialogue": [
+                    "...interrupt my work... who dares... oh, a visitor after all this time?",
+                    "My research... did it succeed? Did it fail? I cannot remember...",
+                    "Be careful with those scrolls. Some are... unstable... without proper preparation.",
+                    "If you seek my greatest works, look beneath the floorboards. I trust no one with their keeping."
+                ]
+            }
+        ]
+    },
+    {
+        "id": "secret_thieves_guild",
+        "name": "Secret Thieves' Guild",
+        "description": "A hidden underground complex where thieves and assassins gather to trade secrets and stolen goods.",
+        "level_range": [15, 25],
+        "enemies": ["Thief", "Assassin", "Guild Enforcer"],
+        "literature": [
+            "Notes:Recipes:Assassin's Poison Primer"
+        ],
+        "points_of_interest": [
+            "Black Market",
+            "Training Grounds",
+            "Guildmaster's Office",
+            "Treasure Vault"
+        ],
+        "npcs": [
+            {
+                "name": "Shadowhand Vex",
+                "role": "Guild Lieutenant",
+                "dialogue": [
+                    "Who vouched for you? We don't take kindly to uninvited guests.",
+                    "The guild has eyes everywhere. Cross us, and there's nowhere to hide.",
+                    "Need something... special? For the right price, anything can be arranged.",
+                    "The Guildmaster only meets with those who've proven their worth. Come back when you've made a name for yourself."
+                ]
+            }
+        ]
+    }
+]
+
+# Default AREAS dictionary if not defined elsewhere
+AREAS = {
+    "Greenwood Village": {
+        "description": "A small village surrounded by dense forest. The local inn offers cheap accommodation.",
+        "mobs": ["Wolf", "Boar", "Bandit"],
+        "level_range": (1, 5),
+        "biome": "Forest",
+        "travel_options": ["Mountainside", "Coastal Town", "Deep Forest", "Monster Plains"]
+    },
+    "Mountainside": {
+        "description": "Rocky terrain with sparse vegetation. Home to dangerous mountain creatures.",
+        "mobs": ["Mountain Lion", "Rock Elemental", "Troll"],
+        "level_range": (5, 10),
+        "biome": "Mountain",
+        "travel_options": ["Greenwood Village", "Mountain Peak", "Deep Cave"]
+    },
+    "Kingdom Capital": {
+        "description": "The bustling capital city with markets, guilds, and the royal castle.",
+        "mobs": ["Guard", "Thief", "Noble"],
+        "level_range": (5, 15),
+        "biome": "Urban",
+        "travel_options": ["Greenwood Village", "Royal Castle", "Merchant District"]
+    }
+}
+
+# Function to integrate new locations into the game world
+def integrate_new_locations():
+    """Add the new literature-related locations to appropriate area connections in the game world"""
+    
+    # Add Village Library to Greenwood Village connections
+    if "Greenwood Village" in AREAS:
+        if "travel_options" not in AREAS["Greenwood Village"]:
+            AREAS["Greenwood Village"]["travel_options"] = []
+        if "Village Library" not in AREAS["Greenwood Village"]["travel_options"]:
+            AREAS["Greenwood Village"]["travel_options"].append("Village Library")
+    
+    # Create new locations based on NEW_LOCATIONS
+    for location in NEW_LOCATIONS:
+        # Get the name and use it directly (no need for location_id)
+        name = location["name"]
+        
+        if name not in AREAS:
+            AREAS[name] = {
+                "description": location["description"],
+                "mobs": location.get("enemies", []),
+                "level_range": tuple(location["level_range"]) if "level_range" in location else (1, 5),
+                "biome": "Settlement" if "enemies" not in location or not location["enemies"] else "Magical",
+                "travel_options": []
+            }
+            
+            # Connect locations based on their types
+            if name == "Village Library":
+                AREAS[name]["travel_options"] = ["Greenwood Village"]
+            elif name == "Royal Archives":
+                AREAS[name]["travel_options"] = ["Kingdom Capital", "Great Library"]
+            elif name == "Great Library":
+                AREAS[name]["travel_options"] = ["Royal Archives", "Abandoned Study"]
+            elif name == "Abandoned Study":
+                AREAS[name]["travel_options"] = ["Great Library"]
+            elif name == "Secret Thieves' Guild":
+                AREAS[name]["travel_options"] = ["Kingdom Capital", "Underground Passages"]
+
+# Call the function to integrate new locations
+integrate_new_locations()
+
 def ensure_user_data_keys(data: Dict) -> None:
     defaults = {
         "class": None,
@@ -1912,6 +2397,11 @@ def ensure_user_data_keys(data: Dict) -> None:
         "inventory": [],
         "equipped": {"weapon": None, "armor": None},
         "gold": INITIAL_GOLD,
+        "literature": {
+            "discovered": [],
+            "read": [],
+            "owned": []
+        },
         "coolness": 0,
         "guild": None,
         "pets": [],
@@ -2416,6 +2906,155 @@ def check_achievements():
     """
     Enhanced achievement system with tiers, categories, and visual feedback
     """
+    
+    # All achievement categories
+    all_achievements = {
+        "Combat": [],
+        "Wealth": [],
+        "Experience": [],
+        "Exploration": [],
+        "Collection": [],
+        "Crafting": [],
+        "Quests": [],
+        "Archaeology": [],
+        "Literature": []
+    }
+        
+    # Define archaeology-related achievements if not already defined
+    archaeology_achievements = [
+        {
+            "id": "novice_archaeologist",
+            "name": "Novice Archaeologist",
+            "description": "Discover your first archaeological site.",
+            "condition": "Discover 1 site",
+            "tier": 1,
+            "category": "Archaeology"
+        },
+        {
+            "id": "amateur_archaeologist",
+            "name": "Amateur Archaeologist",
+            "description": "Discover 3 archaeological sites.",
+            "condition": "Discover 3 sites",
+            "tier": 2,
+            "category": "Archaeology"
+        },
+        {
+            "id": "professional_archaeologist",
+            "name": "Professional Archaeologist",
+            "description": "Discover all archaeological sites.",
+            "condition": "Discover all sites",
+            "tier": 3,
+            "category": "Archaeology"
+        },
+        {
+            "id": "artifact_collector",
+            "name": "Artifact Collector",
+            "description": "Complete your first artifact set.",
+            "condition": "Complete 1 artifact set",
+            "tier": 2,
+            "category": "Archaeology"
+        },
+        {
+            "id": "master_collector",
+            "name": "Master Collector",
+            "description": "Complete 3 artifact sets.",
+            "condition": "Complete 3 artifact sets",
+            "tier": 3,
+            "category": "Archaeology"
+        },
+        {
+            "id": "knowledge_seeker",
+            "name": "Knowledge Seeker",
+            "description": "Acquire your first piece of ancient knowledge.",
+            "condition": "Acquire 1 ancient knowledge",
+            "tier": 1,
+            "category": "Archaeology"
+        },
+        {
+            "id": "ancient_scholar",
+            "name": "Ancient Scholar",
+            "description": "Acquire all pieces of ancient knowledge.",
+            "condition": "Acquire all ancient knowledge",
+            "tier": 3,
+            "category": "Archaeology"
+        },
+        {
+            "id": "museum_curator",
+            "name": "Museum Curator",
+            "description": "Display 5 artifacts in your museum.",
+            "condition": "Display 5 artifacts",
+            "tier": 2,
+            "category": "Archaeology"
+        },
+        {
+            "id": "master_curator",
+            "name": "Master Curator",
+            "description": "Display 10 artifacts in your museum.",
+            "condition": "Display 10 artifacts",
+            "tier": 3,
+            "category": "Archaeology"
+        }
+    ]
+    
+    # Add literature-related achievements
+    literature_achievements = [
+        {
+            "id": "novice_reader",
+            "name": "Novice Reader",
+            "description": "Read your first book or scroll.",
+            "condition": "Read 1 book",
+            "tier": 1,
+            "category": "Literature"
+        },
+        {
+            "id": "bookworm",
+            "name": "Bookworm",
+            "description": "Read 10 different books and scrolls.",
+            "condition": "Read 10 texts",
+            "tier": 2,
+            "category": "Literature"
+        },
+        {
+            "id": "scholar",
+            "name": "Scholar",
+            "description": "Read 25 different books and scrolls.",
+            "condition": "Read 25 texts",
+            "tier": 3,
+            "category": "Literature"
+        },
+        {
+            "id": "collector_of_knowledge",
+            "name": "Collector of Knowledge",
+            "description": "Own 15 different books and scrolls in your collection.",
+            "condition": "Collect 15 texts",
+            "tier": 2,
+            "category": "Literature"
+        },
+        {
+            "id": "master_of_lore",
+            "name": "Master of Lore",
+            "description": "Read at least one book from every category.",
+            "condition": "Read diverse texts",
+            "tier": 3,
+            "category": "Literature"
+        }
+    ]
+    
+    # Add archaeology and literature achievements to achievements list
+    all_achievement_types = {
+        "Archaeology": archaeology_achievements,
+        "Literature": literature_achievements
+    }
+    
+    for category, achievements_list in all_achievement_types.items():
+        if category not in all_achievements:
+            all_achievements[category] = []
+            
+        # Check if achievements need to be added
+        existing_ids = {ach.get("id", "") for ach in all_achievements[category]}
+        for achievement in achievements_list:
+            if achievement["id"] not in existing_ids:
+                all_achievements[category].append(achievement)
     # Initialize achievements structure if not exists
     if "achievements" not in user_data:
         user_data["achievements"] = {
@@ -2974,6 +3613,72 @@ def check_achievements():
 
 def update_achievement_progress():
     """Update and track progress towards achievements"""
+    
+    # Check literature-related achievements
+    if "literature" in user_data:
+        lit_data = user_data["literature"]
+        
+        # Count read literature
+        read_items = len(lit_data.get("read", []))
+        if read_items > 0:
+            unlock_achievement("Novice Reader", "Read your first book or scroll.", "Read 1 book")
+        if read_items >= 10:
+            unlock_achievement("Bookworm", "Read 10 different books and scrolls.", "Read 10 texts")
+        if read_items >= 25:
+            unlock_achievement("Scholar", "Read 25 different books and scrolls.", "Read 25 texts")
+        
+        # Count owned literature
+        owned_items = len(lit_data.get("owned", []))
+        if owned_items >= 15:
+            unlock_achievement("Collector of Knowledge", "Own 15 different books and scrolls in your collection.", "Collect 15 texts")
+        
+        # Check for diverse reading
+        if read_items > 0:
+            read_categories = set()
+            for item_id in lit_data.get("read", []):
+                try:
+                    item_type, category, _ = item_id.split(":", 2)
+                    read_categories.add(f"{item_type}:{category}")
+                except ValueError:
+                    continue
+            
+            # If player has read from at least 5 different categories
+            if len(read_categories) >= 5:
+                unlock_achievement("Master of Lore", "Read at least one book from every category.", "Read diverse texts")
+    
+    # Check archaeology-related achievements
+    if "archaeology" in user_data:
+        arch_data = user_data["archaeology"]
+        
+        # Count discovered sites
+        discovered_sites = len(arch_data.get("discovered_sites", []))
+        if discovered_sites > 0:
+            unlock_achievement("Novice Archaeologist", "Discover your first archaeological site.", "Discover 1 site")
+        if discovered_sites >= 3:
+            unlock_achievement("Amateur Archaeologist", "Discover 3 archaeological sites.", "Discover 3 sites")
+        if discovered_sites >= len(ARCHAEOLOGICAL_SITES):
+            unlock_achievement("Professional Archaeologist", "Discover all archaeological sites.", "Discover all sites")
+        
+        # Count completed artifact sets
+        completed_sets = len(arch_data.get("completed_sets", []))
+        if completed_sets >= 1:
+            unlock_achievement("Artifact Collector", "Complete your first artifact set.", "Complete 1 artifact set")
+        if completed_sets >= 3:
+            unlock_achievement("Master Collector", "Complete 3 artifact sets.", "Complete 3 artifact sets")
+        
+        # Count acquired knowledge
+        knowledge_count = len(arch_data.get("knowledge", []))
+        if knowledge_count >= 1:
+            unlock_achievement("Knowledge Seeker", "Acquire your first piece of ancient knowledge.", "Acquire 1 ancient knowledge")
+        if knowledge_count >= len(ANCIENT_KNOWLEDGE):
+            unlock_achievement("Ancient Scholar", "Acquire all pieces of ancient knowledge.", "Acquire all ancient knowledge")
+        
+        # Count museum exhibits
+        museum_exhibits = len(arch_data.get("museum_exhibits", []))
+        if museum_exhibits >= 5:
+            unlock_achievement("Museum Curator", "Display 5 artifacts in your museum.", "Display 5 artifacts")
+        if museum_exhibits >= 10:
+            unlock_achievement("Master Curator", "Display 10 artifacts in your museum.", "Display 10 artifacts")
     # Update achievement stats based on user_data
     user_stats = user_data["achievements"]["progress"]
 
@@ -6285,6 +6990,1692 @@ def print_header(title: str) -> None:
     print("=" * 40)
 
 # Show the help menu
+def archaeology() -> None:
+    """Main function for the archaeology system - handles excavation, analysis, and museums"""
+    global user_data
+    
+    # Initialize archaeology data if it doesn't exist
+    if "archaeology" not in user_data:
+        user_data["archaeology"] = {
+            "discovered_sites": [],
+            "excavated_artifacts": [],
+            "knowledge": [],
+            "tools": ["Basic Trowel"],
+            "museum_exhibits": [],
+            "excavation_skill": 1,
+            "analysis_skill": 1
+        }
+    
+    print_header("Archaeology")
+    print_colored("Explore ancient ruins, recover artifacts, and gain knowledge of lost civilizations.", CYAN)
+    print()
+    
+    # Main archaeology menu
+    print_colored("1. View Discovered Sites", YELLOW)
+    print_colored("2. Excavate at Current Location", YELLOW)
+    print_colored("3. Analyze Artifacts", YELLOW)
+    print_colored("4. View Your Museum", YELLOW)
+    print_colored("5. View Ancient Knowledge", YELLOW)
+    print_colored("6. Purchase Excavation Tools", YELLOW)
+    print_colored("7. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-7): {ENDC}"))
+        
+        if choice == 1:
+            view_archaeological_sites()
+        elif choice == 2:
+            excavate_site()
+        elif choice == 3:
+            analyze_artifacts()
+        elif choice == 4:
+            view_museum()
+        elif choice == 5:
+            view_ancient_knowledge()
+        elif choice == 6:
+            purchase_excavation_tools()
+        elif choice == 7:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    # Return to archaeology menu after completing action
+    archaeology()
+
+def wait_for_input() -> None:
+    """Wait for user to press Enter to continue"""
+    input(f"\n{YELLOW}Press Enter to continue...{ENDC}")
+
+def unlock_achievement(name: str, description: str, condition: str) -> None:
+    """Unlock an achievement for the player"""
+    if "achievements" not in user_data:
+        user_data["achievements"] = {
+            "unlocked": [],
+            "progress": {}
+        }
+    
+    # Create achievement ID from name
+    achievement_id = name.lower().replace(" ", "_")
+    
+    # Check if already unlocked
+    if achievement_id in user_data["achievements"]["unlocked"]:
+        return
+    
+    # Add to unlocked achievements
+    user_data["achievements"]["unlocked"].append(achievement_id)
+    
+    # Display achievement unlocked message
+    print_colored("\n╔══════════════════════════════════╗", YELLOW)
+    print_colored("║         ACHIEVEMENT UNLOCKED      ║", YELLOW)
+    print_colored("╚══════════════════════════════════╝", YELLOW)
+    print_colored(f"{CYAN}{name}{ENDC}: {description}", LIGHTYELLOW)
+    
+    # Add XP reward
+    user_data["exp"] += 50
+    print_colored("Reward: +50 XP", LIGHTGREEN)
+    
+    # Check for level up
+    check_level_up()
+
+def view_archaeological_sites() -> None:
+    """Display discovered archaeological sites and their details"""
+    arch_data = user_data.get("archaeology", {})
+    discovered_sites = arch_data.get("discovered_sites", [])
+    
+    print_header("Discovered Archaeological Sites")
+    
+    if not discovered_sites:
+        print_colored("You haven't discovered any archaeological sites yet.", YELLOW)
+        print_colored("Explore the world to find ancient ruins and dig sites!", CYAN)
+        wait_for_input()
+        return
+    
+    for i, site_name in enumerate(discovered_sites, 1):
+        if site_name in ARCHAEOLOGICAL_SITES:
+            site = ARCHAEOLOGICAL_SITES[site_name]
+            
+            # Calculate how many artifacts have been found at this site
+            excavated_count = 0
+            for artifact in arch_data.get("excavated_artifacts", []):
+                if artifact.get("site") == site_name:
+                    excavated_count += 1
+            
+            total_artifacts = len(site.get("artifacts", []))
+            
+            # Display site info with progress
+            print_colored(f"{i}. {site_name}", CYAN + BOLD)
+            print_colored(f"   Location: {site['location']}", BLUE)
+            print_colored(f"   {site['description']}", WHITE)
+            print_colored(f"   Difficulty: {site['difficulty']}", 
+                         YELLOW if site['difficulty'] == "Easy" else 
+                         GREEN if site['difficulty'] == "Medium" else
+                         RED if site['difficulty'] == "Hard" else MAGENTA)
+            print_colored(f"   Required Level: {site['difficulty']}", YELLOW)
+            print_colored(f"   Artifacts: {excavated_count}/{total_artifacts}", GREEN)
+            print()
+    
+    wait_for_input()
+
+def excavate_site() -> None:
+    """Excavate at the current location to find artifacts"""
+    # Check if current location has an archaeological site
+    current_location = user_data.get("current_location", "Greenwood Village")
+    
+    # Find sites at this location
+    sites_here = []
+    for site_name, site_data in ARCHAEOLOGICAL_SITES.items():
+        if site_data["location"] == current_location:
+            sites_here.append((site_name, site_data))
+    
+    if not sites_here:
+        print_colored(f"There are no archaeological sites at {current_location}.", YELLOW)
+        print_colored("Travel to different areas to find ancient ruins and dig sites.", CYAN)
+        wait_for_input()
+        return
+    
+    # If there are multiple sites here, let player choose
+    site_name, site_data = sites_here[0]  # Default to first site
+    if len(sites_here) > 1:
+        print_colored(f"You found multiple archaeological sites at {current_location}:", CYAN)
+        for i, (name, data) in enumerate(sites_here, 1):
+            print_colored(f"{i}. {name} ({data['difficulty']})", YELLOW)
+        
+        try:
+            choice = int(input(f"\n{YELLOW}Choose a site to excavate (1-{len(sites_here)}): {ENDC}"))
+            if 1 <= choice <= len(sites_here):
+                site_name, site_data = sites_here[choice-1]
+            else:
+                print_colored("Invalid choice. Defaulting to first site.", RED)
+        except ValueError:
+            print_colored("Invalid input. Defaulting to first site.", RED)
+    
+    # Check player level requirement
+    if user_data["level"] < site_data["required_level"]:
+        print_colored(f"This site requires level {site_data['required_level']} to excavate.", RED)
+        print_colored(f"You are only level {user_data['level']}. Come back when you're stronger.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Add site to discovered sites if not already there
+    if site_name not in user_data["archaeology"]["discovered_sites"]:
+        user_data["archaeology"]["discovered_sites"].append(site_name)
+        print_colored(f"You've discovered a new archaeological site: {site_name}!", GREEN)
+    
+    # Get player's excavation tool
+    tools = user_data["archaeology"].get("tools", ["Basic Trowel"])
+    current_tool = tools[0] if tools else "Basic Trowel"  # Default to basic tool
+    
+    if len(tools) > 1:
+        print_colored("Choose an excavation tool:", CYAN)
+        for i, tool_name in enumerate(tools, 1):
+            tool = ARCHAEOLOGICAL_EXCAVATION_TOOLS.get(tool_name, {})
+            print_colored(f"{i}. {tool_name} - Efficiency: {tool.get('efficiency', 1.0)}, Preservation: {tool.get('preservation_chance', 0.8)*100}%", YELLOW)
+        
+        try:
+            choice = int(input(f"\n{YELLOW}Choose a tool (1-{len(tools)}): {ENDC}"))
+            if 1 <= choice <= len(tools):
+                current_tool = tools[choice-1]
+            else:
+                print_colored("Invalid choice. Using first tool.", RED)
+        except ValueError:
+            print_colored("Invalid input. Using first tool.", RED)
+    
+    # Get tool stats
+    tool_data = ARCHAEOLOGICAL_EXCAVATION_TOOLS.get(current_tool, {
+        "efficiency": 1.0,
+        "preservation_chance": 0.8,
+        "value": 50
+    })
+    
+    # Check which artifacts are already found
+    found_artifacts = []
+    for artifact in user_data["archaeology"].get("excavated_artifacts", []):
+        if artifact.get("site") == site_name:
+            found_artifacts.append(artifact.get("name"))
+    
+    # Get potential artifacts at this site that haven't been found yet
+    available_artifacts = [a for a in site_data.get("artifacts", []) if a not in found_artifacts]
+    
+    if not available_artifacts:
+        print_colored(f"You've already found all artifacts at {site_name}!", GREEN)
+        print_colored("Visit another archaeological site to find more artifacts.", CYAN)
+        wait_for_input()
+        return
+    
+    # Start excavation process
+    print_animated(f"Excavating at {site_name} with {current_tool}...", CYAN, delay=0.03)
+    time.sleep(1)  # Simulate excavation time
+    
+    # Calculate success chance based on difficulty, tool efficiency, and player skill
+    difficulty_modifier = {
+        "Easy": 0.9,
+        "Medium": 0.7,
+        "Hard": 0.5,
+        "Very Hard": 0.3,
+        "Expert": 0.2
+    }.get(site_data["difficulty"], 0.5)
+    
+    excavation_skill = user_data["archaeology"].get("excavation_skill", 1)
+    
+    # Calculate final success chance
+    success_chance = min(0.95, difficulty_modifier * tool_data["efficiency"] * (1 + (excavation_skill - 1) * 0.1))
+    
+    # Determine if excavation is successful
+    if random.random() < success_chance:
+        # Choose a random artifact from available ones
+        artifact_name = random.choice(available_artifacts)
+        artifact_data = ARCHAEOLOGICAL_ARTIFACTS.get(artifact_name, {})
+        
+        # Check if artifact is preserved based on tool and skill
+        preservation_chance = tool_data["preservation_chance"] * (1 + (excavation_skill - 1) * 0.05)
+        
+        if random.random() < preservation_chance:
+            # Success! Add artifact to player's collection
+            print_animated(f"Success! You found: {artifact_name}", GREEN, delay=0.02)
+            print_colored(f"Rarity: {artifact_data.get('rarity', 'Common')}", YELLOW)
+            print_colored(f"Set: {artifact_data.get('set', 'None')}", CYAN)
+            print_colored(f"{artifact_data.get('description', 'An ancient artifact.')}", WHITE)
+            
+            # Add to excavated artifacts
+            user_data["archaeology"]["excavated_artifacts"].append({
+                "name": artifact_name,
+                "site": site_name,
+                "analyzed": False,
+                "displayed": False
+            })
+            
+            # Gain experience for successful find
+            rarity_exp = {
+                "Common": 10,
+                "Uncommon": 20,
+                "Rare": 35,
+                "Epic": 50,
+                "Legendary": 100
+            }.get(artifact_data.get("rarity", "Common"), 10)
+            
+            exp_gain = rarity_exp * (1 + (user_data["level"] - 1) * 0.1)
+            user_data["exp"] += exp_gain
+            print_colored(f"You gained {exp_gain} experience!", LIGHTGREEN)
+            
+            # Check for level up
+            check_level_up()
+            
+            # Small chance to increase excavation skill
+            if random.random() < 0.2:
+                user_data["archaeology"]["excavation_skill"] += 1
+                print_colored(f"Your excavation skill increased to {user_data['archaeology']['excavation_skill']}!", MAGENTA)
+            
+            # Check for completing a set
+            check_artifact_set_completion(artifact_data.get('set', ''))
+        else:
+            # Artifact damaged during excavation
+            print_colored("You found something, but it was damaged during excavation.", YELLOW)
+            print_colored("A more careful approach or better tools might help next time.", CYAN)
+    else:
+        # Failed excavation
+        print_colored("You didn't find anything valuable this time.", RED)
+        print_colored("Keep trying or try another site!", CYAN)
+    
+    wait_for_input()
+
+def analyze_artifacts() -> None:
+    """Analyze discovered artifacts to learn more about them"""
+    arch_data = user_data.get("archaeology", {})
+    artifacts = arch_data.get("excavated_artifacts", [])
+    
+    # Filter for unanalyzed artifacts
+    unanalyzed = [a for a in artifacts if not a.get("analyzed", False)]
+    
+    if not unanalyzed:
+        if not artifacts:
+            print_colored("You don't have any artifacts to analyze.", YELLOW)
+            print_colored("Excavate archaeological sites to find artifacts first!", CYAN)
+        else:
+            print_colored("All your artifacts have already been analyzed.", GREEN)
+            print_colored("Find more artifacts to analyze them!", CYAN)
+        wait_for_input()
+        return
+    
+    print_header("Analyze Artifacts")
+    print_colored("Select an artifact to analyze and learn more about its history:", CYAN)
+    
+    for i, artifact in enumerate(unanalyzed, 1):
+        artifact_name = artifact.get("name", "Unknown Artifact")
+        artifact_data = ARCHAEOLOGICAL_ARTIFACTS.get(artifact_name, {})
+        print_colored(f"{i}. {artifact_name} - {artifact_data.get('rarity', 'Common')}", YELLOW)
+        print_colored(f"   Found at: {artifact.get('site', 'Unknown')}", BLUE)
+        print_colored(f"   {artifact_data.get('description', 'An ancient artifact.')}", WHITE)
+        print()
+    
+    print_colored(f"{len(unanalyzed)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an artifact to analyze (1-{len(unanalyzed)+1}): {ENDC}"))
+        
+        if choice == len(unanalyzed)+1:
+            return
+        
+        if 1 <= choice <= len(unanalyzed):
+            selected = unanalyzed[choice-1]
+            artifact_name = selected.get("name", "Unknown Artifact")
+            site_name = selected.get("site", "Unknown Site")
+            
+            # Start analysis process
+            print_animated(f"Analyzing {artifact_name}...", CYAN, delay=0.03)
+            time.sleep(1.5)  # Simulate analysis time
+            
+            # Mark as analyzed
+            for artifact in artifacts:
+                if artifact.get("name") == artifact_name and artifact.get("site") == site_name:
+                    artifact["analyzed"] = True
+            
+            # Get artifact data
+            artifact_data = ARCHAEOLOGICAL_ARTIFACTS.get(artifact_name, {})
+            
+            # Check if this gives access to ancient knowledge
+            site_data = ARCHAEOLOGICAL_SITES.get(site_name, {})
+            knowledge_name = site_data.get("knowledge_reward")
+            
+            # Check if all artifacts from this site have been analyzed
+            site_artifacts = site_data.get("artifacts", [])
+            all_analyzed = True
+            
+            for site_artifact in site_artifacts:
+                found = False
+                for player_artifact in artifacts:
+                    if player_artifact.get("name") == site_artifact and player_artifact.get("analyzed", False):
+                        found = True
+                        break
+                if not found:
+                    all_analyzed = False
+                    break
+            
+            # Display analysis results
+            print_header(f"Analysis Results: {artifact_name}")
+            print_colored(f"Rarity: {artifact_data.get('rarity', 'Common')}", YELLOW)
+            print_colored(f"Set: {artifact_data.get('set', 'None')}", CYAN)
+            print_colored(f"Value: {artifact_data.get('value', 100)} gold", LIGHTYELLOW)
+            print()
+            print_colored("Historical Analysis:", LIGHTCYAN)
+            
+            # Generate a more detailed description based on artifact and site
+            detailed_description = generate_artifact_lore(artifact_name, site_name)
+            print_colored(detailed_description, WHITE)
+            print()
+            
+            # Show effects
+            if "effect" in artifact_data:
+                print_colored("Special Effects:", MAGENTA)
+                for stat, value in artifact_data["effect"].items():
+                    print_colored(f"  {stat.replace('_', ' ').title()}: +{value}", GREEN)
+                print()
+            
+            # If all artifacts from this site have been analyzed, grant knowledge
+            if all_analyzed and knowledge_name and knowledge_name not in arch_data.get("knowledge", []):
+                print_colored(f"You've analyzed all artifacts from {site_name}!", GREEN)
+                print_colored(f"You've gained new knowledge: {knowledge_name}", MAGENTA + BOLD)
+                
+                # Add knowledge to player's collection
+                user_data["archaeology"]["knowledge"].append(knowledge_name)
+                
+                # Apply knowledge bonuses
+                if knowledge_name in ANCIENT_KNOWLEDGE:
+                    knowledge = ANCIENT_KNOWLEDGE[knowledge_name]
+                    print_colored(f"{knowledge.get('description', '')}", CYAN)
+                    
+                    if "stat_bonus" in knowledge:
+                        print_colored("You gained the following stat bonuses:", YELLOW)
+                        for stat, value in knowledge["stat_bonus"].items():
+                            print_colored(f"  {stat.replace('_', ' ').title()}: +{value}", GREEN)
+                            
+                            # Apply stat bonus to player
+                            if stat not in user_data:
+                                user_data[stat] = 0
+                            user_data[stat] += value
+                    
+                    if "unlocks" in knowledge:
+                        print_colored("You unlocked new abilities:", YELLOW)
+                        for ability in knowledge["unlocks"]:
+                            print_colored(f"  {ability}", GREEN)
+            
+            # Gain experience for analyzing
+            exp_gain = {
+                "Common": 5,
+                "Uncommon": 10,
+                "Rare": 20,
+                "Epic": 35,
+                "Legendary": 50
+            }.get(artifact_data.get("rarity", "Common"), 5)
+            
+            user_data["exp"] += exp_gain
+            print_colored(f"You gained {exp_gain} experience from analysis!", LIGHTGREEN)
+            
+            # Check for level up
+            check_level_up()
+            
+            # Small chance to increase analysis skill
+            # No need to retrieve the current value as we're just incrementing it
+            if random.random() < 0.15:
+                user_data["archaeology"]["analysis_skill"] += 1
+                print_colored(f"Your analysis skill increased to {user_data['archaeology']['analysis_skill']}!", MAGENTA)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def generate_artifact_lore(artifact_name: str, site_name: str) -> str:
+    """Generate detailed lore for an artifact based on its origin"""
+    artifact_data = ARCHAEOLOGICAL_ARTIFACTS.get(artifact_name, {})
+    base_description = artifact_data.get("description", "An ancient artifact of unknown origin.")
+    
+    # Site-specific lore fragments
+    site_lore = {
+        "Ancient Temple Ruins": [
+            "Inscriptions suggest it was used in rituals to honor the god of {element}.",
+            "Temple records indicate it belonged to a high priest named {name}.",
+            "It bears symbols associated with the {season} festival of renewal.",
+            "The craftsmanship indicates it was made during the reign of {ruler}."
+        ],
+        "Abandoned Mine": [
+            "Traces of rare minerals suggest it was crafted in the deepest section of the mine.",
+            "Markings indicate it belonged to master miner {name}.",
+            "It was likely used during the great mineral rush of the {ancient} era.",
+            "The design suggests it had both practical and ceremonial purposes."
+        ],
+        "Sunken Palace": [
+            "Despite centuries underwater, the royal craftsmanship remains evident.",
+            "Court records mention this was commissioned by {ruler} the {title}.",
+            "It's decorated with symbols of the royal family's patron deity.",
+            "This piece would have been present during historical diplomatic meetings."
+        ],
+        "Celestial Observatory": [
+            "Star patterns engraved on it match the sky as it appeared {years} years ago.",
+            "It was likely used by astronomer {name} to predict {event}.",
+            "The material contains traces of stardust, suggesting celestial origin.",
+            "Symbols indicate it was used to track the movement of the {celestial} constellation."
+        ],
+        "Battlefield Grave Site": [
+            "Blood stains suggest it was carried during the final battle of the {war}.",
+            "It belonged to {rank} {name}, who led the charge against the enemy forces.",
+            "Markings indicate it was awarded for exceptional bravery in combat.",
+            "Despite its age, it still radiates a warrior's determination."
+        ]
+    }
+    
+    # Random name generation helpers
+    ancient_names = ["Azuran", "Thelos", "Mirivian", "Kalindor", "Sythera", "Orindus", "Elyssian", "Dranath"]
+    titles = ["Wise", "Brave", "Merciful", "Conqueror", "Visionary", "Mighty", "Blessed", "Feared"]
+    elements = ["Fire", "Water", "Earth", "Air", "Light", "Shadow", "Time", "Life"]
+    seasons = ["Spring", "Summer", "Autumn", "Winter", "Solstice", "Equinox"]
+    ancient_eras = ["Golden", "Silver", "Bronze", "Iron", "Crystal", "Shadow", "Enlightened"]
+    years = [500, 1000, 1500, 2000, 3000, 5000]
+    celestial_bodies = ["North Star", "Twin Moons", "Seven Sisters", "Dragon's Tail", "Eternal Eye"]
+    wars = ["Unification", "Liberation", "Purification", "Reclamation", "Ascension"]
+    ranks = ["Commander", "General", "Captain", "Warlord", "Champion", "Guardian"]
+    events = ["solar eclipse", "star alignment", "comet passage", "celestial convergence"]
+    
+    # Get lore fragments for this site
+    lore_fragments = site_lore.get(site_name, ["Its origins remain a mystery."])
+    
+    # Choose a random lore fragment and format it
+    lore = random.choice(lore_fragments).format(
+        element=random.choice(elements),
+        name=random.choice(ancient_names),
+        season=random.choice(seasons),
+        ruler=f"{random.choice(ancient_names)} the {random.choice(titles)}",
+        ancient=random.choice(ancient_eras),
+        title=random.choice(titles),
+        years=random.choice(years),
+        celestial=random.choice(celestial_bodies),
+        war=f"{random.choice(wars)} War",
+        rank=random.choice(ranks),
+        event=random.choice(events)
+    )
+    
+    # Final lore combines base description with site-specific details
+    full_lore = f"{base_description} {lore}"
+    
+    # Add set-specific details if applicable
+    artifact_set = artifact_data.get("set", "")
+    if artifact_set:
+        set_details = {
+            "Temple Collection": "It is part of a sacred collection used in the most important temple rituals.",
+            "Mining Collection": "Together with other mining artifacts, it tells the story of an advanced mining civilization.",
+            "Royal Collection": "It belonged to the royal collection, with immense historical and cultural significance.",
+            "Celestial Collection": "When combined with other astronomical instruments, it reveals secrets of the cosmos.",
+            "Warrior Collection": "It is one piece of legendary battle gear carried by the greatest warriors."
+        }
+        
+        if artifact_set in set_details:
+            full_lore += f" {set_details[artifact_set]}"
+    
+    return full_lore
+
+def check_artifact_set_completion(set_name: str) -> None:
+    """Check if player has completed an artifact set and apply bonuses"""
+    if not set_name:
+        return
+    
+    # Get all artifacts in this set
+    set_artifacts = []
+    for name, data in ARCHAEOLOGICAL_ARTIFACTS.items():
+        if data.get("set") == set_name:
+            set_artifacts.append(name)
+    
+    # Check if player has all artifacts in the set
+    player_artifacts = [a.get("name") for a in user_data["archaeology"].get("excavated_artifacts", [])]
+    
+    all_found = True
+    for artifact in set_artifacts:
+        if artifact not in player_artifacts:
+            all_found = False
+            break
+    
+    # If all found and not already completed, grant set bonus
+    completed_sets = user_data["archaeology"].get("completed_sets", [])
+    if all_found and set_name not in completed_sets:
+        # Add to completed sets
+        if "completed_sets" not in user_data["archaeology"]:
+            user_data["archaeology"]["completed_sets"] = []
+        user_data["archaeology"]["completed_sets"].append(set_name)
+        
+        # Get set bonus
+        if set_name in ARCHAEOLOGICAL_SET_BONUSES:
+            set_data = ARCHAEOLOGICAL_SET_BONUSES[set_name]
+            
+            print_colored(f"\nCongratulations! You've completed the {set_name}!", GREEN + BOLD)
+            print_colored(f"Set Bonus: {set_data['name']}", MAGENTA)
+            print_colored(f"{set_data['description']}", CYAN)
+            
+            # Apply stat bonuses
+            if "bonus" in set_data:
+                print_colored("You gained the following permanent bonuses:", YELLOW)
+                for stat, value in set_data["bonus"].items():
+                    print_colored(f"  {stat.replace('_', ' ').title()}: +{value}", GREEN)
+                    
+                    # Apply stat bonus to player
+                    if stat not in user_data:
+                        user_data[stat] = 0
+                    user_data[stat] += value
+            
+            # Grant achievement
+            achievement_text = f"Complete the {set_name}"
+            unlock_achievement("Artifact Collector", f"Completed the {set_name} artifact set", achievement_text)
+            
+            # Extra XP reward
+            user_data["exp"] += 300
+            print_colored("You gained 300 bonus experience!", LIGHTGREEN)
+            
+            # Check for level up
+            check_level_up()
+
+def view_museum() -> None:
+    """View and manage your archaeological museum exhibits"""
+    arch_data = user_data.get("archaeology", {})
+    artifacts = arch_data.get("excavated_artifacts", [])
+    museum_exhibits = arch_data.get("museum_exhibits", [])
+    
+    print_header("Your Archaeological Museum")
+    
+    if not artifacts:
+        print_colored("You don't have any artifacts to display in your museum.", YELLOW)
+        print_colored("Excavate archaeological sites to find artifacts first!", CYAN)
+        wait_for_input()
+        return
+    
+    # Display current exhibits
+    if museum_exhibits:
+        print_colored("Current Exhibits:", CYAN)
+        for i, exhibit in enumerate(museum_exhibits, 1):
+            artifact_name = exhibit.get("artifact")
+            artifact_data = ARCHAEOLOGICAL_ARTIFACTS.get(artifact_name, {})
+            
+            print_colored(f"{i}. {artifact_name} ({artifact_data.get('rarity', 'Common')})", YELLOW)
+            print_colored(f"   {artifact_data.get('description', 'An ancient artifact.')}", WHITE)
+            print_colored(f"   Visitors attracted: {exhibit.get('visitors', 0)} per day", GREEN)
+            print_colored(f"   Daily income: {exhibit.get('income', 0)} gold", LIGHTYELLOW)
+            print()
+        
+        # Calculate total museum stats
+        total_visitors = sum(exhibit.get("visitors", 0) for exhibit in museum_exhibits)
+        total_income = sum(exhibit.get("income", 0) for exhibit in museum_exhibits)
+        
+        print_colored(f"Total daily visitors: {total_visitors}", CYAN)
+        print_colored(f"Total daily income: {total_income} gold", LIGHTYELLOW)
+        print()
+    else:
+        print_colored("Your museum has no exhibits yet.", YELLOW)
+        print_colored("Display some of your artifacts to attract visitors and earn gold!", CYAN)
+        print()
+    
+    # Museum management options
+    print_colored("Museum Management:", CYAN)
+    print_colored("1. Add New Exhibit", YELLOW)
+    print_colored("2. Remove Exhibit", YELLOW)
+    print_colored("3. Collect Daily Income", YELLOW)
+    print_colored("4. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-4): {ENDC}"))
+        
+        if choice == 1:
+            add_museum_exhibit()
+        elif choice == 2:
+            remove_museum_exhibit()
+        elif choice == 3:
+            collect_museum_income()
+        elif choice == 4:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    # Return to museum menu after action
+    view_museum()
+
+def add_museum_exhibit() -> None:
+    """Add a new artifact exhibit to your museum"""
+    arch_data = user_data.get("archaeology", {})
+    artifacts = arch_data.get("excavated_artifacts", [])
+    museum_exhibits = arch_data.get("museum_exhibits", [])
+    
+    # Filter for analyzed artifacts that aren't already exhibited
+    exhibited_names = [exhibit.get("artifact") for exhibit in museum_exhibits]
+    available_artifacts = [a for a in artifacts if a.get("analyzed", False) and a.get("name") not in exhibited_names]
+    
+    if not available_artifacts:
+        print_colored("You don't have any artifacts available to exhibit.", YELLOW)
+        print_colored("Find more artifacts or analyze your existing ones first!", CYAN)
+        wait_for_input()
+        return
+    
+    print_colored("Select an artifact to display in your museum:", CYAN)
+    
+    for i, artifact in enumerate(available_artifacts, 1):
+        artifact_name = artifact.get("name", "Unknown Artifact")
+        artifact_data = ARCHAEOLOGICAL_ARTIFACTS.get(artifact_name, {})
+        
+        print_colored(f"{i}. {artifact_name} - {artifact_data.get('rarity', 'Common')}", YELLOW)
+        print_colored(f"   {artifact_data.get('description', 'An ancient artifact.')}", WHITE)
+        print()
+    
+    print_colored(f"{len(available_artifacts)+1}. Cancel", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an artifact to exhibit (1-{len(available_artifacts)+1}): {ENDC}"))
+        
+        if choice == len(available_artifacts)+1:
+            return
+        
+        if 1 <= choice <= len(available_artifacts):
+            selected = available_artifacts[choice-1]
+            artifact_name = selected.get("name", "Unknown Artifact")
+            
+            # Calculate exhibit stats based on artifact rarity and analysis skill
+            artifact_data = ARCHAEOLOGICAL_ARTIFACTS.get(artifact_name, {})
+            rarity = artifact_data.get("rarity", "Common")
+            
+            # Base visitors and income by rarity
+            rarity_values = {
+                "Common": {"visitors": 5, "income": 10},
+                "Uncommon": {"visitors": 10, "income": 25},
+                "Rare": {"visitors": 20, "income": 50},
+                "Epic": {"visitors": 35, "income": 100},
+                "Legendary": {"visitors": 50, "income": 200}
+            }
+            
+            base_stats = rarity_values.get(rarity, {"visitors": 5, "income": 10})
+            
+            # Apply analysis skill modifier
+            # Use the analysis_skill to calculate museum stats
+            analysis_skill = user_data["archaeology"].get("analysis_skill", 1)
+            visitors = int(base_stats["visitors"] * (1 + (analysis_skill - 1) * 0.1))
+            income = int(base_stats["income"] * (1 + (analysis_skill - 1) * 0.1))
+            
+            # Create exhibit
+            exhibit = {
+                "artifact": artifact_name,
+                "visitors": visitors,
+                "income": income,
+                "last_collected": user_data.get("current_day", 0)
+            }
+            
+            # Add to museum
+            if "museum_exhibits" not in user_data["archaeology"]:
+                user_data["archaeology"]["museum_exhibits"] = []
+            
+            user_data["archaeology"]["museum_exhibits"].append(exhibit)
+            
+            print_colored(f"{artifact_name} is now on display in your museum!", GREEN)
+            print_colored(f"It will attract approximately {visitors} visitors per day.", CYAN)
+            print_colored(f"Expected daily income: {income} gold", LIGHTYELLOW)
+            
+            # Check for achievement
+            if len(user_data["archaeology"]["museum_exhibits"]) >= 5:
+                unlock_achievement("Museum Curator", "Display 5 artifacts in your museum", "Display 5 artifacts")
+            if len(user_data["archaeology"]["museum_exhibits"]) >= 10:
+                unlock_achievement("Master Curator", "Display 10 artifacts in your museum", "Display 10 artifacts")
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def view_ancient_knowledge() -> None:
+    """View acquired ancient knowledge and their effects"""
+    arch_data = user_data.get("archaeology", {})
+    knowledge_list = arch_data.get("knowledge", [])
+    
+    print_header("Ancient Knowledge")
+    
+    if not knowledge_list:
+        print_colored("You haven't acquired any ancient knowledge yet.", YELLOW)
+        print_colored("Complete archaeological site excavations to learn ancient knowledge!", CYAN)
+        wait_for_input()
+        return
+    
+    for knowledge_name in knowledge_list:
+        if knowledge_name in ANCIENT_KNOWLEDGE:
+            knowledge = ANCIENT_KNOWLEDGE[knowledge_name]
+            
+            print_colored(f"{knowledge_name}", MAGENTA + BOLD)
+            print_colored(f"{knowledge.get('description', 'Ancient knowledge.')}", WHITE)
+            
+            if "stat_bonus" in knowledge:
+                print_colored("Stat Bonuses:", YELLOW)
+                for stat, value in knowledge["stat_bonus"].items():
+                    print_colored(f"  {stat.replace('_', ' ').title()}: +{value}", GREEN)
+            
+            if "unlocks" in knowledge:
+                print_colored("Unlocked Abilities:", CYAN)
+                for ability in knowledge["unlocks"]:
+                    print_colored(f"  {ability}", LIGHTBLUE)
+            
+            print()
+    
+    wait_for_input()
+
+def purchase_excavation_tools() -> None:
+    """Purchase better excavation tools for archaeology"""
+    available_tools = []
+    
+    # Get player's current tools
+    current_tools = user_data["archaeology"].get("tools", ["Basic Trowel"])
+    
+    # Determine which tools are available based on player level
+    player_level = user_data.get("level", 1)
+    
+    if player_level >= 1:
+        available_tools.append("Basic Trowel")
+    if player_level >= 5:
+        available_tools.append("Archaeologist's Brush Set")
+    if player_level >= 10:
+        available_tools.append("Surveying Equipment")
+    if player_level >= 15:
+        available_tools.append("Advanced Detector")
+    if player_level >= 25:
+        available_tools.append("Master Excavation Kit")
+    
+    print_header("Purchase Excavation Tools")
+    print_colored(f"Your gold: {user_data.get('gold', 0)}", LIGHTYELLOW)
+    print_colored("Better tools improve your excavation success rate and artifact preservation.", CYAN)
+    print()
+    
+    print_colored("Available Tools:", YELLOW)
+    for i, tool_name in enumerate(available_tools, 1):
+        tool = ARCHAEOLOGICAL_EXCAVATION_TOOLS.get(tool_name, {})
+        price = tool.get("value", 50)
+        owned = "✓" if tool_name in current_tools else ""
+        
+        print_colored(f"{i}. {tool_name} {owned}", GREEN if owned else YELLOW)
+        print_colored(f"   Price: {price} gold", LIGHTYELLOW)
+        print_colored(f"   Efficiency: {tool.get('efficiency', 1.0)}", BLUE)
+        print_colored(f"   Preservation: {int(tool.get('preservation_chance', 0.8) * 100)}%", CYAN)
+        print_colored(f"   {tool.get('description', 'An excavation tool.')}", WHITE)
+        print()
+    
+    print_colored(f"{len(available_tools)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose a tool to purchase (1-{len(available_tools)+1}): {ENDC}"))
+        
+        if choice == len(available_tools)+1:
+            return
+        
+        if 1 <= choice <= len(available_tools):
+            selected_tool = available_tools[choice-1]
+            
+            if selected_tool in current_tools:
+                print_colored(f"You already own the {selected_tool}.", YELLOW)
+            else:
+                # Check if player can afford it
+                tool_price = ARCHAEOLOGICAL_EXCAVATION_TOOLS.get(selected_tool, {}).get("value", 50)
+                
+                if user_data.get("gold", 0) >= tool_price:
+                    # Purchase the tool
+                    user_data["gold"] -= tool_price
+                    user_data["archaeology"]["tools"].append(selected_tool)
+                    
+                    print_colored(f"You purchased the {selected_tool}!", GREEN)
+                    print_colored("It has been added to your archaeology tools.", CYAN)
+                else:
+                    print_colored(f"You don't have enough gold to buy the {selected_tool}.", RED)
+                    print_colored(f"You need {tool_price} gold, but only have {user_data.get('gold', 0)}.", YELLOW)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def collect_museum_income() -> None:
+    """Collect daily income from museum exhibits"""
+    arch_data = user_data.get("archaeology", {})
+    museum_exhibits = arch_data.get("museum_exhibits", [])
+    
+    if not museum_exhibits:
+        print_colored("You don't have any exhibits in your museum to generate income.", YELLOW)
+        wait_for_input()
+        return
+    
+    current_day = user_data.get("current_day", 0)
+    
+    # Check for uncollected income
+    uncollected_exhibits = []
+    for exhibit in museum_exhibits:
+        if exhibit.get("last_collected", 0) < current_day:
+            uncollected_exhibits.append(exhibit)
+    
+    if not uncollected_exhibits:
+        print_colored("You've already collected today's museum income.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Calculate total income
+    days_passed = min(7, current_day - min(exhibit.get("last_collected", 0) for exhibit in uncollected_exhibits))
+    days_passed = max(1, days_passed)  # At least 1 day
+    
+    total_visitors = sum(exhibit.get("visitors", 0) for exhibit in uncollected_exhibits)
+    total_income = sum(exhibit.get("income", 0) for exhibit in uncollected_exhibits) * days_passed
+    
+    # Add income to player
+    user_data["gold"] += total_income
+    
+    # Update last collected day
+    for exhibit in museum_exhibits:
+        exhibit["last_collected"] = current_day
+    
+    print_colored(f"You collected {days_passed} days of museum income!", GREEN)
+    print_colored(f"Your museum attracted {total_visitors * days_passed} visitors.", CYAN)
+    print_colored(f"Total income: {total_income} gold", LIGHTYELLOW)
+    print_colored(f"New gold balance: {user_data.get('gold', 0)}", LIGHTYELLOW)
+    
+    wait_for_input()
+
+def remove_museum_exhibit() -> None:
+    """Remove an artifact from museum display"""
+    arch_data = user_data.get("archaeology", {})
+    museum_exhibits = arch_data.get("museum_exhibits", [])
+    
+    if not museum_exhibits:
+        print_colored("You don't have any exhibits to remove.", YELLOW)
+        wait_for_input()
+        return
+    
+    print_colored("Select an exhibit to remove from your museum:", CYAN)
+    
+    for i, exhibit in enumerate(museum_exhibits, 1):
+        artifact_name = exhibit.get("artifact")
+        print_colored(f"{i}. {artifact_name}", YELLOW)
+        print_colored(f"   Visitors: {exhibit.get('visitors', 0)} per day, Income: {exhibit.get('income', 0)} gold per day", CYAN)
+    
+    print_colored(f"{len(museum_exhibits)+1}. Cancel", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an exhibit to remove (1-{len(museum_exhibits)+1}): {ENDC}"))
+        
+        if choice == len(museum_exhibits)+1:
+            return
+        
+        if 1 <= choice <= len(museum_exhibits):
+            removed = museum_exhibits.pop(choice-1)
+            print_colored(f"Removed {removed.get('artifact')} from your museum display.", YELLOW)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def literature_system() -> None:
+    """Main function for the literature system - manage books, scrolls, and notes"""
+    global user_data
+    
+    # Initialize literature data if it doesn't exist
+    if "literature" not in user_data:
+        user_data["literature"] = {
+            "discovered": [],
+            "read": [],
+            "owned": []
+        }
+    
+    print_header("Literature Collection")
+    print_colored("Collect and read books, scrolls, and notes to gain knowledge and special abilities.", CYAN)
+    print()
+    
+    # Main literature menu
+    print_colored("1. View Your Collection", YELLOW)
+    print_colored("2. Read Something", YELLOW)
+    print_colored("3. Search for Literature", YELLOW)
+    print_colored("4. Book Effects", YELLOW)
+    print_colored("5. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-5): {ENDC}"))
+        
+        if choice == 1:
+            view_literature_collection()
+        elif choice == 2:
+            read_literature()
+        elif choice == 3:
+            search_literature()
+        elif choice == 4:
+            view_literature_effects()
+        elif choice == 5:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    # Return to literature menu after completing action
+    literature_system()
+
+def view_literature_collection() -> None:
+    """Display all books, scrolls, and notes the player has discovered or owns"""
+    lit_data = user_data.get("literature", {})
+    discovered = lit_data.get("discovered", [])
+    owned = lit_data.get("owned", [])
+    read = lit_data.get("read", [])
+    
+    if not discovered and not owned:
+        print_colored("You haven't discovered any books, scrolls, or notes yet.", YELLOW)
+        print_colored("Explore the world to find literature!", CYAN)
+        wait_for_input()
+        return
+    
+    print_header("Your Literature Collection")
+    
+    # Organize by type and category
+    collection = {
+        "Books": {},
+        "Scrolls": {},
+        "Notes": {}
+    }
+    
+    # Process discovered and owned literature
+    all_items = list(set(discovered + owned))
+    
+    for item_id in all_items:
+        # Parse item_id format: "type:category:title"
+        try:
+            item_type, category, title = item_id.split(":", 2)
+            
+            # Initialize category if needed
+            if category not in collection[item_type]:
+                collection[item_type][category] = []
+            
+            # Get item data
+            if item_type == "Books":
+                item_data = LITERATURE_DATA["books"][category][title]
+            elif item_type == "Scrolls":
+                item_data = LITERATURE_DATA["scrolls"][category][title]
+            elif item_type == "Notes":
+                item_data = LITERATURE_DATA["notes"][category][title]
+            else:
+                continue
+            
+            # Add to collection with status
+            status = "Read" if item_id in read else "Unread"
+            ownership = "Owned" if item_id in owned else "Discovered"
+            
+            collection[item_type][category].append({
+                "title": title,
+                "data": item_data,
+                "status": status,
+                "ownership": ownership,
+                "item_id": item_id
+            })
+        except (ValueError, KeyError):
+            continue  # Skip invalid entries
+    
+    # Display collection by type and category
+    for item_type, categories in collection.items():
+        if categories:
+            print_colored(f"\n{item_type}", CYAN + BOLD)
+            
+            for category, items in categories.items():
+                if items:
+                    print_colored(f"  {category}", BLUE + BOLD)
+                    
+                    for i, item in enumerate(items, 1):
+                        title = item["data"].get("title", "Unknown")
+                        rarity = item["data"].get("rarity", "Common")
+                        status_color = GREEN if item["status"] == "Read" else YELLOW
+                        
+                        print_colored(f"    {title} ({rarity})", WHITE)
+                        print_colored(f"      Status: {item['status']} | {item['ownership']}", status_color)
+    
+    wait_for_input()
+
+def read_literature() -> None:
+    """Read a book, scroll, or note from your collection with enhanced user experience"""
+    lit_data = user_data.get("literature", {})
+    owned = lit_data.get("owned", [])
+    
+    if not owned:
+        print_colored("You don't own any literature to read.", YELLOW)
+        print_colored("Explore the world to find and collect books and scrolls!", CYAN)
+        print_colored("Hint: Try visiting libraries, archives, or special locations.", CYAN)
+        wait_for_input()
+        return
+    
+    print_header("Your Literary Collection")
+    
+    # Get all readable items and their data
+    readable_items = get_readable_items(owned)
+    
+    # Filter and sort options - initial view shows all items
+    filtered_items = readable_items
+    while True:
+        # Use print statements and newlines instead of clear_screen for compatibility
+        print("\n" * 50)
+        print_header("Your Literary Collection")
+        print_colored(f"You have {len(readable_items)} items in your collection.", CYAN)
+        
+        # Create a menu of filter options
+        print_colored("Filter options:", BLUE)
+        print_colored("1. All Items", WHITE)
+        print_colored("2. Books Only", WHITE)
+        print_colored("3. Scrolls Only", WHITE)
+        print_colored("4. Notes Only", WHITE)
+        print_colored("5. Unread Items", YELLOW)
+        print_colored("6. Read Items", GREEN)
+        print_colored("7. Sort by Name", WHITE)
+        print_colored("8. Sort by Rarity", WHITE)
+        print_colored("9. Read an Item", GREEN + BOLD)
+        print_colored("0. Back to Menu", RED)
+        
+        try:
+            choice = input(f"\n{YELLOW}Choose an option (0-9): {ENDC}")
+            
+            if choice == "0":
+                return
+            elif choice == "1":
+                # Show all items
+                filtered_items = readable_items
+            elif choice == "2":
+                # Show only books
+                filtered_items = [item for item in readable_items if item["type"] == "Books"]
+            elif choice == "3":
+                # Show only scrolls
+                filtered_items = [item for item in readable_items if item["type"] == "Scrolls"]
+            elif choice == "4":
+                # Show only notes
+                filtered_items = [item for item in readable_items if item["type"] == "Notes"]
+            elif choice == "5":
+                # Show only unread items
+                filtered_items = [item for item in readable_items if not item["read"]]
+            elif choice == "6":
+                # Show only read items
+                filtered_items = [item for item in readable_items if item["read"]]
+            elif choice == "7":
+                # Sort by name
+                filtered_items.sort(key=lambda x: x["title"])
+            elif choice == "8":
+                # Sort by rarity
+                rarity_order = {"Common": 0, "Uncommon": 1, "Rare": 2, "Epic": 3, "Legendary": 4}
+                filtered_items.sort(key=lambda x: (
+                    rarity_order.get(x["data"].get("rarity", "Common"), 0),
+                    x["title"]
+                ), reverse=True)
+            elif choice == "9":
+                # Read an item
+                choose_and_read_item(filtered_items, lit_data)
+                # Refresh the list after reading
+                readable_items = get_readable_items(owned)
+                filtered_items = readable_items
+                continue
+            else:
+                print_colored("Invalid option.", RED)
+                wait_for_input()
+                continue
+            
+            # Display the filtered/sorted items
+            print("\n" * 50)
+            print_header("Your Literary Collection")
+            
+            if not filtered_items:
+                print_colored("No items match your filter criteria.", YELLOW)
+                wait_for_input()
+                continue
+            
+            # Show the filtered items
+            print_colored(f"Showing {len(filtered_items)} items:", CYAN)
+            for i, item in enumerate(filtered_items, 1):
+                title = item["data"].get("title", "Unknown")
+                item_type = item["type"][:-1]  # Remove 's' from end (Books -> Book)
+                read_status = "(Read)" if item["read"] else "(Unread)"
+                status_color = GREEN if item["read"] else YELLOW
+                rarity = item["data"].get("rarity", "Common")
+                
+                print_colored(f"{i}. {title}", WHITE)
+                print_colored(f"   Type: {item_type} | {rarity} | {read_status}", status_color)
+            
+            wait_for_input()
+            
+        except ValueError:
+            print_colored("Please enter a valid number.", RED)
+            wait_for_input()
+
+def get_readable_items(owned_items):
+    """Helper function to get all readable items with their data"""
+    lit_data = user_data.get("literature", {})
+    readable_items = []
+    
+    for item_id in owned_items:
+        try:
+            item_type, category, title = item_id.split(":", 2)
+            
+            # Get item data based on type
+            if item_type == "Books":
+                item_data = LITERATURE_DATA["books"][category][title]
+            elif item_type == "Scrolls":
+                item_data = LITERATURE_DATA["scrolls"][category][title]
+            elif item_type == "Notes":
+                item_data = LITERATURE_DATA["notes"][category][title]
+            else:
+                continue
+            
+            readable_items.append({
+                "title": title,
+                "type": item_type,
+                "category": category,
+                "data": item_data,
+                "item_id": item_id,
+                "read": item_id in lit_data.get("read", [])
+            })
+        except (ValueError, KeyError):
+            continue
+    
+    # Sort by read status (unread first), then by type and title
+    readable_items.sort(key=lambda x: (x["read"], x["type"], x["title"]))
+    return readable_items
+
+def choose_and_read_item(items, lit_data):
+    """Helper function to choose and read a literary item"""
+    print("\n" * 50)
+    print_header("Choose an Item to Read")
+    
+    if not items:
+        print_colored("No items available to read.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Display items with numbers
+    for i, item in enumerate(items, 1):
+        title = item["data"].get("title", "Unknown")
+        item_type = item["type"][:-1]  # Remove 's' from end (Books -> Book)
+        read_status = "(Read)" if item["read"] else "(Unread)"
+        status_color = GREEN if item["read"] else YELLOW
+        
+        print_colored(f"{i}. {title} - {item_type} {read_status}", status_color)
+    
+    print_colored(f"{len(items)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose something to read (1-{len(items)+1}): {ENDC}"))
+        
+        if choice == len(items)+1:
+            return
+        
+        if 1 <= choice <= len(items):
+            selected = items[choice-1]
+            print("\n" * 50)
+            display_literature_content(selected["item_id"], selected["data"])
+            
+            # Mark as read if not already
+            if selected["item_id"] not in lit_data.get("read", []):
+                if "read" not in lit_data:
+                    lit_data["read"] = []
+                lit_data["read"].append(selected["item_id"])
+                
+                # Apply effects when read for the first time
+                apply_literature_effect(selected["item_id"], selected["data"])
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def display_literature_content(item_id: str, item_data: Dict) -> None:
+    """Display the content of a book, scroll, or note in a reader-friendly format"""
+    item_type, category, title = item_id.split(":", 2)
+    
+    # Prepare title and author section
+    title_text = item_data.get("title", "Untitled")
+    author = item_data.get("author", "Unknown Author")
+    if author:
+        title_display = f"{title_text}\nby {author}"
+    else:
+        title_display = title_text
+    
+    print_header(title_display)
+    
+    # Display item description
+    description = item_data.get("description", "")
+    if description:
+        print_colored(description, CYAN)
+        print()
+    
+    # Display content based on format
+    content = item_data.get("content", "")
+    if isinstance(content, list):
+        # Chapter/section format
+        for section in content:
+            # Detect if this is a chapter/section header
+            if len(section) < 100 and not section.endswith('.'):
+                print_colored(section, YELLOW + BOLD)
+            else:
+                # Wrap and print normal paragraphs
+                wrapped_text = textwrap.fill(section, width=80)
+                print_colored(wrapped_text, WHITE)
+            print()
+    elif isinstance(content, str):
+        # Single text content
+        # Handle line breaks in the content
+        paragraphs = content.split('\n')
+        for paragraph in paragraphs:
+            wrapped_text = textwrap.fill(paragraph, width=80)
+            print_colored(wrapped_text, WHITE)
+            print()
+    
+    # Display item metadata
+    print()
+    rarity = item_data.get("rarity", "Common")
+    
+    # Get rarity color and display
+    rarity_color = get_rarity_color(rarity)
+    print_colored(f"Rarity: {rarity}", rarity_color)
+    
+    # Show effects if they exist
+    effect = item_data.get("effect", {})
+    if effect:
+        effect_type = effect.get("type", "")
+        if effect_type:
+            print_colored("Special Effect:", GREEN)
+            if effect_type == "stat_increase":
+                stat = effect.get("stat", "")
+                value = effect.get("value", 0)
+                print_colored(f"  Increases {stat.replace('_', ' ').title()} by {value}", GREEN)
+            elif effect_type == "skill_increase":
+                skill = effect.get("skill", "")
+                value = effect.get("value", 0)
+                print_colored(f"  Increases {skill.replace('_', ' ').title()} by {value}", GREEN)
+            elif effect_type == "quest_unlock":
+                quest = effect.get("quest", "")
+                print_colored(f"  Unlocks the quest: {quest}", GREEN)
+            elif effect_type == "area_unlock":
+                area = effect.get("area", "")
+                print_colored(f"  Reveals the location: {area}", GREEN)
+            elif effect_type == "crafting_unlock":
+                recipes = effect.get("recipes", [])
+                print_colored("  Teaches new recipes:", GREEN)
+                for recipe in recipes:
+                    print_colored(f"    - {recipe}", CYAN)
+            elif effect_type == "one_time_spell":
+                print_colored("  One-time use spell", GREEN)
+            elif effect_type == "special_ability":
+                ability = effect.get("ability", "")
+                effect_description = effect.get("description", "")
+                print_colored(f"  Grants ability: {ability}", GREEN)
+                print_colored(f"  {effect_description}", CYAN)
+
+def search_literature() -> None:
+    """Search for literature in the current location"""
+    current_location = user_data.get("current_location", "Greenwood Village")
+    
+    # Check if searching for literature costs time
+    print_colored(f"Searching for literature in {current_location}...", CYAN)
+    time.sleep(1)  # Simulate search time
+    
+    # Find available literature at this location
+    available_items = []
+    
+    # Check books
+    for category in LITERATURE_DATA.get("books", {}):
+        for title, book_data in LITERATURE_DATA["books"][category].items():
+            if book_data.get("location", "") == current_location:
+                item_id = f"Books:{category}:{title}"
+                available_items.append((item_id, book_data))
+    
+    # Check scrolls
+    for category in LITERATURE_DATA.get("scrolls", {}):
+        for title, scroll_data in LITERATURE_DATA["scrolls"][category].items():
+            if scroll_data.get("location", "") == current_location:
+                item_id = f"Scrolls:{category}:{title}"
+                available_items.append((item_id, scroll_data))
+    
+    # Check notes
+    for category in LITERATURE_DATA.get("notes", {}):
+        for title, note_data in LITERATURE_DATA["notes"][category].items():
+            if note_data.get("location", "") == current_location:
+                item_id = f"Notes:{category}:{title}"
+                available_items.append((item_id, note_data))
+    
+    if not available_items:
+        print_colored(f"You didn't find any literature in {current_location}.", YELLOW)
+        print_colored("Try searching in different locations!", CYAN)
+        wait_for_input()
+        return
+    
+    # Found some literature
+    print_colored(f"You found {len(available_items)} items in {current_location}!", GREEN)
+    
+    lit_data = user_data.get("literature", {})
+    discovered = lit_data.get("discovered", [])
+    owned = lit_data.get("owned", [])
+    
+    for item_id, item_data in available_items:
+        title = item_data.get("title", "Unknown")
+        
+        if item_id in owned:
+            print_colored(f"You already own: {title}", BLUE)
+        elif item_id in discovered:
+            # Option to collect the item
+            print_colored(f"You've seen this before: {title}", YELLOW)
+            if input(f"{YELLOW}Do you want to collect it? (y/n): {ENDC}").lower() == 'y':
+                if "owned" not in lit_data:
+                    lit_data["owned"] = []
+                lit_data["owned"].append(item_id)
+                print_colored(f"Added {title} to your collection!", GREEN)
+        else:
+            # New discovery
+            if "discovered" not in lit_data:
+                lit_data["discovered"] = []
+            lit_data["discovered"].append(item_id)
+            
+            rarity = item_data.get("rarity", "Common")
+            
+            # Use the get_rarity_color function for consistent coloring
+            print_colored(f"You discovered: {title} ({rarity})", GREEN)
+            print_colored(f"Description: {item_data.get('description', '')}", CYAN)
+            
+            # Option to collect the item
+            if input(f"{YELLOW}Do you want to collect it? (y/n): {ENDC}").lower() == 'y':
+                if "owned" not in lit_data:
+                    lit_data["owned"] = []
+                lit_data["owned"].append(item_id)
+                print_colored(f"Added {title} to your collection!", GREEN)
+    
+    wait_for_input()
+
+def apply_literature_effect(item_id: str, item_data: Dict) -> None:
+    """Apply the effect of reading a piece of literature for the first time"""
+    effect = item_data.get("effect", {})
+    if not effect:
+        return
+    
+    effect_type = effect.get("type", "")
+    if not effect_type:
+        return
+    
+    title = item_data.get("title", "Unknown")
+    print_colored(f"\nGained effect from reading {title}:", GREEN + BOLD)
+    
+    # Check if this literature unlocks any quests from the literature quest system
+    check_literature_quest_unlocks(item_id)
+    
+    if effect_type == "stat_increase":
+        stat = effect.get("stat", "")
+        value = effect.get("value", 0)
+        
+        if stat and value > 0:
+            if stat not in user_data:
+                user_data[stat] = 0
+            user_data[stat] += value
+            print_colored(f"Your {stat.replace('_', ' ').title()} increased by {value}!", GREEN)
+    
+    elif effect_type == "skill_increase":
+        skill = effect.get("skill", "")
+        value = effect.get("value", 0)
+        
+        if skill and value > 0:
+            if "skills" not in user_data:
+                user_data["skills"] = {}
+            if skill not in user_data["skills"]:
+                user_data["skills"][skill] = 0
+            user_data["skills"][skill] += value
+            print_colored(f"Your {skill.replace('_', ' ').title()} skill increased by {value}!", GREEN)
+    
+    elif effect_type == "quest_unlock":
+        quest = effect.get("quest", "")
+        
+        if quest:
+            # Check if this quest is already active or completed
+            active_quests = user_data.get("active_quests", [])
+            completed_quests = user_data.get("completed_quests", [])
+            
+            if quest not in active_quests and quest not in completed_quests:
+                # Add quest to active quests
+                if "active_quests" not in user_data:
+                    user_data["active_quests"] = []
+                user_data["active_quests"].append(quest)
+                print_colored(f"Unlocked new quest: {quest}!", GREEN)
+            else:
+                print_colored(f"You've already discovered the quest: {quest}", YELLOW)
+    
+    elif effect_type == "area_unlock":
+        area = effect.get("area", "")
+        
+        if area:
+            # Add area to discovered areas if not already there
+            if "discovered_areas" not in user_data:
+                user_data["discovered_areas"] = []
+            
+            if area not in user_data["discovered_areas"]:
+                user_data["discovered_areas"].append(area)
+                print_colored(f"Discovered new area: {area}!", GREEN)
+                
+                # Apply bonus if any
+                bonus = effect.get("bonus", "")
+                if bonus:
+                    print_colored(f"Bonus in this area: {bonus}", CYAN)
+            else:
+                print_colored(f"You've already discovered the area: {area}", YELLOW)
+    
+    elif effect_type == "crafting_unlock":
+        recipes = effect.get("recipes", [])
+        
+        if recipes:
+            if "known_recipes" not in user_data:
+                user_data["known_recipes"] = []
+            
+            new_recipes = []
+            for recipe in recipes:
+                if recipe not in user_data["known_recipes"]:
+                    user_data["known_recipes"].append(recipe)
+                    new_recipes.append(recipe)
+            
+            if new_recipes:
+                print_colored(f"Learned {len(new_recipes)} new recipes:", GREEN)
+                for recipe in new_recipes:
+                    print_colored(f"  - {recipe}", CYAN)
+            else:
+                print_colored("You already know all these recipes.", YELLOW)
+    
+    elif effect_type == "one_time_spell":
+        # For scrolls that grant a one-time spell
+        print_colored("This scroll contains a spell you can use once.", MAGENTA)
+        
+        # Add to usable spells
+        if "usable_spells" not in user_data:
+            user_data["usable_spells"] = []
+        
+        spell_data = {
+            "name": title,
+            "source": item_id,
+            "effect": effect
+        }
+        user_data["usable_spells"].append(spell_data)
+        print_colored(f"Added '{title}' to your usable spells.", GREEN)
+    
+    elif effect_type == "special_ability":
+        ability = effect.get("ability", "")
+        description = effect.get("description", "")
+        
+        if ability:
+            if "abilities" not in user_data:
+                user_data["abilities"] = []
+                
+            if ability not in user_data["abilities"]:
+                user_data["abilities"].append(ability)
+                print_colored(f"Gained new ability: {ability}!", GREEN)
+                print_colored(f"  {description}", CYAN)
+            else:
+                print_colored(f"You already have the ability: {ability}", YELLOW)
+
+def check_literature_quest_unlocks(item_id: str) -> None:
+    """Check if the given literature item unlocks any quests from the literature quest system"""
+    global LITERATURE_QUESTS
+    
+    # Check all literature quests
+    for quest in LITERATURE_QUESTS:
+        # Get literature requirements for this quest
+        unlock_requirements = quest.get("unlock_requirements", {})
+        required_literature = unlock_requirements.get("literature", [])
+        
+        # If this item is required for the quest
+        if item_id in required_literature:
+            quest_name = quest.get("name", "Unknown Quest")
+            quest_id = quest.get("id", "unknown_quest")
+            
+            # Check if player meets level requirements
+            level_req = quest.get("level_requirement", 1)
+            if user_data.get("level", 1) < level_req:
+                print_colored(f"You sense there's more to learn about {quest_name}, but it's beyond your current understanding.", YELLOW)
+                print_colored(f"(Requires level {level_req})", YELLOW)
+                continue
+            
+            # Check if quest is already active or completed
+            active_quests = user_data.get("active_quests", [])
+            completed_quests = user_data.get("completed_quests", [])
+            
+            if quest_id in active_quests:
+                print_colored(f"You already have the quest: {quest_name}", YELLOW)
+            elif quest_id in completed_quests:
+                print_colored(f"You've already completed the quest: {quest_name}", YELLOW)
+            else:
+                # Add quest to active quests
+                if "active_quests" not in user_data:
+                    user_data["active_quests"] = []
+                user_data["active_quests"].append(quest_id)
+                
+                print_colored(f"Unlocked new quest: {quest_name}!", GREEN + BOLD)
+                print_colored(quest.get("description", ""), CYAN)
+                
+                # Add quest details to player's quest log
+                if "quest_log" not in user_data:
+                    user_data["quest_log"] = {}
+                
+                user_data["quest_log"][quest_id] = {
+                    "name": quest_name,
+                    "description": quest.get("description", ""),
+                    "objectives": quest.get("objectives", []),
+                    "current_objective": 0,
+                    "unlocked_time": user_data.get("current_time", 0),
+                    "status": "active"
+                }
+
+def view_literature_effects() -> None:
+    """View all active effects gained from literature"""
+    lit_data = user_data.get("literature", {})
+    read = lit_data.get("read", [])
+    
+    if not read:
+        print_colored("You haven't read any literature yet, so you have no active effects.", YELLOW)
+        print_colored("Find books and scrolls to gain knowledge and special abilities!", CYAN)
+        wait_for_input()
+        return
+    
+    print_header("Literature Effects")
+    
+    active_effects = []
+    for item_id in read:
+        try:
+            item_type, category, title = item_id.split(":", 2)
+            
+            # Get item data
+            if item_type == "Books":
+                item_data = LITERATURE_DATA["books"][category][title]
+            elif item_type == "Scrolls":
+                item_data = LITERATURE_DATA["scrolls"][category][title]
+            elif item_type == "Notes":
+                item_data = LITERATURE_DATA["notes"][category][title]
+            else:
+                continue
+            
+            # Get effect data
+            effect = item_data.get("effect", {})
+            if effect:
+                active_effects.append({
+                    "title": item_data.get("title", "Unknown"),
+                    "type": item_type[:-1],  # Remove 's' from end (Books -> Book)
+                    "effect": effect
+                })
+        except (ValueError, KeyError):
+            continue
+    
+    if not active_effects:
+        print_colored("None of the literature you've read has granted any special effects.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Group effects by type
+    effect_types = {
+        "stat_increase": "Stat Increases",
+        "skill_increase": "Skill Increases",
+        "quest_unlock": "Unlocked Quests",
+        "area_unlock": "Discovered Areas",
+        "crafting_unlock": "Learned Recipes",
+        "one_time_spell": "Usable Spells",
+        "special_ability": "Special Abilities"
+    }
+    
+    for effect_type, type_name in effect_types.items():
+        # Filter effects by type
+        filtered_effects = [e for e in active_effects if e["effect"].get("type") == effect_type]
+        
+        if filtered_effects:
+            print_colored(f"{type_name}:", CYAN + BOLD)
+            
+            for effect_data in filtered_effects:
+                title = effect_data["title"]
+                effect = effect_data["effect"]
+                
+                if effect_type == "stat_increase":
+                    stat = effect.get("stat", "")
+                    value = effect.get("value", 0)
+                    print_colored(f"  {title}: +{value} {stat.replace('_', ' ').title()}", GREEN)
+                
+                elif effect_type == "skill_increase":
+                    skill = effect.get("skill", "")
+                    value = effect.get("value", 0)
+                    print_colored(f"  {title}: +{value} {skill.replace('_', ' ').title()}", GREEN)
+                
+                elif effect_type == "quest_unlock":
+                    quest = effect.get("quest", "")
+                    print_colored(f"  {title}: Unlocked '{quest}'", GREEN)
+                
+                elif effect_type == "area_unlock":
+                    area = effect.get("area", "")
+                    bonus = effect.get("bonus", "")
+                    if bonus:
+                        print_colored(f"  {title}: Discovered '{area}' (Bonus: {bonus})", GREEN)
+                    else:
+                        print_colored(f"  {title}: Discovered '{area}'", GREEN)
+                
+                elif effect_type == "crafting_unlock":
+                    recipes = effect.get("recipes", [])
+                    print_colored(f"  {title}: Learned {len(recipes)} recipes", GREEN)
+                
+                elif effect_type == "one_time_spell":
+                    # Check if spell has been used
+                    used = False
+                    for spell in user_data.get("usable_spells", []):
+                        if spell.get("name") == title:
+                            used = False
+                            break
+                    
+                    status = "Available" if not used else "Used"
+                    status_color = GREEN if not used else YELLOW
+                    print_colored(f"  {title}: One-time spell ({status})", status_color)
+                
+                elif effect_type == "special_ability":
+                    ability = effect.get("ability", "")
+                    print_colored(f"  {title}: Ability '{ability}'", GREEN)
+            
+            print()  # Add space between sections
+    
+    wait_for_input()
+
 def show_help() -> None:
     help_text = """
 LEGACIES OF OUR LEGENDS - COMMANDS
@@ -6296,6 +8687,11 @@ PROGRESS
 /timetravel        - Time travel guide
 /coolness          - Info about coolness
 /story             - Show storyline progress
+/archaeology       - Discover ancient ruins and artifacts
+/library           - Manage your literature collection
+/books            - Show your book collection
+/read             - Read books from your collection
+/search_books     - Search for books in your current location
 
 CRAFTING
 /craft             - Recipes calculator
@@ -6739,6 +9135,248 @@ ELEMENTAL_REACTIONS = {
 }
 
 # Legendary items with special effects
+# Archaeological artifacts system
+ARCHAEOLOGICAL_SITES = {
+    "Ancient Temple Ruins": {
+        "description": "The crumbling remains of a temple dedicated to forgotten gods.",
+        "required_level": 10,
+        "location": "Deep Forest",
+        "artifacts": ["Ceremonial Dagger", "Priest's Medallion", "Stone Tablet", "Ritual Mask", "Temple Key"],
+        "difficulty": "Medium",
+        "knowledge_reward": "Temple Civilization"
+    },
+    "Abandoned Mine": {
+        "description": "A vast network of tunnels where ancient miners once extracted precious minerals.",
+        "required_level": 15,
+        "location": "Mountain Range",
+        "artifacts": ["Miner's Pickaxe", "Mineral Specimen", "Ancient Lamp", "Ore Sample", "Mining Helmet"],
+        "difficulty": "Hard",
+        "knowledge_reward": "Mining Techniques"
+    },
+    "Sunken Palace": {
+        "description": "The remains of an opulent palace, now submerged beneath a lake.",
+        "required_level": 20,
+        "location": "Great Lake",
+        "artifacts": ["Royal Scepter", "Crown Jewel", "Throne Fragment", "Royal Seal", "Court Painting"],
+        "difficulty": "Very Hard",
+        "knowledge_reward": "Lost Dynasty"
+    },
+    "Celestial Observatory": {
+        "description": "An ancient structure used to study the stars and celestial bodies.",
+        "required_level": 25,
+        "location": "Mountain Peak",
+        "artifacts": ["Star Chart", "Telescope Fragment", "Astronomer's Journal", "Celestial Globe", "Moon Calendar"],
+        "difficulty": "Expert",
+        "knowledge_reward": "Ancient Astronomy"
+    },
+    "Battlefield Grave Site": {
+        "description": "The site of an epic battle where countless warriors fell.",
+        "required_level": 5,
+        "location": "Open Plains",
+        "artifacts": ["Broken Sword", "Rusted Helmet", "War Banner", "Commander's Insignia", "Battle Map"],
+        "difficulty": "Easy",
+        "knowledge_reward": "Great War"
+    }
+}
+
+ARCHAEOLOGICAL_ARTIFACTS = {
+    "Ceremonial Dagger": {
+        "description": "A ritualistic dagger used in ancient ceremonies.",
+        "rarity": "Uncommon",
+        "set": "Temple Collection",
+        "effect": {"ritual_power": 5},
+        "value": 150
+    },
+    "Priest's Medallion": {
+        "description": "A symbol of religious authority worn by high priests.",
+        "rarity": "Rare",
+        "set": "Temple Collection",
+        "effect": {"divine_protection": 10},
+        "value": 300
+    },
+    "Stone Tablet": {
+        "description": "Contains writings in a forgotten language.",
+        "rarity": "Uncommon",
+        "set": "Temple Collection",
+        "effect": {"ancient_knowledge": 15},
+        "value": 200
+    },
+    "Ritual Mask": {
+        "description": "Worn during sacred ceremonies to embody divine beings.",
+        "rarity": "Rare",
+        "set": "Temple Collection",
+        "effect": {"intimidation": 20},
+        "value": 350
+    },
+    "Temple Key": {
+        "description": "Likely used to access restricted areas of the temple.",
+        "rarity": "Epic",
+        "set": "Temple Collection",
+        "effect": {"unlock_chance": 25},
+        "value": 500
+    },
+    "Miner's Pickaxe": {
+        "description": "A well-preserved tool used by ancient miners.",
+        "rarity": "Common",
+        "set": "Mining Collection",
+        "effect": {"mining_efficiency": 10},
+        "value": 100
+    },
+    "Mineral Specimen": {
+        "description": "A rare mineral not found in modern mines.",
+        "rarity": "Uncommon",
+        "set": "Mining Collection",
+        "effect": {"gem_finding": 15},
+        "value": 180
+    },
+    "Ancient Lamp": {
+        "description": "Oil lamp used to illuminate the dark mine tunnels.",
+        "rarity": "Common",
+        "set": "Mining Collection",
+        "effect": {"darkness_vision": 5},
+        "value": 80
+    },
+    "Ore Sample": {
+        "description": "Contains traces of a metal unknown to modern metallurgy.",
+        "rarity": "Rare",
+        "set": "Mining Collection",
+        "effect": {"crafting_quality": 10},
+        "value": 250
+    },
+    "Mining Helmet": {
+        "description": "Protected miners from falling rocks and debris.",
+        "rarity": "Uncommon",
+        "set": "Mining Collection",
+        "effect": {"head_protection": 15},
+        "value": 200
+    },
+    "Royal Scepter": {
+        "description": "Symbol of authority carried by the monarch of a lost kingdom.",
+        "rarity": "Legendary",
+        "set": "Royal Collection",
+        "effect": {"command_power": 25},
+        "value": 1000
+    },
+    "Crown Jewel": {
+        "description": "A magnificent gemstone that adorned the royal crown.",
+        "rarity": "Epic",
+        "set": "Royal Collection",
+        "effect": {"charisma": 20},
+        "value": 800
+    },
+    "Throne Fragment": {
+        "description": "A piece of the royal throne, ornately carved from rare wood.",
+        "rarity": "Rare",
+        "set": "Royal Collection",
+        "effect": {"nobility_aura": 15},
+        "value": 400
+    },
+    "Royal Seal": {
+        "description": "Used to authenticate royal decrees and documents.",
+        "rarity": "Epic",
+        "set": "Royal Collection",
+        "effect": {"negotiation_power": 20},
+        "value": 600
+    },
+    "Court Painting": {
+        "description": "Depicts the royal court during its golden age.",
+        "rarity": "Rare",
+        "set": "Royal Collection",
+        "effect": {"historical_insight": 15},
+        "value": 350
+    }
+}
+
+ANCIENT_KNOWLEDGE = {
+    "Temple Civilization": {
+        "description": "Knowledge about an advanced civilization that built elaborate temples to their gods.",
+        "stat_bonus": {"wisdom": 10, "divine_resistance": 15},
+        "unlocks": ["Temple Meditation", "Divine Insight"]
+    },
+    "Mining Techniques": {
+        "description": "Ancient methods of extracting and processing valuable minerals.",
+        "stat_bonus": {"strength": 5, "material_knowledge": 20},
+        "unlocks": ["Efficient Gathering", "Gem Cutting"]
+    },
+    "Lost Dynasty": {
+        "description": "The history of a powerful royal lineage that mysteriously vanished.",
+        "stat_bonus": {"charisma": 15, "leadership": 10},
+        "unlocks": ["Royal Command", "Noble Presence"]
+    },
+    "Ancient Astronomy": {
+        "description": "Early understanding of celestial bodies and their influence.",
+        "stat_bonus": {"intelligence": 15, "cosmic_awareness": 20},
+        "unlocks": ["Star Navigation", "Cosmic Prediction"]
+    },
+    "Great War": {
+        "description": "Records of an epic conflict that shaped the ancient world.",
+        "stat_bonus": {"combat_strategy": 15, "battlefield_awareness": 10},
+        "unlocks": ["Battle Formation", "Strategic Retreat"]
+    }
+}
+
+ARCHAEOLOGICAL_EXCAVATION_TOOLS = {
+    "Basic Trowel": {
+        "description": "A simple digging tool for careful excavation.",
+        "efficiency": 1.0,
+        "preservation_chance": 0.8,
+        "value": 50
+    },
+    "Archaeologist's Brush Set": {
+        "description": "Fine brushes for cleaning delicate artifacts.",
+        "efficiency": 0.8,
+        "preservation_chance": 0.95,
+        "value": 120
+    },
+    "Surveying Equipment": {
+        "description": "Tools for mapping archaeological sites.",
+        "efficiency": 1.2,
+        "preservation_chance": 0.85,
+        "value": 200
+    },
+    "Advanced Detector": {
+        "description": "Uses magic to detect buried artifacts.",
+        "efficiency": 1.5,
+        "preservation_chance": 0.9,
+        "value": 350
+    },
+    "Master Excavation Kit": {
+        "description": "A complete set of professional tools for archaeological work.",
+        "efficiency": 2.0,
+        "preservation_chance": 0.98,
+        "value": 800
+    }
+}
+
+# Set bonuses for collecting complete artifact sets
+ARCHAEOLOGICAL_SET_BONUSES = {
+    "Temple Collection": {
+        "name": "Divine Favor",
+        "description": "Gain the blessing of ancient gods, increasing magical power.",
+        "bonus": {"magic_power": 25, "divine_protection": 15, "ritual_success_rate": 0.2}
+    },
+    "Mining Collection": {
+        "name": "Master Prospector",
+        "description": "Enhanced ability to find valuable minerals and gems.",
+        "bonus": {"mining_yield": 30, "rare_mineral_chance": 0.25, "cave_navigation": 20}
+    },
+    "Royal Collection": {
+        "name": "Noble Heritage",
+        "description": "Command respect and authority like the rulers of old.",
+        "bonus": {"charisma": 25, "negotiation_power": 30, "royal_presence": 20}
+    },
+    "Celestial Collection": {
+        "name": "Cosmic Insight",
+        "description": "Gain deeper understanding of the stars and their magic.",
+        "bonus": {"cosmic_magic": 30, "star_navigation": 25, "celestial_prediction": 0.2}
+    },
+    "Warrior Collection": {
+        "name": "Battle Wisdom",
+        "description": "Ancient combat knowledge enhances your fighting abilities.",
+        "bonus": {"attack": 20, "defense": 15, "battlefield_awareness": 25}
+    }
+}
+
 LEGENDARY_ITEMS = {
     "Crown of New Dawn": {
         "type": "armor",
@@ -8070,6 +10708,19 @@ def handle_command(cmd: str) -> None:
         "/help": show_help,
         "/h": show_help,
         "/pet": show_pets,
+        "/archaeology": archaeology,
+        "/arch": archaeology,
+        "/artifacts": analyze_artifacts,
+        "/excavate": excavate_site,
+        "/dig": excavate_site,
+        "/relics": view_archaeological_sites,
+        "/ancient_knowledge": view_ancient_knowledge,
+        "/museum": view_museum,
+        "/library": literature_system,
+        "/books": literature_system,
+        "/read": read_literature,
+        "/collection": view_literature_collection,
+        "/search_books": search_literature,
         "/search": search_resources,
         "/location": show_location,
         "/location_check": check_location,
