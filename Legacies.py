@@ -5,12 +5,2024 @@ import os
 import time
 import math
 import textwrap
+import re
 from typing import List, Dict, Optional, Tuple, Any
 from datetime import datetime
 from colorama import Fore, Back, Style, init
 
+# Import new game systems
+import game_features
+import feature_integration
+import mechanical_system
+
+# Legendary Pets System
+LEGENDARY_PETS = {
+    "Phoenix": {
+        "rarity": "Legendary",
+        "element": "Fire",
+        "abilities": ["Rebirth", "Flame Aura"],
+        "stats_bonus": {"attack": 25, "speed": 15},
+        "appearance": "A majestic fire bird with brilliant red and gold plumage that emits sparks when it moves.",
+        "lore": "Born from the eternal flames, the Phoenix can be reborn from its ashes once per day.",
+        "obtain_method": "Defeat the ancient Fire Titan in the Volcanic Depths"
+    },
+    "Cerberus": {
+        "rarity": "Legendary",
+        "element": "Dark",
+        "abilities": ["Triple Threat", "Guardian's Warning"],
+        "stats_bonus": {"defense": 30, "max_health": 50},
+        "appearance": "A three-headed hound with obsidian fur that seems to absorb light around it.",
+        "lore": "Once a guardian of the underworld, this loyal hound will protect its master with all three of its fierce heads.",
+        "obtain_method": "Complete the 'Descent into Darkness' quest chain"
+    },
+    "Kraken": {
+        "rarity": "Legendary",
+        "element": "Water",
+        "abilities": ["Tentacle Strike", "Abyssal Protection"],
+        "stats_bonus": {"attack": 20, "defense": 20, "water_breathing": True},
+        "appearance": "A miniature but powerful sea monster with iridescent blue tentacles and intelligent eyes.",
+        "lore": "A young Kraken that bonded with you after you saved it from hunters. Grants the ability to breathe underwater.",
+        "obtain_method": "Rare chance when fishing in the Deep Ocean"
+    },
+    "Pegasus": {
+        "rarity": "Legendary",
+        "element": "Air",
+        "abilities": ["Skyward Bound", "Wind Rush"],
+        "stats_bonus": {"speed": 35, "reduced_fall_damage": True},
+        "appearance": "A magnificent winged horse with a pearlescent coat that shimmers with the colors of the sky.",
+        "lore": "The offspring of celestial winds and earthly steeds, a Pegasus can grant temporary flight to its rider.",
+        "obtain_method": "Find and nurture a rare Pegasus egg from the Floating Islands"
+    },
+    "Legendary Dragon Wyrmling": {
+        "rarity": "Legendary",
+        "element": "Earth",
+        "abilities": ["Dragon Breath", "Ancient Wisdom"],
+        "stats_bonus": {"attack": 15, "defense": 15, "intelligence": 20},
+        "appearance": "A baby dragon with emerald scales that shimmer like precious stones in the light.",
+        "lore": "Even young dragons possess incredible magical potential. This earth wyrmling has chosen you as its parent figure.",
+        "obtain_method": "Complete the Dragon Tamer questline and earn the trust of the Dragon Queen"
+    }
+}
+
+# Ship Types
+SHIPS = {
+    "Baisc Raft": {
+        "capacity": 1,
+        "speed": 1,
+        "durability": 20,
+        "special_features": [],
+        "description": "A simple rafte made up of wood scraps and ropes, suitable for any kind of small journey.",
+        "cost": 120,
+        "required_level": 1,
+        "required_materials": {"Wood": 10, "Rope": 5}
+    },
+    "Fishing Boat": {
+        "capacity": 2,
+        "speed": 1,
+        "durability": 50,
+        "special_features": [],
+        "description": "A small boat suitable for fishing in calm waters and short coastal journeys.",
+        "cost": 500,
+        "required_level": 1,
+        "required_materials": {"Wood": 30, "Rope": 15}
+    },
+    "Merchant Vessel": {
+        "capacity": 5,
+        "speed": 2,
+        "durability": 120,
+        "special_features": ["Cargo Hold"],
+        "description": "A sturdy ship with ample storage for goods and passengers.",
+        "cost": 2000,
+        "required_level": 10,
+        "required_materials": {"Wood": 100, "Iron": 30, "Cloth": 50, "Rope": 40}
+    },
+    "Explorer's Caravel": {
+        "capacity": 4,
+        "speed": 3,
+        "durability": 150,
+        "special_features": ["Navigation Charts", "Weather Resistance"],
+        "description": "A versatile ship designed for exploring unknown waters and withstanding harsh conditions.",
+        "cost": 5000,
+        "required_level": 20,
+        "required_materials": {"Hardwood": 120, "Iron": 60, "Fine Cloth": 70, "Enchanted Rope": 30}
+    },
+    "War Galleon": {
+        "capacity": 8,
+        "speed": 2,
+        "durability": 250,
+        "special_features": ["Cannons", "Reinforced Hull", "Intimidating Flag"],
+        "description": "A powerful warship equipped for naval combat and showing force.",
+        "cost": 10000,
+        "required_level": 30,
+        "required_materials": {"Reinforced Wood": 200, "Steel": 100, "Fine Cloth": 100, "Enchanted Rope": 50}
+    },
+    "Arcane Schooner": {
+        "capacity": 6,
+        "speed": 4,
+        "durability": 200,
+        "special_features": ["Magic Sails", "Elemental Protection", "Enchanted Hull"],
+        "description": "A magical vessel infused with arcane energies, capable of traveling through mystical waters and storms.",
+        "cost": 25000,
+        "required_level": 40,
+        "required_materials": {"Enchanted Wood": 150, "Mithril": 80, "Ethereal Cloth": 100, "Dragon Heartstring": 10},
+        "realm": "Sea"
+    },
+    "Ethereal Skyship": {
+        "capacity": 4,
+        "speed": 5,
+        "durability": 120,
+        "special_features": ["Celestial Navigation", "Cloud Walking", "Dimensional Anchor"],
+        "description": "A magnificent vessel that sails through the skies and can breach the barrier between realms to access the Ethereal Plane.",
+        "cost": 35000,
+        "required_level": 45,
+        "required_materials": {"Ethereal Wood": 150, "Star Metal": 100, "Cloud Silk": 80, "Astral Essence": 50},
+        "realm": "Ethereal"
+    },
+    "Divine Galleon": {
+        "capacity": 10,
+        "speed": 6,
+        "durability": 300,
+        "special_features": ["Divine Protection", "Celestial Navigation", "Realm Phasing", "Godly Essence"],
+        "description": "A legendary vessel blessed by the gods themselves, capable of traversing any realm and withstanding even divine wrath.",
+        "cost": 80000,
+        "required_level": 60,
+        "required_materials": {"God-touched Wood": 200, "Divine Metal": 150, "Blessing Cloth": 100, "Fate Thread": 70},
+        "realm": "All"
+    }
+}
+
+# World Regions
+WORLD_REGIONS = {
+    "Sealtea": {
+        "description": "The main continent, home to diverse landscapes from dense forests to towering mountains.",
+        "climate": "Temperate",
+        "dangers": "Varies by area",
+        "areas": ["Greenwood Village", "Dark Forest", "Mountain Path", "Farmlands", "Crystal Cave", "Arcane Academy"],
+        "required_level": 1
+    },
+    "The Dead Sea": {
+        "description": "A vast, lifeless expanse of unchanging stone stretching to the horizon. The edge of the known world.",
+        "climate": "None",
+        "dangers": "Absolute emptiness, disorientation",
+        "areas": ["Stone's Edge"],
+        "required_level": 50,
+        "special_notes": "Contains no living beings or materials. A plain, unchanging stone surface that marks the border of the world."
+    },
+    "Ethereal Realm": {
+        "description": "A mystical plane of existence where the gods reside. Reality bends to divine will, and time flows differently.",
+        "climate": "Divine",
+        "dangers": "Reality shifts, divine judgment, celestial monsters",
+        "areas": ["Gateway of Stars", "Divine Court", "Celestial Gardens", "Hall of Heroes", "The Great Forge"],
+        "required_level": 45,
+        "required_ship": "Ethereal Skyship",
+        "required_skill": "celestial_navigation"
+    },
+    "Mystic Archipelago": {
+        "description": "A chain of magical islands, each with unique properties and environments.",
+        "climate": "Tropical",
+        "dangers": "Magical storms, sea monsters, island guardians",
+        "areas": ["Navigator's Port", "Siren's Isle", "Volcano Island", "Whispering Reefs"],
+        "required_level": 25,
+        "required_item": "Seaworthy vessel"
+    },
+    "Frozen Wastes": {
+        "description": "A harsh, snow-covered land where only the hardiest creatures survive.",
+        "climate": "Arctic",
+        "dangers": "Frostbite, ice elementals, avalanches, winter wolves",
+        "areas": ["Frost Harbor", "Glacial Peaks", "Frozen Forest", "Ice Caverns"],
+        "required_level": 30,
+        "required_item": "Warm clothing"
+    }
+}
+
+# New areas for the expanded world
+NEW_AREAS = {
+    "Stone's Edge": {
+        "description": "The final outpost before the vast emptiness of The Dead Sea. A lonely watchtower stands vigil over the unchanging expanse.",
+        "region": "The Dead Sea",
+        "connections": ["Mountain Path"],
+        "monsters": ["Stone Elemental", "Void Walker"],
+        "npcs": ["The Watcher", "Lost Explorer"],
+        "quests": ["Edge of the World", "Void Whispers"],
+        "shops": False,
+        "safe": False,
+        "level_range": (45, 50)
+    },
+    "Gateway of Stars": {
+        "description": "A magnificent floating platform surrounded by cosmic energy, marking the entrance to the Ethereal Realm. Countless stars form shifting constellations overhead.",
+        "region": "Ethereal Realm",
+        "connections": ["Divine Court"],
+        "monsters": ["Star Elemental", "Celestial Guardian", "Cosmic Aberration"],
+        "npcs": ["Gateway Keeper", "Lost Soul", "Star Cartographer"],
+        "quests": ["Charting the Heavens", "Star Mapping", "Ascension Path"],
+        "shops": True,
+        "safe": True,
+        "level_range": (45, 55)
+    },
+    "Divine Court": {
+        "description": "A vast, open chamber where the gods hold audience with worthy mortals. The architecture seems to shift and change depending on the observer.",
+        "region": "Ethereal Realm",
+        "connections": ["Gateway of Stars", "Celestial Gardens", "Hall of Heroes"],
+        "monsters": ["Divine Sentinel", "Law Enforcer", "Judgment Seeker"],
+        "npcs": ["Divine Herald", "Court Scribe", "The Judge"],
+    },
+    "Celestial Gardens": {
+        "description": "Breathtaking gardens where flora from all realms and times grow together. Plants react to emotions and thoughts, creating an ever-changing landscape.",
+        "region": "Ethereal Realm",
+        "connections": ["Divine Court", "The Great Forge"],
+        "monsters": ["Garden Keeper", "Corrupt Growth", "Living Bloom"],
+        "npcs": ["Eternal Gardener", "Garden Visitor", "Whisperleaf"],
+    },
+    "Hall of Heroes": {
+        "description": "A majestic hall where the greatest heroes of all time are honored. Their essences remain to provide guidance and wisdom to worthy visitors.",
+        "region": "Ethereal Realm",
+        "connections": ["Divine Court", "The Great Forge"],
+        "monsters": ["Echo of Battle", "Corrupted Hero", "Legacy Guardian"],
+        "npcs": ["Hero's Echo", "Memory Keeper", "The Challenger"],
+    },
+    "The Great Forge": {
+        "description": "The divine workshop where the most powerful artifacts were crafted. Eternal fires burn, ready to forge items of incredible power for those deemed worthy.",
+        "region": "Ethereal Realm",
+        "connections": ["Celestial Gardens", "Hall of Heroes"],
+        "monsters": ["Forge Guardian", "Living Metal", "Flame Sentinel"],
+        "npcs": ["Divine Smith", "Apprentice of Creation", "Master of Elements"],
+        "quests": ["Divine Crafting", "Celestial Materials", "Forge of Destiny"],
+        "shops": True,
+        "safe": False,
+        "level_range": (50, 60)
+    },
+    "Navigator's Port": {
+        "description": "A bustling harbor town where sailors, merchants, and adventurers gather before setting sail to the Mystic Archipelago.",
+        "region": "Mystic Archipelago",
+        "connections": ["Farmlands", "Siren's Isle"],
+        "monsters": ["Drunken Pirate", "Harbor Rat"],
+        "npcs": ["Harbormaster", "Ship Builder", "Sea Sage"],
+        "quests": ["Sea Legs", "Chart the Course"],
+        "shops": True,
+        "safe": True,
+        "level_range": (20, 25)
+    },
+    "Siren's Isle": {
+        "description": "A beautiful but dangerous island where enchanting melodies drift through the mist.",
+        "region": "Mystic Archipelago",
+        "connections": ["Navigator's Port", "Volcano Island"],
+        "monsters": ["Siren", "Enchanted Coral", "Bewitched Sailor"],
+        "npcs": ["Deaf Hermit", "Former Siren"],
+        "quests": ["Resist the Call", "Broken Melody"],
+        "shops": False,
+        "safe": False,
+        "level_range": (25, 30)
+    },
+    "Volcano Island": {
+        "description": "An island dominated by an active volcano, where the ground smolders and rare minerals form in the heat.",
+        "region": "Mystic Archipelago",
+        "connections": ["Siren's Isle", "Whispering Reefs"],
+        "monsters": ["Magma Elemental", "Ash Wraith", "Fire Lizard"],
+        "npcs": ["Volcano Priestess", "Mineral Hunter"],
+        "quests": ["Heart of Fire", "Precious Metals"],
+        "shops": True,
+        "safe": False,
+        "level_range": (27, 32)
+    },
+    "Whispering Reefs": {
+        "description": "Mysterious coral formations that seem to whisper ancient secrets. The waters teem with both beauty and danger.",
+        "region": "Mystic Archipelago",
+        "connections": ["Volcano Island"],
+        "monsters": ["Reef Guardian", "Depth Hunter", "Living Coral"],
+        "npcs": ["Reef Listener", "Treasure Hunter"],
+        "quests": ["Secrets of the Deep", "Lost Expedition"],
+        "shops": False,
+        "safe": False,
+        "level_range": (30, 35)
+    },
+    "Frost Harbor": {
+        "description": "A port carved from ice where hardy traders and explorers prepare for journeys into the Frozen Wastes.",
+        "region": "Frozen Wastes",
+        "connections": ["Dark Forest", "Glacial Peaks"],
+        "monsters": ["Frost Wolf", "Ice Golem"],
+        "npcs": ["Winter Trader", "Arctic Explorer", "Ice Sculptor"],
+        "quests": ["Frostbitten", "Supplies Run"],
+        "shops": True,
+        "safe": True,
+        "level_range": (30, 35)
+    }
+}
+
+# Flag for new features being available
+MODULES_LOADED = True
+
+# Ocean Events for sailing
+OCEAN_EVENTS = {
+    "calm": {
+        "name": "Calm Seas",
+        "description": "The waters are peaceful and the journey smooth.",
+        "effect": "Restores some of your HP and mana during travel.",
+        "probability": 0.3
+    },
+    "storm": {
+        "name": "Raging Storm",
+        "description": "Violent winds and massive waves threaten to capsize your ship!",
+        "effect": "Ship takes damage. You must make sailing checks to avoid capsizing.",
+        "probability": 0.15
+    },
+    "pirates": {
+        "name": "Pirate Attack",
+        "description": "A ship flying the black flag approaches with hostile intent!",
+        "effect": "Combat encounter with pirates. Ship may take damage.",
+        "probability": 0.1
+    },
+    "sea_monster": {
+        "name": "Sea Monster",
+        "description": "A massive creature rises from the depths, its tentacles reaching for your ship!",
+        "effect": "Combat encounter with a powerful sea monster.",
+        "probability": 0.05
+    },
+    "shipwreck": {
+        "name": "Discovered Shipwreck",
+        "description": "You spot the remains of a ship, half-submerged in the water.",
+        "effect": "Chance to salvage valuable items and materials.",
+        "probability": 0.1
+    },
+    "merchants": {
+        "name": "Merchant Ship",
+        "description": "You encounter a friendly merchant vessel willing to trade goods.",
+        "effect": "Opportunity to purchase rare items at sea.",
+        "probability": 0.15
+    },
+    "treasure": {
+        "name": "Floating Treasure",
+        "description": "A small chest bobs in the water, seemingly abandoned.",
+        "effect": "Gain gold, items, or potentially a map to hidden treasure.",
+        "probability": 0.05
+    },
+    "whirlpool": {
+        "name": "Whirlpool",
+        "description": "A massive vortex forms in the ocean, threatening to pull your ship down!",
+        "effect": "Must successfully navigate or risk major damage to ship and crew.",
+        "probability": 0.1
+    }
+}
+
 # Initialize colorama
 init(autoreset=True)
+
+# Legendary Pets Function
+def manage_pets(user_data: Dict[str, Any]) -> None:
+    """Main pet management interface for both regular and legendary pets"""
+    # Initialize pet data structures if not present
+    if "pets" not in user_data:
+        user_data["pets"] = {}
+    if "legendary_pets" not in user_data:
+        user_data["legendary_pets"] = {}
+    
+    # Default pet abilities and stats for new regular pets
+    default_pets = {
+        "Cat": {
+            "type": "Domestic", 
+            "level": 1, 
+            "loyalty": 20,
+            "stats": {"attack": 5, "defense": 3, "speed": 12},
+            "abilities": ["Night Vision", "Agility"]
+        },
+        "Dog": {
+            "type": "Domestic", 
+            "level": 1, 
+            "loyalty": 30,
+            "stats": {"attack": 8, "defense": 7, "speed": 10},
+            "abilities": ["Loyalty", "Danger Sense"]
+        }, 
+        "Wolf": {
+            "type": "Wild", 
+            "level": 3, 
+            "loyalty": 10,
+            "stats": {"attack": 15, "defense": 8, "speed": 12},
+            "abilities": ["Pack Tactics"]
+        }
+    }
+    
+    # Pet evolution paths and requirements - global so it can be accessed by pet functions
+    global PET_EVOLUTIONS
+    PET_EVOLUTIONS = {
+        "Cat": {
+            "evolves_to": "Shadow Cat",
+            "level_required": 10,
+            "loyalty_required": 75,
+            "materials_required": ["Shadow Essence", "Feline Spirit"]
+        },
+        "Dog": {
+            "evolves_to": "War Hound",
+            "level_required": 10,
+            "loyalty_required": 80,
+            "materials_required": ["Beast Fang", "Loyal Heart"]
+        },
+        "Wolf": {
+            "evolves_to": "Dire Wolf",
+            "level_required": 12,
+            "loyalty_required": 65,
+            "materials_required": ["Moon Crystal", "Wild Spirit"]
+        },
+        "Dragon Hatchling": {
+            "evolves_to": "Young Drake",
+            "level_required": 15,
+            "loyalty_required": 70,
+            "materials_required": ["Dragon Scale", "Fire Essence"]
+        },
+        "Shadow Cat": {
+            "evolves_to": "Void Stalker",
+            "level_required": 17,
+            "loyalty_required": 80,
+            "materials_required": ["Void Fragment", "Shadow Crystal", "Midnight Essence"]
+        },
+        "War Hound": {
+            "evolves_to": "Battle Mastiff",
+            "level_required": 20,
+            "loyalty_required": 90,
+            "materials_required": ["War Banner", "Hero's Medal", "Ancient Collar"]
+        }
+    }
+    
+    # Add some starter pets if user has none
+    if not user_data["pets"] and not user_data.get("has_starter_pet", False):
+        print(f"\n{GREEN}You've been given a pet Cat to start your adventure!{ENDC}")
+        user_data["pets"]["Cat"] = default_pets["Cat"].copy()
+        user_data["has_starter_pet"] = True
+    
+    while True:
+        print(f"\n{BOLD}{CYAN}=== PET MANAGEMENT ==={ENDC}")
+        print(f"\n{WHITE}Manage your animal companions, from loyal regular pets to rare legendary creatures.{ENDC}")
+        
+        # Display options
+        print(f"\n{YELLOW}1. Regular Pets{ENDC}")
+        print(f"{YELLOW}2. Legendary Pets{ENDC}")
+        print(f"{YELLOW}3. Pet Encyclopedia{ENDC}")
+        print(f"{YELLOW}4. Evolution Center{ENDC}")
+        print(f"{RED}0. Back to Main Menu{ENDC}")
+        
+        choice = input("\nEnter your choice: ")
+        
+        if choice == "1":
+            manage_regular_pets(user_data)
+        elif choice == "2":
+            manage_legendary_pets_menu(user_data)
+        elif choice == "3":
+            combined_pet_encyclopedia(user_data)
+        elif choice == "4":
+            pet_evolution_center(user_data)
+        elif choice == "0":
+            break
+        else:
+            print(f"{RED}Invalid option. Please try again.{ENDC}")
+
+def manage_regular_pets(user_data: Dict[str, Any]) -> None:
+    """Regular pets management interface"""
+    while True:
+        print(f"\n{BOLD}{CYAN}=== REGULAR PETS ==={ENDC}")
+        print(f"\n{WHITE}Manage your regular animal companions.{ENDC}")
+        
+        # Display options
+        print(f"\n{YELLOW}1. View Your Pets{ENDC}")
+        print(f"{YELLOW}2. Feed Pet{ENDC}")
+        print(f"{YELLOW}3. Train Pet{ENDC}")
+        print(f"{YELLOW}4. Set Active Pet{ENDC}")
+        print(f"{RED}0. Back{ENDC}")
+        
+        choice = input("\nEnter your choice: ")
+        
+        if choice == "1":
+            view_regular_pets(user_data)
+        elif choice == "2":
+            feed_regular_pet(user_data)
+        elif choice == "3":
+            train_regular_pet(user_data)
+        elif choice == "4":
+            set_active_regular_pet(user_data)
+        elif choice == "0":
+            break
+        else:
+            print(f"{RED}Invalid option. Please try again.{ENDC}")
+
+def manage_legendary_pets_menu(user_data: Dict[str, Any]) -> None:
+    """Legendary pets management interface"""
+    # Initialize legendary_pets if not present in user_data
+    if "legendary_pets" not in user_data:
+        user_data["legendary_pets"] = {}
+    
+    while True:
+        print(f"\n{BOLD}{CYAN}=== LEGENDARY PETS ==={ENDC}")
+        print(f"\n{WHITE}Legendary pets are rare and powerful companions that provide unique abilities and significant stat bonuses.{ENDC}")
+        
+        # Display options
+        print(f"\n{YELLOW}1. View Your Legendary Pets{ENDC}")
+        print(f"{YELLOW}2. Legendary Pet Encyclopedia{ENDC}")
+        print(f"{YELLOW}3. Interact with Legendary Pet{ENDC}")
+        print(f"{YELLOW}4. Set Active Legendary Pet{ENDC}")
+        print(f"{RED}0. Back{ENDC}")
+        
+        choice = input("\nEnter your choice: ")
+        
+        if choice == "1":
+            view_owned_pets(user_data)
+        elif choice == "2":
+            pet_encyclopedia()
+        elif choice == "3":
+            interact_with_pet(user_data)
+        elif choice == "4":
+            set_active_pet(user_data)
+        elif choice == "0":
+            break
+        else:
+            print(f"{RED}Invalid option. Please try again.{ENDC}")
+
+def view_regular_pets(user_data: Dict[str, Any]) -> None:
+    """Display all regular pets owned by the player"""
+    print(f"\n{BOLD}{CYAN}=== YOUR PETS ==={ENDC}")
+    
+    # Check if user has any pets
+    if not user_data.get("pets", {}):
+        print(f"\n{YELLOW}You don't have any pets yet. Visit a pet vendor or complete quests to find animal companions!{ENDC}")
+        return
+    
+    # Get active pet
+    active_pet = user_data.get("active_pet", None)
+    
+    # Display each owned pet
+    for pet_name, pet_data in user_data["pets"].items():
+        # Mark active pet
+        active_marker = f"{GREEN}[ACTIVE]{ENDC}" if pet_name == active_pet else ""
+        
+        # Display pet details
+        print(f"\n{BLUE}{BOLD}{pet_name} {active_marker}{ENDC}")
+        print(f"{WHITE}Level: {pet_data.get('level', 1)}{ENDC}")
+        print(f"Type: {pet_data.get('type', 'Unknown')}")
+        print(f"Loyalty: {pet_data.get('loyalty', 0)}/100")
+        
+        # Calculate experience to next level
+        current_level = pet_data.get("level", 1)
+        current_exp = pet_data.get("exp", 0)
+        exp_needed = current_level * 100
+        print(f"Experience: {current_exp}/{exp_needed}")
+        
+        # Check if the pet can evolve
+        if pet_name in PET_EVOLUTIONS:
+            evolution_data = PET_EVOLUTIONS[pet_name]
+            print(f"\n{MAGENTA}Can evolve to: {evolution_data['evolves_to']} (at level {evolution_data['level_required']} and loyalty {evolution_data['loyalty_required']}){ENDC}")
+        
+        # Display stats
+        if "stats" in pet_data:
+            print(f"\n{GREEN}Stats:{ENDC}")
+            for stat, value in pet_data["stats"].items():
+                print(f"- {stat.title()}: {value}")
+        
+        # Display abilities
+        if "abilities" in pet_data:
+            print(f"\n{YELLOW}Abilities:{ENDC}")
+            for ability in pet_data["abilities"]:
+                print(f"- {ability}")
+        
+        print(f"\n{LIGHTRED}{'-' * 40}{ENDC}")
+
+def view_owned_pets(user_data: Dict[str, Any]) -> None:
+    """Display all legendary pets owned by the player"""
+    print(f"\n{BOLD}{CYAN}=== YOUR LEGENDARY PETS ==={ENDC}")
+    
+    # Check if user has any legendary pets
+    if not user_data["legendary_pets"]:
+        print(f"\n{YELLOW}You don't have any legendary pets yet. Embark on special quests to find these rare companions!{ENDC}")
+        return
+    
+    # Get active pet
+    active_pet = user_data.get("active_legendary_pet", None)
+    
+    # Display each owned pet
+    for pet_name, pet_data in user_data["legendary_pets"].items():
+        # Mark active pet
+        active_marker = f"{GREEN}[ACTIVE]{ENDC}" if pet_name == active_pet else ""
+        
+        # Display pet details
+        print(f"\n{BLUE}{BOLD}{pet_name} {active_marker}{ENDC}")
+        print(f"{WHITE}Level: {pet_data.get('level', 1)}{ENDC}")
+        print(f"Element: {pet_data.get('element', 'Unknown')}")
+        print(f"Bond Level: {pet_data.get('bond', 1)}/10")
+        
+        # Display abilities
+        print(f"\n{YELLOW}Abilities:{ENDC}")
+        for ability in LEGENDARY_PETS[pet_name]["abilities"]:
+            print(f"- {ability}")
+            
+        # Display bonuses
+        print(f"\n{GREEN}Stat Bonuses:{ENDC}")
+        for stat, bonus in LEGENDARY_PETS[pet_name]["stats_bonus"].items():
+            if isinstance(bonus, bool):
+                print(f"- {stat.replace('_', ' ').title()}: {'Enabled' if bonus else 'Disabled'}")
+            else:
+                print(f"- {stat.title()}: +{bonus}")
+        
+        print(f"\n{LIGHTRED}{'-' * 40}{ENDC}")
+
+def legendary_pet_encyclopedia() -> None:
+    """Display information about all legendary pets"""
+    print(f"\n{BOLD}{CYAN}=== LEGENDARY PET ENCYCLOPEDIA ==={ENDC}")
+    print(f"{WHITE}Learn about the legendary pets you can discover in your journey.{ENDC}")
+    
+    # Create a numbered list of pets
+    pet_list = list(LEGENDARY_PETS.keys())
+    for i, pet_name in enumerate(pet_list, 1):
+        print(f"{i}. {pet_name}")
+    
+    print("0. Back")
+    
+    choice = input("\nSelect a pet to learn more about (or 0 to go back): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(pet_list):
+            pet_name = pet_list[index]
+            pet = LEGENDARY_PETS[pet_name]
+            
+            print(f"\n{BOLD}{BLUE}=== {pet_name} ==={ENDC}")
+            print(f"{MAGENTA}Rarity: {pet['rarity']}{ENDC}")
+            print(f"{MAGENTA}Element: {pet['element']}{ENDC}")
+            print(f"\n{WHITE}{pet['appearance']}{ENDC}")
+            print(f"\n{YELLOW}Lore: {pet['lore']}{ENDC}")
+            
+            print(f"\n{GREEN}Abilities:{ENDC}")
+            for ability in pet['abilities']:
+                print(f"- {ability}")
+            
+            print(f"\n{CYAN}Stat Bonuses:{ENDC}")
+            for stat, bonus in pet['stats_bonus'].items():
+                if isinstance(bonus, bool):
+                    print(f"- {stat.replace('_', ' ').title()}: {'Enabled' if bonus else 'Disabled'}")
+                else:
+                    print(f"- {stat.title()}: +{bonus}")
+            
+            print(f"\n{RED}How to obtain: {pet['obtain_method']}{ENDC}")
+            input("\nPress Enter to continue...")
+        else:
+            print(f"{RED}Invalid selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+
+def combined_pet_encyclopedia(user_data: Dict[str, Any]) -> None:
+    """Display a combined encyclopedia of both regular and legendary pets"""
+    while True:
+        print(f"\n{BOLD}{CYAN}=== PET ENCYCLOPEDIA ==={ENDC}")
+        print(f"{WHITE}Learn about the various pets you can discover and collect.{ENDC}")
+        
+        print(f"\n{YELLOW}1. Regular Pets Encyclopedia{ENDC}")
+        print(f"{YELLOW}2. Legendary Pets Encyclopedia{ENDC}")
+        print(f"{RED}0. Back{ENDC}")
+        
+        choice = input("\nEnter your choice: ")
+        
+        if choice == "1":
+            regular_pet_encyclopedia()
+        elif choice == "2":
+            legendary_pet_encyclopedia()
+        elif choice == "0":
+            return
+        else:
+            print(f"{RED}Invalid option. Please try again.{ENDC}")
+
+def regular_pet_encyclopedia() -> None:
+    """Display information about all regular pets"""
+    print(f"\n{BOLD}{CYAN}=== REGULAR PET ENCYCLOPEDIA ==={ENDC}")
+    print(f"{WHITE}Learn about the common and uncommon pets you can find in your journey.{ENDC}")
+    
+    # Define pet types/categories
+    pet_categories = {
+        "Domestic": ["Cat", "Dog", "Rabbit", "Bird"],
+        "Wild": ["Wolf", "Bear", "Fox", "Raccoon"],
+        "Exotic": ["Dragon Hatchling", "Griffin Cub", "Baby Chimera", "Shadow Panther"],
+        "Aquatic": ["Fish", "Turtle", "Frog", "Abyssal Kraken Hatchling"]
+    }
+    
+    # Display categories
+    print(f"\n{YELLOW}Pet Categories:{ENDC}")
+    for i, category in enumerate(pet_categories.keys(), 1):
+        print(f"{i}. {category}")
+    
+    print("0. Back")
+    
+    category_choice = input("\nSelect a category to browse (or 0 to go back): ")
+    
+    if category_choice == "0":
+        return
+    
+    try:
+        category_index = int(category_choice) - 1
+        if 0 <= category_index < len(pet_categories):
+            category = list(pet_categories.keys())[category_index]
+            pet_list = pet_categories[category]
+            
+            print(f"\n{BOLD}{BLUE}=== {category} PETS ==={ENDC}")
+            
+            for i, pet_name in enumerate(pet_list, 1):
+                print(f"{i}. {pet_name}")
+            
+            print("0. Back")
+            
+            pet_choice = input("\nSelect a pet to learn more about (or 0 to go back): ")
+            
+            if pet_choice == "0":
+                return
+            
+            try:
+                pet_index = int(pet_choice) - 1
+                if 0 <= pet_index < len(pet_list):
+                    pet_name = pet_list[pet_index]
+                    
+                    # Display pet details
+                    print(f"\n{BOLD}{BLUE}=== {pet_name} ==={ENDC}")
+                    
+                    # Show evolution path if available
+                    if pet_name in PET_EVOLUTIONS:
+                        evolution = PET_EVOLUTIONS[pet_name]
+                        print(f"{MAGENTA}Evolution: Can evolve into {evolution['evolves_to']}{ENDC}")
+                        print(f"{MAGENTA}Requirements: Level {evolution['level_required']}, Loyalty {evolution['loyalty_required']}{ENDC}")
+                        
+                        materials = ", ".join(evolution['materials_required'])
+                        print(f"{MAGENTA}Materials needed: {materials}{ENDC}")
+                    
+                    # Add more pet details - this is placeholder data since actual details would come from a pet database
+                    if pet_name == "Cat":
+                        print(f"\n{WHITE}A small, agile domestic pet known for its independence and hunting skills.{ENDC}")
+                        print(f"\n{YELLOW}Abilities:{ENDC}")
+                        print("- Night Vision: Can see clearly in dark areas")
+                        print("- Agility: +10% dodge chance")
+                    elif pet_name == "Dog":
+                        print(f"\n{WHITE}A loyal companion that will help you in combat and alert you to dangers.{ENDC}")
+                        print(f"\n{YELLOW}Abilities:{ENDC}")
+                        print("- Loyalty: +5% to all stats when health is low")
+                        print("- Danger Sense: Early warning of approaching enemies")
+                    elif pet_name == "Dragon Hatchling":
+                        print(f"\n{WHITE}A rare baby dragon that will grow into a powerful ally with proper care.{ENDC}")
+                        print(f"\n{YELLOW}Abilities:{ENDC}")
+                        print("- Fire Breath: Small fire attack with growing power")
+                        print("- Scales: Natural armor reduces damage by 5%")
+                    else:
+                        print(f"\n{WHITE}A wonderful companion on your journey. Raise it well!{ENDC}")
+                        print(f"\n{YELLOW}Abilities:{ENDC}")
+                        print("- Various abilities based on pet type and level")
+                    
+                    print(f"\n{CYAN}How to obtain: Complete quests, explore specific regions, or purchase from pet vendors.{ENDC}")
+                    input("\nPress Enter to continue...")
+                else:
+                    print(f"{RED}Invalid selection.{ENDC}")
+            except ValueError:
+                print(f"{RED}Please enter a number.{ENDC}")
+        else:
+            print(f"{RED}Invalid category selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+
+def pet_evolution_center(user_data: Dict[str, Any]) -> None:
+    """Interface for evolving pets to their higher forms"""
+    print(f"\n{BOLD}{CYAN}=== PET EVOLUTION CENTER ==={ENDC}")
+    print(f"{WHITE}Evolve your pets into more powerful forms when they meet the requirements.{ENDC}")
+    
+    # Check if user has any pets that can evolve
+    evolvable_pets = []
+    
+    if "pets" in user_data:
+        for pet_name, pet_data in user_data["pets"].items():
+            if pet_name in PET_EVOLUTIONS:
+                evolution = PET_EVOLUTIONS[pet_name]
+                level_req = evolution["level_required"]
+                loyalty_req = evolution["loyalty_required"]
+                
+                # Check if pet meets level and loyalty requirements
+                if pet_data.get("level", 1) >= level_req and pet_data.get("loyalty", 0) >= loyalty_req:
+                    # Check if user has required materials
+                    has_materials = True
+                    for material in evolution["materials_required"]:
+                        if user_data.get("materials", {}).get(material, 0) < 1:
+                            has_materials = False
+                            break
+                    
+                    if has_materials:
+                        evolvable_pets.append((pet_name, evolution["evolves_to"]))
+    
+    if not evolvable_pets:
+        print(f"\n{YELLOW}You don't have any pets ready to evolve. Raise their level and loyalty, and collect the required materials.{ENDC}")
+        print(f"\n{CYAN}Tip: Check the Pet Encyclopedia to see evolution requirements for each pet.{ENDC}")
+        input("\nPress Enter to continue...")
+        return
+    
+    print(f"\n{GREEN}The following pets are ready to evolve:{ENDC}")
+    
+    for i, (pet_name, evolves_to) in enumerate(evolvable_pets, 1):
+        print(f"{i}. {BLUE}{pet_name}{ENDC} → {MAGENTA}{evolves_to}{ENDC}")
+    
+    print("0. Cancel")
+    
+    choice = input("\nSelect a pet to evolve (or 0 to cancel): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(evolvable_pets):
+            pet_name, evolves_to = evolvable_pets[index]
+            
+            # Confirmation
+            confirm = input(f"\n{YELLOW}Are you sure you want to evolve your {pet_name} into a {evolves_to}? This process cannot be reversed. (y/n): {ENDC}")
+            
+            if confirm.lower() == "y":
+                # Get pet data
+                pet_data = user_data["pets"][pet_name]
+                evolution = PET_EVOLUTIONS[pet_name]
+                
+                # Consume materials
+                for material in evolution["materials_required"]:
+                    user_data["materials"][material] -= 1
+                
+                # Create evolved pet with upgraded stats
+                user_data["pets"][evolves_to] = {
+                    "level": pet_data["level"],
+                    "loyalty": pet_data["loyalty"],
+                    "type": "Evolved",
+                    "evolved_from": pet_name,
+                    "stats": {
+                        "attack": pet_data.get("stats", {}).get("attack", 10) + 15,
+                        "defense": pet_data.get("stats", {}).get("defense", 10) + 15,
+                        "speed": pet_data.get("stats", {}).get("speed", 10) + 10
+                    },
+                    "abilities": pet_data.get("abilities", []) + [f"{evolves_to} Special Ability"]
+                }
+                
+                # Remove original pet
+                del user_data["pets"][pet_name]
+                
+                # Update active pet if needed
+                if user_data.get("active_pet") == pet_name:
+                    user_data["active_pet"] = evolves_to
+                
+                print(f"\n{BOLD}{CYAN}*** EVOLUTION SUCCESSFUL ***{ENDC}")
+                print(f"\n{GREEN}Your {pet_name} has evolved into a powerful {evolves_to}!")
+                print(f"The new form has increased stats and new abilities!{ENDC}")
+            else:
+                print(f"\n{YELLOW}Evolution cancelled.{ENDC}")
+        else:
+            print(f"{RED}Invalid selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+    
+    input("\nPress Enter to continue...")
+
+# Functions to manage regular pets
+def feed_regular_pet(user_data: Dict[str, Any]) -> None:
+    """Interface for feeding regular pets to increase loyalty"""
+    print(f"\n{BOLD}{CYAN}=== FEED PET ==={ENDC}")
+    
+    # Check if user has any pets
+    if not user_data.get("pets", {}):
+        print(f"\n{YELLOW}You don't have any pets to feed.{ENDC}")
+        return
+    
+    # List user's pets
+    print(f"\n{WHITE}Select a pet to feed:{ENDC}")
+    
+    pets = list(user_data["pets"].keys())
+    for i, pet_name in enumerate(pets, 1):
+        loyalty = user_data["pets"][pet_name].get("loyalty", 0)
+        print(f"{i}. {pet_name} - Loyalty: {loyalty}/100")
+    
+    print("0. Cancel")
+    
+    choice = input("\nSelect a pet (or 0 to cancel): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(pets):
+            pet_name = pets[index]
+            
+            # Check if player has food items
+            food_items = {
+                "1": {"name": "Basic Pet Food", "loyalty": 5, "cost": 10},
+                "2": {"name": "Premium Pet Treats", "loyalty": 15, "cost": 30},
+                "3": {"name": "Gourmet Pet Meal", "loyalty": 25, "cost": 50}
+            }
+            
+            print(f"\n{WHITE}Select food to give to {pet_name}:{ENDC}")
+            
+            for key, food in food_items.items():
+                print(f"{key}. {food['name']} - +{food['loyalty']} Loyalty - {food['cost']} gold")
+            
+            print("0. Cancel")
+            
+            food_choice = input("\nSelect food (or 0 to cancel): ")
+            
+            if food_choice == "0":
+                return
+            
+            if food_choice in food_items:
+                food = food_items[food_choice]
+                
+                # Check if player can afford the food
+                if user_data.get("gold", 0) >= food["cost"]:
+                    # Deduct gold
+                    user_data["gold"] -= food["cost"]
+                    
+                    # Increase loyalty
+                    current_loyalty = user_data["pets"][pet_name].get("loyalty", 0)
+                    new_loyalty = min(100, current_loyalty + food["loyalty"])
+                    user_data["pets"][pet_name]["loyalty"] = new_loyalty
+                    
+                    loyalty_gained = new_loyalty - current_loyalty
+                    
+                    print(f"\n{GREEN}You fed {food['name']} to your {pet_name}.")
+                    print(f"Loyalty increased by {loyalty_gained} points to {new_loyalty}/100!{ENDC}")
+                    
+                    # Check for loyalty milestones
+                    if current_loyalty < 25 and new_loyalty >= 25:
+                        print(f"\n{CYAN}Your {pet_name} is starting to trust you more.{ENDC}")
+                    elif current_loyalty < 50 and new_loyalty >= 50:
+                        print(f"\n{CYAN}Your {pet_name} has become quite attached to you.{ENDC}")
+                    elif current_loyalty < 75 and new_loyalty >= 75:
+                        print(f"\n{CYAN}Your {pet_name} is very loyal and may learn new abilities.{ENDC}")
+                    elif current_loyalty < 100 and new_loyalty >= 100:
+                        print(f"\n{CYAN}Your {pet_name} has reached maximum loyalty! It's now ready for evolution if other requirements are met.{ENDC}")
+                else:
+                    print(f"\n{RED}You don't have enough gold for this food. You need {food['cost']} gold.{ENDC}")
+            else:
+                print(f"\n{RED}Invalid food selection.{ENDC}")
+        else:
+            print(f"\n{RED}Invalid pet selection.{ENDC}")
+    except ValueError:
+        print(f"\n{RED}Please enter a number.{ENDC}")
+
+def train_regular_pet(user_data: Dict[str, Any]) -> None:
+    """Interface for training regular pets to increase level"""
+    print(f"\n{BOLD}{CYAN}=== TRAIN PET ==={ENDC}")
+    
+    # Check if user has any pets
+    if not user_data.get("pets", {}):
+        print(f"\n{YELLOW}You don't have any pets to train.{ENDC}")
+        return
+    
+    # List user's pets
+    print(f"\n{WHITE}Select a pet to train:{ENDC}")
+    
+    pets = list(user_data["pets"].keys())
+    for i, pet_name in enumerate(pets, 1):
+        level = user_data["pets"][pet_name].get("level", 1)
+        print(f"{i}. {pet_name} - Level: {level}")
+    
+    print("0. Cancel")
+    
+    choice = input("\nSelect a pet (or 0 to cancel): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(pets):
+            pet_name = pets[index]
+            
+            # Training options
+            training_options = {
+                "1": {"name": "Basic Training", "exp": 50, "cost": 20, "time": 1},
+                "2": {"name": "Advanced Training", "exp": 150, "cost": 50, "time": 2},
+                "3": {"name": "Intensive Training", "exp": 300, "cost": 100, "time": 4}
+            }
+            
+            print(f"\n{WHITE}Select training for {pet_name}:{ENDC}")
+            
+            for key, training in training_options.items():
+                print(f"{key}. {training['name']} - {training['exp']} EXP - {training['cost']} gold - {training['time']} days")
+            
+            print("0. Cancel")
+            
+            training_choice = input("\nSelect training (or 0 to cancel): ")
+            
+            if training_choice == "0":
+                return
+            
+            if training_choice in training_options:
+                training = training_options[training_choice]
+                
+                # Check if player can afford the training
+                if user_data.get("gold", 0) >= training["cost"]:
+                    # Deduct gold
+                    user_data["gold"] -= training["cost"]
+                    
+                    # Simulate time passing
+                    if "game_days" in user_data:
+                        user_data["game_days"] += training["time"]
+                    
+                    # Initialize pet exp if not present
+                    if "exp" not in user_data["pets"][pet_name]:
+                        user_data["pets"][pet_name]["exp"] = 0
+                    
+                    # Add experience
+                    current_exp = user_data["pets"][pet_name]["exp"]
+                    user_data["pets"][pet_name]["exp"] = current_exp + training["exp"]
+                    
+                    # Check for level up
+                    current_level = user_data["pets"][pet_name].get("level", 1)
+                    exp_needed = current_level * 100  # Simple formula: level * 100 exp needed for next level
+                    
+                    level_ups = 0
+                    while user_data["pets"][pet_name]["exp"] >= exp_needed:
+                        user_data["pets"][pet_name]["exp"] -= exp_needed
+                        current_level += 1
+                        level_ups += 1
+                        exp_needed = current_level * 100
+                    
+                    user_data["pets"][pet_name]["level"] = current_level
+                    
+                    print(f"\n{GREEN}Your {pet_name} completed {training['name']}.")
+                    
+                    if level_ups > 0:
+                        print(f"{pet_name} gained {level_ups} level(s) and is now level {current_level}!")
+                        
+                        # Initialize or upgrade pet stats
+                        if "stats" not in user_data["pets"][pet_name]:
+                            user_data["pets"][pet_name]["stats"] = {
+                                "attack": 5,
+                                "defense": 5,
+                                "speed": 5
+                            }
+                        
+                        # Increase stats on level up
+                        user_data["pets"][pet_name]["stats"]["attack"] += level_ups * 2
+                        user_data["pets"][pet_name]["stats"]["defense"] += level_ups * 2
+                        user_data["pets"][pet_name]["stats"]["speed"] += level_ups
+                        
+                        print("Stats increased! New stats:")
+                        for stat, value in user_data["pets"][pet_name]["stats"].items():
+                            print(f"- {stat.title()}: {value}")
+                        
+                        # Check if pet can learn new abilities
+                        if current_level % 5 == 0:  # New ability every 5 levels
+                            if "abilities" not in user_data["pets"][pet_name]:
+                                user_data["pets"][pet_name]["abilities"] = []
+                            
+                            # Example ability based on pet type
+                            new_ability = f"Level {current_level} Ability"
+                            user_data["pets"][pet_name]["abilities"].append(new_ability)
+                            print(f"{CYAN}{pet_name} learned a new ability: {new_ability}!{ENDC}")
+                    else:
+                        remaining_exp = exp_needed - user_data["pets"][pet_name]["exp"]
+                        print(f"{pet_name} gained experience. {remaining_exp} more EXP needed for next level.{ENDC}")
+                    
+                    # Check for evolution eligibility
+                    if pet_name in PET_EVOLUTIONS:
+                        evolution = PET_EVOLUTIONS[pet_name]
+                        if current_level >= evolution["level_required"] and user_data["pets"][pet_name].get("loyalty", 0) >= evolution["loyalty_required"]:
+                            print(f"\n{MAGENTA}{pet_name} now meets the level and loyalty requirements for evolution!")
+                            print(f"Visit the Pet Evolution Center to evolve it into a {evolution['evolves_to']}.{ENDC}")
+                else:
+                    print(f"\n{RED}You don't have enough gold for this training. You need {training['cost']} gold.{ENDC}")
+            else:
+                print(f"\n{RED}Invalid training selection.{ENDC}")
+        else:
+            print(f"\n{RED}Invalid pet selection.{ENDC}")
+    except ValueError:
+        print(f"\n{RED}Please enter a number.{ENDC}")
+
+def set_active_regular_pet(user_data: Dict[str, Any]) -> None:
+    """Set a regular pet as the active companion"""
+    print(f"\n{BOLD}{CYAN}=== SET ACTIVE PET ==={ENDC}")
+    
+    # Check if user has any pets
+    if not user_data.get("pets", {}):
+        print(f"\n{YELLOW}You don't have any pets to set as active.{ENDC}")
+        return
+    
+    # Display current active pet
+    active_pet = user_data.get("active_pet", None)
+    if active_pet:
+        print(f"\n{GREEN}Current active pet: {active_pet}{ENDC}")
+    else:
+        print(f"\n{YELLOW}You don't have an active pet set.{ENDC}")
+    
+    # List user's pets
+    print(f"\n{WHITE}Select a pet to make active:{ENDC}")
+    
+    pets = list(user_data["pets"].keys())
+    for i, pet_name in enumerate(pets, 1):
+        level = user_data["pets"][pet_name].get("level", 1)
+        print(f"{i}. {pet_name} - Level: {level}")
+    
+    print("0. Cancel")
+    
+    choice = input("\nSelect a pet to set as active (or 0 to cancel): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(pets):
+            pet_name = pets[index]
+            user_data["active_pet"] = pet_name
+            print(f"\n{GREEN}{pet_name} is now your active pet! It will follow you on your adventures.{ENDC}")
+            
+            # Apply pet bonuses based on level and stats
+            pet_level = user_data["pets"][pet_name].get("level", 1)
+            
+            if "stats" in user_data["pets"][pet_name]:
+                pet_stats = user_data["pets"][pet_name]["stats"]
+                print(f"\n{CYAN}Your level {pet_level} pet provides the following bonuses:{ENDC}")
+                
+                # Calculate bonuses - these are adjusted by pet level
+                level_multiplier = 1.0 + (pet_level * 0.05)  # 5% bonus per level
+                attack_bonus = int(pet_stats.get("attack", 0) * 0.1 * level_multiplier)
+                defense_bonus = int(pet_stats.get("defense", 0) * 0.1 * level_multiplier)
+                speed_bonus = int(pet_stats.get("speed", 0) * 0.05)  # 5% of pet's speed adds to player
+                
+                if attack_bonus > 0:
+                    print(f"Attack: +{attack_bonus}")
+                if defense_bonus > 0:
+                    print(f"Defense: +{defense_bonus}")
+                if speed_bonus > 0:
+                    print(f"Speed: +{speed_bonus}")
+                
+                # Apply special bonuses based on pet type
+                if "Dragon" in pet_name:
+                    print("Fire Resistance: +10%")
+                elif "Wolf" in pet_name or "Dog" in pet_name:
+                    print("Increased item find chance: +5%")
+                elif "Cat" in pet_name or "Panther" in pet_name:
+                    print("Night Vision: Can see in dark areas")
+            else:
+                print(f"\n{CYAN}Your pet provides company and occasional assistance in your journey.{ENDC}")
+        else:
+            print(f"\n{RED}Invalid pet selection.{ENDC}")
+    except ValueError:
+        print(f"\n{RED}Please enter a number.{ENDC}")
+
+def pet_encyclopedia() -> None:
+    """Redirects to the legendary pet encyclopedia for backwards compatibility"""
+    legendary_pet_encyclopedia()
+
+# Add this function to handle pet command in the main game
+def handle_pet_command(user_data: Dict[str, Any], args: List[str]) -> None:
+    """Handle the pet command and route to the proper pet management function"""
+    manage_pets(user_data)
+
+def interact_with_pet(user_data: Dict[str, Any]) -> None:
+    """Interact with a legendary pet to increase bond and unlock new abilities"""
+    # Check if user has any legendary pets
+    if not user_data["legendary_pets"]:
+        print(f"\n{YELLOW}You don't have any legendary pets to interact with yet.{ENDC}")
+        return
+    
+    print(f"\n{BOLD}{CYAN}=== INTERACT WITH YOUR LEGENDARY PET ==={ENDC}")
+    
+    # Create a numbered list of owned pets
+    owned_pets = list(user_data["legendary_pets"].keys())
+    for i, pet_name in enumerate(owned_pets, 1):
+        print(f"{i}. {pet_name}")
+    
+    print("0. Back")
+    
+    choice = input("\nSelect a pet to interact with (or 0 to go back): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(owned_pets):
+            pet_name = owned_pets[index]
+            pet_data = user_data["legendary_pets"][pet_name]
+            
+            # Get current bond level
+            bond = pet_data.get("bond", 1)
+            
+            print(f"\n{BOLD}{BLUE}=== Interacting with {pet_name} ==={ENDC}")
+            print(f"{WHITE}Current Bond Level: {bond}/10{ENDC}")
+            
+            # Interaction options
+            print(f"\n{YELLOW}1. Feed{ENDC}")
+            print(f"{YELLOW}2. Play{ENDC}")
+            print(f"{YELLOW}3. Train{ENDC}")
+            print(f"{YELLOW}4. Groom{ENDC}")
+            print(f"{RED}0. Back{ENDC}")
+            
+            interaction = input("\nChoose how to interact: ")
+            
+            if interaction == "0":
+                return
+                
+            if interaction in ["1", "2", "3", "4"]:
+                # Check if can increase bond
+                if bond < 10:
+                    # 70% chance to increase bond
+                    if random.random() < 0.7:
+                        pet_data["bond"] = bond + 1
+                        print(f"\n{GREEN}Your bond with {pet_name} has increased to {pet_data['bond']}/10!{ENDC}")
+                        
+                        # Check for bond level milestones
+                        if pet_data["bond"] == 3:
+                            print(f"\n{CYAN}Your {pet_name} now trusts you more and will be more effective in battle.{ENDC}")
+                        elif pet_data["bond"] == 5:
+                            print(f"\n{CYAN}Your {pet_name} has learned to coordinate with you perfectly, increasing your combat effectiveness.{ENDC}")
+                        elif pet_data["bond"] == 8:
+                            print(f"\n{CYAN}Your {pet_name} has developed a special connection with you, unlocking a unique ability!{ENDC}")
+                        elif pet_data["bond"] == 10:
+                            print(f"\n{CYAN}You've reached maximum bond with your {pet_name}! All of its abilities are now fully powered.{ENDC}")
+                    else:
+                        print(f"\n{YELLOW}{pet_name} enjoyed your attention, but your bond remains at {bond}/10.{ENDC}")
+                else:
+                    print(f"\n{CYAN}Your bond with {pet_name} is already at maximum (10/10)!{ENDC}")
+                
+                # Display interaction result based on choice
+                if interaction == "1":  # Feed
+                    print(f"\n{WHITE}You offered {pet_name} its favorite food. It happily devoured it all!{ENDC}")
+                elif interaction == "2":  # Play
+                    print(f"\n{WHITE}You spent time playing with {pet_name}. It seems to really enjoy your company!{ENDC}")
+                elif interaction == "3":  # Train
+                    print(f"\n{WHITE}You trained with {pet_name}, helping it become stronger and more skilled.{ENDC}")
+                elif interaction == "4":  # Groom
+                    print(f"\n{WHITE}You carefully groomed {pet_name}. It looks magnificent now!{ENDC}")
+            else:
+                print(f"{RED}Invalid option. Please try again.{ENDC}")
+        else:
+            print(f"{RED}Invalid selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+
+def set_active_pet(user_data: Dict[str, Any]) -> None:
+    """Set a legendary pet as the active companion"""
+    # Check if user has any legendary pets
+    if not user_data["legendary_pets"]:
+        print(f"\n{YELLOW}You don't have any legendary pets to set as active.{ENDC}")
+        return
+    
+    print(f"\n{BOLD}{CYAN}=== SET ACTIVE LEGENDARY PET ==={ENDC}")
+    print(f"{WHITE}Your active pet will provide its bonuses and accompany you on your adventures.{ENDC}")
+    
+    # Display current active pet
+    active_pet = user_data.get("active_legendary_pet", None)
+    if active_pet:
+        print(f"\n{GREEN}Current active pet: {active_pet}{ENDC}")
+    else:
+        print(f"\n{YELLOW}You don't have an active legendary pet set.{ENDC}")
+    
+    # Create a numbered list of owned pets
+    owned_pets = list(user_data["legendary_pets"].keys())
+    for i, pet_name in enumerate(owned_pets, 1):
+        print(f"{i}. {pet_name}")
+    
+    print("0. Back")
+    
+    choice = input("\nSelect a pet to set as active (or 0 to go back): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(owned_pets):
+            pet_name = owned_pets[index]
+            user_data["active_legendary_pet"] = pet_name
+            print(f"\n{GREEN}{pet_name} is now your active legendary pet!{ENDC}")
+        else:
+            print(f"{RED}Invalid selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+
+def obtain_legendary_pet(user_data: Dict[str, Any], pet_name: str) -> None:
+    """Add a legendary pet to the player's collection"""
+    # Check if pet exists in the legendary pets database
+    if pet_name not in LEGENDARY_PETS:
+        return
+        
+    # Check if player already has this pet
+    if pet_name in user_data["legendary_pets"]:
+        return
+    
+    # Initialize the pet in player's collection
+    user_data["legendary_pets"][pet_name] = {
+        "level": 1,
+        "bond": 1,
+        "element": LEGENDARY_PETS[pet_name]["element"],
+        "acquired_date": "Day " + str(user_data.get("game_days", 1))
+    }
+    
+    # Display acquisition message
+    print(f"\n{BOLD}{CYAN}*** LEGENDARY PET ACQUIRED ***{ENDC}")
+    print(f"\n{GREEN}You have obtained {pet_name}, a legendary pet!{ENDC}")
+    print(f"\n{BLUE}{LEGENDARY_PETS[pet_name]['appearance']}{ENDC}")
+    
+    # Offer to set as active pet
+    if not user_data.get("active_legendary_pet"):
+        user_data["active_legendary_pet"] = pet_name
+        print(f"\n{GREEN}{pet_name} has been automatically set as your active legendary pet!{ENDC}")
+
+# Sailing and Ship Functions
+def manage_sailing(user_data: Dict[str, Any]) -> None:
+    """Main sailing interface"""
+    # Initialize ships and navigation if not present
+    if "ships" not in user_data:
+        user_data["ships"] = {}
+    if "navigation" not in user_data:
+        user_data["navigation"] = {
+            "maps": ["Sealtea Map"],
+            "discovered_regions": ["Sealtea"],
+            "ocean_routes": []
+        }
+    
+    while True:
+        print(f"\n{BOLD}{CYAN}=== SAILING & NAVIGATION ===")
+        print(f"\n{WHITE}Explore the vast oceans and discover new lands with your ships.")
+        
+        # Display options
+        print(f"\n{YELLOW}1. View Your Ships")
+        print(f"{YELLOW}2. Purchase a Ship")
+        print(f"{YELLOW}3. Repair Ship")
+        print(f"{YELLOW}4. Set Sail")
+        print(f"{YELLOW}5. View Maps")
+        print(f"{YELLOW}6. Ship Encyclopedia")
+        print(f"{RED}0. Back to Main Menu")
+        
+        choice = input("\nEnter your choice: ")
+        
+        if choice == "1":
+            view_owned_ships(user_data)
+        elif choice == "2":
+            purchase_ship(user_data)
+        elif choice == "3":
+            repair_ship(user_data)
+        elif choice == "4":
+            sail(user_data)
+        elif choice == "5":
+            view_maps(user_data)
+        elif choice == "6":
+            ship_encyclopedia()
+        elif choice == "0":
+            break
+        else:
+            print(f"{RED}Invalid option. Please try again.{ENDC}")
+
+def view_owned_ships(user_data: Dict[str, Any]) -> None:
+    """Display all ships owned by the player"""
+    print(f"\n{BOLD}{CYAN}=== YOUR SHIPS ===")
+    
+    # Check if user has any ships
+    if not user_data["ships"]:
+        print(f"\n{YELLOW}You don't own any ships yet. Visit Navigator's Port to purchase your first vessel!")
+        return
+    
+    # Display each owned ship
+    for ship_key, ship_data in user_data["ships"].items():
+        ship_type = ship_data["type"]
+        ship_name = ship_data.get("name", ship_type)
+        # Display ship key/id for reference when selecting ships
+        print(f"\nShip ID: {ship_key}")
+        
+        # Get color based on ship condition
+        condition_percent = ship_data["durability"] / SHIPS[ship_type]["durability"] * 100
+        if condition_percent > 75:
+            condition_color = GREEN
+        elif condition_percent > 40:
+            condition_color = YELLOW
+        else:
+            condition_color = RED
+        
+        # Display ship details
+        print(f"\n{BLUE}{BOLD}{ship_name} ({ship_type})")
+        print(f"{WHITE}Condition: {condition_color}{ship_data['durability']}/{SHIPS[ship_type]['durability']} ({int(condition_percent)}%){ENDC}")
+        print(f"{WHITE}Speed: {ship_data.get('speed', SHIPS[ship_type]['speed'])}")
+        print(f"{WHITE}Capacity: {ship_data.get('capacity', SHIPS[ship_type]['capacity'])} crew")
+        
+        # Display special features
+        features = ship_data.get("special_features", SHIPS[ship_type]["special_features"])
+        if features:
+            print(f"{YELLOW}Special Features:")
+            for feature in features:
+                print(f"- {feature}")
+        
+        # Upgrades
+        upgrades = ship_data.get("upgrades", [])
+        if upgrades:
+            print(f"{GREEN}Upgrades:")
+            for upgrade in upgrades:
+                print(f"- {upgrade}")
+        
+        print(f"\n{'-' * 40}")
+
+def purchase_ship(user_data: Dict[str, Any]) -> None:
+    """Interface for purchasing new ships"""
+    print(f"\n{BOLD}{CYAN}=== PURCHASE A SHIP ===")
+    print(f"{WHITE}Available ships for purchase:")
+    
+    # Check if player is in Navigator's Port
+    if user_data.get("current_area") != "Navigator's Port":
+        print(f"\n{RED}You must be at Navigator's Port to purchase a ship.{ENDC}")
+        return
+    
+    # Display available ships
+    available_ships = []
+    for i, (ship_type, ship_data) in enumerate(SHIPS.items(), 1):
+        # Check level requirement
+        if user_data["level"] >= ship_data["required_level"]:
+            available_ships.append(ship_type)
+            
+            # Determine if player can afford it
+            can_afford = user_data["gold"] >= ship_data["cost"]
+            price_color = GREEN if can_afford else RED
+            
+            print(f"\n{i}. {BLUE}{ship_type} - {price_color}{ship_data['cost']} gold{ENDC}")
+            print(f"   {WHITE}{ship_data['description']}")
+            print(f"   Speed: {ship_data['speed']} | Durability: {ship_data['durability']} | Capacity: {ship_data['capacity']}")
+            
+            # Special features
+            if ship_data["special_features"]:
+                features_text = ", ".join(ship_data["special_features"])
+                print(f"   {YELLOW}Features: {features_text}")
+            
+            # Required materials
+            print(f"   {CYAN}Required Materials:")
+            for material, amount in ship_data["required_materials"].items():
+                has_enough = user_data.get("materials", {}).get(material, 0) >= amount
+                material_color = GREEN if has_enough else RED
+                print(f"   - {material}: {material_color}{amount}{ENDC}")
+    
+    if not available_ships:
+        print(f"\n{RED}There are no ships available at your current level. Return when you've gained more experience.{ENDC}")
+        return
+    
+    print(f"\n{RED}0. Cancel Purchase{ENDC}")
+    
+    choice = input("\nEnter the number of the ship you wish to purchase (or 0 to cancel): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(available_ships):
+            ship_type = available_ships[index]
+            ship_data = SHIPS[ship_type]
+            
+            # Check if player can afford the ship
+            if user_data["gold"] < ship_data["cost"]:
+                print(f"\n{RED}You don't have enough gold to purchase this ship.{ENDC}")
+                return
+            
+            # Check if player has required materials
+            for material, amount in ship_data["required_materials"].items():
+                if user_data.get("materials", {}).get(material, 0) < amount:
+                    print(f"\n{RED}You don't have enough {material} to build this ship.{ENDC}")
+                    return
+            
+            # Generate unique ship ID
+            ship_id = f"{ship_type.lower().replace(' ', '_')}_{len(user_data['ships']) + 1}"
+            
+            # Prompt for ship name
+            ship_name = input(f"\n{YELLOW}What would you like to name your new {ship_type}? {ENDC}")
+            if not ship_name.strip():
+                ship_name = f"{ship_type} {len(user_data['ships']) + 1}"
+            
+            # Deduct gold and materials
+            user_data["gold"] -= ship_data["cost"]
+            for material, amount in ship_data["required_materials"].items():
+                user_data["materials"][material] -= amount
+            
+            # Add ship to player's ships
+            user_data["ships"][ship_id] = {
+                "type": ship_type,
+                "name": ship_name,
+                "durability": ship_data["durability"],
+                "speed": ship_data["speed"],
+                "capacity": ship_data["capacity"],
+                "special_features": ship_data["special_features"].copy(),
+                "upgrades": [],
+                "purchase_date": f"Day {user_data.get('game_days', 1)}"
+            }
+            
+            print(f"\n{GREEN}Congratulations! You are now the proud owner of {ship_name}, a {ship_type}!")
+            print(f"The Harbormaster hands you the deed and wishes you safe travels.{ENDC}")
+        else:
+            print(f"{RED}Invalid selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+
+def repair_ship(user_data: Dict[str, Any]) -> None:
+    """Interface for repairing ships"""
+    print(f"\n{BOLD}{CYAN}=== REPAIR SHIP ===")
+    
+    # Check if player is at a port
+    current_area = user_data.get("current_area", "")
+    is_at_port = "Port" in current_area or "Harbor" in current_area
+    
+    if not is_at_port:
+        print(f"\n{RED}You need to be at a port or harbor to repair your ships.{ENDC}")
+        return
+    
+    # Check if user has any ships
+    if not user_data["ships"]:
+        print(f"\n{YELLOW}You don't own any ships to repair.{ENDC}")
+        return
+    
+    # Display ships that need repair
+    ships_to_repair = []
+    for ship_id, ship_data in user_data["ships"].items():
+        ship_type = ship_data["type"]
+        max_durability = SHIPS[ship_type]["durability"]
+        current_durability = ship_data["durability"]
+        
+        if current_durability < max_durability:
+            ships_to_repair.append((ship_id, ship_data, max_durability - current_durability))
+    
+    if not ships_to_repair:
+        print(f"\n{GREEN}All your ships are in perfect condition and don't need repairs.{ENDC}")
+        return
+    
+    print(f"\n{WHITE}The following ships need repairs:")
+    
+    for i, (ship_id, ship_data, damage) in enumerate(ships_to_repair, 1):
+        ship_type = ship_data["type"]
+        ship_name = ship_data.get("name", ship_type)
+        
+        # Calculate repair cost - 5 gold per point of damage
+        repair_cost = damage * 5
+        
+        # Determine if player can afford the repair
+        can_afford = user_data["gold"] >= repair_cost
+        price_color = GREEN if can_afford else RED
+        
+        print(f"\n{i}. {BLUE}{ship_name} ({ship_type})")
+        print(f"   Condition: {ship_data['durability']}/{SHIPS[ship_type]['durability']}")
+        print(f"   Repair Cost: {price_color}{repair_cost} gold{ENDC}")
+    
+    print(f"\n{RED}0. Cancel{ENDC}")
+    
+    choice = input("\nEnter the number of the ship you wish to repair (or 0 to cancel): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(ships_to_repair):
+            ship_id, ship_data, damage = ships_to_repair[index]
+            repair_cost = damage * 5
+            
+            # Check if player can afford the repair
+            if user_data["gold"] < repair_cost:
+                print(f"\n{RED}You don't have enough gold for these repairs.{ENDC}")
+                return
+            
+            # Process the repair
+            user_data["gold"] -= repair_cost
+            user_data["ships"][ship_id]["durability"] = SHIPS[ship_data["type"]]["durability"]
+            
+            ship_name = ship_data.get("name", ship_data["type"])
+            print(f"\n{GREEN}The {ship_name} has been fully repaired and is ready to sail!{ENDC}")
+        else:
+            print(f"{RED}Invalid selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+
+def sail(user_data: Dict[str, Any]) -> None:
+    """Main sailing function - allows player to travel between regions by sea or sky"""
+    print(f"\n{BOLD}{CYAN}=== SET SAIL ===")
+    
+    # Check player's location type (coastal or celestial gateway)
+    current_area = user_data.get("current_area", "")
+    coastal_areas = ["Navigator's Port", "Siren's Isle", "Volcano Island", "Whispering Reefs", "Frost Harbor"]
+    celestial_areas = ["Gateway of Stars", "Divine Court", "Celestial Gardens", "Hall of Heroes", "The Great Forge"]
+    
+    # Determine navigation type based on location
+    if current_area in coastal_areas:
+        navigation_type = "sea"
+    elif current_area in celestial_areas:
+        navigation_type = "ethereal"
+    else:
+        print(f"\n{RED}You need to be at a coastal location or celestial gateway to set sail.{ENDC}")
+        return
+    
+    # Check if player has a ship/vessel
+    if not user_data["ships"]:
+        print(f"\n{RED}You need a ship to sail. Visit Navigator's Port to purchase one.{ENDC}")
+        return
+    
+    # Check for celestial navigation skill if trying to navigate ethereal space
+    if navigation_type == "ethereal":
+        if "celestial_navigation" not in user_data.get("skills", {}):
+            print(f"\n{YELLOW}You need the Celestial Navigation skill to traverse the Ethereal Realm.")
+            print(f"Visit the Star Cartographer at Gateway of Stars to learn this skill.{ENDC}")
+            return
+    
+    # Check if player has appropriate maps
+    if not user_data["navigation"]["maps"]:
+        print(f"\n{RED}You need a map to navigate. You can purchase maps at port settlements or from the Star Cartographer.{ENDC}")
+        return
+    
+    # Check for ethereal map if navigating ethereal space
+    if navigation_type == "ethereal" and "Ethereal Map" not in user_data["navigation"]["maps"]:
+        print(f"\n{RED}You need an Ethereal Map to navigate the divine realms. Visit the Star Cartographer.{ENDC}")
+        return
+    
+    # Select ship to sail with
+    print(f"\n{WHITE}Select a ship for your journey:")
+    
+    available_ships = []
+    for ship_id, ship_data in user_data["ships"].items():
+        # Only show ships with durability > 0
+        if ship_data["durability"] > 0:
+            available_ships.append((ship_id, ship_data))
+    
+    if not available_ships:
+        print(f"\n{RED}All your ships are too damaged to sail. Repair them first.{ENDC}")
+        return
+    
+    for i, (ship_id, ship_data) in enumerate(available_ships, 1):
+        ship_type = ship_data["type"]
+        ship_name = ship_data.get("name", ship_type)
+        
+        # Show durability as a percentage
+        durability_percent = int(ship_data["durability"] / SHIPS[ship_type]["durability"] * 100)
+        
+        # Color based on durability
+        if durability_percent > 75:
+            durability_color = GREEN
+        elif durability_percent > 40:
+            durability_color = YELLOW
+        else:
+            durability_color = RED
+        
+        # Show realm compatibility
+        ship_type = ship_data["type"]
+        ship_realm = SHIPS[ship_type].get("realm", "Sea")
+        realm_text = ""
+        
+        if ship_realm == "Sea":
+            realm_text = f"{CYAN}[Sea Vessel]{ENDC}"
+        elif ship_realm == "Ethereal":
+            realm_text = f"{MAGENTA}[Ethereal Skyship]{ENDC}"
+        elif ship_realm == "All":
+            realm_text = f"{YELLOW}[Divine Vessel]{ENDC}"
+            
+        print(f"{i}. {BLUE}{ship_name} - {durability_color}Condition: {durability_percent}%{ENDC} | Speed: {ship_data['speed']} {realm_text}")
+    
+    print(f"{RED}0. Cancel{ENDC}")
+    
+    ship_choice = input("\nChoose a ship (or 0 to cancel): ")
+    
+    if ship_choice == "0":
+        return
+    
+    try:
+        ship_index = int(ship_choice) - 1
+        if 0 <= ship_index < len(available_ships):
+            chosen_ship_id, chosen_ship = available_ships[ship_index]
+            
+            # Select destination
+            print(f"\n{WHITE}Select your destination:")
+            
+            # Get ship realm capability
+            chosen_ship_type = chosen_ship["type"]
+            ship_realm = SHIPS[chosen_ship_type].get("realm", "Sea")
+            
+            # Find potential destinations based on maps and ship capabilities
+            available_destinations = []
+            
+            if navigation_type == "sea":
+                # Check all coastal areas except current area
+                for area in coastal_areas:
+                    if area != current_area:
+                        region = next((r for r, data in WORLD_REGIONS.items() if area in data["areas"]), None)
+                        
+                        # Check if player has map for this region
+                        if region and f"{region} Map" in user_data["navigation"]["maps"]:
+                            available_destinations.append((area, region))
+                
+                if not available_destinations:
+                    print(f"\n{RED}You don't have maps for any other coastal destinations.{ENDC}")
+                    return
+            else:  # ethereal navigation
+                # Check celestial navigation skill
+                if "celestial_navigation" not in user_data.get("skills", {}):
+                    print(f"\n{RED}You need the Celestial Navigation skill to travel to ethereal destinations.{ENDC}")
+                    return
+                    
+                # Check if ship can travel to ethereal realm
+                if ship_realm not in ["Ethereal", "All"]:
+                    print(f"\n{RED}Your vessel cannot travel to the Ethereal Realm. You need a ship with Ethereal capabilities.{ENDC}")
+                    return
+                
+                # Check all ethereal areas except current area
+                for area in celestial_areas:
+                    if area != current_area:
+                        region = "Ethereal Realm"
+                        
+                        # Check if player has ethereal map
+                        if "Ethereal Realm Map" in user_data["navigation"]["maps"]:
+                            available_destinations.append((area, region))
+                
+                if not available_destinations:
+                    print(f"\n{RED}You don't have maps for any other ethereal destinations.{ENDC}")
+                    return
+            
+            for i, (area, region) in enumerate(available_destinations, 1):
+                # Calculate journey difficulty (1-5)
+                journey_length = random.randint(2, 5)  # Based on region distance
+                journey_danger = random.randint(1, 5)  # Based on region dangers
+                
+                # Journey time based on ship speed
+                journey_time = max(1, journey_length // chosen_ship["speed"])
+                
+                print(f"{i}. {GREEN}{area} ({region}){ENDC}")
+                print(f"   Journey Length: {YELLOW}{'★' * journey_length}{ENDC}")
+                print(f"   Danger Level: {RED}{'★' * journey_danger}{ENDC}")
+                print(f"   Estimated Travel Time: {journey_time} days")
+            
+            print(f"{RED}0. Cancel{ENDC}")
+            
+            dest_choice = input("\nChoose your destination (or 0 to cancel): ")
+            
+            if dest_choice == "0":
+                return
+            
+            try:
+                dest_index = int(dest_choice) - 1
+                if 0 <= dest_index < len(available_destinations):
+                    destination, destination_region = available_destinations[dest_index]
+                    
+                    # Journey time calculation
+                    journey_length = random.randint(2, 5)
+                    journey_time = max(1, journey_length // chosen_ship["speed"])
+                    
+                    print(f"\n{BOLD}{CYAN}=== JOURNEY TO {destination.upper()} ===")
+                    print(f"\n{WHITE}You set sail from {current_area} toward {destination}.")
+                    print(f"The journey will take approximately {journey_time} days.")
+                    print(f"Your {chosen_ship['name']} cuts through the waves as you leave the harbor...")
+                    
+                    # Simulate journey with events
+                    journey_success = True
+                    for day in range(1, journey_time + 1):
+                        print(f"\n{YELLOW}=== Day {day} of {journey_time} ===")
+                        
+                        # Random ocean event (70% chance)
+                        if random.random() < 0.7:
+                            # Choose random event based on probability
+                            event_roll = random.random()
+                            cumulative_prob = 0
+                            chosen_event = None
+                            
+                            for event_id, event_data in OCEAN_EVENTS.items():
+                                cumulative_prob += event_data["probability"]
+                                if event_roll <= cumulative_prob:
+                                    chosen_event = event_id
+                                    break
+                            
+                            if chosen_event:
+                                event = OCEAN_EVENTS[chosen_event]
+                                print(f"\n{BOLD}{CYAN}{event['name']}!")
+                                print(f"{WHITE}{event['description']}")
+                                print(f"{YELLOW}Effect: {event['effect']}")
+                                
+                                # Handle event effects
+                                if chosen_event == "calm":
+                                    # Heal player slightly
+                                    heal_amount = int(user_data["max_health"] * 0.1)
+                                    user_data["health"] = min(user_data["max_health"], user_data["health"] + heal_amount)
+                                    print(f"\n{GREEN}The calm seas allow you to rest. You recover {heal_amount} health.{ENDC}")
+                                
+                                elif chosen_event == "storm":
+                                    # Damage ship
+                                    damage = random.randint(5, 15)
+                                    user_data["ships"][chosen_ship_id]["durability"] = max(1, user_data["ships"][chosen_ship_id]["durability"] - damage)
+                                    print(f"\n{RED}Your ship takes {damage} damage from the violent storm!{ENDC}")
+                                
+                                elif chosen_event == "pirates":
+                                    # Simple simulation of pirate encounter
+                                    print(f"\n{RED}You engage in battle with the pirates!{ENDC}")
+                                    if random.random() < 0.6:  # 60% chance to win
+                                        print(f"{GREEN}You successfully fend off the pirates!{ENDC}")
+                                        
+                                        # Gain loot
+                                        gold_found = random.randint(50, 200)
+                                        user_data["gold"] += gold_found
+                                        print(f"{YELLOW}You find {gold_found} gold from the defeated pirates.{ENDC}")
+                                    else:
+                                        # Take damage to ship and player
+                                        ship_damage = random.randint(10, 25)
+                                        user_data["ships"][chosen_ship_id]["durability"] = max(1, user_data["ships"][chosen_ship_id]["durability"] - ship_damage)
+                                        
+                                        player_damage = random.randint(5, 15)
+                                        user_data["health"] = max(1, user_data["health"] - player_damage)
+                                        
+                                        print(f"{RED}The pirates damage your ship and crew before retreating!")
+                                        print(f"Ship damage: {ship_damage} | Your health: -{player_damage}{ENDC}")
+                                
+                                elif chosen_event == "sea_monster":
+                                    # Simulate sea monster encounter
+                                    print(f"\n{RED}A massive sea creature attacks your ship!{ENDC}")
+                                    
+                                    # Outcome depends on ship type and durability
+                                    if "War Galleon" in chosen_ship["type"] or "Arcane Schooner" in chosen_ship["type"]:
+                                        if random.random() < 0.7:  # 70% chance to defeat with powerful ships
+                                            print(f"{GREEN}Your well-equipped ship allows you to defeat the monster!{ENDC}")
+                                            
+                                            # Add rare material as reward
+                                            if "materials" not in user_data:
+                                                user_data["materials"] = {}
+                                            
+                                            rare_materials = ["Sea Monster Hide", "Monster Tooth", "Abyssal Scale"]
+                                            material = random.choice(rare_materials)
+                                            amount = random.randint(1, 3)
+                                            
+                                            if material not in user_data["materials"]:
+                                                user_data["materials"][material] = 0
+                                            user_data["materials"][material] += amount
+                                            
+                                            print(f"{YELLOW}You collect {amount} {material} from the defeated monster.{ENDC}")
+                                        else:
+                                            # Major damage to ship
+                                            ship_damage = random.randint(30, 50)
+                                            user_data["ships"][chosen_ship_id]["durability"] = max(1, user_data["ships"][chosen_ship_id]["durability"] - ship_damage)
+                                            print(f"{RED}The monster severely damages your ship before retreating to the depths!{ENDC}")
+                                    else:
+                                        # Weaker ships fare worse
+                                        if random.random() < 0.3:  # 30% chance to escape unharmed
+                                            print(f"{GREEN}Through skillful maneuvering, you manage to escape the monster!{ENDC}")
+                                        else:
+                                            # Major damage to ship
+                                            ship_damage = random.randint(40, 70)
+                                            user_data["ships"][chosen_ship_id]["durability"] = max(1, user_data["ships"][chosen_ship_id]["durability"] - ship_damage)
+                                            
+                                            # Player takes damage too
+                                            player_damage = random.randint(10, 25)
+                                            user_data["health"] = max(1, user_data["health"] - player_damage)
+                                            
+                                            print(f"{RED}The monster batters your ship and injures several crew members!")
+                                            print(f"Ship damage: {ship_damage} | Your health: -{player_damage}{ENDC}")
+                                
+                                # Handle more events as needed...
+                        else:
+                            print(f"{WHITE}You have an uneventful day of sailing.{ENDC}")
+                        
+                        # Check if ship is severely damaged
+                        if user_data["ships"][chosen_ship_id]["durability"] < SHIPS[chosen_ship["type"]]["durability"] * 0.2:
+                            print(f"\n{RED}WARNING: {chosen_ship['name']} is severely damaged and at risk of sinking!{ENDC}")
+                            
+                            # 10% chance of sinking if below 20% durability
+                            if random.random() < 0.1:
+                                print(f"\n{RED}DISASTER! Your ship has been torn apart by the harsh conditions!")
+                                print(f"You and your crew barely make it to a lifeboat and drift for days...{ENDC}")
+                                
+                                # Remove ship from inventory
+                                del user_data["ships"][chosen_ship_id]
+                                
+                                # 50% chance to lose the journey completely and wash up somewhere random
+                                if random.random() < 0.5:
+                                    random_locations = ["Greenwood Village", "Navigator's Port", "Frost Harbor"]
+                                    random_destination = random.choice(random_locations)
+                                    
+                                    print(f"\n{YELLOW}After days adrift, you wash ashore near {random_destination}.{ENDC}")
+                                    user_data["current_area"] = random_destination
+                                    
+                                    # Take damage
+                                    damage = random.randint(20, 40)
+                                    user_data["health"] = max(1, user_data["health"] - damage)
+                                    
+                                    print(f"{RED}You suffered {damage} damage from exposure and lack of supplies.{ENDC}")
+                                    journey_success = False
+                                    break
+                        
+                        # Pause between days
+                        input("\nPress Enter to continue...")
+                    
+                    # Journey complete
+                    if journey_success:
+                        print(f"\n{BOLD}{GREEN}=== LAND HO! ===")
+                        print(f"\n{WHITE}After {journey_time} days at sea, you arrive safely at {destination}.")
+                        
+                        # Update player location
+                        user_data["current_area"] = destination
+                        
+                        # Add region to discovered regions if not already there
+                        if destination_region not in user_data["navigation"]["discovered_regions"]:
+                            user_data["navigation"]["discovered_regions"].append(destination_region)
+                            print(f"\n{CYAN}You've discovered a new region: {destination_region}!{ENDC}")
+                        
+                        # Add ocean route to known routes
+                        route = f"{current_area} to {destination}"
+                        reverse_route = f"{destination} to {current_area}"
+                        
+                        if route not in user_data["navigation"]["ocean_routes"] and reverse_route not in user_data["navigation"]["ocean_routes"]:
+                            user_data["navigation"]["ocean_routes"].append(route)
+                            print(f"\n{YELLOW}You've charted a new ocean route: {route}{ENDC}")
+                else:
+                    print(f"{RED}Invalid destination selection.{ENDC}")
+            except ValueError:
+                print(f"{RED}Please enter a number.{ENDC}")
+        else:
+            print(f"{RED}Invalid ship selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
+
+def view_maps(user_data: Dict[str, Any]) -> None:
+    """View maps and discovered regions"""
+    print(f"\n{BOLD}{CYAN}=== MAPS & DISCOVERED REGIONS ===")
+    
+    # Show maps
+    print(f"\n{YELLOW}Maps in your possession:")
+    if user_data["navigation"]["maps"]:
+        for map_name in user_data["navigation"]["maps"]:
+            print(f"- {map_name}")
+    else:
+        print(f"{RED}You don't have any maps.{ENDC}")
+    
+    # Show discovered regions
+    print(f"\n{GREEN}Regions you've discovered:")
+    if user_data["navigation"]["discovered_regions"]:
+        for region in user_data["navigation"]["discovered_regions"]:
+            # Show description if available
+            if region in WORLD_REGIONS:
+                print(f"\n{BLUE}{region}: {WHITE}{WORLD_REGIONS[region]['description']}")
+                
+                # Show areas in this region
+                areas = WORLD_REGIONS[region]["areas"]
+                visited_areas = [area for area in areas if area in user_data.get("achievements", {}).get("progress", {}).get("areas_visited", set())]
+                
+                print(f"{YELLOW}Areas discovered: {len(visited_areas)}/{len(areas)}")
+                for area in areas:
+                    if area in visited_areas:
+                        print(f"- {GREEN}{area} (Visited){ENDC}")
+                    else:
+                        print(f"- {RED}{area} (Undiscovered){ENDC}")
+            else:
+                print(f"- {region}")
+    else:
+        print(f"{RED}You haven't discovered any regions yet.{ENDC}")
+    
+    # Show charted routes
+    print(f"\n{CYAN}Ocean routes you've charted:")
+    if user_data["navigation"]["ocean_routes"]:
+        for route in user_data["navigation"]["ocean_routes"]:
+            print(f"- {route}")
+    else:
+        print(f"{RED}You haven't charted any ocean routes yet.{ENDC}")
+
+def ship_encyclopedia() -> None:
+    """Display information about all ship types"""
+    print(f"\n{BOLD}{CYAN}=== SHIP ENCYCLOPEDIA ===")
+    print(f"{WHITE}Learn about the various ship types available in the world.")
+    
+    # List all ship types
+    print(f"\n{YELLOW}Available Ship Types:")
+    
+    for i, (ship_type, ship_data) in enumerate(SHIPS.items(), 1):
+        print(f"{i}. {ship_type}")
+    
+    print(f"{RED}0. Back{ENDC}")
+    
+    choice = input("\nSelect a ship type to learn more about (or 0 to go back): ")
+    
+    if choice == "0":
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(SHIPS):
+            ship_type = list(SHIPS.keys())[index]
+            ship_data = SHIPS[ship_type]
+            
+            print(f"\n{BOLD}{BLUE}=== {ship_type} ===")
+            print(f"\n{WHITE}{ship_data['description']}")
+            
+            print(f"\n{YELLOW}Statistics:")
+            print(f"Speed: {ship_data['speed']}")
+            print(f"Durability: {ship_data['durability']}")
+            print(f"Capacity: {ship_data['capacity']} crew")
+            
+            print(f"\n{GREEN}Special Features:")
+            if ship_data["special_features"]:
+                for feature in ship_data["special_features"]:
+                    print(f"- {feature}")
+            else:
+                print("None")
+            
+            print(f"\n{CYAN}Requirements:")
+            print(f"Level: {ship_data['required_level']}+")
+            print(f"Cost: {ship_data['cost']} gold")
+            
+            print(f"\n{RED}Required Materials:")
+            for material, amount in ship_data["required_materials"].items():
+                print(f"- {material}: {amount}")
+            
+            input("\nPress Enter to continue...")
+        else:
+            print(f"{RED}Invalid selection.{ENDC}")
+    except ValueError:
+        print(f"{RED}Please enter a number.{ENDC}")
 
 def clear_screen():
     """Clear the terminal screen"""
@@ -913,11 +2925,282 @@ CHARACTER_CLASSES = {
     "Assassin": {"health_bonus": -15, "attack_bonus": 35, "defense_bonus": -5, "speed_bonus": 12},
     "Druid": {"health_bonus": 15, "attack_bonus": 10, "defense_bonus": 15, "speed_bonus": 6},
     "Samurai": {"health_bonus": 0, "attack_bonus": 20, "defense_bonus": 10, "speed_bonus": 9},
+}
+
+# Character Gacha System - Inspired by Genshin Impact
+# Characters have rarity tiers, elements, unique abilities, and stats
+
+# Character rarity definitions with pull rates and colors
+CHARACTER_RARITIES = {
+    "Common": {"stars": 1, "color": WHITE, "pull_rate": 60.0, "pity_increase": 0},
+    "Uncommon": {"stars": 2, "color": GREEN, "pull_rate": 25.0, "pity_increase": 1},
+    "Rare": {"stars": 3, "color": BLUE + BOLD, "pull_rate": 10.0, "pity_increase": 5},
+    "Epic": {"stars": 4, "color": MAGENTA + BOLD, "pull_rate": 4.0, "pity_increase": 10},
+    "Legendary": {"stars": 5, "color": YELLOW + BOLD, "pull_rate": 1.0, "pity_increase": 25}
+}
+
+# Character elements and their colors
+CHARACTER_ELEMENTS = {
+    "Fire": RED + BOLD,
+    "Water": BLUE,
+    "Earth": GREEN,
+    "Air": CYAN,
+    "Light": YELLOW + BOLD,
+    "Dark": DARKGRAY + BOLD,
+    "Lightning": YELLOW,
+    "Ice": CYAN + BOLD,
+    "Nature": GREEN + BOLD,
+    "Arcane": MAGENTA
+}
+
+# Gacha Character Collection - Detailed character entries with stats, abilities, and lore
+GACHA_CHARACTERS = {
+    # LEGENDARY CHARACTERS (5★)
+    "Aurora": {
+        "rarity": "Legendary",
+        "element": "Light",
+        "class": "Paladin",
+        "weapon": "Sacred Sword",
+        "base_stats": {"health": 1200, "attack": 85, "defense": 75, "speed": 60},
+        "abilities": [
+            {"name": "Divine Judgement", "description": "Deals massive Light damage to all enemies", "cooldown": 4},
+            {"name": "Blessing of Light", "description": "Heals all allies and provides a defense boost", "cooldown": 3}
+        ],
+        "passive": "When HP drops below 20%, automatically heals for 30% of max HP once per battle",
+        "constellation_bonus": "All Light damage increased by 25%",
+        "lore": "Born under a solar eclipse, Aurora was blessed by the celestial light. She swore to protect the realm from darkness.",
+        "obtain_method": "Radiance Gacha Banner (Limited)",
+        "voice_lines": [
+            "The light shall guide us to victory.",
+            "Darkness cannot stand against my radiance!",
+            "For the glory of the sun kingdom!"
+        ]
+    },
+    "Ezra": {
+        "rarity": "Legendary",
+        "element": "Dark",
+        "class": "Rogue",
+        "weapon": "Shadow Daggers",
+        "base_stats": {"health": 950, "attack": 95, "defense": 50, "speed": 85},
+        "abilities": [
+            {"name": "Void Strike", "description": "Deals massive Dark damage to a single target with 50% chance to inflict Void status", "cooldown": 3},
+            {"name": "Shadow Realm", "description": "Makes entire party untargetable for 1 turn", "cooldown": 5}
+        ],
+        "passive": "20% chance to dodge any attack",
+        "constellation_bonus": "After dodging, automatically counterattacks for 150% damage",
+        "lore": "Once the heir to a noble kingdom, Ezra sacrificed everything to gain the power of the void when dark forces threatened his homeland.",
+        "obtain_method": "Abyssal Desires Gacha Banner (Limited)",
+        "voice_lines": [
+            "The shadows bend to my will.",
+            "You cannot see what lurks in the dark.",
+            "My path is my own to choose."
+        ]
+    },
+    "Solara": {
+        "rarity": "Legendary",
+        "element": "Fire",
+        "class": "Mage",
+        "weapon": "Solar Staff",
+        "base_stats": {"health": 1000, "attack": 100, "defense": 60, "speed": 70},
+        "abilities": [
+            {"name": "Solar Flare", "description": "Deals immense Fire damage to all enemies with Burn chance", "cooldown": 4},
+            {"name": "Phoenix Rebirth", "description": "Revives a fallen ally with 50% HP and grants Fire Shield", "cooldown": 6}
+        ],
+        "passive": "Applies Burn to all enemies at the start of battle",
+        "constellation_bonus": "Burn damage increased by 50%",
+        "lore": "Solara channels the eternal flame of the sun. Said to be the reincarnation of the Phoenix Queen.",
+        "obtain_method": "Celestial Flame Gacha Banner (Limited)",
+        "voice_lines": [
+            "The sun rises with me.",
+            "Ashes will be your end.",
+            "Witness rebirth through fire!"
+        ]
+    },
+    
+    # EPIC CHARACTERS (4★)
+    "Lyra": {
+        "rarity": "Epic",
+        "element": "Ice",
+        "class": "Archer",
+        "weapon": "Crystalline Bow",
+        "base_stats": {"health": 850, "attack": 78, "defense": 45, "speed": 75},
+        "abilities": [
+            {"name": "Freezing Shot", "description": "Deals Ice damage with 70% chance to freeze target for 1 turn", "cooldown": 3},
+            {"name": "Blizzard Volley", "description": "Fires multiple arrows dealing AoE Ice damage", "cooldown": 4}
+        ],
+        "passive": "Critical hits have a 50% chance to apply Chill effect, reducing enemy speed",
+        "constellation_bonus": "Frozen enemies take 35% more damage from all sources",
+        "lore": "Raised in the frozen north, Lyra learned to hunt in the harshest conditions. Her arrows are infused with ancient ice magic.",
+        "obtain_method": "Standard Gacha Banner",
+        "voice_lines": [
+            "One shot, one kill.",
+            "The cold never bothered me.",
+            "I'll freeze your heart."
+        ]
+    },
+    "Terra": {
+        "rarity": "Epic",
+        "element": "Earth",
+        "class": "Mage",
+        "weapon": "Living Stone Staff",
+        "base_stats": {"health": 900, "attack": 72, "defense": 65, "speed": 50},
+        "abilities": [
+            {"name": "Stone Barrage", "description": "Launches multiple stone projectiles at random enemies", "cooldown": 3},
+            {"name": "Earthquake", "description": "Deals Earth damage to all enemies and has a chance to stun", "cooldown": 5}
+        ],
+        "passive": "Whenever Terra takes damage, gains a stacking shield that absorbs 5% of max HP (up to 25%)",
+        "constellation_bonus": "Earthquake now always stuns enemies for 1 turn",
+        "lore": "A child of the mountains, Terra can feel the heartbeat of the world beneath her feet and call upon its strength.",
+        "obtain_method": "Standard Gacha Banner",
+        "voice_lines": [
+            "The earth responds to my call.",
+            "Mountains bow to me.",
+            "Stand firm like stone."
+        ]
+    },
+    "Vayne": {
+        "rarity": "Epic",
+        "element": "Air",
+        "class": "Assassin",
+        "weapon": "Twin Fans",
+        "base_stats": {"health": 800, "attack": 82, "defense": 42, "speed": 90},
+        "abilities": [
+            {"name": "Gale Dance", "description": "Strikes multiple enemies with swift wind slashes", "cooldown": 3},
+            {"name": "Silent Step", "description": "Becomes untargetable and gains crit boost next turn", "cooldown": 5}
+        ],
+        "passive": "Gains 15% evasion while above 70% HP",
+        "constellation_bonus": "Silent Step also restores 10% HP",
+        "lore": "A legendary dancer from the sky islands who uses elegance as a weapon.",
+        "obtain_method": "Wind Whispers Gacha Banner",
+        "voice_lines": [
+            "Can you catch the wind?",
+            "My blades are as swift as air.",
+            "Dance of death, begin!"
+        ]
+    },
+    
+    # RARE CHARACTERS (3★)
+    "Elm": {
+        "rarity": "Rare",
+        "element": "Nature",
+        "class": "Rogue",
+        "weapon": "Living Vines",
+        "base_stats": {"health": 750, "attack": 65, "defense": 55, "speed": 70},
+        "abilities": [
+            {"name": "Entangling Roots", "description": "Immobilizes an enemy and deals Nature damage over time", "cooldown": 3},
+            {"name": "Life Bloom", "description": "Heals the party for a moderate amount", "cooldown": 4}
+        ],
+        "passive": "Recovers 5% HP at the start of each turn",
+        "constellation_bonus": "Entangling Roots affects all enemies",
+        "lore": "Once a tree spirit, Elm took human form to protect the ancient forests from those who would destroy them.",
+        "obtain_method": "Standard Gacha Banner",
+        "voice_lines": [
+            "Nature always finds a way.",
+            "The forest speaks through me.",
+            "Growth comes after hardship."
+        ]
+    },
+    "Andrei": {
+        "rarity": "Rare",
+        "element": "Lightning",
+        "class": "Warrior",
+        "weapon": "Volt Axe",
+        "base_stats": {"health": 780, "attack": 70, "defense": 60, "speed": 65},
+        "abilities": [
+            {
+                "name": "Thunder Cleave",
+                "description": "Deals Lightning damage to a single enemy and has a 30% chance to stun",
+                "cooldown": 3
+            },
+            {
+                "name": "Chargebreaker",
+                "description": "Deals damage and reduces enemy defense for 2 turns",
+                "cooldown": 4
+            }
+        ],
+        "passive": "When landing a critical hit, gains +10 speed for 1 turn (stacks up to 3 times)",
+        "constellation_bonus": "Thunder Cleave's stun chance increases to 60%",
+        "lore": "A battle-hardened mercenary who fights for coin but carries a code of honor. His axe crackles with the fury of a hundred storms.",
+        "obtain_method": "Standard Gacha Banner, Mercenary's Pact Event",
+        "voice_lines": [
+            "Pay me well, and I'll bring the thunder.",
+            "Storm’s coming... and I'm leading it.",
+            "No loyalty, only lightning."
+        ]
+    },
+    
+    # UNCOMMON CHARACTERS (2★)
+    "Marin": {
+        "rarity": "Uncommon",
+        "element": "Water",
+        "class": "Warrior",
+        "weapon": "Coral Trident",
+        "base_stats": {"health": 650, "attack": 58, "defense": 60, "speed": 55},
+        "abilities": [
+            {"name": "Tidal Slash", "description": "Deals Water damage to a single target", "cooldown": 2},
+            {"name": "Ocean's Protection", "description": "Creates a water shield that reduces damage taken", "cooldown": 4}
+        ],
+        "passive": "Takes 20% reduced damage when below 50% HP",
+        "constellation_bonus": "Ocean's Protection also heals allies for 10% of their max HP",
+        "lore": "Born in a coastal village, Marin swore to protect his people from sea monsters and pirates alike.",
+        "obtain_method": "Standard Gacha Banner",
+        "voice_lines": [
+            "The tide turns in my favor.",
+            "Water always finds its path.",
+            "I stand as the shore against the tide."
+        ]
+    },
+    
+    # COMMON CHARACTERS (1★)
+    "Thorn": {
+        "rarity": "Common",
+        "element": "Earth",
+        "class": "Warrior",
+        "weapon": "Iron Sword",
+        "base_stats": {"health": 550, "attack": 45, "defense": 50, "speed": 45},
+        "abilities": [
+            {"name": "Strong Slash", "description": "Basic attack with increased power", "cooldown": 2},
+            {"name": "Defensive Stance", "description": "Increases defense for 2 turns", "cooldown": 3}
+        ],
+        "passive": "Has a 10% chance to counterattack when hit",
+        "constellation_bonus": "Defensive Stance also recovers 10% HP",
+        "lore": "A dedicated village guard who dreams of becoming a hero worthy of legend.",
+        "obtain_method": "Standard Gacha Banner, Friend Summons",
+        "voice_lines": [
+            "I'll protect everyone!",
+            "Stand behind me.",
+            "My sword is ready."
+        ]
+    },
+    "Juno": {
+        "rarity": "Common",
+        "element": "Water",
+        "class": "Archer",
+        "weapon": "Reed Bow",
+        "base_stats": {"health": 540, "attack": 46, "defense": 40, "speed": 50},
+        "abilities": [
+            {"name": "Water Arrow", "description": "Deals minor Water damage to an enemy", "cooldown": 2},
+            {"name": "Aqua Focus", "description": "Increases next attack's power", "cooldown": 3}
+        ],
+        "passive": "Has 5% chance to land a critical hit",
+        "constellation_bonus": "Water Arrow has a 20% chance to slow",
+        "lore": "An aspiring hunter from the riverside village, determined to prove herself.",
+        "obtain_method": "Standard Gacha Banner, Beginner Rewards",
+        "voice_lines": [
+            "One day, I'll hit the bullseye!",
+            "I won’t miss again!",
+            "Splash and sting!"
+        ]
+    }
+}
+
+# Add additional character classes
+CHARACTER_CLASSES.update({
     "Ninja": {"health_bonus": -5, "attack_bonus": 25, "defense_bonus": 5, "speed_bonus": 11},
     "Knight": {"health_bonus": 40, "attack_bonus": 10, "defense_bonus": 20, "speed_bonus": 4},
     "Hunter": {"health_bonus": 0, "attack_bonus": 15, "defense_bonus": 10, "speed_bonus": 7},
-    "Tamer": {"health_bonus": 35, "attack_bonus": 50, "defense_bonus": -25, "speed_bonus": 5},
-}
+    "Tamer": {"health_bonus": 35, "attack_bonus": 50, "defense_bonus": -25, "speed_bonus": 5}
+})
 
 # Item rarity
 RARITY_MULTIPLIERS = {
@@ -2405,6 +4688,13 @@ def ensure_user_data_keys(data: Dict) -> None:
         "coolness": 0,
         "guild": None,
         "pets": [],
+        "legendary_pets": {},
+        "ships": {},
+        "navigation": {
+            "maps": ["Sealtea Map"],
+            "discovered_regions": ["Sealtea"],
+            "ocean_routes": []
+        },
         "progress": "starter",
         "exp": 0,
         "health": INITIAL_HEALTH,
@@ -2427,6 +4717,47 @@ def ensure_user_data_keys(data: Dict) -> None:
         # Home/camp system data
         "home_structures": {"Tent": {"built": True, "position": [0, 0], "health": 100}},
         "home_location": "Camp",
+        # Archaeology system data
+        "archaeology": {
+            "discovered_sites": [],
+            "excavated_artifacts": [],
+            "knowledge": [],
+            "tools": ["Basic Trowel"],
+            "museum_exhibits": [],
+            "excavation_skill": 1,
+            "analysis_skill": 1,
+            "artifact_collections": {},
+            "site_levels": {},
+            "current_site": None,
+            "rare_discoveries": [],
+            "excavation_dates": {},
+            "last_excavation": None
+        },
+        # Character gacha system
+        "gacha": {
+            "characters": [],
+            "weapons": [],
+            "memory_shards": {},  # Character constellation system
+            "character_pity_5star": 0,  # Pity counter for 5-star characters
+            "character_pity_4star": 0,  # Pity counter for 4-star characters
+            "weapon_pity_5star": 0,     # Pity counter for 5-star weapons
+            "weapon_pity_4star": 0,     # Pity counter for 4-star weapons
+            "memory_dust": 0,           # Currency for memory shop
+            "primogems": 1600,          # Gacha currency
+            "fates": 0,                 # Pull tokens 
+            "last_5star_was_featured": False,  # For 50/50 system on limited banners
+            "daily_login": {
+                "last_login": None,     # Last login date for daily rewards
+                "login_streak": 0,      # Consecutive days logged in
+                "claimed_milestones": [] # Milestone rewards claimed
+            },
+            "farmed_materials": {},     # Farming materials for characters and weapons
+            "character_levels": {},     # Character levels (1-90)
+            "weapon_levels": {},        # Weapon levels (1-90)
+            "weapon_refinements": {},   # Weapon refinement levels (1-5)
+            "equipped_weapons": {},     # Characters -> equipped weapons mapping
+            "active_party": []          # Currently active characters (up to 4)
+        },
         "achievements": {
             "completed": set(),
             "stats": {
@@ -2438,7 +4769,10 @@ def ensure_user_data_keys(data: Dict) -> None:
                 "crops_harvested": 0,
                 "max_damage_dealt": 0,
                 "total_gold_earned": 0,
-                "rare_items_found": 0
+                "rare_items_found": 0,
+                "characters_collected": 0,
+                "weapons_collected": 0,
+                "gacha_pulls": 0
             }
         }
     }
@@ -4011,6 +6345,126 @@ def get_completion_color(percentage):
 # First calculate_elemental_damage function removed (duplicate)
 # Using the more complete version at line ~3038
 
+# Character and Element Synergy System
+def apply_character_element_synergy() -> Dict:
+    """
+    Calculate and apply elemental synergy effects from active character party
+    
+    Returns:
+        Dictionary of active synergy effects
+    """
+    # Initialize synergy effects
+    synergy_effects = {
+        "elemental_damage_bonus": 0,  # % damage bonus for matching elements
+        "elemental_resistance_bonus": 0,  # % resistance bonus for matching elements
+        "passive_effects": [],  # List of passive effects
+        "status_resistance": [],  # List of status effects with increased resistance
+    }
+    
+    # Check if gacha system is active
+    if "gacha" not in user_data:
+        return synergy_effects
+    
+    current_party = user_data["gacha"]["characters"]
+    if not current_party:
+        return synergy_effects
+    
+    # Count elements in party for resonance effects
+    element_count = {}
+    character_levels = {}
+    
+    for char_name in current_party:
+        char_data = GACHA_CHARACTERS.get(char_name, {})
+        element = char_data.get("element", "None")
+        memory_level = user_data["gacha"]["memory_shards"].get(char_name, 0)
+        
+        # Count elements for resonance
+        if element not in element_count:
+            element_count[element] = 0
+        element_count[element] += 1
+        
+        # Store character memory levels
+        character_levels[char_name] = memory_level
+        
+        # Apply individual character Sea of Memory effects based on level
+        if memory_level > 0:
+            memories = char_data.get("sea_of_memories", [])
+            for i in range(min(memory_level, len(memories))):
+                memory = memories[i]
+                if "damage" in memory.lower() and "increase" in memory.lower():
+                    # Parse damage bonus from memory description
+                    match = re.search(r"(\d+)%", memory)
+                    if match:
+                        bonus = int(match.group(1))
+                        synergy_effects["elemental_damage_bonus"] += bonus / 100
+                
+                if any(status in memory.lower() for status in ["poison", "burn", "freeze", "shock"]):
+                    for status in ["poison", "burn", "freeze", "shock"]:
+                        if status in memory.lower() and status not in synergy_effects["status_resistance"]:
+                            synergy_effects["status_resistance"].append(status)
+                
+                # Add passive effect description
+                effect_desc = f"{char_name}'s {memory.split(':')[1].strip()}"
+                synergy_effects["passive_effects"].append(effect_desc)
+    
+    # Apply elemental resonance effects (2+ of same element)
+    for element, count in element_count.items():
+        if count >= 2:
+            # Different resonance effects based on element
+            if element == "Fire":
+                synergy_effects["elemental_damage_bonus"] += 0.15  # +15% fire damage
+                effect_desc = "Fire Resonance: +15% Fire damage"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Water":
+                synergy_effects["elemental_resistance_bonus"] += 0.15  # +15% water resistance
+                effect_desc = "Water Resonance: +15% Water resistance and healing"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Earth":
+                effect_desc = "Earth Resonance: +20% physical defense"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Air":
+                effect_desc = "Air Resonance: +10% movement speed and evasion"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Lightning":
+                effect_desc = "Lightning Resonance: +10% critical hit chance"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Ice":
+                effect_desc = "Ice Resonance: +15% chance to freeze enemies"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Light":
+                effect_desc = "Light Resonance: +15% healing effectiveness"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Dark":
+                effect_desc = "Dark Resonance: +15% damage against elite enemies"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Nature":
+                effect_desc = "Nature Resonance: Regenerate 2% health per minute"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+            
+            elif element == "Arcane":
+                effect_desc = "Arcane Resonance: +15% to all elemental damage"
+                if effect_desc not in synergy_effects["passive_effects"]:
+                    synergy_effects["passive_effects"].append(effect_desc)
+    
+    return synergy_effects
+
 # First apply_elemental_effects function removed (duplicate)
 # Using the more complete version at line ~3090
 
@@ -4021,13 +6475,14 @@ def get_completion_color(percentage):
 # Using the more complete version below with type annotations
 
 # Elemental Combat Functions
-def calculate_elemental_damage(attacker_element: str, defender_element: str, base_damage: int) -> Tuple[int, str, Dict]:
+def calculate_elemental_damage(attacker_element: str, defender_element: str, base_damage: int, is_player: bool = True) -> Tuple[int, str, Dict]:
     """Calculate damage based on elemental interactions and return elemental reaction if applicable
 
     Args:
         attacker_element: The element of the attacker
         defender_element: The element of the defender
         base_damage: The base damage amount
+        is_player: Whether the attacker is the player (for character synergy bonuses)
 
     Returns:
         Tuple of (final_damage, reaction_name, reaction_effect)
@@ -4035,26 +6490,103 @@ def calculate_elemental_damage(attacker_element: str, defender_element: str, bas
     damage_multiplier = 1.0
     reaction_name = ""  # Empty string instead of None
     reaction_effect = {}
+    
+    # Get character party synergy effects if player is attacking
+    synergy_effects = {}
+    element_count = {}
+    if is_player and "gacha" in user_data and user_data["gacha"].get("current_party"):
+        # Get active synergy effects from character party
+        synergy_effects = apply_character_element_synergy()
+        
+        # Count elements in party for resonance effects
+        for char_name in user_data["gacha"]["current_party"]:
+            char_data = GACHA_CHARACTERS.get(char_name, {})
+            element = char_data.get("element", "None")
+            if element not in element_count:
+                element_count[element] = 0
+            element_count[element] += 1
+
+    # Map simplified character elements to game elements
+    element_mapping = {
+        "Fire": "Ignis",
+        "Water": "Aqua", 
+        "Earth": "Gē",
+        "Air": "Aer",
+        "Lightning": "Fulmen",
+        "Ice": "Glacies",
+        "Light": "Lux",
+        "Dark": "Tenebrae",
+        "Nature": "Viridia",
+        "Arcane": "Pneuma"
+    }
+    
+    # Convert character elements to game elements if needed
+    game_attacker_element = element_mapping.get(attacker_element, attacker_element)
+    game_defender_element = element_mapping.get(defender_element, defender_element)
 
     # Check for immunity (monster immune to their own element)
-    if attacker_element == defender_element and defender_element != "Nullum":
-        print_colored(f"The {defender_element} creature is immune to {attacker_element} damage!", WARNING)
-        return 0, "", {}  # Empty string instead of None
+    if game_attacker_element == game_defender_element and game_defender_element != "Nullum":
+        # Check if character party provides immunity bypass
+        immunity_bypass = False
+        if is_player and synergy_effects.get("passive_effects"):
+            for effect in synergy_effects["passive_effects"]:
+                if ("immunity" in effect.lower() and "bypass" in effect.lower()) or "transform" in effect.lower():
+                    immunity_bypass = True
+                    print_colored("Character ability bypasses elemental immunity!", MAGENTA)
+                    break
+        
+        if not immunity_bypass:
+            print_colored(f"The {defender_element} creature is immune to {attacker_element} damage!", WARNING)
+            return 0, "", {}  # Empty string instead of None
+        else:
+            # Reduced damage but not immune when bypassed
+            damage_multiplier *= 0.3
+            print_colored("Your characters' abilities allow you to damage it at reduced effectiveness!", CYAN)
+
+    # Apply elemental damage bonus from character synergy
+    if is_player and synergy_effects.get("elemental_damage_bonus", 0) > 0:
+        elem_bonus = synergy_effects["elemental_damage_bonus"]
+        damage_multiplier += elem_bonus
+        
+        # Only show message if bonus is significant
+        if elem_bonus >= 0.1:  # 10% or higher bonus
+            print_colored(f"Party Synergy: +{int(elem_bonus*100)}% elemental damage!", CYAN)
 
     # Check elemental strengths and weaknesses
-    if attacker_element in ELEMENTS and defender_element in ELEMENTS:
+    if game_attacker_element in ELEMENTS and game_defender_element in ELEMENTS:
         # Defender is weak to attacker's element
-        if defender_element in ELEMENTS[attacker_element].get("strength", []):
-            damage_multiplier = 1.5
+        if game_defender_element in ELEMENTS[game_attacker_element].get("strength", []):
+            weakness_multiplier = 1.5
+            
+            # Enhanced weakness damage from character party of same element
+            if is_player and attacker_element in element_count and element_count[attacker_element] >= 2:
+                # +10% per matching character after the first, up to +30%
+                weakness_bonus = min(0.3, (element_count[attacker_element] - 1) * 0.1)
+                weakness_multiplier += weakness_bonus
+                
+                if weakness_bonus > 0:
+                    print_colored(f"{attacker_element} Party Resonance: +{int(weakness_bonus*100)}% weakness damage!", CYAN)
+            
+            damage_multiplier *= weakness_multiplier
             print_colored(f"{attacker_element} is strong against {defender_element}!", OKGREEN)
 
         # Attacker's element is weak against defender's element
-        elif attacker_element in ELEMENTS[defender_element].get("strength", []):
-            damage_multiplier = 0.5
+        elif game_attacker_element in ELEMENTS[game_defender_element].get("strength", []):
+            resistance_penalty = 0.5
+            
+            # Reduced resistance penalty from character effects
+            if is_player and synergy_effects.get("passive_effects"):
+                for effect in synergy_effects["passive_effects"]:
+                    if "weakness" in effect.lower() and "reduce" in effect.lower():
+                        resistance_penalty = 0.7  # Less penalty (0.7x instead of 0.5x)
+                        print_colored("Character ability reduces your elemental weakness penalty!", CYAN)
+                        break
+            
+            damage_multiplier *= resistance_penalty
             print_colored(f"{attacker_element} is weak against {defender_element}!", FAIL)
 
     # Check for potential elemental reaction
-    reaction_key = f"{attacker_element}+{defender_element}"
+    reaction_key = f"{game_attacker_element}+{game_defender_element}"
     if reaction_key in ELEMENTAL_REACTIONS:
         reaction = ELEMENTAL_REACTIONS[reaction_key]
         reaction_name = reaction["name"]
@@ -4063,12 +6595,41 @@ def calculate_elemental_damage(attacker_element: str, defender_element: str, bas
 
         # Apply elemental reaction multiplier
         damage_multiplier *= reaction_multiplier
+        
+        # Enhanced reaction damage from characters with matching elements
+        if is_player:
+            # Find matching character elements in reaction
+            elem1 = game_attacker_element
+            elem2 = game_defender_element
+            
+            elem1_char_count = element_count.get(element_mapping.get(elem1, elem1), 0)
+            elem2_char_count = element_count.get(element_mapping.get(elem2, elem2), 0)
+            
+            if elem1_char_count > 0 and elem2_char_count > 0:
+                # Both elements in party = +25% reaction damage
+                reaction_bonus = 0.25
+                damage_multiplier += reaction_bonus
+                print_colored(f"Dual Element Resonance: +{int(reaction_bonus*100)}% reaction damage!", MAGENTA)
 
         print_colored(f"Elemental Reaction: {reaction_name}!", MAGENTA)
         print_colored(f"{reaction['description']}", CYAN)
 
     # Calculate final damage with appropriate rounding
     final_damage = int(base_damage * damage_multiplier)
+    
+    # Check for critical hit enhancements from characters with same element
+    if is_player and attacker_element in element_count and element_count[attacker_element] >= 1:
+        crit_chance = 0.05  # Base 5% critical chance
+        matching_element_bonus = 0.03 * element_count[attacker_element]  # +3% per matching character
+        
+        # Calculate final crit chance
+        final_crit_chance = min(0.5, crit_chance + matching_element_bonus)  # Cap at 50%
+        
+        # Check for critical hit
+        if random.random() < final_crit_chance:
+            # Critical hit does 2x damage
+            final_damage *= 2
+            print_colored("CRITICAL HIT!", LIGHTMAGENTA)
 
     return final_damage, reaction_name, reaction_effect
 
@@ -7380,14 +9941,30 @@ def analyze_artifacts() -> None:
                 # Add knowledge to player's collection
                 user_data["archaeology"]["knowledge"].append(knowledge_name)
                 
+                # Integrate with other systems when gaining new knowledge
+                integrate_all_systems()
+                
+                # Check if this unlocks literature
+                if "literature" in user_data and random.random() < 0.6:  # 60% chance
+                    literature_ids = list(user_data["literature"]["books"].keys())
+                    undiscovered_books = [book_id for book_id in literature_ids 
+                                         if not user_data["literature"]["books"][book_id].get("discovered", False)]
+                    
+                    if undiscovered_books:
+                        discovered_book_id = random.choice(undiscovered_books)
+                        user_data["literature"]["books"][discovered_book_id]["discovered"] = True
+                        book_title = user_data["literature"]["books"][discovered_book_id].get("title", "Unknown Text")
+                        print_colored(f"\nYour discoveries revealed an ancient text: {book_title}", MAGENTA)
+                        print_colored("This book has been added to your literature collection!", GREEN)
+                
                 # Apply knowledge bonuses
                 if knowledge_name in ANCIENT_KNOWLEDGE:
-                    knowledge = ANCIENT_KNOWLEDGE[knowledge_name]
-                    print_colored(f"{knowledge.get('description', '')}", CYAN)
+                    knowledge_data = ANCIENT_KNOWLEDGE[knowledge_name]
+                    print_colored(f"{knowledge_data.get('description', '')}", CYAN)
                     
-                    if "stat_bonus" in knowledge:
+                    if "stat_bonus" in knowledge_data:
                         print_colored("You gained the following stat bonuses:", YELLOW)
-                        for stat, value in knowledge["stat_bonus"].items():
+                        for stat, value in knowledge_data["stat_bonus"].items():
                             print_colored(f"  {stat.replace('_', ' ').title()}: +{value}", GREEN)
                             
                             # Apply stat bonus to player
@@ -7395,9 +9972,9 @@ def analyze_artifacts() -> None:
                                 user_data[stat] = 0
                             user_data[stat] += value
                     
-                    if "unlocks" in knowledge:
+                    if "unlocks" in knowledge_data:
                         print_colored("You unlocked new abilities:", YELLOW)
-                        for ability in knowledge["unlocks"]:
+                        for ability in knowledge_data["unlocks"]:
                             print_colored(f"  {ability}", GREEN)
             
             # Gain experience for analyzing
@@ -7516,7 +10093,8 @@ def generate_artifact_lore(artifact_name: str, site_name: str) -> str:
     return full_lore
 
 def check_artifact_set_completion(set_name: str) -> None:
-    """Check if player has completed an artifact set and apply bonuses"""
+    """Check if player has completed an artifact set and apply bonuses.
+    Creates strong links between archaeology and other systems."""
     if not set_name:
         return
     
@@ -7542,6 +10120,20 @@ def check_artifact_set_completion(set_name: str) -> None:
         if "completed_sets" not in user_data["archaeology"]:
             user_data["archaeology"]["completed_sets"] = []
         user_data["archaeology"]["completed_sets"].append(set_name)
+        
+        # Track in collections for bonus system
+        if "artifact_collections" not in user_data["archaeology"]:
+            user_data["archaeology"]["artifact_collections"] = {}
+            
+        if set_name not in user_data["archaeology"]["artifact_collections"]:
+            user_data["archaeology"]["artifact_collections"][set_name] = []
+            
+        for artifact in set_artifacts:
+            if artifact not in user_data["archaeology"]["artifact_collections"][set_name]:
+                user_data["archaeology"]["artifact_collections"][set_name].append(artifact)
+        
+        # Integrate with other systems
+        integrate_all_systems()
         
         # Get set bonus
         if set_name in ARCHAEOLOGICAL_SET_BONUSES:
@@ -7742,20 +10334,22 @@ def view_ancient_knowledge() -> None:
     
     for knowledge_name in knowledge_list:
         if knowledge_name in ANCIENT_KNOWLEDGE:
-            knowledge = ANCIENT_KNOWLEDGE[knowledge_name]
+            knowledge_data = ANCIENT_KNOWLEDGE[knowledge_name]
             
             print_colored(f"{knowledge_name}", MAGENTA + BOLD)
-            print_colored(f"{knowledge.get('description', 'Ancient knowledge.')}", WHITE)
+            print_colored(f"{knowledge_data.get('description', 'Ancient knowledge.')}", WHITE)
             
-            if "stat_bonus" in knowledge:
+            # Display stat bonuses
+            if "stat_bonus" in knowledge_data:
                 print_colored("Stat Bonuses:", YELLOW)
-                for stat, value in knowledge["stat_bonus"].items():
+                for stat, value in knowledge_data["stat_bonus"].items():
                     print_colored(f"  {stat.replace('_', ' ').title()}: +{value}", GREEN)
             
-            if "unlocks" in knowledge:
+            # Display unlocks
+            if "unlocks" in knowledge_data:
                 print_colored("Unlocked Abilities:", CYAN)
-                for ability in knowledge["unlocks"]:
-                    print_colored(f"  {ability}", LIGHTBLUE)
+                for ability in knowledge_data["unlocks"]:
+                    print_colored(f"  - {ability}", WHITE)
             
             print()
     
@@ -7958,7 +10552,7 @@ def literature_system() -> None:
     literature_system()
 
 def view_literature_collection() -> None:
-    """Display all books, scrolls, and notes the player has discovered or owns"""
+    """Display all books, scrolls, and notes the player has discovered or owns with enhanced features"""
     lit_data = user_data.get("literature", {})
     discovered = lit_data.get("discovered", [])
     owned = lit_data.get("owned", [])
@@ -7967,29 +10561,488 @@ def view_literature_collection() -> None:
     if not discovered and not owned:
         print_colored("You haven't discovered any books, scrolls, or notes yet.", YELLOW)
         print_colored("Explore the world to find literature!", CYAN)
+        print_colored("Hint: Visit libraries, archives, and ancient ruins to find rare texts.", CYAN)
         wait_for_input()
         return
     
-    print_header("Your Literature Collection")
+    # Calculate collection stats
+    total_discovered = len(discovered)
+    total_owned = len(owned)
+    total_read = len(read)
     
-    # Organize by type and category
-    collection = {
-        "Books": {},
-        "Scrolls": {},
-        "Notes": {}
-    }
+    # Collection completion percentage
+    completion_percentage = int((total_owned / max(total_discovered, 1)) * 100)
+    reading_percentage = int((total_read / max(total_owned, 1)) * 100)
     
-    # Process discovered and owned literature
-    all_items = list(set(discovered + owned))
+    # Collection status titles
+    if completion_percentage >= 90:
+        collection_status = f"{GREEN}Master Collector{ENDC}"
+    elif completion_percentage >= 70:
+        collection_status = f"{CYAN}Dedicated Collector{ENDC}"
+    elif completion_percentage >= 50:
+        collection_status = f"{YELLOW}Aspiring Collector{ENDC}"
+    else:
+        collection_status = f"{WHITE}Novice Collector{ENDC}"
     
-    for item_id in all_items:
-        # Parse item_id format: "type:category:title"
+    # Scholar status based on reading
+    if reading_percentage >= 90:
+        scholar_status = f"{GREEN}Grand Scholar{ENDC}"
+    elif reading_percentage >= 70:
+        scholar_status = f"{CYAN}Scholar{ENDC}"
+    elif reading_percentage >= 50:
+        scholar_status = f"{YELLOW}Student{ENDC}"
+    else:
+        scholar_status = f"{WHITE}Beginner Reader{ENDC}"
+    
+    # Main menu loop for the literature collection
+    while True:
+        clear_screen()
+        print_header("Your Literature Collection")
+        
+        # Display collection stats
+        print_colored(f"Collection Status: {collection_status} | Scholar Status: {scholar_status}", BLUE + BOLD)
+        print_colored(f"Discovered: {total_discovered} | Owned: {total_owned} ({completion_percentage}%) | Read: {total_read} ({reading_percentage}%)", CYAN)
+        print()
+        
+        # Main options
+        print_colored("View Collection By:", YELLOW)
+        print_colored("1. Type (Books, Scrolls, Notes)", WHITE)
+        print_colored("2. Rarity (Common to Legendary)", WHITE)
+        print_colored("3. Reading Status (Read/Unread)", WHITE)
+        print_colored("4. Recently Acquired", WHITE)
+        print_colored("5. Search Collection", CYAN)
+        print_colored("6. View Collection Stats", CYAN)
+        print_colored("7. Back to Literature Menu", RED)
+        
+        try:
+            choice = int(input(f"\n{YELLOW}Choose an option (1-7): {ENDC}"))
+            
+            if choice == 1:
+                view_by_type(discovered, owned, read)
+            elif choice == 2:
+                view_by_rarity(discovered, owned, read)
+            elif choice == 3:
+                view_by_status(discovered, owned, read)
+            elif choice == 4:
+                view_recent_acquisitions(discovered, owned, read)
+            elif choice == 5:
+                search_collection(discovered, owned, read)
+            elif choice == 6:
+                view_collection_stats(discovered, owned, read)
+            elif choice == 7:
+                return
+            else:
+                print_colored("Invalid choice. Please select 1-7.", RED)
+        except ValueError:
+            print_colored("Please enter a number.", RED)
+        
+        wait_for_input()
+
+def view_by_type(discovered, owned, read):
+    """View literature collection sorted by type (Books, Scrolls, Notes)"""
+    clear_screen()
+    print_header("Literature by Type")
+    
+    print_colored("Select a type to view:", CYAN)
+    print_colored("1. Books", WHITE)
+    print_colored("2. Scrolls", WHITE)
+    print_colored("3. Notes", WHITE)
+    print_colored("4. All Types", CYAN)
+    print_colored("5. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose a type (1-5): {ENDC}"))
+        
+        if choice == 5:
+            return
+        
+        # Organize collection data
+        collection = {}
+        
+        # Types to display based on choice
+        if choice == 1:
+            types_to_show = ["Books"]
+        elif choice == 2:
+            types_to_show = ["Scrolls"]
+        elif choice == 3:
+            types_to_show = ["Notes"]
+        elif choice == 4:
+            types_to_show = ["Books", "Scrolls", "Notes"]
+        else:
+            print_colored("Invalid choice.", RED)
+            return
+        
+        # Initialize collection structure
+        for item_type in types_to_show:
+            collection[item_type] = {}
+        
+        # Process all items
+        all_items = list(set(discovered + owned))
+        for item_id in all_items:
+            try:
+                item_type, category, title = item_id.split(":", 2)
+                
+                if item_type not in types_to_show:
+                    continue
+                
+                # Initialize category if needed
+                if category not in collection[item_type]:
+                    collection[item_type][category] = []
+                
+                # Get item data
+                if item_type == "Books":
+                    item_data = LITERATURE_DATA["books"][category][title]
+                elif item_type == "Scrolls":
+                    item_data = LITERATURE_DATA["scrolls"][category][title]
+                elif item_type == "Notes":
+                    item_data = LITERATURE_DATA["notes"][category][title]
+                else:
+                    continue
+                
+                # Add to collection with status
+                status = "Read" if item_id in read else "Unread"
+                ownership = "Owned" if item_id in owned else "Discovered"
+                
+                collection[item_type][category].append({
+                    "title": title,
+                    "data": item_data,
+                    "status": status,
+                    "ownership": ownership,
+                    "item_id": item_id,
+                    "rarity": item_data.get("rarity", "Common")
+                })
+            except (ValueError, KeyError):
+                continue
+        
+        # Display collection
+        clear_screen()
+        print_header("Literature Collection")
+        
+        # Count items for header
+        total_items = 0
+        for item_type in types_to_show:
+            for category, items in collection[item_type].items():
+                total_items += len(items)
+        
+        print_colored(f"Found {total_items} items", CYAN)
+        
+        # Display items by type
+        for item_type in types_to_show:
+            if collection[item_type]:
+                print_colored(f"\n{item_type}", CYAN + BOLD)
+                
+                # Count categories
+                total_categories = len(collection[item_type])
+                print_colored(f"  {total_categories} categories", BLUE)
+                
+                for category, items in collection[item_type].items():
+                    if items:
+                        # Sort items by rarity (highest first)
+                        rarity_values = {"Common": 0, "Uncommon": 1, "Rare": 2, "Epic": 3, "Legendary": 4}
+                        items.sort(key=lambda x: (rarity_values.get(x["rarity"], 0), x["title"]), reverse=True)
+                        
+                        # Count owned items in this category
+                        owned_count = sum(1 for item in items if item["ownership"] == "Owned")
+                        read_count = sum(1 for item in items if item["status"] == "Read")
+                        
+                        print_colored(f"  {category} ({owned_count}/{len(items)} owned, {read_count}/{owned_count if owned_count else 1} read)", BLUE + BOLD)
+                        
+                        for i, item in enumerate(items, 1):
+                            title = item["data"].get("title", "Unknown")
+                            rarity = item["rarity"]
+                            
+                            # Get appropriate colors
+                            rarity_colors = {
+                                "Common": WHITE,
+                                "Uncommon": GREEN,
+                                "Rare": BLUE,
+                                "Epic": MAGENTA,
+                                "Legendary": YELLOW
+                            }
+                            rarity_color = rarity_colors.get(rarity, WHITE)
+                            status_color = GREEN if item["status"] == "Read" else YELLOW
+                            
+                            print_colored(f"    {title} ({rarity_color}{rarity}{ENDC})", WHITE)
+                            print_colored(f"      Status: {status_color}{item['status']}{ENDC} | {item['ownership']}", WHITE)
+                    
+        if total_items == 0:
+            if len(types_to_show) == 1:
+                print_colored(f"You haven't discovered any {types_to_show[0].lower()} yet.", YELLOW)
+            else:
+                print_colored("You haven't discovered any literature of the selected types yet.", YELLOW)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+
+def view_by_rarity(discovered, owned, read):
+    """View literature collection sorted by rarity"""
+    clear_screen()
+    print_header("Literature by Rarity")
+    
+    # Define rarities from lowest to highest
+    rarities = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+    
+    print_colored("Select a rarity to view:", CYAN)
+    for i, rarity in enumerate(rarities, 1):
+        # Color-code rarity options
+        rarity_colors = {
+            "Common": WHITE,
+            "Uncommon": GREEN,
+            "Rare": BLUE,
+            "Epic": MAGENTA,
+            "Legendary": YELLOW
+        }
+        rarity_color = rarity_colors.get(rarity, WHITE)
+        print_colored(f"{i}. {rarity_color}{rarity}{ENDC}", WHITE)
+    
+    print_colored(f"{len(rarities)+1}. All Rarities", CYAN)
+    print_colored(f"{len(rarities)+2}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose a rarity (1-{len(rarities)+2}): {ENDC}"))
+        
+        if choice == len(rarities)+2:
+            return
+        
+        # Determine which rarities to show
+        if 1 <= choice <= len(rarities):
+            rarities_to_show = [rarities[choice-1]]
+        elif choice == len(rarities)+1:
+            rarities_to_show = rarities
+        else:
+            print_colored("Invalid choice.", RED)
+            return
+        
+        # Collect items by rarity
+        items_by_rarity = {rarity: [] for rarity in rarities_to_show}
+        
+        # Process all items
+        all_items = list(set(discovered + owned))
+        for item_id in all_items:
+            try:
+                item_type, category, title = item_id.split(":", 2)
+                
+                # Get item data
+                if item_type == "Books":
+                    item_data = LITERATURE_DATA["books"][category][title]
+                elif item_type == "Scrolls":
+                    item_data = LITERATURE_DATA["scrolls"][category][title]
+                elif item_type == "Notes":
+                    item_data = LITERATURE_DATA["notes"][category][title]
+                else:
+                    continue
+                
+                # Get rarity and check if it should be shown
+                rarity = item_data.get("rarity", "Common")
+                if rarity not in rarities_to_show:
+                    continue
+                
+                # Add to collection
+                status = "Read" if item_id in read else "Unread"
+                ownership = "Owned" if item_id in owned else "Discovered"
+                
+                items_by_rarity[rarity].append({
+                    "title": title,
+                    "type": item_type,
+                    "category": category,
+                    "data": item_data,
+                    "status": status,
+                    "ownership": ownership,
+                    "item_id": item_id
+                })
+            except (ValueError, KeyError):
+                continue
+        
+        # Display items by rarity
+        clear_screen()
+        print_header("Literature by Rarity")
+        
+        total_items = sum(len(items) for items in items_by_rarity.values())
+        print_colored(f"Found {total_items} items", CYAN)
+        
+        for rarity in rarities_to_show:
+            if items_by_rarity[rarity]:
+                # Get rarity color
+                rarity_colors = {
+                    "Common": WHITE,
+                    "Uncommon": GREEN,
+                    "Rare": BLUE,
+                    "Epic": MAGENTA,
+                    "Legendary": YELLOW
+                }
+                rarity_color = rarity_colors.get(rarity, WHITE)
+                
+                print_colored(f"\n{rarity_color}{rarity}{ENDC} Items ({len(items_by_rarity[rarity])})", BOLD)
+                
+                # Group by type for better organization
+                items_by_type = {}
+                for item in items_by_rarity[rarity]:
+                    item_type = item["type"]
+                    if item_type not in items_by_type:
+                        items_by_type[item_type] = []
+                    items_by_type[item_type].append(item)
+                
+                for item_type, items in items_by_type.items():
+                    print_colored(f"  {item_type}", BLUE + BOLD)
+                    
+                    # Sort by category and title
+                    items.sort(key=lambda x: (x["category"], x["title"]))
+                    
+                    for item in items:
+                        title = item["data"].get("title", "Unknown")
+                        status_color = GREEN if item["status"] == "Read" else YELLOW
+                        
+                        print_colored(f"    {title} ({item['category']})", WHITE)
+                        print_colored(f"      Status: {status_color}{item['status']}{ENDC} | {item['ownership']}", WHITE)
+        
+        if total_items == 0:
+            if len(rarities_to_show) == 1:
+                print_colored(f"You haven't discovered any {rarities_to_show[0].lower()} literature yet.", YELLOW)
+            else:
+                print_colored("You haven't discovered any literature of the selected rarities yet.", YELLOW)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+
+def view_by_status(discovered, owned, read):
+    """View literature collection by reading status"""
+    clear_screen()
+    print_header("Literature by Reading Status")
+    
+    print_colored("Select status to view:", CYAN)
+    print_colored("1. Read", GREEN)
+    print_colored("2. Unread", YELLOW)
+    print_colored("3. Owned", BLUE)
+    print_colored("4. Discovered (But Not Owned)", MAGENTA)
+    print_colored("5. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose a status (1-5): {ENDC}"))
+        
+        if choice == 5:
+            return
+        
+        # Filter items based on choice
+        filtered_items = []
+        
+        # Process all items
+        all_items = list(set(discovered + owned))
+        for item_id in all_items:
+            try:
+                item_type, category, title = item_id.split(":", 2)
+                
+                # Get item data
+                if item_type == "Books":
+                    item_data = LITERATURE_DATA["books"][category][title]
+                elif item_type == "Scrolls":
+                    item_data = LITERATURE_DATA["scrolls"][category][title]
+                elif item_type == "Notes":
+                    item_data = LITERATURE_DATA["notes"][category][title]
+                else:
+                    continue
+                
+                # Determine if this item should be included
+                status = "Read" if item_id in read else "Unread"
+                ownership = "Owned" if item_id in owned else "Discovered"
+                
+                include_item = False
+                if choice == 1 and status == "Read":
+                    include_item = True
+                elif choice == 2 and status == "Unread" and ownership == "Owned":
+                    include_item = True
+                elif choice == 3 and ownership == "Owned":
+                    include_item = True
+                elif choice == 4 and ownership == "Discovered":
+                    include_item = True
+                
+                if include_item:
+                    filtered_items.append({
+                        "title": title,
+                        "type": item_type,
+                        "category": category,
+                        "data": item_data,
+                        "status": status,
+                        "ownership": ownership,
+                        "item_id": item_id,
+                        "rarity": item_data.get("rarity", "Common")
+                    })
+            except (ValueError, KeyError):
+                continue
+        
+        # Display filtered items
+        clear_screen()
+        status_labels = {1: "Read", 2: "Unread", 3: "Owned", 4: "Discovered"}
+        print_header(f"Literature - {status_labels.get(choice, '')} Items")
+        
+        if not filtered_items:
+            print_colored(f"No {status_labels.get(choice, '').lower()} literature found.", YELLOW)
+            return
+        
+        print_colored(f"Found {len(filtered_items)} items", CYAN)
+        
+        # Sort items by rarity (highest first) then by type
+        rarity_values = {"Common": 0, "Uncommon": 1, "Rare": 2, "Epic": 3, "Legendary": 4}
+        filtered_items.sort(key=lambda x: (-rarity_values.get(x["rarity"], 0), x["type"], x["category"], x["title"]))
+        
+        # Group by type for display
+        items_by_type = {}
+        for item in filtered_items:
+            item_type = item["type"]
+            if item_type not in items_by_type:
+                items_by_type[item_type] = []
+            items_by_type[item_type].append(item)
+        
+        for item_type, items in items_by_type.items():
+            print_colored(f"\n{item_type}", CYAN + BOLD)
+            
+            # Group by category
+            items_by_category = {}
+            for item in items:
+                category = item["category"]
+                if category not in items_by_category:
+                    items_by_category[category] = []
+                items_by_category[category].append(item)
+            
+            for category, cat_items in items_by_category.items():
+                print_colored(f"  {category}", BLUE + BOLD)
+                
+                for item in cat_items:
+                    title = item["data"].get("title", "Unknown")
+                    rarity = item["rarity"]
+                    
+                    # Get appropriate colors
+                    rarity_colors = {
+                        "Common": WHITE,
+                        "Uncommon": GREEN,
+                        "Rare": BLUE,
+                        "Epic": MAGENTA,
+                        "Legendary": YELLOW
+                    }
+                    rarity_color = rarity_colors.get(rarity, WHITE)
+                    status_color = GREEN if item["status"] == "Read" else YELLOW
+                    
+                    print_colored(f"    {title} ({rarity_color}{rarity}{ENDC})", WHITE)
+                    if choice != 1 and choice != 2:  # Only show status if not filtering by it
+                        print_colored(f"      Status: {status_color}{item['status']}{ENDC}", WHITE)
+                    if choice != 3 and choice != 4:  # Only show ownership if not filtering by it
+                        print_colored(f"      {item['ownership']}", WHITE)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+
+def view_recent_acquisitions(discovered, owned, read):
+    """View recently acquired literature (placeholder - would need timestamp data)"""
+    clear_screen()
+    print_header("Recent Acquisitions")
+    
+    print_colored("This feature will show your most recently acquired literature items.", CYAN)
+    print_colored("Feature coming soon in a future update!", YELLOW)
+    
+    # This would require adding timestamp data to the literature items
+    # For now, just show the last 5 items alphabetically as a demonstration
+    
+    # Get owned items
+    owned_items = []
+    for item_id in owned:
         try:
             item_type, category, title = item_id.split(":", 2)
-            
-            # Initialize category if needed
-            if category not in collection[item_type]:
-                collection[item_type][category] = []
             
             # Get item data
             if item_type == "Books":
@@ -8001,38 +11054,301 @@ def view_literature_collection() -> None:
             else:
                 continue
             
-            # Add to collection with status
             status = "Read" if item_id in read else "Unread"
-            ownership = "Owned" if item_id in owned else "Discovered"
             
-            collection[item_type][category].append({
+            owned_items.append({
                 "title": title,
+                "type": item_type,
+                "category": category,
                 "data": item_data,
                 "status": status,
-                "ownership": ownership,
-                "item_id": item_id
+                "item_id": item_id,
+                "rarity": item_data.get("rarity", "Common")
             })
         except (ValueError, KeyError):
-            continue  # Skip invalid entries
+            continue
     
-    # Display collection by type and category
-    for item_type, categories in collection.items():
-        if categories:
-            print_colored(f"\n{item_type}", CYAN + BOLD)
+    # Sort alphabetically and take the last 5 (as if they were most recent)
+    owned_items.sort(key=lambda x: x["title"])
+    recent_items = owned_items[-5:] if len(owned_items) > 5 else owned_items
+    
+    if recent_items:
+        print_colored("\nYour most recent acquisitions:", CYAN)
+        
+        for item in recent_items:
+            title = item["data"].get("title", "Unknown")
+            rarity = item["rarity"]
             
-            for category, items in categories.items():
-                if items:
-                    print_colored(f"  {category}", BLUE + BOLD)
-                    
-                    for i, item in enumerate(items, 1):
-                        title = item["data"].get("title", "Unknown")
-                        rarity = item["data"].get("rarity", "Common")
-                        status_color = GREEN if item["status"] == "Read" else YELLOW
-                        
-                        print_colored(f"    {title} ({rarity})", WHITE)
-                        print_colored(f"      Status: {item['status']} | {item['ownership']}", status_color)
+            # Get appropriate colors
+            rarity_colors = {
+                "Common": WHITE,
+                "Uncommon": GREEN,
+                "Rare": BLUE,
+                "Epic": MAGENTA,
+                "Legendary": YELLOW
+            }
+            rarity_color = rarity_colors.get(rarity, WHITE)
+            status_color = GREEN if item["status"] == "Read" else YELLOW
+            
+            print_colored(f"  {title} ({rarity_color}{rarity}{ENDC})", WHITE)
+            print_colored(f"    Type: {item['type']} | Category: {item['category']}", BLUE)
+            print_colored(f"    Status: {status_color}{item['status']}{ENDC}", WHITE)
+    else:
+        print_colored("You don't own any literature yet.", YELLOW)
+
+def search_collection(discovered, owned, read):
+    """Search for specific literature in your collection"""
+    clear_screen()
+    print_header("Search Literature Collection")
     
-    wait_for_input()
+    search_term = input(f"{YELLOW}Enter search term: {ENDC}").strip().lower()
+    
+    if not search_term:
+        print_colored("Search canceled.", YELLOW)
+        return
+    
+    # Search for items matching the term
+    matches = []
+    
+    all_items = list(set(discovered + owned))
+    for item_id in all_items:
+        try:
+            item_type, category, title = item_id.split(":", 2)
+            
+            # Get item data
+            if item_type == "Books":
+                item_data = LITERATURE_DATA["books"][category][title]
+            elif item_type == "Scrolls":
+                item_data = LITERATURE_DATA["scrolls"][category][title]
+            elif item_type == "Notes":
+                item_data = LITERATURE_DATA["notes"][category][title]
+            else:
+                continue
+            
+            # Check for matches in title, description, or content
+            found = False
+            title_text = item_data.get("title", "").lower()
+            description = item_data.get("description", "").lower()
+            
+            if search_term in title_text or search_term in description:
+                found = True
+            else:
+                # Check content (which could be string or list)
+                content = item_data.get("content", "")
+                if isinstance(content, str) and search_term in content.lower():
+                    found = True
+                elif isinstance(content, list):
+                    # Check each section in the content
+                    for section in content:
+                        if isinstance(section, str) and search_term in section.lower():
+                            found = True
+                            break
+            
+            if found:
+                status = "Read" if item_id in read else "Unread"
+                ownership = "Owned" if item_id in owned else "Discovered"
+                
+                matches.append({
+                    "title": title,
+                    "type": item_type,
+                    "category": category,
+                    "data": item_data,
+                    "status": status,
+                    "ownership": ownership,
+                    "item_id": item_id,
+                    "rarity": item_data.get("rarity", "Common")
+                })
+        except (ValueError, KeyError):
+            continue
+    
+    # Display search results
+    clear_screen()
+    print_header("Search Results")
+    
+    if not matches:
+        print_colored(f"No literature found matching '{search_term}'.", YELLOW)
+        return
+    
+    print_colored(f"Found {len(matches)} items matching '{search_term}':", CYAN)
+    
+    # Sort by type then title
+    matches.sort(key=lambda x: (x["type"], x["category"], x["title"]))
+    
+    # Group by type for better organization
+    results_by_type = {}
+    for item in matches:
+        item_type = item["type"]
+        if item_type not in results_by_type:
+            results_by_type[item_type] = []
+        results_by_type[item_type].append(item)
+    
+    for item_type, items in results_by_type.items():
+        print_colored(f"\n{item_type}", CYAN + BOLD)
+        
+        # Group by category
+        items_by_category = {}
+        for item in items:
+            category = item["category"]
+            if category not in items_by_category:
+                items_by_category[category] = []
+            items_by_category[category].append(item)
+        
+        for category, cat_items in items_by_category.items():
+            print_colored(f"  {category}", BLUE + BOLD)
+            
+            for item in cat_items:
+                title = item["data"].get("title", "Unknown")
+                rarity = item["rarity"]
+                
+                # Get appropriate colors
+                rarity_colors = {
+                    "Common": WHITE,
+                    "Uncommon": GREEN,
+                    "Rare": BLUE,
+                    "Epic": MAGENTA,
+                    "Legendary": YELLOW
+                }
+                rarity_color = rarity_colors.get(rarity, WHITE)
+                status_color = GREEN if item["status"] == "Read" else YELLOW
+                
+                print_colored(f"    {title} ({rarity_color}{rarity}{ENDC})", WHITE)
+                print_colored(f"      Status: {status_color}{item['status']}{ENDC} | {item['ownership']}", WHITE)
+                
+                # Display a snippet that contains the search term
+                description = item["data"].get("description", "")
+                if search_term in description.lower():
+                    # Show snippet around the match
+                    pos = description.lower().find(search_term)
+                    start = max(0, pos - 20)
+                    end = min(len(description), pos + len(search_term) + 20)
+                    
+                    # Add ellipsis if snippet doesn't include beginning/end
+                    prefix = "..." if start > 0 else ""
+                    suffix = "..." if end < len(description) else ""
+                    
+                    snippet = prefix + description[start:end] + suffix
+                    # Highlight the search term
+                    highlighted = snippet.replace(search_term, f"{CYAN}{search_term}{ENDC}")
+                    print_colored(f"      \"{highlighted}\"", WHITE)
+
+def view_collection_stats(discovered, owned, read):
+    """View detailed statistics about your literature collection"""
+    clear_screen()
+    print_header("Literature Collection Statistics")
+    
+    if not discovered:
+        print_colored("You haven't discovered any literature yet.", YELLOW)
+        return
+    
+    # Calculate statistics
+    total_discovered = len(discovered)
+    total_owned = len(owned)
+    total_read = len(read)
+    
+    # Collection percentages
+    owned_percent = int((total_owned / total_discovered) * 100)
+    read_percent = int((total_read / max(total_owned, 1)) * 100)
+    
+    print_colored("Overall Collection", BLUE + BOLD)
+    print_colored(f"  Discovered: {total_discovered} items", CYAN)
+    print_colored(f"  Owned: {total_owned} items ({owned_percent}% of discovered)", CYAN)
+    print_colored(f"  Read: {total_read} items ({read_percent}% of owned)", CYAN)
+    
+    # Count by type
+    types = {"Books": 0, "Scrolls": 0, "Notes": 0}
+    owned_by_type = {"Books": 0, "Scrolls": 0, "Notes": 0}
+    read_by_type = {"Books": 0, "Scrolls": 0, "Notes": 0}
+    
+    for item_id in discovered:
+        try:
+            item_type, _, _ = item_id.split(":", 2)
+            if item_type in types:
+                types[item_type] += 1
+                
+                if item_id in owned:
+                    owned_by_type[item_type] += 1
+                    
+                    if item_id in read:
+                        read_by_type[item_type] += 1
+        except ValueError:
+            continue
+    
+    print_colored("\nCollection by Type", BLUE + BOLD)
+    for item_type, count in types.items():
+        if count > 0:
+            owned_count = owned_by_type[item_type]
+            read_count = read_by_type[item_type]
+            owned_percent = int((owned_count / count) * 100)
+            read_percent = int((read_count / max(owned_count, 1)) * 100)
+            
+            print_colored(f"  {item_type}:", CYAN)
+            print_colored(f"    Discovered: {count} items", WHITE)
+            print_colored(f"    Owned: {owned_count} items ({owned_percent}%)", WHITE)
+            print_colored(f"    Read: {read_count} items ({read_percent}% of owned)", WHITE)
+    
+    # Count by rarity
+    rarities = {"Common": 0, "Uncommon": 0, "Rare": 0, "Epic": 0, "Legendary": 0}
+    owned_by_rarity = {"Common": 0, "Uncommon": 0, "Rare": 0, "Epic": 0, "Legendary": 0}
+    
+    for item_id in discovered:
+        try:
+            item_type, category, title = item_id.split(":", 2)
+            
+            # Get item data
+            if item_type == "Books":
+                item_data = LITERATURE_DATA["books"][category][title]
+            elif item_type == "Scrolls":
+                item_data = LITERATURE_DATA["scrolls"][category][title]
+            elif item_type == "Notes":
+                item_data = LITERATURE_DATA["notes"][category][title]
+            else:
+                continue
+            
+            rarity = item_data.get("rarity", "Common")
+            if rarity in rarities:
+                rarities[rarity] += 1
+                
+                if item_id in owned:
+                    owned_by_rarity[rarity] += 1
+        except (ValueError, KeyError):
+            continue
+    
+    print_colored("\nCollection by Rarity", BLUE + BOLD)
+    # Rarity colors
+    rarity_colors = {
+        "Common": WHITE,
+        "Uncommon": GREEN,
+        "Rare": BLUE,
+        "Epic": MAGENTA,
+        "Legendary": YELLOW
+    }
+    
+    for rarity, count in rarities.items():
+        if count > 0:
+            owned_count = owned_by_rarity[rarity]
+            owned_percent = int((owned_count / count) * 100)
+            rarity_color = rarity_colors.get(rarity, WHITE)
+            
+            print_colored(f"  {rarity_color}{rarity}{ENDC}:", CYAN)
+            print_colored(f"    Discovered: {count} items", WHITE)
+            print_colored(f"    Owned: {owned_count} items ({owned_percent}%)", WHITE)
+    
+    # Categories with most items
+    categories = {}
+    
+    for item_id in discovered:
+        try:
+            _, category, _ = item_id.split(":", 2)
+            if category not in categories:
+                categories[category] = 0
+            categories[category] += 1
+        except ValueError:
+            continue
+    
+    print_colored("\nTop Categories", BLUE + BOLD)
+    sorted_categories = sorted(categories.items(), key=lambda x: x[1], reverse=True)
+    for i, (category, count) in enumerate(sorted_categories[:5], 1):
+        print_colored(f"  {i}. {category}: {count} items", CYAN)
 
 def read_literature() -> None:
     """Read a book, scroll, or note from your collection with enhanced user experience"""
@@ -8692,6 +12008,9 @@ PROGRESS
 /books            - Show your book collection
 /read             - Read books from your collection
 /search_books     - Search for books in your current location
+/gacha            - Character wish system (collect unique characters)
+/wish             - Same as /gacha command
+/characters       - View your character collection
 
 CRAFTING
 /craft             - Recipes calculator
@@ -10600,9 +13919,17 @@ def show_season() -> None:
 
 def handle_command(cmd: str) -> None:
     allowed_commands_without_character = {"/new", "/load", "/help", "/exit", "/prefix", "/save"}
+    
+    # Add new commands for our enhanced features
+    allowed_commands_without_character.add("/about")
 
     parts = cmd.lower().split()
     base_cmd = parts[0] if parts else ""
+    
+    # Initialize new systems when user first loads game
+    if "user_data" in globals() and not user_data.get("new_systems_initialized", False):
+        feature_integration.initialize_new_systems(user_data)
+        user_data["new_systems_initialized"] = True
 
     # Special handling for /dev command
     if base_cmd == "/dev":
@@ -10721,6 +14048,9 @@ def handle_command(cmd: str) -> None:
         "/read": read_literature,
         "/collection": view_literature_collection,
         "/search_books": search_literature,
+        "/gacha": gacha_system,
+        "/wish": gacha_system,
+        "/characters": view_character_collection,
         "/search": search_resources,
         "/location": show_location,
         "/location_check": check_location,
@@ -10769,6 +14099,17 @@ def handle_command(cmd: str) -> None:
         "/support": show_support,
         "/dungeon_list": list_dungeons,
         "/bestiary": show_bestiary,
+        # New Systems
+        "/skills": lambda: process_skills_command(cmd.split()),
+        "/ability": lambda: process_ability_command(cmd.split()),
+        "/knowledge": lambda: show_knowledge(),
+        "/buffs": lambda: show_active_buffs(),
+        "/resistance": lambda: show_elemental_resistance(),
+        "/spells": lambda: show_one_time_spells(),
+        # Mechanical constructs system
+        "/constructs": display_constructs,
+        "/blueprints": display_blueprints,
+        "/craft_construct": lambda: handle_construct_command(cmd.split()),
         "/dailymob": daily_monster,
         "/weapon_info": lambda: show_weapon_info(),
         "/settings": user_settings,
@@ -11836,10 +15177,14 @@ def get_save_directory() -> str:
 
 def save_game(slot: int = 1, auto: bool = False) -> None:
     try:
+        # Convert any set objects to lists for JSON serialization
+        prepared_user_data = prepare_user_data_for_save(user_data)
+        
         save_data = {
-            "user_data": user_data,
+            "user_data": prepared_user_data,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": "1.0"
+            "version": "1.1",  # Updated version for gacha system
+            "gacha_version": "1.0"  # Track gacha system versioning
         }
 
         save_dir = get_save_directory()
@@ -11857,6 +15202,39 @@ def save_game(slot: int = 1, auto: bool = False) -> None:
     except Exception as e:
         print(f"Error saving game: {e}")
 
+
+def prepare_user_data_for_save(data: Dict) -> Dict:
+    """
+    Prepare user data for saving by converting sets to lists
+    and handling any other special data types.
+    """
+    prepared_data = {}
+    
+    # Handle nested dictionaries through recursion
+    for key, value in data.items():
+        if isinstance(value, set):
+            # Convert sets to lists
+            prepared_data[key] = list(value)
+        elif isinstance(value, dict):
+            # Recursively handle nested dictionaries
+            prepared_data[key] = prepare_user_data_for_save(value)
+        elif isinstance(value, list):
+            # Handle lists of dictionaries or sets
+            prepared_list = []
+            for item in value:
+                if isinstance(item, dict):
+                    prepared_list.append(prepare_user_data_for_save(item))
+                elif isinstance(item, set):
+                    prepared_list.append(list(item))
+                else:
+                    prepared_list.append(item)
+            prepared_data[key] = prepared_list
+        else:
+            # No conversion needed
+            prepared_data[key] = value
+            
+    return prepared_data
+
 def load_game(slot: int = 1) -> bool:
     save_dir = get_save_directory()
     filename = os.path.join(save_dir, f"save_{slot}.json")
@@ -11868,13 +15246,45 @@ def load_game(slot: int = 1) -> bool:
 
         with open(filename, "r", encoding='utf-8') as f:
             save_data = json.load(f)
-            if save_data.get("version") != "1.0":
-                print("Warning: Save file version mismatch")
+            saved_version = save_data.get("version", "1.0")
+            
+            # Handle version differences
+            if saved_version != "1.1":
+                print("Notice: Converting save file to latest version...")
+            
             global user_data
             user_data = save_data["user_data"]
+            
+            # Convert any lists back to sets where needed
+            user_data = restore_sets_from_lists(user_data)
+            
+            # Ensure all required keys exist
             ensure_user_data_keys(user_data)
+            
+            # Apply any necessary version-specific migrations
+            if "gacha_version" not in save_data or save_data["gacha_version"] != "1.0":
+                print("Migrating gacha system data...")
+                migrate_gacha_data(user_data)
+            
+            # Ensure all gacha system components are fully initialized
+            ensure_gacha_system_initialized(user_data)
+            
+            # Ensure all archaeology system components are fully initialized
+            ensure_archaeology_system_initialized(user_data)
+            
+            # Update archaeology and gacha systems interaction
+            if "archaeology" in user_data and "gacha" in user_data:
+                calculate_archaeology_gacha_bonuses(user_data)
+            
+            # Create deep connections between all game systems
+            integrate_all_systems()
+            
             print(f"Game loaded successfully from slot {slot}!")
             print(f"Save timestamp: {save_data['timestamp']}")
+            
+            # Update daily login reward if player logs in on a new day
+            check_daily_login_reward()
+            
             return True
     except Exception as e:
         print(f"Error loading game: {e}")
@@ -11886,12 +15296,809 @@ def load_game(slot: int = 1) -> bool:
                 with open(backup_file, "r", encoding='utf-8') as f:
                     save_data = json.load(f)
                     user_data = save_data["user_data"]
+                    user_data = restore_sets_from_lists(user_data)
                     ensure_user_data_keys(user_data)
+                    ensure_gacha_system_initialized(user_data)
+                    ensure_archaeology_system_initialized(user_data)
+                    calculate_archaeology_gacha_bonuses(user_data)
                     print("Backup loaded successfully!")
                     return True
-            except Exception:
-                print("Backup load failed.")
+            except Exception as be:
+                print(f"Backup load failed: {be}")
         return False
+
+
+def restore_sets_from_lists(data):
+    """
+    Restores sets from lists in the loaded data.
+    Used for achievement sets and other set data structures that were converted to lists for saving.
+    """
+    if not isinstance(data, dict):
+        return data
+        
+    result = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            # Recursively process nested dictionaries
+            result[key] = restore_sets_from_lists(value)
+        elif isinstance(value, list):
+            # Special case for achievements.completed and achievements.stats.areas_visited which should be sets
+            if key == "completed" and "achievements" in result:
+                result[key] = set(value)
+            elif key == "areas_visited" and "stats" in result and "achievements" in data:
+                result[key] = set(value)
+            else:
+                # Process list items
+                processed_list = []
+                for item in value:
+                    if isinstance(item, dict):
+                        processed_list.append(restore_sets_from_lists(item))
+                    else:
+                        processed_list.append(item)
+                result[key] = processed_list
+        else:
+            result[key] = value
+            
+    # Special case for achievement data
+    if "achievements" in data and isinstance(data["achievements"], dict):
+        if "completed" in data["achievements"] and isinstance(data["achievements"]["completed"], list):
+            result.setdefault("achievements", {})["completed"] = set(data["achievements"]["completed"])
+        
+        if "stats" in data["achievements"] and isinstance(data["achievements"]["stats"], dict):
+            if "areas_visited" in data["achievements"]["stats"] and isinstance(data["achievements"]["stats"]["areas_visited"], list):
+                result.setdefault("achievements", {}).setdefault("stats", {})["areas_visited"] = set(data["achievements"]["stats"]["areas_visited"])
+                
+    return result
+
+
+def integrate_all_systems():
+    """
+    Creates deep connections between archaeology, literature, and gacha systems.
+    This function implements synergies that allow each system to enhance the others.
+    
+    Important: This is called after loading a game and at key points during gameplay
+    to ensure all systems properly interact and provide benefits to each other.
+    
+    Returns:
+        bool: True if integration was successful with multiple systems interacting
+    """
+    global user_data
+    
+    # Track progress in each system to determine integration possibilities
+    systems_progress = 0
+    
+    # Check progress in archaeology system
+    if "archaeology" in user_data:
+        arch_data = user_data["archaeology"]
+        if arch_data.get("excavated_artifacts", []):
+            systems_progress += 1
+        
+        # Apply archaeology bonuses to character gacha system
+        if "gacha" in user_data and arch_data.get("knowledge", []):
+            # Archaeological knowledge can increase pull rates
+            knowledge_count = len(arch_data.get("knowledge", []))
+            if knowledge_count > 0:
+                # Increase 5-star character/weapon rate based on knowledge
+                bonus_rate = min(0.02, knowledge_count * 0.005)  # Max 2% bonus
+                if "pull_rates" not in user_data["gacha"]:
+                    user_data["gacha"]["pull_rates"] = {}
+                user_data["gacha"]["pull_rates"]["archaeology_bonus"] = bonus_rate
+            
+            # Complete artifact sets provide character bonuses
+            if "completed_sets" in arch_data and arch_data["completed_sets"]:
+                for char_id, char_data in user_data["gacha"].get("characters", {}).items():
+                    # Apply bonuses to matching characters based on artifact themes
+                    for set_name in arch_data["completed_sets"]:
+                        # Temple collection benefits magical characters
+                        if set_name == "Temple Collection" and char_data.get("element") in ["Fire", "Water", "Light"]:
+                            char_data["bonus_stats"] = char_data.get("bonus_stats", {})
+                            char_data["bonus_stats"]["magic_power"] = char_data["bonus_stats"].get("magic_power", 0) + 15
+                        
+                        # Mining collection benefits earth characters
+                        elif set_name == "Mining Collection" and char_data.get("element") == "Earth":
+                            char_data["bonus_stats"] = char_data.get("bonus_stats", {})
+                            char_data["bonus_stats"]["defense"] = char_data["bonus_stats"].get("defense", 0) + 20
+                        
+                        # Royal collection benefits all characters
+                        elif set_name == "Royal Collection":
+                            char_data["bonus_stats"] = char_data.get("bonus_stats", {})
+                            char_data["bonus_stats"]["leadership"] = char_data["bonus_stats"].get("leadership", 0) + 10
+    
+    # Check progress in literature system
+    if "literature" in user_data:
+        lit_data = user_data["literature"]
+        read_books = [book for book_id, book in lit_data.get("books", {}).items() if book.get("read", False)]
+        if read_books:
+            systems_progress += 1
+        
+        # Apply literature bonuses to characters
+        if "gacha" in user_data and read_books:
+            # Reading books provides character bonuses
+            for char_id, char_data in user_data["gacha"].get("characters", {}).items():
+                # Initialize bonus stats if needed
+                if "bonus_stats" not in char_data:
+                    char_data["bonus_stats"] = {}
+                
+                # Each read book gives a small bonus based on book type and character class
+                read_count = len(read_books)
+                char_class = char_data.get("class", "")
+                
+                if char_class == "Scholar":
+                    char_data["bonus_stats"]["intelligence"] = char_data["bonus_stats"].get("intelligence", 0) + (read_count * 3)
+                elif char_class == "Warrior":
+                    char_data["bonus_stats"]["strength"] = char_data["bonus_stats"].get("strength", 0) + (read_count)
+                elif char_class == "Mage":
+                    char_data["bonus_stats"]["magic_power"] = char_data["bonus_stats"].get("magic_power", 0) + (read_count * 2)
+                else:
+                    # Default bonus for all other classes
+                    char_data["bonus_stats"]["knowledge"] = char_data["bonus_stats"].get("knowledge", 0) + (read_count)
+    
+    # Check progress in gacha system
+    if "gacha" in user_data:
+        # Check if player has characters
+        if user_data["gacha"].get("characters", {}):
+            systems_progress += 1
+            
+        # Characters can provide archaeology bonuses
+        if "archaeology" in user_data:
+            # Calculate archaeology bonuses from characters
+            skill_bonuses = {"excavation": 0, "analysis": 0}
+            rare_find_chance = 0
+            artifacts_expertise = []
+            
+            # Apply character bonuses to archaeology
+            for char_id, char_info in user_data["gacha"].get("characters", {}).items():
+                if not char_info.get("active", False):
+                    continue  # Only apply bonuses from active characters
+                
+                char_class = char_info.get("class", "")
+                char_element = char_info.get("element", "")
+                
+                # Different classes help with different archaeology skills
+                if char_class == "Warrior":
+                    skill_bonuses["excavation"] += 2  # Warriors help with digging
+                elif char_class == "Mage":
+                    skill_bonuses["analysis"] += 2  # Mages help with analysis
+                elif char_class == "Scholar":
+                    skill_bonuses["analysis"] += 3  # Scholars are best at analysis
+                elif char_class == "Explorer":
+                    skill_bonuses["excavation"] += 3  # Explorers are best at excavation
+                
+                # Elements can provide special archaeology benefits
+                if char_element == "Earth":
+                    skill_bonuses["excavation"] += 2  # Earth characters have affinity for digging
+                    rare_find_chance += 0.05  # 5% better chance for rare finds
+                elif char_element == "Water":
+                    skill_bonuses["analysis"] += 1  # Water helps clean artifacts
+                elif char_element == "Fire":
+                    rare_find_chance += 0.03  # Fire illuminates hidden treasures
+                
+                # Add character expertise to archaeology system
+                char_expertise = char_info.get("archaeology_expertise", [])
+                if char_expertise:
+                    artifacts_expertise.extend(char_expertise)
+            
+            # Apply the bonuses to archaeology system
+            if skill_bonuses["excavation"] > 0:
+                user_data["archaeology"]["excavation_skill"] = user_data["archaeology"].get("excavation_skill", 1) + skill_bonuses["excavation"]
+            if skill_bonuses["analysis"] > 0:
+                user_data["archaeology"]["analysis_skill"] = user_data["archaeology"].get("analysis_skill", 1) + skill_bonuses["analysis"]
+            if rare_find_chance > 0:
+                user_data["archaeology"]["rare_find_bonus"] = user_data["archaeology"].get("rare_find_bonus", 0) + rare_find_chance
+    
+    # Check if all systems have synergy effects to apply
+    if systems_progress >= 2:
+        # Create synergy effects when multiple systems have progress
+        
+        # 1. Archaeological discoveries can unlock special character abilities
+        if "archaeology" in user_data and "gacha" in user_data:
+            arch_data = user_data["archaeology"]
+            knowledge_list = arch_data.get("knowledge", [])
+            
+            # Each type of knowledge can unlock special abilities for matching characters
+            for knowledge_name in knowledge_list:
+                if knowledge_name == "Temple Civilization":
+                    # Improves magical characters
+                    for char_id, char_data in user_data["gacha"].get("characters", {}).items():
+                        if char_data.get("element") in ["Fire", "Water", "Light"]:
+                            if "special_abilities" not in char_data:
+                                char_data["special_abilities"] = []
+                            if "Divine Ritual" not in char_data["special_abilities"]:
+                                char_data["special_abilities"].append("Divine Ritual")
+                
+                elif knowledge_name == "Mining Technologies":
+                    # Improves earth and physical characters
+                    for char_id, char_data in user_data["gacha"].get("characters", {}).items():
+                        if char_data.get("element") == "Earth" or char_data.get("class") == "Warrior":
+                            if "special_abilities" not in char_data:
+                                char_data["special_abilities"] = []
+                            if "Treasure Hunter" not in char_data["special_abilities"]:
+                                char_data["special_abilities"].append("Treasure Hunter")
+                
+                elif knowledge_name == "Ancient Astronomy":
+                    # Improves all characters with cosmic awareness
+                    for char_id, char_data in user_data["gacha"].get("characters", {}).items():
+                        if "special_abilities" not in char_data:
+                            char_data["special_abilities"] = []
+                        if "Celestial Navigation" not in char_data["special_abilities"]:
+                            char_data["special_abilities"].append("Celestial Navigation")
+        
+        # 2. Literature knowledge and character combination can yield unique research insights
+        if "literature" in user_data and "gacha" in user_data:
+            lit_data = user_data["literature"]
+            read_books = [book for book_id, book in lit_data.get("books", {}).items() if book.get("read", False)]
+            
+            if read_books and len(read_books) >= 3 and "archaeology" in user_data:
+                # Reading multiple books improves archaeological research
+                research_bonus = min(50, len(read_books) * 5)  # Up to 50% research bonus
+                user_data["archaeology"]["research_bonus"] = user_data["archaeology"].get("research_bonus", 0) + research_bonus
+        
+        # 3. Complete archaeological sets can yield special character-specific weapons
+        if "archaeology" in user_data and "gacha" in user_data:
+            arch_data = user_data["archaeology"]
+            completed_sets = arch_data.get("completed_sets", [])
+            
+            if completed_sets:
+                # Each completed set can unlock a special weapon for appropriate characters
+                for char_id, char_data in user_data["gacha"].get("characters", {}).items():
+                    if "Royal Collection" in completed_sets and char_data.get("rarity", "") == "5-Star":
+                        # Add royal weapon for 5-star characters
+                        if "special_weapons" not in char_data:
+                            char_data["special_weapons"] = []
+                        if "Royal Armament" not in char_data["special_weapons"]:
+                            char_data["special_weapons"].append("Royal Armament")
+    
+    # Return True if integration had effects to apply
+    return systems_progress >= 2
+
+def ensure_archaeology_system_initialized(data):
+    """
+    Ensures all archaeology system components are properly initialized.
+    Handles specific archaeology system structures not covered by the general ensure_user_data_keys.
+    """
+    if "archaeology" not in data:
+        data["archaeology"] = {
+            "discovered_sites": [],
+            "excavated_artifacts": [],
+            "knowledge": [],
+            "tools": ["Basic Trowel"],
+            "museum_exhibits": [],
+            "excavation_skill": 1,
+            "analysis_skill": 1,
+            "artifact_collections": {},
+            "site_levels": {},
+            "current_site": None,
+            "rare_discoveries": [],
+            "excavation_dates": {},
+            "last_excavation": None
+        }
+    
+    arch = data["archaeology"]
+    
+    # Ensure all archaeology keys exist
+    if "artifact_collections" not in arch:
+        arch["artifact_collections"] = {}
+        
+        # Initialize collections based on existing artifacts
+        if "excavated_artifacts" in arch and arch["excavated_artifacts"]:
+            for artifact in arch["excavated_artifacts"]:
+                if artifact in ARCHAEOLOGICAL_ARTIFACTS:
+                    collection = ARCHAEOLOGICAL_ARTIFACTS[artifact].get("set", "Miscellaneous")
+                    if collection not in arch["artifact_collections"]:
+                        arch["artifact_collections"][collection] = []
+                    if artifact not in arch["artifact_collections"][collection]:
+                        arch["artifact_collections"][collection].append(artifact)
+    
+    # Ensure site levels are tracked
+    if "site_levels" not in arch:
+        arch["site_levels"] = {}
+        for site in arch.get("discovered_sites", []):
+            arch["site_levels"][site] = 1
+            
+    # Track last excavation for daily limits
+    if "last_excavation" not in arch:
+        arch["last_excavation"] = None
+        
+    # Track excavation dates for statistics
+    if "excavation_dates" not in arch:
+        arch["excavation_dates"] = {}
+        
+    # Special discoveries list
+    if "rare_discoveries" not in arch:
+        arch["rare_discoveries"] = []
+        
+    # Link archaeology to gacha through ancient knowledge
+    if "gacha_bonuses" not in arch:
+        arch["gacha_bonuses"] = {
+            "pull_rate_bonus": 0.0,  # Bonus percentage to pull rates
+            "character_exp_bonus": 0.0,  # Bonus percentage to character exp gains
+            "material_drop_bonus": 0.0,  # Bonus percentage to material drop rates
+            "special_wish_artifacts": []  # Special artifacts that provide wish bonuses
+        }
+    
+    # Process known archaeology knowledge for bonuses
+    if "knowledge" in arch and arch["knowledge"]:
+        calculate_archaeology_gacha_bonuses(data)
+
+
+def calculate_archaeology_gacha_bonuses(data):
+    """
+    Calculate gacha bonuses based on archaeological knowledge and artifacts.
+    This creates synergy between the archaeology and gacha systems.
+    """
+    if "archaeology" not in data or "gacha" not in data:
+        return
+        
+    arch = data["archaeology"]
+    
+    # Reset bonuses before recalculating
+    arch["gacha_bonuses"] = {
+        "pull_rate_bonus": 0.0,
+        "character_exp_bonus": 0.0,
+        "material_drop_bonus": 0.0,
+        "special_wish_artifacts": [],
+        "character_stat_bonuses": {},
+        "combat_bonuses": {
+            "attack": 0.0,
+            "defense": 0.0,
+            "health": 0.0,
+            "speed": 0.0,
+            "critical_rate": 0.0,
+            "elemental_mastery": 0.0
+        },
+        "special_abilities": []
+    }
+    
+    # Apply bonuses from ancient knowledge
+    for knowledge_name in arch.get("knowledge", []):
+        if knowledge_name in ANCIENT_KNOWLEDGE:
+            
+            # Apply specific bonuses based on knowledge type
+            if knowledge_name == "Temple Civilization":
+                arch["gacha_bonuses"]["pull_rate_bonus"] += 0.5  # 0.5% increased pull rates
+                arch["gacha_bonuses"]["combat_bonuses"]["elemental_mastery"] += 10.0  # +10 elemental mastery
+                # Character-specific bonuses
+                arch["gacha_bonuses"]["character_stat_bonuses"]["Solara"] = {
+                    "attack": 5,
+                    "elemental_mastery": 15
+                }
+                arch["gacha_bonuses"]["special_abilities"].append({
+                    "name": "Temple Ritual",
+                    "description": "Characters gain 10% increased elemental damage due to ancient temple knowledge",
+                    "effect": {"elemental_damage_bonus": 0.1}
+                })
+                
+            elif knowledge_name == "Mining Techniques":
+                arch["gacha_bonuses"]["material_drop_bonus"] += 5.0  # 5% increased material drops
+                arch["gacha_bonuses"]["combat_bonuses"]["defense"] += 5.0  # +5% defense
+                # Character-specific bonuses
+                arch["gacha_bonuses"]["character_stat_bonuses"]["Adira"] = {
+                    "defense": 10,
+                    "health": 50
+                }
+                arch["gacha_bonuses"]["special_abilities"].append({
+                    "name": "Ancient Mining",
+                    "description": "Characters can extract extra resources from mineral-rich enemies",
+                    "effect": {"bonus_materials": 0.15}
+                })
+                
+            elif knowledge_name == "Ancient Warfare":
+                arch["gacha_bonuses"]["character_exp_bonus"] += 3.0  # 3% increased character exp
+                arch["gacha_bonuses"]["combat_bonuses"]["attack"] += 5.0  # +5% attack
+                # Character-specific bonuses
+                arch["gacha_bonuses"]["character_stat_bonuses"]["Kato"] = {
+                    "attack": 15,
+                    "critical_rate": 3.0
+                }
+                arch["gacha_bonuses"]["special_abilities"].append({
+                    "name": "War Tactics",
+                    "description": "Characters have a 5% chance to perform a coordinated strike in battle",
+                    "effect": {"coordinated_strike_chance": 0.05}
+                })
+                
+            elif knowledge_name == "Ancient Astronomy":
+                # Astronomy gives a chance for special pulls
+                arch["gacha_bonuses"]["pull_rate_bonus"] += 1.0  # 1% increased pull rates
+                arch["gacha_bonuses"]["combat_bonuses"]["critical_rate"] += 3.0  # +3% critical rate
+                # Character-specific bonuses
+                arch["gacha_bonuses"]["character_stat_bonuses"]["Luna"] = {
+                    "speed": 5,
+                    "elemental_mastery": 10
+                }
+                arch["gacha_bonuses"]["special_abilities"].append({
+                    "name": "Stellar Guidance",
+                    "description": "Characters gain increased accuracy and positioning in night battles",
+                    "effect": {"night_accuracy_bonus": 0.15}
+                })
+                
+            elif knowledge_name == "Royal Lineage":
+                # Royal knowledge improves character progression
+                arch["gacha_bonuses"]["character_exp_bonus"] += 5.0  # 5% increased character exp
+                arch["gacha_bonuses"]["combat_bonuses"]["health"] += 5.0  # +5% health
+                # Character-specific bonuses
+                arch["gacha_bonuses"]["character_stat_bonuses"]["Eldrin"] = {
+                    "attack": 8,
+                    "defense": 8,
+                    "health": 100
+                }
+                arch["gacha_bonuses"]["special_abilities"].append({
+                    "name": "Royal Authority",
+                    "description": "Characters with royal lineage gain a command aura, providing small bonuses to all party members",
+                    "effect": {"team_stat_bonus": 0.03}
+                })
+                
+            elif knowledge_name == "Great War":
+                # War knowledge increases weapon effectiveness
+                arch["gacha_bonuses"]["material_drop_bonus"] += 3.0  # 3% increased material drops
+                arch["gacha_bonuses"]["combat_bonuses"]["attack"] += 3.0  # +3% attack
+                # Character-specific bonuses
+                arch["gacha_bonuses"]["character_stat_bonuses"]["Vayne"] = {
+                    "attack": 10,
+                    "speed": 7
+                }
+                arch["gacha_bonuses"]["special_abilities"].append({
+                    "name": "Battle Hardened",
+                    "description": "Characters gain increased resistance to physical damage",
+                    "effect": {"physical_resistance": 0.08}
+                })
+    
+    # Apply bonuses from complete artifact collections
+    for collection, artifacts in arch.get("artifact_collections", {}).items():
+        # Check if collection is complete
+        if collection in ["Temple Collection", "Mining Collection", "Astronomy Collection", "Royal Collection", "War Collection"]:
+            collection_completed = True
+            expected_artifacts = []
+            
+            # Get all artifacts that should be in this collection
+            for artifact, data in ARCHAEOLOGICAL_ARTIFACTS.items():
+                if data.get("set") == collection:
+                    expected_artifacts.append(artifact)
+            
+            # Check if all expected artifacts are in the collection
+            for expected in expected_artifacts:
+                if expected not in artifacts:
+                    collection_completed = False
+                    break
+                    
+            # Apply bonus for complete collection
+            if collection_completed:
+                if collection == "Temple Collection":
+                    arch["gacha_bonuses"]["pull_rate_bonus"] += 1.0  # 1% increased pull rates
+                    arch["gacha_bonuses"]["special_wish_artifacts"].append("Ritual Mask")
+                    # Increased elemental damage for all characters
+                    arch["gacha_bonuses"]["combat_bonuses"]["elemental_mastery"] += 15.0
+                    # Unlock special temple-themed cosmetics for characters
+                    if "collection_cosmetics" not in arch["gacha_bonuses"]:
+                        arch["gacha_bonuses"]["collection_cosmetics"] = {}
+                    arch["gacha_bonuses"]["collection_cosmetics"]["Temple"] = [
+                        "High Priest's Robes", "Sacred Headdress", "Temple Guardian Armor"
+                    ]
+                    # Unlock special temple battle arena
+                    if "special_arenas" not in arch["gacha_bonuses"]:
+                        arch["gacha_bonuses"]["special_arenas"] = []
+                    arch["gacha_bonuses"]["special_arenas"].append("Ancient Temple Arena")
+                    
+                elif collection == "Mining Collection":
+                    arch["gacha_bonuses"]["material_drop_bonus"] += 10.0  # 10% increased material drops
+                    arch["gacha_bonuses"]["special_wish_artifacts"].append("Mineral Specimen")
+                    # Better mining resource drops
+                    arch["gacha_bonuses"]["mining_efficiency"] = 1.25  # 25% better mining yields
+                    # Unlock mining cosmetics
+                    if "collection_cosmetics" not in arch["gacha_bonuses"]:
+                        arch["gacha_bonuses"]["collection_cosmetics"] = {}
+                    arch["gacha_bonuses"]["collection_cosmetics"]["Mining"] = [
+                        "Miner's Outfit", "Crystal Crown", "Gem-studded Armor"
+                    ]
+                    # Special ability to find rare minerals during excavations
+                    arch["gacha_bonuses"]["special_abilities"].append({
+                        "name": "Mineral Sense",
+                        "description": "Characters can detect rare minerals and gems during excavations",
+                        "effect": {"rare_mineral_chance": 0.15}
+                    })
+                    
+                elif collection == "Astronomy Collection":
+                    arch["gacha_bonuses"]["pull_rate_bonus"] += 2.0  # 2% increased pull rates
+                    arch["gacha_bonuses"]["special_wish_artifacts"].append("Celestial Globe")
+                    # Stars and cosmos themed abilities
+                    arch["gacha_bonuses"]["combat_bonuses"]["critical_rate"] += 5.0
+                    # Special star-themed cosmetics
+                    if "collection_cosmetics" not in arch["gacha_bonuses"]:
+                        arch["gacha_bonuses"]["collection_cosmetics"] = {}
+                    arch["gacha_bonuses"]["collection_cosmetics"]["Astronomy"] = [
+                        "Star Mage Robes", "Constellation Crown", "Celestial Armor"
+                    ]
+                    # Integration with literature system - unlock cosmic literature
+                    if "unlocked_literature" not in arch["gacha_bonuses"]:
+                        arch["gacha_bonuses"]["unlocked_literature"] = []
+                    arch["gacha_bonuses"]["unlocked_literature"].extend([
+                        "Cosmic Secrets", "Star Charts of the Ancients", "Celestial Navigation"
+                    ])
+                    
+                elif collection == "Royal Collection":
+                    arch["gacha_bonuses"]["character_exp_bonus"] += 10.0  # 10% increased character exp
+                    arch["gacha_bonuses"]["special_wish_artifacts"].append("Royal Scepter")
+                    # Royal abilities and bonuses
+                    arch["gacha_bonuses"]["combat_bonuses"]["health"] += 10.0
+                    arch["gacha_bonuses"]["combat_bonuses"]["defense"] += 5.0
+                    # Royal themed cosmetics
+                    if "collection_cosmetics" not in arch["gacha_bonuses"]:
+                        arch["gacha_bonuses"]["collection_cosmetics"] = {}
+                    arch["gacha_bonuses"]["collection_cosmetics"]["Royal"] = [
+                        "Royal Crown", "Royal Robes", "Royal Guard Armor"
+                    ]
+                    # Enhanced diplomacy with NPCs
+                    arch["gacha_bonuses"]["special_abilities"].append({
+                        "name": "Royal Authority",
+                        "description": "Characters have enhanced dialogue options with NPCs and better prices with merchants",
+                        "effect": {"merchant_discount": 0.10, "npc_relationship_bonus": 15}
+                    })
+                    
+                elif collection == "War Collection":
+                    arch["gacha_bonuses"]["material_drop_bonus"] += 5.0  # 5% increased material drops
+                    arch["gacha_bonuses"]["character_exp_bonus"] += 5.0  # 5% increased character exp
+                    arch["gacha_bonuses"]["special_wish_artifacts"].append("Commander's Insignia")
+                    # Combat bonuses
+                    arch["gacha_bonuses"]["combat_bonuses"]["attack"] += 10.0
+                    arch["gacha_bonuses"]["combat_bonuses"]["speed"] += 5.0
+                    # War-themed cosmetics
+                    if "collection_cosmetics" not in arch["gacha_bonuses"]:
+                        arch["gacha_bonuses"]["collection_cosmetics"] = {}
+                    arch["gacha_bonuses"]["collection_cosmetics"]["War"] = [
+                        "Commander's Armor", "Battle Helm", "War Banner Cape"
+                    ]
+                    # Strategic battle abilities
+                    arch["gacha_bonuses"]["special_abilities"].append({
+                        "name": "Battle Tactics",
+                        "description": "Characters gain enhanced positioning in battle and can use special formation abilities",
+                        "effect": {"formation_bonus": 0.15, "strategic_retreat_chance": 0.20}
+                    })
+
+
+def ensure_gacha_system_initialized(data):
+    """
+    Ensures all gacha system components are properly initialized.
+    This is more comprehensive than ensure_user_data_keys and focuses specifically on the gacha system.
+    """
+    if "gacha" not in data:
+        data["gacha"] = {}
+    
+    gacha = data["gacha"]
+    
+    # Character system
+    if "characters" not in gacha:
+        gacha["characters"] = []
+    
+    if "memory_shards" not in gacha:
+        gacha["memory_shards"] = {}
+    
+    if "character_pity_5star" not in gacha:
+        gacha["character_pity_5star"] = 0
+        
+    if "character_pity_4star" not in gacha:
+        gacha["character_pity_4star"] = 0
+        
+    if "last_5star_was_featured" not in gacha:
+        gacha["last_5star_was_featured"] = False
+    
+    # Weapon system
+    if "weapons" not in gacha:
+        gacha["weapons"] = []
+        
+    if "weapon_pity_5star" not in gacha:
+        gacha["weapon_pity_5star"] = 0
+        
+    if "weapon_pity_4star" not in gacha:
+        gacha["weapon_pity_4star"] = 0
+    
+    # Party system
+    if "active_party" not in gacha:
+        gacha["active_party"] = []
+        
+    if "equipped_weapons" not in gacha:
+        gacha["equipped_weapons"] = {}
+    
+    # Currencies
+    if "primogems" not in gacha:
+        gacha["primogems"] = 1600
+        
+    if "fates" not in gacha:
+        gacha["fates"] = 0
+        
+    if "memory_dust" not in gacha:
+        gacha["memory_dust"] = 0
+    
+    # Daily login system
+    if "daily_login" not in gacha:
+        gacha["daily_login"] = {
+            "last_login": None,
+            "login_streak": 0,
+            "claimed_milestones": []
+        }
+    
+    # Character and weapon progression
+    if "character_levels" not in gacha:
+        gacha["character_levels"] = {}
+        
+    if "weapon_levels" not in gacha:
+        gacha["weapon_levels"] = {}
+        
+    if "weapon_refinements" not in gacha:
+        gacha["weapon_refinements"] = {}
+        
+    if "farmed_materials" not in gacha:
+        gacha["farmed_materials"] = {}
+    
+    # Banner rotation
+    if "banner_rotation" not in data:
+        current_featured_character = next(iter(GACHA_CHARACTERS.keys())) if GACHA_CHARACTERS else "Unknown Character"
+        data["banner_rotation"] = {
+            "current_featured_character": current_featured_character,
+            "featured_weapons": [],
+            "last_rotation": datetime.now().strftime("%Y-%m-%d")
+        }
+        
+    # Achievement stats related to gacha
+    if "achievements" in data and "stats" in data["achievements"]:
+        stats = data["achievements"]["stats"]
+        if "characters_collected" not in stats:
+            stats["characters_collected"] = len(gacha.get("characters", []))
+        if "weapons_collected" not in stats:
+            stats["weapons_collected"] = len(gacha.get("weapons", []))
+        if "gacha_pulls" not in stats:
+            stats["gacha_pulls"] = 0
+
+
+def migrate_gacha_data(data):
+    """
+    Apply migrations for gacha system data.
+    This handles specific conversions needed when loading older save files.
+    """
+    if "gacha" not in data:
+        return
+    
+    gacha = data["gacha"]
+    
+    # Migration for constellation_levels to memory_shards
+    if "constellation_levels" in gacha and "memory_shards" not in gacha:
+        gacha["memory_shards"] = gacha["constellation_levels"]
+        
+    # Initialize character levels for existing characters
+    if "characters" in gacha and "character_levels" not in gacha:
+        gacha["character_levels"] = {}
+        for char_name in gacha["characters"]:
+            if char_name in GACHA_CHARACTERS:
+                char_data = GACHA_CHARACTERS[char_name]
+                rarity = char_data.get("rarity", "Common")
+                # Default level based on rarity
+                max_level = {
+                    "Common": 40,
+                    "Uncommon": 50,
+                    "Rare": 60,
+                    "Epic": 80,
+                    "Legendary": 90
+                }.get(rarity, 40)
+                gacha["character_levels"][char_name] = max_level
+                
+
+def check_daily_login_reward():
+    """
+    Check and update daily login rewards when loading a save file.
+    Gives rewards if the player logs in on a new day.
+    """
+    if "gacha" not in user_data or "daily_login" not in user_data["gacha"]:
+        return
+        
+    daily_login = user_data["gacha"]["daily_login"]
+    
+    # Get the current date
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # If this is the first login, set initial values
+    if daily_login["last_login"] is None:
+        daily_login["last_login"] = today
+        daily_login["login_streak"] = 1
+        give_daily_login_reward(1, True)
+        return
+        
+    # Check if this is a new day compared to the last login
+    if today != daily_login["last_login"]:
+        # Check if the login streak should continue or reset
+        last_login_date = datetime.strptime(daily_login["last_login"], "%Y-%m-%d")
+        today_date = datetime.strptime(today, "%Y-%m-%d")
+        days_difference = (today_date - last_login_date).days
+        
+        if days_difference == 1:
+            # Consecutive login
+            daily_login["login_streak"] += 1
+        elif days_difference > 1:
+            # Login streak broken, reset to 1
+            daily_login["login_streak"] = 1
+            
+        # Update the last login date
+        daily_login["last_login"] = today
+        
+        # Give rewards based on the streak
+        give_daily_login_reward(daily_login["login_streak"])
+
+
+def give_daily_login_reward(streak, silent=False):
+    """
+    Give daily login rewards based on the login streak.
+    
+    Args:
+        streak: The current login streak
+        silent: If True, don't print messages (for first-time initialization)
+    """
+    # Base rewards
+    primogems = 20 + (streak * 5)  # Increases with streak
+    gold = 100 + (streak * 20)     # Increases with streak
+    
+    # Give rewards
+    user_data["gacha"]["primogems"] += primogems
+    user_data["gold"] += gold
+    
+    if not silent:
+        print_colored(f"Daily Login Reward (Day {streak}):", MAGENTA)
+        print_colored(f"• {primogems} Primogems", CYAN)
+        print_colored(f"• {gold} Gold", YELLOW)
+    
+    # Special milestone rewards
+    milestones = {
+        7: {"reward": "fate", "amount": 1, "description": "Intertwined Fate"},
+        14: {"reward": "materials", "amount": 5, "description": "Rare Materials"},
+        30: {"reward": "fate", "amount": 5, "description": "Intertwined Fates"},
+        60: {"reward": "character", "description": "Random Epic Character"},
+        90: {"reward": "weapon", "description": "Random Legendary Weapon"},
+        180: {"reward": "select_character", "description": "Character Selection"}
+    }
+    
+    # Check if milestone reached and not already claimed
+    if streak in milestones and streak not in user_data["gacha"]["daily_login"].get("claimed_milestones", []):
+        milestone = milestones[streak]
+        
+        if not silent:
+            print_colored(f"\nMilestone Reward (Day {streak}):", MAGENTA + BOLD)
+            print_colored(f"• {milestone['description']}", CYAN)
+        
+        # Give milestone reward
+        if milestone["reward"] == "fate":
+            user_data["gacha"]["fates"] += milestone["amount"]
+            
+        elif milestone["reward"] == "materials":
+            # Add random rare materials
+            material_types = ["Character Ascension", "Weapon Refinement", "Talent Enhancement"]
+            for _ in range(milestone["amount"]):
+                material_type = random.choice(material_types)
+                if material_type not in user_data["gacha"]["farmed_materials"]:
+                    user_data["gacha"]["farmed_materials"][material_type] = 0
+                user_data["gacha"]["farmed_materials"][material_type] += 1
+                
+        elif milestone["reward"] == "character":
+            # Give random Epic character
+            epic_chars = [c for c, data in GACHA_CHARACTERS.items() 
+                          if data.get("rarity") == "Epic" and c not in user_data["gacha"]["characters"]]
+            
+            if epic_chars:
+                random_char = random.choice(epic_chars)
+                if random_char not in user_data["gacha"]["characters"]:
+                    user_data["gacha"]["characters"].append(random_char)
+                    user_data["gacha"]["memory_shards"][random_char] = 0
+                    user_data["gacha"]["character_levels"][random_char] = 1
+            
+        elif milestone["reward"] == "weapon":
+            # Give random Legendary weapon
+            legendary_weapons = [w for w, data in CHARACTER_WEAPONS.items() 
+                               if data.get("rarity") == "Legendary" and w not in user_data["gacha"]["weapons"]]
+            
+            if legendary_weapons:
+                random_weapon = random.choice(legendary_weapons)
+                if random_weapon not in user_data["gacha"]["weapons"]:
+                    user_data["gacha"]["weapons"].append(random_weapon)
+                    user_data["gacha"]["weapon_levels"][random_weapon] = 1
+                    user_data["gacha"]["weapon_refinements"][random_weapon] = 1
+        
+        # Mark milestone as claimed
+        user_data["gacha"]["daily_login"].setdefault("claimed_milestones", []).append(streak)
 
 def auto_save() -> None:
     save_game(slot=0, auto=True)
@@ -12467,6 +16674,11 @@ def loot(monster: Dict) -> None:
     global user_data
 
     print_animated(f"\n{BG_YELLOW}{BLACK} LOOT DISCOVERED! {ENDC}", delay=0.05)
+    
+    # Award Stellarstones for defeating the monster if gacha system is active
+    if "gacha" in user_data:
+        monster_level = monster.get("level", 1)
+        hook_battle_reward(monster_level)
 
     # Basic monster drops
     base_drops = monster.get("drops", [])
@@ -13917,6 +18129,22 @@ def complete_quest(quest_name: str) -> None:
         if "adventurer" in user_data:
             user_data["adventurer"]["total_quests"] += 1
             # Check if rank advancement is available
+            
+        # Award Stellarstones based on quest difficulty if gacha system is active
+        if "gacha" in user_data:
+            # Determine quest difficulty based on reward
+            difficulty = "Easy"
+            if gold >= 200 or exp >= 100:
+                difficulty = "Medium"
+            if gold >= 400 or exp >= 200:
+                difficulty = "Hard"
+            if gold >= 700 or exp >= 400:
+                difficulty = "Very Hard"
+            if gold >= 1000 or exp >= 600:
+                difficulty = "Legendary"
+                
+            # Award Stellarstones through the hook
+            hook_quest_reward(difficulty)
             check_rank_advancement()
 
         print(f"Quest '{quest['name']}' completed! You received {gold} gold and {exp} experience.")
@@ -13928,6 +18156,3007 @@ def complete_quest(quest_name: str) -> None:
             print("Hylit has joined you as a companion!")
     else:
         print(f"No active quest named '{quest_name}' found.")
+
+# Character definitions for gacha system
+GACHA_CHARACTERS = {
+    # Ancient Ruins Characters
+    "Oracle of Ruins": {
+        "rarity": "Legendary",
+        "element": "Arcane",
+        "weapon": "Staff",
+        "class": "Mage",
+        "background": "A mysterious seer who communes with the ancient spirits of the ruins. Her prophecies have guided many adventurers to treasure and safety.",
+        "abilities": ["Ancient Revelation", "Time Echo", "Ruin's Whisper"],
+        "sea_of_memories": ["Memory Shard I: Increases Arcane damage by 15%", 
+                           "Memory Shard II: Ancient Revelation has a 25% chance to reveal enemy weaknesses",
+                           "Memory Shard III: Time Echo can now rewind time for 3 seconds",
+                           "Memory Shard IV: Gain 20% resistance to all status effects",
+                           "Memory Shard V: Ruin's Whisper can now silence enemies for 2 turns",
+                           "Memory Shard VI: Summon an Ancient Guardian once per battle"]
+    },
+    "Relic Hunter": {
+        "rarity": "Epic",
+        "element": "Earth",
+        "weapon": "Whip",
+        "class": "Hunter",
+        "background": "A daring treasure hunter who has mapped most of the Ancient Ruins. She's as quick with a clever quip as she is with her trusty whip.",
+        "abilities": ["Relic Sense", "Quickdraw", "Trap Disarmer"],
+        "sea_of_memories": ["Memory Shard I: 15% chance to find additional loot", 
+                           "Memory Shard II: Quickdraw attack speed increased by 20%",
+                           "Memory Shard III: Can detect and disarm traps with 80% success rate",
+                           "Memory Shard IV: 25% damage bonus against Constructs and Undead",
+                           "Memory Shard V: Can use enemy weapons against them for one turn",
+                           "Memory Shard VI: Find a Legendary relic once per dungeon"]
+    },
+    
+    # Crystal Cave Characters
+    "Crystal Harmonist": {
+        "rarity": "Legendary",
+        "element": "Light",
+        "weapon": "Crystal Harp",
+        "class": "Bard",
+        "background": "A mystical musician who learned to communicate with the living crystals of the deep caves. Her music can heal allies or shatter enemies.",
+        "abilities": ["Crystal Symphony", "Resonance Wave", "Prismatic Shield"],
+        "sea_of_memories": ["Memory Shard I: Crystal Symphony heals 15% more", 
+                           "Memory Shard II: Resonance Wave can stun enemies for 1 turn",
+                           "Memory Shard III: Prismatic Shield reflects 20% damage back to attackers",
+                           "Memory Shard IV: Music now affects a larger area (3 meter radius)",
+                           "Memory Shard V: Can attune to crystals to gain their elemental properties",
+                           "Memory Shard VI: Once per battle, can summon a Crystal Guardian"]
+    },
+    "Geode Sculptor": {
+        "rarity": "Rare",
+        "element": "Earth",
+        "weapon": "Chisel and Hammer",
+        "class": "Craftsman",
+        "background": "A master artisan who can shape the cave's crystals into powerful tools and weapons. His sculptures sometimes seem to have a life of their own.",
+        "abilities": ["Stone Shaper", "Crystal Infusion", "Geode Barrier"],
+        "sea_of_memories": ["Memory Shard I: Can create temporary stone weapons", 
+                           "Memory Shard II: Crystal Infusion adds elemental damage to weapons",
+                           "Memory Shard III: Geode Barrier absorbs 30% more damage",
+                           "Memory Shard IV: Can shape stone terrain to gain tactical advantage",
+                           "Memory Shard V: Created sculptures can now attack autonomously",
+                           "Memory Shard VI: Can transform into living crystal form for 3 turns"]
+    },
+    
+    # Forest Characters
+    "Guardian of the Grove": {
+        "rarity": "Epic",
+        "element": "Nature",
+        "weapon": "Living Bow",
+        "class": "Ranger",
+        "background": "A forest protector blessed by the ancient tree spirits. She moves unseen through the woods and commands the forest itself to fight alongside her.",
+        "abilities": ["Verdant Shot", "Nature's Command", "Forest Stride"],
+        "sea_of_memories": ["Memory Shard I: Verdant Shot entangles targets", 
+                           "Memory Shard II: Can command forest creatures to aid in battle",
+                           "Memory Shard III: Forest Stride increases dodge rate by 30%",
+                           "Memory Shard IV: Arrows can split to hit multiple targets",
+                           "Memory Shard V: Can temporarily animate trees as guardians",
+                           "Memory Shard VI: Once per battle, can summon a legendary forest beast"]
+    },
+    "Dryad Healer": {
+        "rarity": "Rare",
+        "element": "Nature",
+        "weapon": "Staff of Seasons",
+        "class": "Healer",
+        "background": "A forest spirit in human form who channels the restorative powers of nature. Her healing changes with the seasons, each offering unique benefits.",
+        "abilities": ["Seasonal Blessing", "Rejuvenation", "Thorn Ward"],
+        "sea_of_memories": ["Memory Shard I: Healing effects increased by 20%", 
+                           "Memory Shard II: Rejuvenation now removes one negative status effect",
+                           "Memory Shard III: Thorn Ward reflects 15% damage to attackers",
+                           "Memory Shard IV: Can now switch seasons at will rather than following natural cycle",
+                           "Memory Shard V: Healing now spreads to nearby allies at 50% effectiveness",
+                           "Memory Shard VI: Can temporarily transform allies into forest spirits"]
+    },
+    
+    # Mountain Characters
+    "Summit King": {
+        "rarity": "Legendary",
+        "element": "Ice",
+        "weapon": "Great Axe",
+        "class": "Warrior",
+        "background": "The uncontested ruler of the highest peaks, he has survived storms and battles that would kill lesser beings. His roar can trigger avalanches.",
+        "abilities": ["Mountain's Might", "Avalanche", "Frost Armor"],
+        "sea_of_memories": ["Memory Shard I: Damage increased by 15% when at higher elevation", 
+                           "Memory Shard II: Avalanche ability area of effect increased by 5 meters",
+                           "Memory Shard III: Frost Armor reduces incoming damage by 30%",
+                           "Memory Shard IV: Immune to cold and high-altitude effects",
+                           "Memory Shard V: Can create ice constructs that fight alongside him",
+                           "Memory Shard VI: Once per battle, can summon a blizzard that damages all enemies"]
+    },
+    "Eagle Rider": {
+        "rarity": "Epic",
+        "element": "Air",
+        "weapon": "Twin Daggers",
+        "class": "Scout",
+        "background": "A fearless scout who bonded with a giant mountain eagle. Together they patrol the skies, dropping down on enemies with deadly precision.",
+        "abilities": ["Diving Strike", "Eagle Eye", "Wind Dash"],
+        "sea_of_memories": ["Memory Shard I: Diving Strike causes 20% more damage", 
+                           "Memory Shard II: Eagle Eye reveals hidden enemies and traps",
+                           "Memory Shard III: Wind Dash can be used twice in succession",
+                           "Memory Shard IV: Eagle companion can now attack independently",
+                           "Memory Shard V: Can create wind barriers that deflect projectiles",
+                           "Memory Shard VI: Can temporarily grant flight to the entire party"]
+    },
+    
+    # Temple Characters
+    "Oracle Priestess": {
+        "rarity": "Epic",
+        "element": "Light",
+        "weapon": "Sacred Texts",
+        "class": "Mystic",
+        "background": "A devoted servant of the temple who has been granted divine foresight. Her prophecies can reveal enemy weaknesses or hidden pathways.",
+        "abilities": ["Divine Insight", "Blessing of Light", "Banishment"],
+        "sea_of_memories": ["Memory Shard I: Divine Insight reveals additional information", 
+                           "Memory Shard II: Blessing of Light heals and provides damage shield",
+                           "Memory Shard III: Banishment has 25% chance to instantly defeat undead enemies",
+                           "Memory Shard IV: Can predict enemy moves one turn in advance",
+                           "Memory Shard V: Light abilities deal 50% more damage to dark enemies",
+                           "Memory Shard VI: Once per battle, can channel divine intervention"]
+    },
+    "Temple Guardian": {
+        "rarity": "Rare",
+        "element": "Earth",
+        "weapon": "Temple Shield and Mace",
+        "class": "Guardian",
+        "background": "A stoic protector enchanted to defend the sacred temple grounds. Once a stone statue, now imbued with life and purpose.",
+        "abilities": ["Unyielding Defense", "Consecrated Ground", "Stone Form"],
+        "sea_of_memories": ["Memory Shard I: Damage reduction increased by 15%", 
+                           "Memory Shard II: Consecrated Ground heals allies in area by 5% per turn",
+                           "Memory Shard III: Stone Form provides immunity to critical hits",
+                           "Memory Shard IV: Can create walls of sacred stone",
+                           "Memory Shard V: Attacks have 20% chance to stun enemies",
+                           "Memory Shard VI: Can temporarily animate other statues to fight"]
+    },
+    
+    # Swamp Characters
+    "Bog Witch": {
+        "rarity": "Epic",
+        "element": "Nature",
+        "weapon": "Cursed Staff",
+        "class": "Witch",
+        "background": "A reclusive witch who draws power from the murky swamps. Her concoctions can heal or harm, and few dare to seek her out.",
+        "abilities": ["Miasma Cloud", "Bog Familiar", "Swamp Stride"],
+        "sea_of_memories": ["Memory Shard I: Miasma Cloud affects larger area", 
+                           "Memory Shard II: Bog Familiar can scout ahead without being detected",
+                           "Memory Shard III: Swamp Stride allows faster movement through difficult terrain",
+                           "Memory Shard IV: Poison effects last 2 turns longer",
+                           "Memory Shard V: Can turn enemies into toads temporarily",
+                           "Memory Shard VI: Can control swamp monsters to fight for her"]
+    },
+    "Venom Alchemist": {
+        "rarity": "Rare",
+        "element": "Nature",
+        "weapon": "Poison Darts",
+        "class": "Alchemist",
+        "background": "A mysterious figure who studies the deadly creatures of the swamp. He has survived countless poisonings and now incorporates toxins into his weapons.",
+        "abilities": ["Toxic Concoction", "Antidote", "Poison Resistance"],
+        "sea_of_memories": ["Memory Shard I: Poison damage increased by 20%", 
+                           "Memory Shard II: Antidote can cure any poison or disease",
+                           "Memory Shard III: Complete immunity to poison effects",
+                           "Memory Shard IV: Weapons automatically apply poison effect",
+                           "Memory Shard V: Can extract venom from defeated enemies",
+                           "Memory Shard VI: Can transform into poisonous mist form"]
+    },
+    
+    # Desert characters
+    "Mirage Walker": {
+        "rarity": "Epic",
+        "element": "Fire",
+        "weapon": "Heat Blades",
+        "class": "Nomad",
+        "background": "A wanderer of the scorching deserts who has learned to manipulate heat and create illusions to survive. The blazing sun is both ally and weapon.",
+        "abilities": ["Heat Mirage", "Sand Veil", "Sun's Fury"],
+        "sea_of_memories": ["Memory Shard I: Heat Mirage creates decoys that confuse enemies", 
+                           "Memory Shard II: Sand Veil provides 30% evasion in desert terrain",
+                           "Memory Shard III: Sun's Fury deals 25% more damage at noon",
+                           "Memory Shard IV: Can summon sandstorms that blind enemies",
+                           "Memory Shard V: Heat attacks have a chance to cause Dehydration status",
+                           "Memory Shard VI: Can transform into living flame to pass through barriers"]
+    },
+    "Dune Oracle": {
+        "rarity": "Legendary",
+        "element": "Arcane",
+        "weapon": "Ancient Tablet",
+        "class": "Prophet",
+        "background": "A mystic who communes with ancient desert spirits and can read the future in the shifting sands. Their prophecies have never been wrong.",
+        "abilities": ["Sand Divination", "Desert Whispers", "Temporal Glimpse"],
+        "sea_of_memories": ["Memory Shard I: Sand Divination reveals hidden treasures in a wide area", 
+                           "Memory Shard II: Desert Whispers allows communication with desert creatures",
+                           "Memory Shard III: Temporal Glimpse shows enemy attack patterns before they happen",
+                           "Memory Shard IV: Can summon ancient desert guardians to fight",
+                           "Memory Shard V: Gains ability to temporarily stop time for 3 seconds",
+                           "Memory Shard VI: Can create oases that heal all allies and restore resources"]
+    },
+    
+    # Coastal/Ocean characters
+    "Tide Caller": {
+        "rarity": "Epic",
+        "element": "Water",
+        "weapon": "Coral Trident",
+        "class": "Sea Shaman",
+        "background": "Born during a tsunami, this coastal tribe member can control the tides and communicate with marine life. The ocean answers their call.",
+        "abilities": ["Tidal Wave", "Marine Bond", "Whirlpool"],
+        "sea_of_memories": ["Memory Shard I: Tidal Wave can push enemies back 50% further", 
+                           "Memory Shard II: Marine Bond allows summoning of sea creatures to assist",
+                           "Memory Shard III: Whirlpool traps enemies for 3 additional seconds",
+                           "Memory Shard IV: Water attacks have 25% chance to cause Drowning status",
+                           "Memory Shard V: Can breathe underwater indefinitely and swim at double speed",
+                           "Memory Shard VI: Can part waters to create dry passages through water bodies"]
+    },
+    "Deep Navigator": {
+        "rarity": "Rare",
+        "element": "Water",
+        "weapon": "Abyssal Harpoon",
+        "class": "Diver",
+        "background": "An explorer of the ocean depths who has adapted to the crushing pressure of the abyss. They've discovered ancient secrets in the darkest waters.",
+        "abilities": ["Pressure Resistance", "Bioluminescence", "Depth Charge"],
+        "sea_of_memories": ["Memory Shard I: Pressure Resistance reduces physical damage by 20%", 
+                           "Memory Shard II: Bioluminescence reveals hidden enemies in darkness",
+                           "Memory Shard III: Depth Charge can stun multiple enemies in a line",
+                           "Memory Shard IV: Gains ability to communicate with deep sea creatures",
+                           "Memory Shard V: Water pressure can be weaponized to crush armored foes",
+                           "Memory Shard VI: Can create water spheres that function as portable breathing environments"]
+    },
+    
+    # Volcano characters
+    "Magma Sculptor": {
+        "rarity": "Epic",
+        "element": "Fire",
+        "weapon": "Obsidian Hammer",
+        "class": "Forgemaster",
+        "background": "A master craftsman who lives within an active volcano and shapes molten rock with bare hands. Their creations are prized across all lands.",
+        "abilities": ["Lava Shaping", "Heat Forge", "Magma Shield"],
+        "sea_of_memories": ["Memory Shard I: Lava Shaping creates barriers that damage enemies on contact", 
+                           "Memory Shard II: Heat Forge can temporarily enhance ally weapons with fire damage",
+                           "Memory Shard III: Magma Shield absorbs 50% of incoming damage",
+                           "Memory Shard IV: Can summon volcanic eruptions in small targeted areas",
+                           "Memory Shard V: Fire immunity extends to allies within 10 meter radius",
+                           "Memory Shard VI: Can create living magma golems that fight independently"]
+    },
+    "Ash Walker": {
+        "rarity": "Uncommon",
+        "element": "Fire",
+        "weapon": "Charred Staff",
+        "class": "Survivor",
+        "background": "The sole survivor of a village destroyed by a volcanic eruption, they've learned to commune with the spirits of the ash and smoke.",
+        "abilities": ["Ash Cloud", "Smoke Form", "Ember Sight"],
+        "sea_of_memories": ["Memory Shard I: Ash Cloud blinds enemies for 3 seconds", 
+                           "Memory Shard II: Smoke Form allows brief intangibility to pass through obstacles",
+                           "Memory Shard III: Ember Sight can detect heat signatures through walls",
+                           "Memory Shard IV: Ash attacks have chance to cause Choking status",
+                           "Memory Shard V: Can resurrect once per day with 50% health if defeated",
+                           "Memory Shard VI: Can draw power from fallen foes, gaining strength from defeats"]
+    },
+    
+    # Tundra/Snow characters
+    "Frost Weaver": {
+        "rarity": "Epic",
+        "element": "Ice",
+        "weapon": "Crystal Scepter",
+        "class": "Winter Mage",
+        "background": "Born during the centennial blizzard, this mage can create intricate structures of living ice and bend the winter winds to their will.",
+        "abilities": ["Ice Architecture", "Winter's Breath", "Glacial Spike"],
+        "sea_of_memories": ["Memory Shard I: Ice Architecture creates complex structures that last 3x longer", 
+                           "Memory Shard II: Winter's Breath can freeze water surfaces instantly",
+                           "Memory Shard III: Glacial Spike damage increased by 40%",
+                           "Memory Shard IV: Can create ice bridges to traverse gaps and chasms",
+                           "Memory Shard V: Ice attacks have 30% chance to cause Frostbite status",
+                           "Memory Shard VI: Can summon a legendary snow phoenix that heals and protects"]
+    },
+    "Aurora Hunter": {
+        "rarity": "Rare",
+        "element": "Light",
+        "weapon": "Northern Bow",
+        "class": "Pathfinder",
+        "background": "A guide who navigates by the polar lights and has learned to harness their energy. They never lose their way, even in the most ferocious blizzards.",
+        "abilities": ["Light Navigation", "Aurora Arrow", "Polar Sight"],
+        "sea_of_memories": ["Memory Shard I: Light Navigation prevents party from getting lost in any terrain", 
+                           "Memory Shard II: Aurora Arrow pierces through multiple enemies",
+                           "Memory Shard III: Polar Sight allows vision through snowstorms and darkness",
+                           "Memory Shard IV: Light attacks restore small amount of energy to allies",
+                           "Memory Shard V: Can create illusions using aurora energy",
+                           "Memory Shard VI: Can briefly stop a blizzard in a large area by absorbing its energy"]
+    }
+}
+
+# Character rarity definitions
+CHARACTER_RARITIES = {
+    "Common": {
+        "color": WHITE,
+        "pull_rate": 60.0,  # 60% chance
+        "stars": 1,
+        "pity_increase": 0,
+        "max_level": 40
+    },
+    "Uncommon": {
+        "color": GREEN,
+        "pull_rate": 25.0,  # 25% chance
+        "stars": 2,
+        "pity_increase": 1,
+        "max_level": 50
+    },
+    "Rare": {
+        "color": BLUE,
+        "pull_rate": 10.0,  # 10% chance
+        "stars": 3,
+        "pity_increase": 2,
+        "max_level": 60
+    },
+    "Epic": {
+        "color": PURPLE,
+        "pull_rate": 4.0,  # 4% chance
+        "stars": 4,
+        "pity_increase": 5,
+        "max_level": 70
+    },
+    "Legendary": {
+        "color": YELLOW,
+        "pull_rate": 1.0,  # 1% chance
+        "stars": 5,
+        "pity_increase": 10,
+        "max_level": 90
+    }
+}
+
+# Character element definitions with color coding
+CHARACTER_ELEMENTS = {
+    "Fire": RED,
+    "Water": BLUE,
+    "Earth": DARKGRAY,
+    "Air": CYAN,
+    "Light": YELLOW,
+    "Dark": DARKGRAY,
+    "Lightning": LIGHTBLUE,
+    "Ice": LIGHTCYAN,
+    "Nature": GREEN,
+    "Arcane": PURPLE
+}
+
+# Weapon rarities with colors and pull rates
+WEAPON_RARITIES = {
+    "Common": {
+        "color": WHITE,
+        "pull_rate": 60.0,  # 60% of weapon pulls (48% of total pulls)
+        "stars": 1,
+        "max_level": 20,
+        "max_refinement": 5
+    },
+    "Uncommon": {
+        "color": GREEN,
+        "pull_rate": 25.0,  # 25% of weapon pulls (20% of total pulls)
+        "stars": 2,
+        "max_level": 40,
+        "max_refinement": 5
+    },
+    "Rare": {
+        "color": BLUE,
+        "pull_rate": 10.0,  # 10% of weapon pulls (8% of total pulls)
+        "stars": 3,
+        "max_level": 50,
+        "max_refinement": 5
+    },
+    "Epic": {
+        "color": PURPLE,
+        "pull_rate": 4.0,  # 4% of weapon pulls (3.2% of total pulls)
+        "stars": 4,
+        "max_level": 70,
+        "max_refinement": 5
+    },
+    "Legendary": {
+        "color": YELLOW,
+        "pull_rate": 1.0,  # 1% of weapon pulls (0.8% of total pulls)
+        "stars": 5,
+        "max_level": 90,
+        "max_refinement": 5
+    }
+}
+
+# Banner rotation system
+BANNER_ROTATION = {
+    "last_update": None,  # Last time banners were updated
+    "update_interval": 20,  # Days between banner updates
+    "current_featured_character": None,  # Current featured 5* character
+    "current_featured_weapons": [],  # Current featured 5* weapons (up to 2)
+    "history": []  # History of past banners
+}
+
+# Character-specific weapons
+CHARACTER_WEAPONS = {
+    # Ancient Ruins Weapons
+    "Oracle's Insight": {
+        "type": "Staff",
+        "rarity": "Legendary",
+        "element": "Arcane",
+        "base_attack": 45,
+        "special_effect": "Increases Arcane damage by 25%",
+        "description": "A staff of ancient origin, resonating with the knowledge of civilizations long past.",
+        "for_character": "Oracle of Ruins"
+    },
+    "Crystal Greatsword": {
+        "type": "Greatsword",
+        "rarity": "Epic",
+        "element": "Earth",
+        "base_attack": 38,
+        "special_effect": "15% chance to create crystal spikes when attacking",
+        "description": "A massive sword with a blade of pure crystal that can manipulate the earth itself.",
+        "for_character": "Crystal Knight"
+    },
+    
+    # Forest Weapons
+    "Living Bow": {
+        "type": "Bow",
+        "rarity": "Epic",
+        "element": "Nature",
+        "base_attack": 36,
+        "special_effect": "Arrows have a 20% chance to entangle targets",
+        "description": "A bow grown from a sacred tree, still alive and forming arrows from its own essence.",
+        "for_character": "Guardian of the Grove"
+    },
+    "Staff of Seasons": {
+        "type": "Staff",
+        "rarity": "Rare",
+        "element": "Nature",
+        "base_attack": 30,
+        "special_effect": "Healing effects change with seasons: Spring (HP), Summer (ATK), Fall (DEF), Winter (Resistance)",
+        "description": "A staff that channels the power of the changing seasons, its appearance shifting throughout the year.",
+        "for_character": "Dryad Healer"
+    },
+    
+    # Mountain Weapons
+    "Avalanche Axe": {
+        "type": "Great Axe",
+        "rarity": "Legendary",
+        "element": "Ice",
+        "base_attack": 48,
+        "special_effect": "10% chance to trigger an avalanche, damaging all enemies",
+        "description": "A massive axe eternally frosted with the coldest ice from the highest peaks.",
+        "for_character": "Summit King"
+    },
+    "Alpine Longbow": {
+        "type": "Longbow",
+        "rarity": "Epic",
+        "element": "Air",
+        "base_attack": 37,
+        "special_effect": "Arrows travel 50% faster and further at high altitudes",
+        "description": "A bow designed for the thin air of mountain peaks, allowing for incredible range.",
+        "for_character": "Alpine Hunter"
+    },
+    
+    # Temple Weapons
+    "Soul Mirror": {
+        "type": "Catalyst",
+        "rarity": "Legendary",
+        "element": "Light",
+        "base_attack": 42,
+        "special_effect": "Reflects 15% of damage taken back to attacker",
+        "description": "A sacred mirror that reveals one's true soul and reflects harmful intent.",
+        "for_character": "Luminous Monk"
+    },
+    "Spirit Lance": {
+        "type": "Polearm",
+        "rarity": "Epic",
+        "element": "Light",
+        "base_attack": 39,
+        "special_effect": "Attacks have a 25% chance to pierce defense",
+        "description": "A lance infused with holy energy that can pierce through both physical and spiritual armor.",
+        "for_character": "Temple Guardian"
+    },
+    
+    # Swamp Weapons
+    "Venomfang": {
+        "type": "Dagger",
+        "rarity": "Epic",
+        "element": "Nature",
+        "base_attack": 33,
+        "special_effect": "Applies Poison status effect (20% chance)",
+        "description": "A curved dagger extracted from the fang of a legendary venomous beast that lurked in the deepest swamps.",
+        "for_character": "Marsh Stalker"
+    },
+    "Bogwood Staff": {
+        "type": "Staff",
+        "rarity": "Rare",
+        "element": "Water",
+        "base_attack": 28,
+        "special_effect": "Creates a healing mist that restores 5% HP per turn in swampy areas",
+        "description": "A staff carved from the ancient wood of a bog tree, imbued with restorative properties.",
+        "for_character": "Swamp Witch"
+    },
+    
+    # Desert Weapons
+    "Sun's Fury": {
+        "type": "Scimitar",
+        "rarity": "Legendary",
+        "element": "Fire",
+        "base_attack": 45,
+        "special_effect": "During daytime, increases attack by 30%",
+        "description": "A curved blade that harnesses the scorching power of the desert sun.",
+        "for_character": "Sandstorm Warrior"
+    },
+    "Dune Staff": {
+        "type": "Staff",
+        "rarity": "Epic",
+        "element": "Earth",
+        "base_attack": 36,
+        "special_effect": "Can create quicksand under enemies (15% chance)",
+        "description": "A staff topped with a sphere of compressed sand that can manipulate the desert itself.",
+        "for_character": "Mirage Mage"
+    },
+    
+    # Coastal Weapons
+    "Tidecaller": {
+        "type": "Trident",
+        "rarity": "Legendary",
+        "element": "Water",
+        "base_attack": 44,
+        "special_effect": "Creates a tidal wave dealing AoE damage once per battle",
+        "description": "A trident forged from coral and enchanted pearls, said to be blessed by the sea gods.",
+        "for_character": "Coastal Guardian"
+    },
+    "Coral Blade": {
+        "type": "Sword",
+        "rarity": "Epic",
+        "element": "Water",
+        "base_attack": 37,
+        "special_effect": "Increases movement speed by 20% in water",
+        "description": "A sword formed from living coral that remains sharp even underwater.",
+        "for_character": "Reef Hunter"
+    },
+    
+    # Volcano Weapons
+    "Magma Hammer": {
+        "type": "Hammer",
+        "rarity": "Legendary",
+        "element": "Fire",
+        "base_attack": 50,
+        "special_effect": "Creates a lava pool on critical hits, dealing damage over time",
+        "description": "A massive hammer with a head of ever-molten stone from the heart of a volcano.",
+        "for_character": "Lava King"
+    },
+    "Obsidian Daggers": {
+        "type": "Dual Daggers",
+        "rarity": "Epic",
+        "element": "Fire",
+        "base_attack": 34,
+        "special_effect": "Attacks ignore 20% of enemy defense",
+        "description": "Twin daggers of volcanic glass sharper than any steel, capable of slicing through almost anything.",
+        "for_character": "Ashen Rogue"
+    },
+    
+    # Tundra Weapons
+    "Permafrost": {
+        "type": "Sword",
+        "rarity": "Legendary",
+        "element": "Ice",
+        "base_attack": 46,
+        "special_effect": "25% chance to freeze targets for 1 turn",
+        "description": "A sword of eternal ice that never melts, freezing anything it touches.",
+        "for_character": "Frost Monarch"
+    },
+    "Aurora Bow": {
+        "type": "Bow",
+        "rarity": "Epic",
+        "element": "Ice",
+        "base_attack": 38,
+        "special_effect": "Arrows leave a trail of ice, slowing enemies that cross it",
+        "description": "A bow that channels the ethereal lights of the polar sky, creating arrows of pure cold light.",
+        "for_character": "Tundra Hunter"
+    }
+}
+
+def gacha_system() -> None:
+    """Main interface for the character gacha system"""
+    # Initialize gacha data if not present
+    if "gacha" not in user_data:
+        user_data["gacha"] = {
+            "characters": [],  # List of owned character IDs
+            "memory_shards": {},  # Character ID -> memory shard level (0-6)
+            "pity_counter": 0,  # Pity counter for 5-star characters
+            "pity_counter_4star": 0,  # Pity counter for 4-star characters
+            "current_party": [],  # Active characters in battle party (max 4)
+            "standard_pulls": 0,  # Total pulls on standard banner
+            "limited_pulls": 0,  # Total pulls on limited banners
+            "stellarstones": 1600,  # Starting currency for pulls
+            "memory_dust": 0,  # Currency from duplicates
+            "last_daily_check": None  # For daily rewards
+        }
+    
+    clear_screen()
+    print_header("Character Wish System")
+    print_colored("Collect powerful characters to aid you on your journey!", CYAN)
+    print()
+    
+    print_colored(f"Primogems: {user_data['gacha']['primogems']}", CYAN)
+    print_colored(f"Stardust: {user_data['gacha']['stardust']}", BLUE)
+    print()
+    
+    print_colored("1. Standard Wish (160 Primogems per pull)", WHITE)
+    print_colored("2. Limited Character Wish (160 Primogems per pull)", WHITE)
+    print_colored("3. View Character Collection", WHITE)
+    print_colored("4. Manage Party", WHITE)
+    print_colored("5. Character Details", WHITE)
+    print_colored("6. Shop", WHITE)
+    print_colored("7. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-7): {ENDC}"))
+        
+        if choice == 1:
+            wish_standard_banner()
+        elif choice == 2:
+            wish_limited_banner()
+        elif choice == 3:
+            view_character_collection()
+        elif choice == 4:
+            manage_party()
+        elif choice == 5:
+            view_character_details()
+        elif choice == 6:
+            gacha_shop()
+        elif choice == 7:
+            return
+        else:
+            print_colored("Invalid choice. Please select 1-7.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    # Return to gacha menu after completing action
+    wait_for_input()
+    gacha_system()
+
+def wish_standard_banner() -> None:
+    """Pull from the standard banner with 85% weapons, 15% characters"""
+    clear_screen()
+    print_header("Standard Wish")
+    
+    # Check banner rotation
+    check_banner_rotation()
+    
+    # Check if player has enough Stellarstones
+    stones = user_data["gacha"]["stellarstones"]
+    if stones < 160:
+        print_colored(f"Not enough Stellarstones! You have {stones}, but need 160 for a wish.", RED)
+        wait_for_input()
+        return
+    
+    # Confirm wish
+    print_colored(f"You have {stones} Stellarstones.", CYAN)
+    print_colored("Standard Wish costs 160 Stellarstones per pull.", CYAN)
+    print_colored("Pull rates: 85% weapons, 15% characters", YELLOW)
+    print_colored("Weapon rates: 80% normal weapons, 20% 5★ weapons", YELLOW)
+    print_colored("1. Single Wish (160 Stellarstones)", WHITE)
+    print_colored("2. 10x Wish (1600 Stellarstones)", WHITE)
+    print_colored("3. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-3): {ENDC}"))
+        
+        if choice == 1:
+            # Single pull
+            if stones >= 160:
+                user_data["gacha"]["stellarstones"] -= 160
+                user_data["gacha"]["standard_pulls"] += 1
+                pull_character("standard")
+            else:
+                print_colored("Not enough Stellarstones!", RED)
+        elif choice == 2:
+            # 10x pull
+            if stones >= 1600:
+                user_data["gacha"]["stellarstones"] -= 1600
+                user_data["gacha"]["standard_pulls"] += 10
+                
+                print_header("10x Wish Results")
+                for _ in range(10):
+                    pull_character("standard")
+                    time.sleep(0.5)  # Dramatic pause between pulls
+            else:
+                print_colored("Not enough Primogems for 10 wishes!", RED)
+        elif choice == 3:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+
+def check_banner_rotation() -> None:
+    """Check if banners need to be rotated based on time elapsed"""
+    # Initialize banner rotation data if not present
+    if "banner_rotation" not in user_data:
+        user_data["banner_rotation"] = {
+            "last_update": datetime.now().strftime("%Y-%m-%d"),
+            "current_featured_character": "Elysia",  # Default character
+            "current_featured_weapons": ["Oracle's Insight", "Avalanche Axe"],  # Default weapons
+            "history": []
+        }
+    
+    # Check if it's time to rotate banners
+    last_update_str = user_data["banner_rotation"]["last_update"]
+    try:
+        last_update = datetime.strptime(last_update_str, "%Y-%m-%d")
+        current_date = datetime.now()
+        days_passed = (current_date - last_update).days
+        
+        if days_passed >= BANNER_ROTATION["update_interval"] or user_data["banner_rotation"]["current_featured_character"] is None:
+            rotate_banners()
+    except (ValueError, TypeError):
+        # If there's an error with the date format, force a rotation
+        rotate_banners()
+
+def rotate_banners() -> None:
+    """Rotate the current banner to feature new characters and weapons"""
+    # Get all legendary characters
+    legendary_characters = [name for name, data in GACHA_CHARACTERS.items() 
+                            if data.get("rarity") == "Legendary"]
+    
+    # Get all legendary weapons
+    legendary_weapons = [name for name, data in CHARACTER_WEAPONS.items() 
+                         if data.get("rarity") == "Legendary"]
+    
+    # If no legendary items found, use defaults
+    if not legendary_characters:
+        legendary_characters = ["Elysia"]
+    
+    if not legendary_weapons:
+        legendary_weapons = ["Oracle's Insight", "Avalanche Axe"]
+    
+    # Select a new featured character that's different from the current one
+    current_featured = user_data["banner_rotation"].get("current_featured_character")
+    available_characters = [c for c in legendary_characters if c != current_featured]
+    
+    if not available_characters:
+        available_characters = legendary_characters
+    
+    new_featured_character = random.choice(available_characters)
+    
+    # Select new featured weapons that are different from current ones
+    current_weapons = user_data["banner_rotation"].get("current_featured_weapons", [])
+    available_weapons = [w for w in legendary_weapons if w not in current_weapons]
+    
+    if len(available_weapons) < 2:
+        available_weapons = legendary_weapons
+    
+    new_featured_weapons = random.sample(available_weapons, min(2, len(available_weapons)))
+    
+    # Store the history of the previous banner
+    if current_featured:
+        user_data["banner_rotation"]["history"].append({
+            "character": current_featured,
+            "weapons": current_weapons,
+            "end_date": datetime.now().strftime("%Y-%m-%d")
+        })
+    
+    # Update banner information
+    user_data["banner_rotation"].update({
+        "last_update": datetime.now().strftime("%Y-%m-%d"),
+        "current_featured_character": new_featured_character,
+        "current_featured_weapons": new_featured_weapons
+    })
+    
+    print_colored("✨ The wish banners have been updated with new featured items! ✨", CYAN)
+    print_colored(f"Featured Character: {new_featured_character}", YELLOW)
+    print_colored(f"Featured Weapons: {', '.join(new_featured_weapons)}", YELLOW)
+
+def wish_limited_banner() -> None:
+    """Pull from the limited-time banner with featured items"""
+    clear_screen()
+    print_header("Limited Wish")
+    
+    # Check for banner rotation and fix error with missing definition
+    check_banner_rotation()
+    
+    # Get current featured items
+    featured_character = user_data["banner_rotation"].get("current_featured_character")
+    featured_weapons = user_data["banner_rotation"].get("current_featured_weapons", [])
+    
+    # Get character data for display
+    char_data = GACHA_CHARACTERS.get(featured_character, {})
+    char_rarity = char_data.get("rarity", "Legendary")
+    char_element = char_data.get("element", "Unknown")
+    
+    char_color = CHARACTER_RARITIES.get(char_rarity, {}).get("color", YELLOW)
+    element_color = CHARACTER_ELEMENTS.get(char_element, WHITE)
+    
+    # Display banner information
+    print_colored(f"Featured 5★ Character: {char_color}{featured_character}{ENDC} ({element_color}{char_element}{ENDC})", CYAN)
+    print_colored("Featured 5★ Weapons:", CYAN)
+    for weapon in featured_weapons:
+        weapon_data = CHARACTER_WEAPONS.get(weapon, {})
+        weapon_type = weapon_data.get("type", "Unknown")
+        weapon_color = WEAPON_RARITIES.get(weapon_data.get("rarity", "Legendary"), {}).get("color", YELLOW)
+        print_colored(f"  • {weapon_color}{weapon}{ENDC} ({weapon_type})", WHITE)
+    
+    print()
+    print_colored("Pull rates: 85% weapons, 15% characters", YELLOW)
+    print_colored("For characters: 50% chance to get featured 5★ when pulling a 5★!", YELLOW)
+    print_colored("For weapons: 50% chance to get featured 5★ when pulling a 5★ weapon!", YELLOW)
+    print_colored("If your last 5★ wasn't the featured item, the next one is guaranteed!", CYAN)
+    
+    # Last banner rotation date
+    last_update = user_data["banner_rotation"].get("last_update", "Unknown")
+    days_left = 20
+    if last_update != "Unknown":
+        try:
+            last_date = datetime.strptime(last_update, "%Y-%m-%d")
+            current_date = datetime.now()
+            days_passed = (current_date - last_date).days
+            days_left = max(0, BANNER_ROTATION["update_interval"] - days_passed)
+        except (ValueError, TypeError):
+            days_left = "Unknown"
+    
+    print_colored(f"Banner changes in {days_left} days", LIGHTGRAY)
+    print()
+    
+    # Check if player has enough Stellarstones
+    stones = user_data["gacha"]["stellarstones"]
+    if stones < 160:
+        print_colored(f"Not enough Stellarstones! You have {stones}, but need 160 for a wish.", RED)
+        wait_for_input()
+        return
+    
+    # Confirm wish options
+    print_colored(f"You have {stones} Stellarstones.", CYAN)
+    print_colored("Limited Wish costs 160 Stellarstones per pull.", CYAN)
+    print_colored("1. Single Wish (160 Stellarstones)", WHITE)
+    print_colored("2. 10x Wish (1600 Stellarstones)", WHITE)
+    print_colored("3. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-3): {ENDC}"))
+        
+        if choice == 1:
+            # Single pull
+            if stones >= 160:
+                user_data["gacha"]["stellarstones"] -= 160
+                user_data["gacha"]["limited_pulls"] += 1
+                
+                # Use the featured character from banner rotation
+                featured_character = user_data["banner_rotation"].get("current_featured_character")
+                
+                # Calculate the odds and perform pull with new rates:
+                # 85% chance for weapons, 15% chance for characters
+                item_type = random.choices(["weapon", "character"], weights=[85, 15], k=1)[0]
+                
+                if item_type == "weapon":
+                    # Use pull_weapon function instead of perform_weapon_pull
+                    pulled_item = pull_weapon(is_limited=True)
+                    print_colored(f"You received a weapon: {pulled_item}", CYAN)
+                else:
+                    # Use pull_character function instead of perform_character_pull
+                    pulled_character = pull_character("limited", featured_character)
+            else:
+                print_colored("Not enough Stellarstones!", RED)
+        elif choice == 2:
+            # 10x pull
+            if stones >= 1600:
+                user_data["gacha"]["stellarstones"] -= 1600
+                user_data["gacha"]["limited_pulls"] += 10
+                
+                # Use the featured character from banner rotation
+                featured_character = user_data["banner_rotation"].get("current_featured_character")
+                
+                print_header("10x Wish Results")
+                # Guarantee at least one 4* or higher item in 10 pulls
+                has_guaranteed_4star = False
+                
+                for i in range(10):
+                    # For the last pull, ensure a 4* or higher if none received yet
+                    if i == 9 and not has_guaranteed_4star:
+                        # Force a 4* or higher pull
+                        if random.random() < 0.2:  # 20% chance for character vs weapon for guaranteed
+                            featured_character = user_data["banner_rotation"].get("current_featured_character")
+                            pulled_character = pull_character("limited", featured_character, force_rarity="Epic")
+                        else:
+                            pulled_item = pull_weapon(is_limited=True, force_rarity="Epic")
+                        has_guaranteed_4star = True
+                    else:
+                        # Normal pull with 85/15 split
+                        item_type = random.choices(["weapon", "character"], weights=[85, 15], k=1)[0]
+                        
+                        if item_type == "weapon":
+                            pulled_item = pull_weapon(is_limited=True)
+                            weapon_data = CHARACTER_WEAPONS.get(pulled_item, {})
+                            weapon_rarity = weapon_data.get("rarity", "Common")
+                            if weapon_rarity in ["Epic", "Legendary"]:
+                                has_guaranteed_4star = True
+                        else:
+                            featured_character = user_data["banner_rotation"].get("current_featured_character")
+                            pulled_character = pull_character("limited", featured_character)
+                            char_data = GACHA_CHARACTERS.get(pulled_character, {})
+                            char_rarity = char_data.get("rarity", "Common")
+                            if char_rarity in ["Epic", "Legendary"]:
+                                has_guaranteed_4star = True
+                    
+                    time.sleep(0.5)  # Dramatic pause between pulls
+            else:
+                print_colored("Not enough Stellarstones for 10 wishes!", RED)
+        elif choice == 3:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+
+def legacy_pull_character(banner_type: str, featured_character: Optional[str] = None) -> str:
+    """
+    Legacy pull function (replaced by enhanced pull_character)
+    
+    Args:
+        banner_type: "standard" or "limited"
+        featured_character: Name of the featured character on limited banner
+    
+    Returns:
+        The name of the pulled character
+    """
+    # Use the new pull system instead
+    featured_char = featured_character if featured_character is not None else ""
+    return pull_character(banner_type, featured_char)
+
+def view_character_collection() -> None:
+    """View all characters in the collection"""
+    clear_screen()
+    print_header("Character Collection")
+    
+    characters = user_data["gacha"]["characters"]
+    if not characters:
+        print_colored("You haven't obtained any characters yet.", YELLOW)
+        print_colored("Use the Wish system to obtain characters!", CYAN)
+        wait_for_input()
+        return
+    
+    # Group characters by rarity for better display
+    characters_by_rarity = {
+        "Legendary": [],
+        "Epic": [],
+        "Rare": [],
+        "Uncommon": [],
+        "Common": []
+    }
+    
+    for char_name in characters:
+        if char_name and char_name in GACHA_CHARACTERS:
+            char_data = GACHA_CHARACTERS[char_name]
+            rarity = char_data.get("rarity", "Common")
+            characters_by_rarity[rarity].append(char_name)
+    
+    # Display collection stats
+    total_chars = len(characters)
+    total_possible = len(GACHA_CHARACTERS)
+    collection_percent = int((total_chars / total_possible) * 100) if total_possible > 0 else 0
+    
+    # Create a visual progress bar for collection
+    progress_bar = create_progress_bar(collection_percent / 100.0)
+    print_colored(f"Collection Progress: {progress_bar} {collection_percent}% ({total_chars}/{total_possible})", CYAN)
+    print()
+    
+    # Display characters by rarity (highest first)
+    for rarity, chars in characters_by_rarity.items():
+        if chars:
+            rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+            stars = CHARACTER_RARITIES.get(rarity, {}).get("stars", 1)
+            star_display = "★" * stars
+            
+            print_colored(f"{rarity_color}{rarity} Characters ({star_display}){ENDC}", rarity_color + BOLD)
+            
+            for char_name in chars:
+                char_data = GACHA_CHARACTERS.get(char_name, {})
+                element = char_data.get("element", "")
+                constellation = user_data["gacha"]["constellation_levels"].get(char_name, 0)
+                
+                element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+                
+                # Show if character is in current party
+                in_party = char_name in user_data["gacha"]["current_party"]
+                party_indicator = f"{GREEN}[Active]{ENDC} " if in_party else ""
+                
+                print_colored(f"  {party_indicator}{char_name} - {element_color}{element}{ENDC} - C{constellation}", rarity_color)
+    
+    wait_for_input()
+
+def view_character_details() -> None:
+    """View detailed information about a specific character"""
+    clear_screen()
+    print_header("Character Details")
+    
+    characters = user_data["gacha"]["characters"]
+    if not characters:
+        print_colored("You haven't obtained any characters yet.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Display characters with numbers for selection
+    for i, char_name in enumerate(characters, 1):
+        char_data = GACHA_CHARACTERS.get(char_name, {})
+        rarity = char_data.get("rarity", "Common")
+        element = char_data.get("element", "")
+        
+        rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+        element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+        
+        print_colored(f"{i}. {rarity_color}{char_name}{ENDC} - {element_color}{element}{ENDC}", WHITE)
+    
+    print_colored(f"{len(characters)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Select a character (1-{len(characters)+1}): {ENDC}"))
+        
+        if choice == len(characters)+1:
+            return
+        
+        if 1 <= choice <= len(characters):
+            selected_char = characters[choice-1]
+            display_character_profile(selected_char)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def display_character_profile(character_name: str) -> None:
+    """Display detailed profile for a specific character with Sea of Memories details"""
+    clear_screen()
+    print_header(f"Character Profile: {character_name}")
+    
+    if character_name not in GACHA_CHARACTERS:
+        print_colored("Character not found in database.", RED)
+        wait_for_input()
+        return
+    
+    char_data = GACHA_CHARACTERS[character_name]
+    
+    # Get character details
+    rarity = char_data.get("rarity", "Common")
+    element = char_data.get("element", "None")
+    weapon = char_data.get("weapon", "None")
+    char_class = char_data.get("class", "None")
+    background = char_data.get("background", "No background information available.")
+    abilities = char_data.get("abilities", [])
+    
+    # Get colors for display
+    rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+    element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+    
+    # Display character info
+    stars = CHARACTER_RARITIES.get(rarity, {}).get("stars", 1)
+    star_display = "★" * stars
+    
+    print_colored(f"Rarity: {rarity_color}{rarity} {star_display}{ENDC}", WHITE)
+    print_colored(f"Element: {element_color}{element}{ENDC}", WHITE)
+    print_colored(f"Weapon: {weapon}", WHITE)
+    print_colored(f"Class: {char_class}", WHITE)
+    print()
+    
+    print_colored("Background:", CYAN)
+    print_colored(f"{background}", LIGHTGRAY)
+    print()
+    
+    # Display abilities
+    print_colored("Abilities:", CYAN)
+    for ability in abilities:
+        print_colored(f"- {ability}", GREEN)
+    print()
+    
+    # Display Sea of Memories (formerly constellations)
+    memory_level = user_data["gacha"]["memory_shards"].get(character_name, 0)
+    print_colored(f"Sea of Memories (Unlocked: {memory_level}/6):", MAGENTA)
+    
+    sea_memories = char_data.get("sea_of_memories", [])
+    for i, memory in enumerate(sea_memories):
+        if i <= memory_level:
+            # Unlocked memory
+            print_colored(f"✓ {memory}", GREEN)
+        else:
+            # Locked memory
+            print_colored(f"? {memory}", DARKGRAY)
+    
+    print()
+    print_colored("Note: Obtain multiple copies of this character to unlock Memory Shards!", YELLOW)
+    wait_for_input()
+    
+# Removed first occurrence of manage_party to fix duplication
+    
+def daily_login_rewards() -> None:
+    """Daily login rewards for the gacha system"""
+    clear_screen()
+    print_header("Daily Login Rewards")
+    
+    # Initialize login rewards data if not present
+    if "login_rewards" not in user_data:
+        user_data["login_rewards"] = {
+            "last_login": None,
+            "consecutive_days": 0,
+            "total_logins": 0,
+            "claimed_milestones": []
+        }
+    
+    # Check if already claimed today
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    last_login = user_data["login_rewards"].get("last_login")
+    
+    if last_login == current_date:
+        print_colored("You've already claimed your daily rewards today!", YELLOW)
+        print_colored("Come back tomorrow for more rewards.", CYAN)
+        
+        # Show consecutive login info
+        consecutive_days = user_data["login_rewards"]["consecutive_days"]
+        total_logins = user_data["login_rewards"]["total_logins"]
+        print_colored(f"Current login streak: {consecutive_days} days", GREEN)
+        print_colored(f"Total login days: {total_logins}", BLUE)
+        
+        # Display next milestone
+        _display_login_milestones()
+        
+        wait_for_input()
+        return
+    
+    # Check if consecutive or missed days
+    is_consecutive = False
+    if last_login:
+        try:
+            last_date = datetime.strptime(last_login, "%Y-%m-%d")
+            current_date_obj = datetime.strptime(current_date, "%Y-%m-%d")
+            days_diff = (current_date_obj - last_date).days
+            
+            if days_diff == 1:
+                is_consecutive = True
+            elif days_diff > 1:
+                # Streak broken
+                print_colored(f"Your login streak has been reset! You missed {days_diff-1} days.", RED)
+                user_data["login_rewards"]["consecutive_days"] = 0
+        except (ValueError, TypeError):
+            # Invalid date format
+            is_consecutive = False
+    
+    # Update login data
+    user_data["login_rewards"]["last_login"] = current_date
+    user_data["login_rewards"]["total_logins"] += 1
+    
+    if is_consecutive:
+        user_data["login_rewards"]["consecutive_days"] += 1
+    else:
+        user_data["login_rewards"]["consecutive_days"] = 1
+    
+    consecutive_days = user_data["login_rewards"]["consecutive_days"]
+    total_logins = user_data["login_rewards"]["total_logins"]
+    
+    # Award daily rewards
+    stellarstones = 40  # Base daily reward
+    
+    # Bonus for consecutive days
+    if consecutive_days >= 30:
+        stellarstones += 60  # 100 total for 30+ days streak
+    elif consecutive_days >= 14:
+        stellarstones += 40  # 80 total for 14+ days streak
+    elif consecutive_days >= 7:
+        stellarstones += 20  # 60 total for 7+ days streak
+    
+    user_data["gacha"]["stellarstones"] += stellarstones
+    
+    # Random materials reward
+    materials = ["Character EXP Material", "Weapon Enhancement Crystal", "Refinement Ore", "Ascension Material"]
+    material = random.choice(materials)
+    amount = random.randint(3, 8)
+    
+    # Initialize materials inventory if needed
+    if "materials" not in user_data:
+        user_data["materials"] = {}
+    
+    if material not in user_data["materials"]:
+        user_data["materials"][material] = 0
+    
+    user_data["materials"][material] += amount
+    
+    # Check for milestone rewards
+    _check_login_milestones()
+    
+    # Display rewards
+    print_colored(f"Daily Login Bonus - Day {consecutive_days}", GREEN)
+    print_colored(f"You received {stellarstones} Stellarstones!", CYAN)
+    print_colored(f"You received {amount} {material}!", BLUE)
+    
+    # Weekly bonus every 7 days
+    if consecutive_days % 7 == 0:
+        bonus_stones = 100
+        user_data["gacha"]["stellarstones"] += bonus_stones
+        print_colored(f"Weekly Bonus: +{bonus_stones} Stellarstones!", YELLOW)
+    
+    # Show streak info
+    print()
+    print_colored(f"Current login streak: {consecutive_days} days", GREEN)
+    print_colored(f"Total login days: {total_logins}", BLUE)
+    
+    # Display login milestones
+    _display_login_milestones()
+    
+    wait_for_input()
+
+def _check_login_milestones() -> None:
+    """Check and award login milestone rewards"""
+    milestones = {
+        7: {"reward": "Free 4★ Weapon", "description": "Choose one 4★ weapon"},
+        14: {"reward": "1000 Stellarstones", "description": "1000 Stellarstones"},
+        30: {"reward": "Free 4★ Character", "description": "Choose one 4★ character"},
+        60: {"reward": "2000 Stellarstones", "description": "2000 Stellarstones"},
+        90: {"reward": "3000 Stellarstones", "description": "3000 Stellarstones"},
+        180: {"reward": "Free 5★ Character", "description": "Choose one 5★ character"},
+        365: {"reward": "Free 5★ Weapon", "description": "Choose one 5★ weapon"}
+    }
+    
+    total_days = user_data["login_rewards"]["total_logins"]
+    claimed = user_data["login_rewards"].get("claimed_milestones", [])
+    
+    for days, reward_info in milestones.items():
+        if total_days >= days and days not in claimed:
+            print_colored("\n🎁 MILESTONE REWARD UNLOCKED! 🎁", YELLOW + BOLD)
+            print_colored(f"Login Milestone: {days} days", GREEN)
+            print_colored(f"Reward: {reward_info['reward']}", CYAN)
+            print_colored("Claim this reward in the Milestone Rewards menu!", MAGENTA)
+            
+            # Mark as available but not claimed yet
+            if "available_milestones" not in user_data["login_rewards"]:
+                user_data["login_rewards"]["available_milestones"] = []
+            
+            if days not in user_data["login_rewards"]["available_milestones"]:
+                user_data["login_rewards"]["available_milestones"].append(days)
+
+def _display_login_milestones() -> None:
+    """Display login milestone rewards"""
+    milestones = {
+        7: {"reward": "Free 4★ Weapon", "description": "Choose one 4★ weapon"},
+        14: {"reward": "1000 Stellarstones", "description": "1000 Stellarstones"},
+        30: {"reward": "Free 4★ Character", "description": "Choose one 4★ character"},
+        60: {"reward": "2000 Stellarstones", "description": "2000 Stellarstones"},
+        90: {"reward": "3000 Stellarstones", "description": "3000 Stellarstones"},
+        180: {"reward": "Free 5★ Character", "description": "Choose one 5★ character"},
+        365: {"reward": "Free 5★ Weapon", "description": "Choose one 5★ weapon"}
+    }
+    
+    total_days = user_data["login_rewards"]["total_logins"]
+    claimed = user_data["login_rewards"].get("claimed_milestones", [])
+    available = user_data["login_rewards"].get("available_milestones", [])
+    
+    print()
+    print_colored("Login Milestones:", CYAN + BOLD)
+    
+    for days, reward_info in sorted(milestones.items()):
+        if days in claimed:
+            status = f"{GREEN}[CLAIMED]{ENDC}"
+        elif days in available:
+            status = f"{YELLOW}[AVAILABLE]{ENDC}"
+        elif total_days >= days:
+            status = f"{YELLOW}[AVAILABLE]{ENDC}"
+        else:
+            status = f"{RED}[LOCKED]{ENDC} ({days-total_days} days left)"
+        
+        print_colored(f"  • Day {days}: {reward_info['reward']} {status}", WHITE)
+
+def character_ascension() -> None:
+    """Character leveling and ascension system"""
+    clear_screen()
+    print_header("Character Ascension")
+    
+    # Check if user has any characters
+    if "gacha" not in user_data or not user_data["gacha"]["characters"]:
+        print_colored("You don't have any characters to level up yet.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Initialize character levels if not present
+    if "character_levels" not in user_data["gacha"]:
+        user_data["gacha"]["character_levels"] = {}
+    
+    if "character_ascensions" not in user_data["gacha"]:
+        user_data["gacha"]["character_ascensions"] = {}
+    
+    # Initialize materials
+    if "materials" not in user_data:
+        user_data["materials"] = {
+            "Character EXP Material": 50,  # Starting materials
+            "Ascension Material": 20
+        }
+    
+    # Display owned characters for selection
+    characters = user_data["gacha"]["characters"]
+    
+    print_colored("Select a character to level up or ascend:", WHITE)
+    for i, char_name in enumerate(characters, 1):
+        char_data = GACHA_CHARACTERS.get(char_name, {})
+        char_rarity = char_data.get("rarity", "Common")
+        char_element = char_data.get("element", "None")
+        
+        # Get current level and ascension
+        char_level = user_data["gacha"]["character_levels"].get(char_name, 1)
+        char_ascension = user_data["gacha"]["character_ascensions"].get(char_name, 0)
+        
+        # Get maximum level based on rarity and ascension
+        max_base_level = CHARACTER_RARITIES.get(char_rarity, {}).get("max_level", 40)
+        max_level = max_base_level + (char_ascension * 10)
+        
+        # Calculate level progress color
+        level_ratio = char_level / max_level
+        if level_ratio >= 0.9:
+            level_color = GREEN
+        elif level_ratio >= 0.7:
+            level_color = CYAN
+        elif level_ratio >= 0.4:
+            level_color = YELLOW
+        else:
+            level_color = RED
+        
+        rarity_color = CHARACTER_RARITIES.get(char_rarity, {}).get("color", WHITE)
+        element_color = CHARACTER_ELEMENTS.get(char_element, WHITE)
+        
+        print_colored(f"{i}. {rarity_color}{char_name}{ENDC} - {element_color}{char_element}{ENDC} - {level_color}Lv.{char_level}/{max_level}{ENDC} - Ascension {char_ascension}", WHITE)
+    
+    print_colored(f"{len(characters)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Select a character (1-{len(characters)+1}): {ENDC}"))
+        
+        if choice == len(characters)+1:
+            return
+        
+        if 1 <= choice <= len(characters):
+            selected_char = characters[choice-1]
+            ascend_character_menu(selected_char)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+    character_ascension()
+
+def open_weapon_refinement() -> None:
+    """Opens the weapon refinement menu from other contexts"""
+    # Call the main weapon refinement implementation
+    # No need to set special flags as we're just redirecting
+    weapon_refinement()
+
+def pull_weapon(is_limited: bool = False, force_rarity: Optional[str] = None) -> str:
+    """Pull a weapon from the weapon pool
+    
+    Args:
+        is_limited: Whether this is a pull on the limited banner
+        force_rarity: Force a specific rarity (for 10-pull guarantees)
+        
+    Returns:
+        Name of the pulled weapon
+    """
+    # Get all available weapons
+    all_weapons = list(CHARACTER_WEAPONS.keys())
+    
+    if not all_weapons:
+        print_colored("No weapons available in the pool.", RED)
+        return "No Weapon Found"
+    
+    # Initialize weapon categories by rarity
+    weapons_by_rarity = {
+        "Common": [],
+        "Uncommon": [],
+        "Rare": [],
+        "Epic": [],
+        "Legendary": []
+    }
+    
+    # Group weapons by rarity
+    for weapon_name in all_weapons:
+        weapon_data = CHARACTER_WEAPONS.get(weapon_name, {})
+        rarity = weapon_data.get("rarity", "Common")
+        weapons_by_rarity[rarity].append(weapon_name)
+    
+    # Check for 5-star pity (weapon)
+    if "weapon_pity_5star" not in user_data["gacha"]:
+        user_data["gacha"]["weapon_pity_5star"] = 0
+    
+    if "weapon_pity_4star" not in user_data["gacha"]:
+        user_data["gacha"]["weapon_pity_4star"] = 0
+    
+    # Increment pity counters
+    user_data["gacha"]["weapon_pity_5star"] += 1
+    user_data["gacha"]["weapon_pity_4star"] += 1
+    
+    # Generate probabilities - 80% of weapon pulls are normal, 20% are 5-star
+    if force_rarity:
+        rarity = force_rarity
+    else:
+        # Check for 5-star pity (80 pulls guaranteed)
+        if user_data["gacha"]["weapon_pity_5star"] >= 80:
+            rarity = "Legendary"
+            user_data["gacha"]["weapon_pity_5star"] = 0
+        # Check for 4-star pity (10 pulls guaranteed)
+        elif user_data["gacha"]["weapon_pity_4star"] >= 10:
+            # Determine if 4 or 5 star
+            if random.random() < 0.1:  # 10% chance for 5-star
+                rarity = "Legendary"
+            else:
+                rarity = "Epic"
+            user_data["gacha"]["weapon_pity_4star"] = 0
+        # Regular probability check
+        else:
+            rarities = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+            weights = [60.0, 25.0, 10.0, 4.0, 1.0]  # Based on WEAPON_RARITIES pull_rate
+            rarity = random.choices(rarities, weights=weights, k=1)[0]
+            
+            if rarity == "Legendary":
+                user_data["gacha"]["weapon_pity_5star"] = 0
+            if rarity in ["Epic", "Legendary"]:
+                user_data["gacha"]["weapon_pity_4star"] = 0
+    
+    # Get the weapon based on rarity
+    if rarity == "Legendary" and is_limited and user_data["banner_rotation"].get("current_featured_weapons"):
+        featured_weapons = user_data["banner_rotation"]["current_featured_weapons"]
+        # 50/50 chance to get featured weapon vs random 5-star
+        if random.random() < 0.5:
+            pulled_weapon = random.choice(featured_weapons)
+            print_colored("✨ You won the 50/50 and got a featured weapon! ✨", YELLOW)
+        else:
+            # Random legendary weapon
+            legendary_weapons = weapons_by_rarity["Legendary"]
+            if legendary_weapons:
+                pulled_weapon = random.choice(legendary_weapons)
+            else:
+                pulled_weapon = random.choice(all_weapons)
+    else:
+        # Get weapon from selected rarity pool
+        if weapons_by_rarity[rarity]:
+            pulled_weapon = random.choice(weapons_by_rarity[rarity])
+        else:
+            # Fallback to any weapon
+            pulled_weapon = random.choice(all_weapons)
+    
+    # Store the weapon
+    if "weapons" not in user_data["gacha"]:
+        user_data["gacha"]["weapons"] = []
+    
+    # Check if user already has this weapon
+    is_new = pulled_weapon not in user_data["gacha"]["weapons"]
+    if is_new:
+        user_data["gacha"]["weapons"].append(pulled_weapon)
+    else:
+        # Grant weapon refinement materials instead
+        if "refinement_materials" not in user_data["materials"]:
+            user_data["materials"]["Refinement Ore"] = 0
+        
+        # Get weapon rarity for refinement value
+        weapon_data = CHARACTER_WEAPONS.get(pulled_weapon, {})
+        weapon_rarity = weapon_data.get("rarity", "Common")
+        
+        # Higher rarity gives more refinement materials
+        refinement_bonus = {
+            "Common": 1,
+            "Uncommon": 2,
+            "Rare": 3,
+            "Epic": 5,
+            "Legendary": 10
+        }.get(weapon_rarity, 1)
+        
+        user_data["materials"]["Refinement Ore"] = user_data["materials"].get("Refinement Ore", 0) + refinement_bonus
+        print_colored(f"Duplicate weapon: +{refinement_bonus} Refinement Ore", BLUE)
+    
+    # Display the result
+    weapon_data = CHARACTER_WEAPONS.get(pulled_weapon, {})
+    weapon_rarity = weapon_data.get("rarity", "Common")
+    weapon_type = weapon_data.get("type", "Weapon")
+    rarity_color = WEAPON_RARITIES.get(weapon_rarity, {}).get("color", WHITE)
+    
+    # Generate stars based on rarity
+    stars = WEAPON_RARITIES.get(weapon_rarity, {}).get("stars", 1)
+    star_display = "★" * stars
+    
+    # Show special effect if it exists
+    special_effect = weapon_data.get("special_effect", "")
+    
+    # Print result
+    print_colored(f"\n{is_new and 'NEW! ' or ''}Weapon: {rarity_color}{pulled_weapon}{ENDC} ({weapon_type}) - {rarity_color}{star_display}{ENDC}", rarity_color)
+    if special_effect:
+        print_colored(f"  Special Effect: {special_effect}", CYAN)
+    
+    # Assign the weapon automatically if it's specific to a character
+    for_character = weapon_data.get("for_character")
+    if for_character and for_character in user_data["gacha"]["characters"]:
+        # Check if "equipped_weapons" exists
+        if "equipped_weapons" not in user_data["gacha"]:
+            user_data["gacha"]["equipped_weapons"] = {}
+        
+        # Equip the weapon to its character
+        user_data["gacha"]["equipped_weapons"][for_character] = pulled_weapon
+        print_colored(f"Automatically equipped {pulled_weapon} to {for_character}!", GREEN)
+    
+    return pulled_weapon
+
+def pull_character(banner_type: str = "standard", featured_character: str = "", force_rarity: Optional[str] = None) -> str:
+    """Pull a character from the character pool
+    
+    Args:
+        banner_type: The type of banner to pull from ('standard', 'limited', etc.)
+        featured_character: The featured character on the banner
+        force_rarity: Force a specific rarity (for 10-pull guarantees)
+        
+    Returns:
+        Name of the pulled character
+    """
+    # Get all available characters
+    all_characters = list(GACHA_CHARACTERS.keys())
+    
+    if not all_characters:
+        print_colored("No characters available in the pool.", RED)
+        return "No Character Found"
+    
+    # Initialize character categories by rarity
+    characters_by_rarity = {
+        "Common": [],
+        "Uncommon": [],
+        "Rare": [],
+        "Epic": [],
+        "Legendary": []
+    }
+    
+    # Group characters by rarity
+    for char_name in all_characters:
+        char_data = GACHA_CHARACTERS.get(char_name, {})
+        rarity = char_data.get("rarity", "Common")
+        characters_by_rarity[rarity].append(char_name)
+    
+    # Check for 5-star pity
+    if "character_pity_5star" not in user_data["gacha"]:
+        user_data["gacha"]["character_pity_5star"] = 0
+    
+    if "character_pity_4star" not in user_data["gacha"]:
+        user_data["gacha"]["character_pity_4star"] = 0
+    
+    # Check for 50/50 pity (losing 50/50 guarantees next 5-star is featured)
+    if "character_guaranteed_featured" not in user_data["gacha"]:
+        user_data["gacha"]["character_guaranteed_featured"] = False
+    
+    # Increment pity counters
+    user_data["gacha"]["character_pity_5star"] += 1
+    user_data["gacha"]["character_pity_4star"] += 1
+    
+    # Generate probabilities
+    if force_rarity:
+        rarity = force_rarity
+    else:
+        # Check for 5-star pity (90 pulls guaranteed)
+        if user_data["gacha"]["character_pity_5star"] >= 90:
+            rarity = "Legendary"
+            user_data["gacha"]["character_pity_5star"] = 0
+        # Check for 4-star pity (10 pulls guaranteed)
+        elif user_data["gacha"]["character_pity_4star"] >= 10:
+            # Determine if 4 or 5 star
+            if random.random() < 0.05:  # 5% chance for 5-star on 4-star pity
+                rarity = "Legendary"
+            else:
+                rarity = "Epic"
+            user_data["gacha"]["character_pity_4star"] = 0
+        # Regular probability check
+        else:
+            rarities = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+            weights = [30.0, 35.0, 20.0, 13.0, 2.0]  # Based on CHARACTER_RARITIES pull_rate
+            rarity = random.choices(rarities, weights=weights, k=1)[0]
+            
+            if rarity == "Legendary":
+                user_data["gacha"]["character_pity_5star"] = 0
+            if rarity in ["Epic", "Legendary"]:
+                user_data["gacha"]["character_pity_4star"] = 0
+    
+    # Get the character based on rarity
+    pulled_character = "None"
+    
+    # 50/50 chance for featured character on limited banner for 5-stars
+    if rarity == "Legendary" and banner_type == "limited" and featured_character:
+        if user_data["gacha"]["character_guaranteed_featured"]:
+            # Guaranteed featured character
+            pulled_character = featured_character
+            user_data["gacha"]["character_guaranteed_featured"] = False
+            print_colored("✨ Guaranteed featured character! ✨", YELLOW)
+        elif random.random() < 0.5:  # 50% chance to get featured
+            pulled_character = featured_character
+            print_colored("✨ You won the 50/50 and got the featured character! ✨", YELLOW)
+            user_data["gacha"]["character_guaranteed_featured"] = False
+        else:
+            # Lost 50/50, get a random legendary character
+            non_featured_legendaries = [c for c in characters_by_rarity["Legendary"] if c != featured_character]
+            if non_featured_legendaries:
+                pulled_character = random.choice(non_featured_legendaries)
+            else:
+                pulled_character = random.choice(all_characters)  # Fallback
+            
+            # Set guaranteed for next 5-star
+            user_data["gacha"]["character_guaranteed_featured"] = True
+            print_colored("💔 You lost the 50/50, but your next 5-star is guaranteed to be the featured character! 💔", MAGENTA)
+    else:
+        # Get character from selected rarity pool
+        if characters_by_rarity[rarity]:
+            pulled_character = random.choice(characters_by_rarity[rarity])
+        else:
+            # Fallback to any character
+            pulled_character = random.choice(all_characters)
+    
+    # Store the character
+    if "characters" not in user_data["gacha"]:
+        user_data["gacha"]["characters"] = []
+    
+    # Check if user already has this character
+    is_new = pulled_character not in user_data["gacha"]["characters"]
+    if is_new:
+        user_data["gacha"]["characters"].append(pulled_character)
+    else:
+        # Grant memory shards instead
+        if "memory_shards" not in user_data["gacha"]:
+            user_data["gacha"]["memory_shards"] = {}
+        
+        if pulled_character not in user_data["gacha"]["memory_shards"]:
+            user_data["gacha"]["memory_shards"][pulled_character] = 0
+        
+        # Get character rarity for shard value
+        char_data = GACHA_CHARACTERS.get(pulled_character, {})
+        char_rarity = char_data.get("rarity", "Common")
+        
+        # Higher rarity gives more shards
+        shard_bonus = {
+            "Common": 1,
+            "Uncommon": 2,
+            "Rare": 5,
+            "Epic": 10,
+            "Legendary": 25
+        }.get(char_rarity, 1)
+        
+        user_data["gacha"]["memory_shards"][pulled_character] += shard_bonus
+        print_colored(f"Duplicate character: +{shard_bonus} Memory Shards for {pulled_character}", BLUE)
+    
+    # Display the result
+    char_data = GACHA_CHARACTERS.get(pulled_character, {})
+    char_rarity = char_data.get("rarity", "Common")
+    char_element = char_data.get("element", "None")
+    rarity_color = CHARACTER_RARITIES.get(char_rarity, {}).get("color", WHITE)
+    element_color = CHARACTER_ELEMENTS.get(char_element, WHITE)
+    
+    # Generate stars based on rarity
+    stars = CHARACTER_RARITIES.get(char_rarity, {}).get("stars", 1)
+    star_display = "★" * stars
+    
+    # Print result
+    print_colored(f"\n{is_new and 'NEW! ' or ''}Character: {rarity_color}{pulled_character}{ENDC} - {element_color}{char_element}{ENDC} - {rarity_color}{star_display}{ENDC}", rarity_color)
+    
+    # Check if there's a special weapon for this character
+    if is_new:
+        for weapon_name, weapon_data in CHARACTER_WEAPONS.items():
+            if weapon_data.get("for_character") == pulled_character:
+                # Check if we have this weapon
+                if "weapons" in user_data["gacha"] and weapon_name in user_data["gacha"]["weapons"]:
+                    # Auto-equip the weapon
+                    if "equipped_weapons" not in user_data["gacha"]:
+                        user_data["gacha"]["equipped_weapons"] = {}
+                    
+                    user_data["gacha"]["equipped_weapons"][pulled_character] = weapon_name
+                    print_colored(f"Automatically equipped {weapon_name} to {pulled_character}!", GREEN)
+    
+    return pulled_character
+
+def view_weapon_materials() -> None:
+    """View weapon enhancement and refinement materials"""
+    clear_screen()
+    print_header("Weapon Enhancement Materials")
+    
+    # Check current materials
+    enhancement_crystals = user_data["materials"].get("Weapon Enhancement Crystal", 0)
+    refinement_ores = user_data["materials"].get("Refinement Ore", 0)
+    
+    print_colored("Current Materials:", CYAN)
+    print_colored(f"• Weapon Enhancement Crystals: {enhancement_crystals}", GREEN)
+    print_colored(f"• Refinement Ores: {refinement_ores}", BLUE)
+    
+    print()
+    print_colored("Material Usage:", CYAN)
+    print_colored("• Enhancement Crystals are used to level up weapons", GREEN)
+    print_colored("• Refinement Ores are used to increase a weapon's special effect strength", BLUE)
+    
+    print()
+    print_colored("Ways to Obtain Materials:", CYAN)
+    print_colored("• Daily login rewards", WHITE)
+    print_colored("• Duplicate weapons from gacha pulls", WHITE)
+    print_colored("• Material farming at specific locations", WHITE)
+    print_colored("• Weekend material bonuses", WHITE)
+    
+    wait_for_input()
+
+def ascend_character(character_name: str) -> None:
+    """Ascend a character to increase their level cap"""
+    clear_screen()
+    
+    char_data = GACHA_CHARACTERS.get(character_name, {})
+    char_rarity = char_data.get("rarity", "Common")
+    
+    # Get current level and ascension
+    char_level = user_data["gacha"]["character_levels"].get(character_name, 1)
+    char_ascension = user_data["gacha"]["character_ascensions"].get(character_name, 0)
+    
+    # Get maximum level based on rarity and ascension
+    max_base_level = CHARACTER_RARITIES.get(char_rarity, {}).get("max_level", 40)
+    max_level = max_base_level + (char_ascension * 10)
+    
+    # Get max possible ascension based on rarity
+    max_ascension = {
+        "Common": 2,
+        "Uncommon": 3,
+        "Rare": 4,
+        "Epic": 5,
+        "Legendary": 6
+    }.get(char_rarity, 2)
+    
+    # Check if already at max ascension
+    if char_ascension >= max_ascension:
+        print_colored(f"{character_name} is already at maximum ascension ({max_ascension}).", YELLOW)
+        wait_for_input()
+        return
+    
+    # Check if character is at appropriate level for ascension
+    if char_level < max_level:
+        print_colored(f"{character_name} needs to be at level {max_level} before ascending.", RED)
+        print_colored(f"Current level: {char_level}/{max_level}", YELLOW)
+        wait_for_input()
+        return
+    
+    # Materials needed based on rarity and current ascension
+    base_materials = {
+        "Common": 5,
+        "Uncommon": 8,
+        "Rare": 12,
+        "Epic": 20,
+        "Legendary": 30
+    }.get(char_rarity, 10)
+    
+    # Materials increase with each ascension
+    materials_needed = base_materials + (char_ascension * 5)
+    
+    # Materials owned
+    ascension_materials = user_data["materials"].get("Ascension Material", 0)
+    
+    # Display info
+    print_header(f"Ascend {character_name}")
+    print_colored(f"Current Ascension: {char_ascension}/{max_ascension}", CYAN)
+    print_colored(f"Current Level: {char_level}/{max_level}", GREEN)
+    print_colored(f"Ascension Materials available: {ascension_materials}", BLUE)
+    print_colored(f"Materials needed for ascension: {materials_needed}", YELLOW)
+    
+    print()
+    print_colored("After ascending:", WHITE)
+    new_max_level = max_base_level + ((char_ascension + 1) * 10)
+    print_colored(f"• New level cap will be {new_max_level}", GREEN)
+    print_colored("• Character stats will increase", CYAN)
+    
+    print()
+    print_colored("1. Ascend Character", WHITE)
+    print_colored("2. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-2): {ENDC}"))
+        
+        if choice == 1:
+            if ascension_materials >= materials_needed:
+                user_data["materials"]["Ascension Material"] -= materials_needed
+                user_data["gacha"]["character_ascensions"][character_name] = char_ascension + 1
+                print_colored(f"{character_name} ascended to phase {char_ascension + 1}!", GREEN)
+                print_colored(f"New level cap: {new_max_level}", CYAN)
+            else:
+                print_colored(f"Not enough Ascension Materials. Need {materials_needed}, have {ascension_materials}.", RED)
+        elif choice == 2:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def view_ascension_materials() -> None:
+    """View character ascension materials"""
+    clear_screen()
+    print_header("Character Ascension Materials")
+    
+    # Check current materials
+    ascension_materials = user_data["materials"].get("Ascension Material", 0)
+    exp_materials = user_data["materials"].get("Character EXP Material", 0)
+    
+    print_colored("Current Materials:", CYAN)
+    print_colored(f"• Character EXP Materials: {exp_materials}", GREEN)
+    print_colored(f"• Ascension Materials: {ascension_materials}", BLUE)
+    
+    print()
+    print_colored("Material Usage:", CYAN)
+    print_colored("• EXP Materials are used to level up characters", GREEN)
+    print_colored("• Ascension Materials are used to increase a character's level cap", BLUE)
+    
+    print()
+    print_colored("Ascension Level Caps:", YELLOW)
+    for rarity, data in CHARACTER_RARITIES.items():
+        max_level = data.get("max_level", 40)
+        rarity_color = data.get("color", WHITE)
+        
+        max_ascension = {
+            "Common": 2,
+            "Uncommon": 3,
+            "Rare": 4,
+            "Epic": 5,
+            "Legendary": 6
+        }.get(rarity, 2)
+        
+        print_colored(f"• {rarity_color}{rarity}{ENDC} characters:", WHITE)
+        print_colored(f"  - Base level cap: {max_level}", WHITE)
+        
+        for ascension in range(1, max_ascension + 1):
+            new_cap = max_level + (ascension * 10)
+            print_colored(f"  - Ascension {ascension}: Level cap {new_cap}", WHITE)
+    
+    print()
+    print_colored("Ways to Obtain Materials:", CYAN)
+    print_colored("• Daily login rewards", WHITE)
+    print_colored("• Material farming at specific locations", WHITE)
+    print_colored("• Weekend material bonuses", WHITE)
+    
+    wait_for_input()
+
+def weapon_refinement() -> None:
+    """Main weapon refinement menu to select weapons"""
+    clear_screen()
+    print_header("Weapon Refinement")
+    
+    # Check if user has weapons
+    if "gacha" not in user_data or "weapons" not in user_data["gacha"] or not user_data["gacha"]["weapons"]:
+        print_colored("You don't have any weapons to refine yet.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Initialize weapon levels and refinement if not present
+    if "weapon_levels" not in user_data["gacha"]:
+        user_data["gacha"]["weapon_levels"] = {}
+    
+    if "weapon_refinements" not in user_data["gacha"]:
+        user_data["gacha"]["weapon_refinements"] = {}
+    
+    # Initialize materials
+    if "materials" not in user_data:
+        user_data["materials"] = {
+            "Weapon Enhancement Crystal": 50,  # Starting materials
+            "Refinement Ore": 20
+        }
+    
+    # Display owned weapons for selection
+    weapons = user_data["gacha"]["weapons"]
+    
+    print_colored("Select a weapon to enhance or refine:", WHITE)
+    for i, weapon_name in enumerate(weapons, 1):
+        weapon_data = CHARACTER_WEAPONS.get(weapon_name, {})
+        if not weapon_data:
+            continue
+            
+        weapon_rarity = weapon_data.get("rarity", "Common")
+        weapon_type = weapon_data.get("type", "Unknown")
+        
+        # Get current level and refinement
+        weapon_level = user_data["gacha"]["weapon_levels"].get(weapon_name, 1)
+        weapon_refinement = user_data["gacha"]["weapon_refinements"].get(weapon_name, 1)
+        
+        # Get maximum level based on rarity
+        max_level = WEAPON_RARITIES.get(weapon_rarity, {}).get("max_level", 20)
+        max_refinement = WEAPON_RARITIES.get(weapon_rarity, {}).get("max_refinement", 5)
+        
+        # For display: calculate color based on refinement level
+        if weapon_refinement >= max_refinement:
+            refinement_color = YELLOW
+        elif weapon_refinement >= 3:
+            refinement_color = GREEN
+        else:
+            refinement_color = WHITE
+        
+        rarity_color = WEAPON_RARITIES.get(weapon_rarity, {}).get("color", WHITE)
+        
+        # Show if equipped by character
+        equipped_by = ""
+        if "equipped_weapons" in user_data["gacha"]:
+            for char, char_weapon in user_data["gacha"]["equipped_weapons"].items():
+                if char_weapon == weapon_name:
+                    equipped_by = f" (Equipped by {char})"
+                    break
+        
+        print_colored(f"{i}. {rarity_color}{weapon_name}{ENDC} - {weapon_type} - Lv.{weapon_level}/{max_level} - {refinement_color}R{weapon_refinement}{ENDC}{equipped_by}", WHITE)
+    
+    print_colored(f"{len(weapons)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Select a weapon (1-{len(weapons)+1}): {ENDC}"))
+        
+        if choice == len(weapons)+1:
+            return
+        
+        if 1 <= choice <= len(weapons):
+            selected_weapon = weapons[choice-1]
+            refine_weapon_menu(selected_weapon)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+    # Avoid recursion, just return to previous menu
+    return
+
+def refine_weapon_menu(weapon_name: str) -> None:
+    """Menu for enhancing and refining a specific weapon"""
+    while True:
+        clear_screen()
+        
+        weapon_data = CHARACTER_WEAPONS.get(weapon_name, {})
+        weapon_rarity = weapon_data.get("rarity", "Common")
+        weapon_type = weapon_data.get("type", "Unknown")
+        
+        # Get current level and refinement
+        weapon_level = user_data["gacha"]["weapon_levels"].get(weapon_name, 1)
+        weapon_refinement = user_data["gacha"]["weapon_refinements"].get(weapon_name, 1)
+        
+        # Get maximum level based on rarity
+        max_level = WEAPON_RARITIES.get(weapon_rarity, {}).get("max_level", 20)
+        max_refinement = WEAPON_RARITIES.get(weapon_rarity, {}).get("max_refinement", 5)
+        
+        # Materials owned
+        enhancement_crystals = user_data["materials"].get("Weapon Enhancement Crystal", 0)
+        refinement_ores = user_data["materials"].get("Refinement Ore", 0)
+        
+        # Header with weapon info
+        print_header(f"Weapon: {weapon_name}")
+        
+        rarity_color = WEAPON_RARITIES.get(weapon_rarity, {}).get("color", WHITE)
+        
+        print_colored(f"Rarity: {rarity_color}{weapon_rarity}{ENDC} ({rarity_color}{'★' * WEAPON_RARITIES.get(weapon_rarity, {}).get('stars', 1)}{ENDC})", WHITE)
+        print_colored(f"Type: {weapon_type}", WHITE)
+        print_colored(f"Level: {weapon_level}/{max_level}", CYAN)
+        print_colored(f"Refinement: {weapon_refinement}/{max_refinement}", YELLOW)
+        
+        # Display weapon stats
+        base_attack = weapon_data.get("base_attack", 0)
+        current_attack = base_attack + (weapon_level * 2)  # Simple formula for attack growth
+        
+        print_colored(f"Base ATK: {current_attack}", GREEN)
+        
+        # Special effect with refinement bonus
+        special_effect = weapon_data.get("special_effect", "None")
+        if special_effect != "None":
+            refinement_bonus = (weapon_refinement - 1) * 0.1  # 10% increase per refinement rank
+            print_colored(f"Special Effect: {special_effect}", CYAN)
+            if refinement_bonus > 0:
+                print_colored(f"Refinement Bonus: +{int(refinement_bonus*100)}% effect strength", YELLOW)
+        
+        print()
+        print_colored(f"Enhancement Crystals: {enhancement_crystals}", GREEN)
+        print_colored(f"Refinement Ores: {refinement_ores}", BLUE)
+        
+        print()
+        print_colored("1. Enhance Weapon (Level Up)", WHITE)
+        print_colored("2. Refine Weapon (Increase Refinement Rank)", WHITE)
+        print_colored("3. View Enhancement Materials", WHITE)
+        print_colored("4. Back", RED)
+        
+        try:
+            choice = int(input(f"\n{YELLOW}Choose an option (1-4): {ENDC}"))
+            
+            if choice == 1:
+                enhance_weapon(weapon_name)
+            elif choice == 2:
+                refine_weapon(weapon_name)
+            elif choice == 3:
+                view_weapon_materials()
+            elif choice == 4:
+                return
+            else:
+                print_colored("Invalid choice.", RED)
+                wait_for_input()
+        except ValueError:
+            print_colored("Please enter a number.", RED)
+            wait_for_input()
+
+def enhance_weapon(weapon_name: str) -> None:
+    """Level up a weapon using Enhancement Crystals"""
+    clear_screen()
+    
+    weapon_data = CHARACTER_WEAPONS.get(weapon_name, {})
+    weapon_rarity = weapon_data.get("rarity", "Common")
+    
+    # Get current level
+    weapon_level = user_data["gacha"]["weapon_levels"].get(weapon_name, 1)
+    
+    # Get maximum level based on rarity
+    max_level = WEAPON_RARITIES.get(weapon_rarity, {}).get("max_level", 20)
+    
+    # Check if weapon is already at max level
+    if weapon_level >= max_level:
+        print_colored(f"{weapon_name} is already at the maximum level ({max_level}).", YELLOW)
+        wait_for_input()
+        return
+    
+    # Materials owned
+    enhancement_crystals = user_data["materials"].get("Weapon Enhancement Crystal", 0)
+    
+    # EXP per crystal based on weapon rarity
+    exp_per_crystal = {
+        "Common": 100,
+        "Uncommon": 120,
+        "Rare": 150,
+        "Epic": 200,
+        "Legendary": 250
+    }.get(weapon_rarity, 100)
+    
+    # Calculate EXP needed per level
+    exp_needed_per_level = {
+        "Common": 50,
+        "Uncommon": 100,
+        "Rare": 150,
+        "Epic": 200,
+        "Legendary": 250
+    }.get(weapon_rarity, 100)
+    
+    # Calculate EXP needed to reach max level
+    total_exp_needed = 0
+    for level in range(weapon_level, max_level):
+        # EXP increases with level
+        level_exp = exp_needed_per_level + (level * 10)
+        total_exp_needed += level_exp
+    
+    # Calculate how many crystals needed
+    crystals_needed = math.ceil(total_exp_needed / exp_per_crystal)
+    
+    # Display info
+    print_header(f"Enhance {weapon_name}")
+    print_colored(f"Current Level: {weapon_level}/{max_level}", CYAN)
+    print_colored(f"Enhancement Crystals available: {enhancement_crystals}", GREEN)
+    print_colored(f"Crystals needed to reach max level: {crystals_needed}", YELLOW)
+    print_colored(f"EXP per crystal: {exp_per_crystal}", BLUE)
+    
+    print()
+    print_colored("How many crystals would you like to use?", WHITE)
+    print_colored("1. Use just enough to level up once", WHITE)
+    print_colored("2. Use all crystals needed to reach max level", WHITE)
+    print_colored("3. Use custom amount", WHITE)
+    print_colored("4. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-4): {ENDC}"))
+        
+        if choice == 1:
+            # Level up once
+            exp_for_one_level = exp_needed_per_level + (weapon_level * 10)
+            crystals_for_one = math.ceil(exp_for_one_level / exp_per_crystal)
+            
+            if enhancement_crystals >= crystals_for_one:
+                user_data["materials"]["Weapon Enhancement Crystal"] -= crystals_for_one
+                user_data["gacha"]["weapon_levels"][weapon_name] = weapon_level + 1
+                print_colored(f"{weapon_name} enhanced to Level {weapon_level + 1}!", GREEN)
+            else:
+                print_colored(f"Not enough crystals. Need {crystals_for_one}, have {enhancement_crystals}.", RED)
+        
+        elif choice == 2:
+            # Max level
+            if enhancement_crystals >= crystals_needed:
+                user_data["materials"]["Weapon Enhancement Crystal"] -= crystals_needed
+                user_data["gacha"]["weapon_levels"][weapon_name] = max_level
+                print_colored(f"{weapon_name} enhanced to maximum Level {max_level}!", GREEN)
+            else:
+                # Use what we can
+                levels_gained = 0
+                crystals_used = 0
+                new_level = weapon_level
+                
+                while crystals_used < enhancement_crystals and new_level < max_level:
+                    level_exp = exp_needed_per_level + (new_level * 10)
+                    crystals_for_level = math.ceil(level_exp / exp_per_crystal)
+                    
+                    if crystals_used + crystals_for_level <= enhancement_crystals:
+                        crystals_used += crystals_for_level
+                        new_level += 1
+                        levels_gained += 1
+                    else:
+                        break
+                
+                if levels_gained > 0:
+                    user_data["materials"]["Weapon Enhancement Crystal"] -= crystals_used
+                    user_data["gacha"]["weapon_levels"][weapon_name] = new_level
+                    print_colored(f"{weapon_name} enhanced to Level {new_level}! (+{levels_gained} levels)", GREEN)
+                else:
+                    print_colored(f"Not enough crystals. Need at least {crystals_needed - enhancement_crystals} more.", RED)
+        
+        elif choice == 3:
+            # Custom amount
+            max_usable = min(enhancement_crystals, crystals_needed)
+            try:
+                amount = int(input(f"\n{YELLOW}Enter amount to use (1-{max_usable}): {ENDC}"))
+                
+                if 1 <= amount <= max_usable:
+                    # Calculate levels gained
+                    exp_gained = amount * exp_per_crystal
+                    levels_gained = 0
+                    total_exp_used = 0
+                    new_level = weapon_level
+                    
+                    while total_exp_used < exp_gained and new_level < max_level:
+                        level_exp = exp_needed_per_level + (new_level * 10)
+                        
+                        if total_exp_used + level_exp <= exp_gained:
+                            total_exp_used += level_exp
+                            new_level += 1
+                            levels_gained += 1
+                        else:
+                            break
+                    
+                    if levels_gained > 0:
+                        user_data["materials"]["Weapon Enhancement Crystal"] -= amount
+                        user_data["gacha"]["weapon_levels"][weapon_name] = new_level
+                        print_colored(f"{weapon_name} enhanced to Level {new_level}! (+{levels_gained} levels)", GREEN)
+                    else:
+                        print_colored("Not enough crystals to gain a level.", RED)
+                else:
+                    print_colored("Invalid amount.", RED)
+            except ValueError:
+                print_colored("Please enter a valid number.", RED)
+        
+        elif choice == 4:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def refine_weapon(weapon_name: str) -> None:
+    """Refine a weapon to increase its special effect strength"""
+    clear_screen()
+    
+    weapon_data = CHARACTER_WEAPONS.get(weapon_name, {})
+    weapon_rarity = weapon_data.get("rarity", "Common")
+    
+    # Get current refinement
+    weapon_refinement = user_data["gacha"]["weapon_refinements"].get(weapon_name, 1)
+    
+    # Get maximum refinement based on rarity
+    max_refinement = WEAPON_RARITIES.get(weapon_rarity, {}).get("max_refinement", 5)
+    
+    # Check if weapon is already at max refinement
+    if weapon_refinement >= max_refinement:
+        print_colored(f"{weapon_name} is already at maximum refinement rank (R{max_refinement}).", YELLOW)
+        wait_for_input()
+        return
+    
+    # Get special effect
+    special_effect = weapon_data.get("special_effect", "None")
+    
+    # Materials owned
+    refinement_ores = user_data["materials"].get("Refinement Ore", 0)
+    
+    # Ores required based on rarity and current refinement
+    base_ores_needed = {
+        "Common": 2,
+        "Uncommon": 3,
+        "Rare": 5,
+        "Epic": 7,
+        "Legendary": 10
+    }.get(weapon_rarity, 3)
+    
+    # Ore requirement increases with refinement level
+    ores_needed = base_ores_needed + ((weapon_refinement - 1) * 2)
+    
+    # Display info
+    print_header(f"Refine {weapon_name}")
+    print_colored(f"Current Refinement: R{weapon_refinement}/{max_refinement}", CYAN)
+    print_colored(f"Refinement Ores available: {refinement_ores}", GREEN)
+    print_colored(f"Ores needed for next refinement: {ores_needed}", YELLOW)
+    
+    if special_effect != "None":
+        current_bonus = (weapon_refinement - 1) * 0.1  # 10% increase per refinement rank
+        next_bonus = weapon_refinement * 0.1
+        
+        print()
+        print_colored("Special Effect:", MAGENTA)
+        print_colored(f"  {special_effect}", CYAN)
+        print_colored(f"Current Bonus: +{int(current_bonus*100)}% effect strength", YELLOW)
+        print_colored(f"Next Rank Bonus: +{int(next_bonus*100)}% effect strength", GREEN)
+    else:
+        print_colored("This weapon has no special effect to enhance.", YELLOW)
+    
+    print()
+    print_colored("1. Refine Weapon", WHITE)
+    print_colored("2. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-2): {ENDC}"))
+        
+        if choice == 1:
+            if refinement_ores >= ores_needed:
+                user_data["materials"]["Refinement Ore"] -= ores_needed
+                user_data["gacha"]["weapon_refinements"][weapon_name] = weapon_refinement + 1
+                print_colored(f"{weapon_name} refined to Rank {weapon_refinement + 1}!", GREEN)
+                
+                if special_effect != "None":
+                    new_bonus = weapon_refinement * 0.1
+                    print_colored(f"Special effect strength increased to +{int(new_bonus*100)}%!", YELLOW)
+            else:
+                print_colored(f"Not enough Refinement Ores. Need {ores_needed}, have {refinement_ores}.", RED)
+        elif choice == 2:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def material_farming_locations() -> None:
+    """Display available locations for farming character and weapon materials"""
+    clear_screen()
+    print_header("Material Farming Locations")
+    
+    # Define material locations
+    material_locations = {
+        "Character EXP Material": {
+            "Ancient Ruins": "Common drops from ruins guardians. (20% drop chance)",
+            "Temple": "Abundant in sacred shrines. (30% drop chance)",
+            "Crystal Cave": "Found in crystal formations. (25% drop chance)",
+            "Greenwood Village": "Sold by village merchants for 100 gold each."
+        },
+        "Weapon Enhancement Crystal": {
+            "Mountain": "Mined from mountain veins. (25% drop chance)",
+            "Cave": "Common in deep caverns. (30% drop chance)",
+            "Ancient Ruins": "Ancient forge remnants. (20% drop chance)",
+            "Stormhaven": "Sold by blacksmiths for 120 gold each."
+        },
+        "Refinement Ore": {
+            "Crystal Cave": "Rare crystal formations. (15% drop chance)",
+            "Mountain": "Special mountain peak deposits. (10% drop chance)",
+            "Temple": "Sacred forging materials. (12% drop chance)",
+            "Shadowmere": "Sold by mystical vendors for 300 gold each."
+        },
+        "Ascension Material": {
+            "Ancient Ruins": "Ancient power sources. (15% drop chance)",
+            "Temple": "Blessed offerings. (20% drop chance)",
+            "Dragon's Peak": "Dragon scales and essence. (10% drop chance)",
+            "Shadowmere": "Sold by dark market dealers for 500 gold each."
+        }
+    }
+    
+    # Display available materials and their locations
+    print_colored("Material Farming Guide", CYAN)
+    print_colored("Visit these locations to gather materials for enhancing characters and weapons:", WHITE)
+    print()
+    
+    for material, locations in material_locations.items():
+        # Choose color based on material type
+        if "Character" in material:
+            material_color = GREEN
+        elif "Weapon" in material:
+            material_color = BLUE
+        elif "Refinement" in material:
+            material_color = YELLOW
+        else:
+            material_color = MAGENTA
+            
+        print_colored(f"{material_color}{material}:{ENDC}", BOLD)
+        
+        for location, description in locations.items():
+            # Colorize location names
+            if "Ancient" in location or "Temple" in location:
+                location_color = YELLOW
+            elif "Mountain" in location or "Cave" in location:
+                location_color = CYAN
+            elif "Village" in location or "haven" in location:
+                location_color = GREEN
+            else:
+                location_color = PURPLE
+                
+            print_colored(f"  • {location_color}{location}{ENDC}: {description}", WHITE)
+        
+        print()
+    
+    # Expedition feature teaser
+    print_colored("Material Expeditions (Coming Soon)", CYAN + BOLD)
+    print_colored("Send your characters on expeditions to automatically gather materials over time!", YELLOW)
+    print_colored("Higher level characters will gather materials more efficiently.", WHITE)
+    
+    # Daily material rotation info
+    print_colored("\nDaily Material Rotation:", CYAN + BOLD)
+    
+    # Use current day to determine available materials (pseudo-random based on day)
+    current_day = datetime.now().weekday()
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    day_name = days[current_day]
+    
+    daily_rotations = {
+        0: {"material": "Character EXP Material", "location": "Temple"},
+        1: {"material": "Weapon Enhancement Crystal", "location": "Cave"},
+        2: {"material": "Refinement Ore", "location": "Crystal Cave"},
+        3: {"material": "Character EXP Material", "location": "Ancient Ruins"},
+        4: {"material": "Weapon Enhancement Crystal", "location": "Mountain"},
+        5: {"material": "All Materials", "location": "All Locations (Weekend Bonus)"},
+        6: {"material": "All Materials", "location": "All Locations (Weekend Bonus)"}
+    }
+    
+    today_rotation = daily_rotations.get(current_day, {})
+    print_colored(f"Today ({day_name}): {today_rotation.get('material', 'No bonus')} - Increased drop rate in {today_rotation.get('location', 'No location')}", GREEN)
+    
+    # If it's not weekend, show next rotation
+    if current_day < 5:
+        next_day = (current_day + 1) % 7
+        next_rotation = daily_rotations.get(next_day, {})
+        print_colored(f"Tomorrow ({days[next_day]}): {next_rotation.get('material', 'No bonus')} - Increased drop rate in {next_rotation.get('location', 'No location')}", YELLOW)
+    
+    wait_for_input()
+
+def ascend_character_menu(character_name: str) -> None:
+    """Menu for leveling up and ascending a specific character"""
+    while True:
+        clear_screen()
+        
+        char_data = GACHA_CHARACTERS.get(character_name, {})
+        char_rarity = char_data.get("rarity", "Common")
+        char_element = char_data.get("element", "None")
+        
+        # Get current level and ascension
+        char_level = user_data["gacha"]["character_levels"].get(character_name, 1)
+        char_ascension = user_data["gacha"]["character_ascensions"].get(character_name, 0)
+        
+        # Get maximum level based on rarity and ascension
+        max_base_level = CHARACTER_RARITIES.get(char_rarity, {}).get("max_level", 40)
+        max_level = max_base_level + (char_ascension * 10)
+        
+        # Get max possible ascension based on rarity
+        max_ascension = {
+            "Common": 2,
+            "Uncommon": 3,
+            "Rare": 4,
+            "Epic": 5,
+            "Legendary": 6
+        }.get(char_rarity, 2)
+        
+        # Materials owned
+        exp_materials = user_data["materials"].get("Character EXP Material", 0)
+        ascension_materials = user_data["materials"].get("Ascension Material", 0)
+        
+        # Header with character info
+        print_header(f"Character: {character_name}")
+        
+        rarity_color = CHARACTER_RARITIES.get(char_rarity, {}).get("color", WHITE)
+        element_color = CHARACTER_ELEMENTS.get(char_element, WHITE)
+        
+        print_colored(f"Rarity: {rarity_color}{char_rarity}{ENDC} ({rarity_color}{'★' * CHARACTER_RARITIES.get(char_rarity, {}).get('stars', 1)}{ENDC})", WHITE)
+        print_colored(f"Element: {element_color}{char_element}{ENDC}", WHITE)
+        print_colored(f"Level: {char_level}/{max_level}", CYAN)
+        print_colored(f"Ascension: {char_ascension}/{max_ascension}", PURPLE)
+        
+        print()
+        print_colored(f"EXP Materials: {exp_materials}", GREEN)
+        print_colored(f"Ascension Materials: {ascension_materials}", BLUE)
+        
+        print()
+        print_colored("1. Level Up Character", WHITE)
+        print_colored("2. Ascend Character", WHITE)
+        print_colored("3. View Ascension Materials", WHITE)
+        print_colored("4. Back", RED)
+        
+        try:
+            choice = int(input(f"\n{YELLOW}Choose an option (1-4): {ENDC}"))
+            
+            if choice == 1:
+                level_up_character(character_name)
+            elif choice == 2:
+                ascend_character(character_name)
+            elif choice == 3:
+                view_ascension_materials()
+            elif choice == 4:
+                return
+            else:
+                print_colored("Invalid choice.", RED)
+                wait_for_input()
+        except ValueError:
+            print_colored("Please enter a number.", RED)
+            wait_for_input()
+
+def level_up_character(character_name: str) -> None:
+    """Level up a character using EXP materials"""
+    clear_screen()
+    
+    char_data = GACHA_CHARACTERS.get(character_name, {})
+    char_rarity = char_data.get("rarity", "Common")
+    
+    # Get current level and ascension
+    char_level = user_data["gacha"]["character_levels"].get(character_name, 1)
+    char_ascension = user_data["gacha"]["character_ascensions"].get(character_name, 0)
+    
+    # Get maximum level based on rarity and ascension
+    max_base_level = CHARACTER_RARITIES.get(char_rarity, {}).get("max_level", 40)
+    max_level = max_base_level + (char_ascension * 10)
+    
+    # Check if character is already at max level
+    if char_level >= max_level:
+        print_colored(f"{character_name} is already at the maximum level for current ascension.", YELLOW)
+        print_colored(f"Ascend the character to increase the level cap beyond {max_level}.", CYAN)
+        wait_for_input()
+        return
+    
+    # Materials owned
+    exp_materials = user_data["materials"].get("Character EXP Material", 0)
+    
+    # EXP per material based on character rarity
+    exp_per_material = {
+        "Common": 1000,
+        "Uncommon": 1200,
+        "Rare": 1500,
+        "Epic": 2000,
+        "Legendary": 2500
+    }.get(char_rarity, 1000)
+    
+    # Calculate EXP needed per level
+    exp_needed_per_level = {
+        "Common": 500,
+        "Uncommon": 1000,
+        "Rare": 1500,
+        "Epic": 2000,
+        "Legendary": 2500
+    }.get(char_rarity, 1000)
+    
+    # Calculate EXP needed to reach max level
+    total_exp_needed = 0
+    for level in range(char_level, max_level):
+        # EXP increases with level
+        level_exp = exp_needed_per_level + (level * 100)
+        total_exp_needed += level_exp
+    
+    # Calculate how many materials needed
+    materials_needed = math.ceil(total_exp_needed / exp_per_material)
+    
+    # Display info
+    print_header(f"Level Up {character_name}")
+    print_colored(f"Current Level: {char_level}/{max_level}", CYAN)
+    print_colored(f"EXP Materials available: {exp_materials}", GREEN)
+    print_colored(f"Materials needed to reach max level: {materials_needed}", YELLOW)
+    print_colored(f"EXP per material: {exp_per_material}", BLUE)
+    
+    print()
+    print_colored("How many materials would you like to use?", WHITE)
+    print_colored("1. Use just enough to level up once", WHITE)
+    print_colored("2. Use all materials needed to reach max level", WHITE)
+    print_colored("3. Use custom amount", WHITE)
+    print_colored("4. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-4): {ENDC}"))
+        
+        if choice == 1:
+            # Level up once
+            exp_for_one_level = exp_needed_per_level + (char_level * 100)
+            materials_for_one = math.ceil(exp_for_one_level / exp_per_material)
+            
+            if exp_materials >= materials_for_one:
+                user_data["materials"]["Character EXP Material"] -= materials_for_one
+                user_data["gacha"]["character_levels"][character_name] = char_level + 1
+                print_colored(f"{character_name} leveled up to {char_level + 1}!", GREEN)
+            else:
+                print_colored(f"Not enough materials. Need {materials_for_one}, have {exp_materials}.", RED)
+        
+        elif choice == 2:
+            # Max level
+            if exp_materials >= materials_needed:
+                user_data["materials"]["Character EXP Material"] -= materials_needed
+                user_data["gacha"]["character_levels"][character_name] = max_level
+                print_colored(f"{character_name} leveled up to {max_level}!", GREEN)
+            else:
+                # Use what we can
+                levels_gained = 0
+                materials_used = 0
+                new_level = char_level
+                
+                while materials_used < exp_materials and new_level < max_level:
+                    level_exp = exp_needed_per_level + (new_level * 100)
+                    materials_for_level = math.ceil(level_exp / exp_per_material)
+                    
+                    if materials_used + materials_for_level <= exp_materials:
+                        materials_used += materials_for_level
+                        new_level += 1
+                        levels_gained += 1
+                    else:
+                        break
+                
+                if levels_gained > 0:
+                    user_data["materials"]["Character EXP Material"] -= materials_used
+                    user_data["gacha"]["character_levels"][character_name] = new_level
+                    print_colored(f"{character_name} leveled up to {new_level}! (+{levels_gained} levels)", GREEN)
+                else:
+                    print_colored(f"Not enough materials. Need at least {materials_needed - exp_materials} more.", RED)
+        
+        elif choice == 3:
+            # Custom amount
+            max_usable = min(exp_materials, materials_needed)
+            try:
+                amount = int(input(f"\n{YELLOW}Enter amount to use (1-{max_usable}): {ENDC}"))
+                
+                if 1 <= amount <= max_usable:
+                    # Calculate levels gained
+                    exp_gained = amount * exp_per_material
+                    levels_gained = 0
+                    total_exp_used = 0
+                    new_level = char_level
+                    
+                    while total_exp_used < exp_gained and new_level < max_level:
+                        level_exp = exp_needed_per_level + (new_level * 100)
+                        
+                        if total_exp_used + level_exp <= exp_gained:
+                            total_exp_used += level_exp
+                            new_level += 1
+                            levels_gained += 1
+                        else:
+                            break
+                    
+                    if levels_gained > 0:
+                        user_data["materials"]["Character EXP Material"] -= amount
+                        user_data["gacha"]["character_levels"][character_name] = new_level
+                        print_colored(f"{character_name} leveled up to {new_level}! (+{levels_gained} levels)", GREEN)
+                    else:
+                        print_colored("Not enough materials to gain a level.", RED)
+                else:
+                    print_colored("Invalid amount.", RED)
+            except ValueError:
+                print_colored("Please enter a valid number.", RED)
+        
+        elif choice == 4:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def view_party_synergy() -> None:
+    """View the active party composition and synergy effects"""
+    clear_screen()
+    print_header("Party Synergy")
+    
+    # Check if user has gacha data
+    if "gacha" not in user_data:
+        print_colored("You haven't obtained any characters yet.", YELLOW)
+        wait_for_input()
+        return
+    
+    current_party = user_data["gacha"]["current_party"]
+    if not current_party:
+        print_colored("Your party is empty. Add characters to your party to see synergy effects.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Display current party
+    print_colored("Active Party:", BLUE + BOLD)
+    element_count = {}
+    
+    for i, char_name in enumerate(current_party, 1):
+        char_data = GACHA_CHARACTERS.get(char_name, {})
+        rarity = char_data.get("rarity", "Common")
+        element = char_data.get("element", "None")
+        char_level = user_data["gacha"].get("character_levels", {}).get(char_name, 1)
+        memory_level = user_data["gacha"]["memory_shards"].get(char_name, 0)
+        
+        # Count elements for resonance effects
+        if element not in element_count:
+            element_count[element] = 0
+        element_count[element] += 1
+        
+        rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+        element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+        
+        # Get character's equipped weapon
+        equipped_weapon = "None"
+        if "equipped_weapons" in user_data["gacha"] and char_name in user_data["gacha"]["equipped_weapons"]:
+            equipped_weapon = user_data["gacha"]["equipped_weapons"][char_name]
+        
+        print_colored(f"{i}. {rarity_color}{char_name}{ENDC} - {element_color}{element}{ENDC} - Lv.{char_level} - Memory Shards: {memory_level}/6", WHITE)
+        print_colored(f"   Weapon: {equipped_weapon}", LIGHTGRAY)
+    
+    print()
+    
+    # Show element resonance
+    print_colored("Element Resonance:", CYAN + BOLD)
+    has_resonance = False
+    
+    for element, count in element_count.items():
+        element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+        
+        if count >= 2:
+            has_resonance = True
+            print_colored(f"{element_color}{element} Resonance{ENDC} ({count} characters)", WHITE)
+            
+            # Show element-specific resonance effects
+            if element == "Fire":
+                print_colored("  • +15% Fire damage", LIGHTYELLOW)
+                print_colored("  • +10% ATK for all party members", LIGHTYELLOW)
+            elif element == "Water":
+                print_colored("  • +15% Water resistance", LIGHTBLUE)
+                print_colored("  • +15% healing effectiveness", LIGHTBLUE)
+            elif element == "Earth":
+                print_colored("  • +20% physical defense", YELLOW)
+                print_colored("  • -15% damage from critical hits", YELLOW)
+            elif element == "Air":
+                print_colored("  • +10% movement speed", LIGHTCYAN)
+                print_colored("  • +10% evasion chance", LIGHTCYAN)
+            elif element == "Lightning":
+                print_colored("  • +10% critical hit chance", MAGENTA)
+                print_colored("  • +15% critical hit damage", MAGENTA)
+            elif element == "Ice":
+                print_colored("  • +15% chance to freeze enemies", CYAN)
+                print_colored("  • +20% duration of freeze effects", CYAN)
+            elif element == "Light":
+                print_colored("  • +15% healing effectiveness", WHITE)
+                print_colored("  • +10% elemental resistance", WHITE)
+            elif element == "Dark":
+                print_colored("  • +15% damage against elite enemies", LIGHTGRAY)
+                print_colored("  • +25% effect duration for debuffs", LIGHTGRAY)
+            elif element == "Nature":
+                print_colored("  • Regenerate 2% health per minute", GREEN)
+                print_colored("  • +20% effectiveness for healing items", GREEN)
+            elif element == "Arcane":
+                print_colored("  • +15% to all elemental damage", LIGHTMAGENTA)
+                print_colored("  • +10% elemental reaction damage", LIGHTMAGENTA)
+    
+    if not has_resonance:
+        print_colored("No element resonance active. You need at least 2 characters of the same element.", YELLOW)
+    
+    wait_for_input()
+
+def equip_character_weapon(character_name: str) -> None:
+    """Allow equipping a specific weapon to a character"""
+    clear_screen()
+    print_header(f"Equip Weapon for {character_name}")
+    
+    # Get character data
+    char_data = GACHA_CHARACTERS.get(character_name, {})
+    if not char_data:
+        print_colored(f"Character {character_name} not found.", RED)
+        wait_for_input()
+        return
+    
+    # Find character's preferred weapon
+    character_weapon = None
+    for weapon_name, weapon_data in CHARACTER_WEAPONS.items():
+        if weapon_data.get("for_character") == character_name:
+            character_weapon = {"name": weapon_name, "data": weapon_data}
+            break
+    
+    if not character_weapon:
+        print_colored(f"No specific weapon found for {character_name}.", YELLOW)
+        wait_for_input()
+        return
+    
+    # Show weapon details
+    weapon_name = character_weapon["name"]
+    weapon_data = character_weapon["data"]
+    
+    rarity = weapon_data.get("rarity", "Common")
+    rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+    
+    print_colored(f"Weapon: {rarity_color}{weapon_name}{ENDC}", WHITE)
+    print_colored(f"Type: {weapon_data.get('type', 'Unknown')}", WHITE)
+    print_colored(f"Element: {weapon_data.get('element', 'None')}", CHARACTER_ELEMENTS.get(weapon_data.get('element', 'None'), WHITE))
+    print_colored(f"Attack: {weapon_data.get('base_attack', 0)}", WHITE)
+    print_colored(f"Special Effect: {weapon_data.get('special_effect', 'None')}", CYAN)
+    print_colored(f"Description: {weapon_data.get('description', '')}", LIGHTGRAY)
+    
+    print()
+    
+    # Check if user has the weapon or materials to craft it
+    has_weapon = False
+    if "character_weapons" not in user_data:
+        user_data["character_weapons"] = {}
+    
+    if character_name in user_data["character_weapons"]:
+        has_weapon = True
+        print_colored("You already have this weapon equipped.", GREEN)
+    else:
+        print_colored("You don't have this weapon yet.", YELLOW)
+        print_colored("Let's craft it for your character!", CYAN)
+        
+        # For simplicity, just give them the weapon without requiring materials
+        # In a real implementation, this would check crafting requirements
+        user_data["character_weapons"][character_name] = {
+            "name": weapon_name,
+            "level": 1,
+            "refinement": 0,
+            "element": weapon_data.get("element", "None"),
+            "base_attack": weapon_data.get("base_attack", 0)
+        }
+        has_weapon = True
+        print_colored(f"You crafted {rarity_color}{weapon_name}{ENDC}!", GREEN)
+    
+    if has_weapon:
+        print_colored(f"Character {character_name} will now use {weapon_name} in battle!", GREEN)
+        
+        # Update character's weapon reference
+        if "equipped_weapons" not in user_data["gacha"]:
+            user_data["gacha"]["equipped_weapons"] = {}
+        
+        user_data["gacha"]["equipped_weapons"][character_name] = weapon_name
+    
+    wait_for_input()
+
+# Integrate Stellarstones with quests and battles
+def give_stellarstones(amount: int, reason: str = "") -> None:
+    """
+    Award the player Stellarstones with a notification
+    
+    Args:
+        amount: Amount of Stellarstones to give
+        reason: Optional reason for receiving the stones
+    """
+    if "gacha" not in user_data:
+        user_data["gacha"] = {
+            "characters": [],
+            "memory_shards": {},
+            "pity_counter": 0,
+            "pity_counter_4star": 0,
+            "current_party": [],
+            "standard_pulls": 0,
+            "limited_pulls": 0,
+            "stellarstones": 1600,
+            "memory_dust": 0,
+            "last_daily_check": None
+        }
+    
+    user_data["gacha"]["stellarstones"] += amount
+    
+    # Display notification
+    message = f"Received {amount} Stellarstones"
+    if reason:
+        message += f" for {reason}"
+    
+    print_colored(message + "!", CYAN)
+    
+    # Show current total
+    total = user_data["gacha"]["stellarstones"]
+    print_colored(f"Total Stellarstones: {total}", LIGHTGRAY)
+
+def hook_battle_reward(monster_level: int) -> None:
+    """Award Stellarstones after defeating a monster based on its level"""
+    # Base reward for defeating a monster
+    base_amount = 5
+    
+    # Bonus based on monster level (higher level = more stones)
+    level_bonus = monster_level * 2
+    
+    # Random bonus (1-10 additional stones)
+    random_bonus = random.randint(1, 10)
+    
+    # Calculate total reward
+    total_reward = base_amount + level_bonus + random_bonus
+    
+    # Award the stones
+    give_stellarstones(total_reward, "monster defeat")
+    
+def hook_quest_reward(quest_difficulty: str) -> None:
+    """Award Stellarstones after completing a quest based on difficulty"""
+    # Reward amounts based on quest difficulty
+    difficulty_rewards = {
+        "Easy": 50,
+        "Medium": 100,
+        "Hard": 200,
+        "Very Hard": 350,
+        "Legendary": 500
+    }
+    
+    # Get reward amount based on difficulty (default to 25 if difficulty not found)
+    reward_amount = difficulty_rewards.get(quest_difficulty, 25)
+    
+    # Award the stones
+    give_stellarstones(reward_amount, f"completing a {quest_difficulty} quest")
+
+# Complete rewritten function to replace duplicate implementations
+
+def manage_party() -> None:
+    """Manage active character party"""
+    clear_screen()
+    print_header("Party Management")
+    
+    characters = user_data["gacha"]["characters"]
+    if not characters:
+        print_colored("You haven't obtained any characters yet.", YELLOW)
+        wait_for_input()
+        return
+    
+    current_party = user_data["gacha"]["current_party"]
+    
+    # Display current party
+    print_colored("Current Party:", BLUE + BOLD)
+    if current_party:
+        for i, char_name in enumerate(current_party, 1):
+            char_data = GACHA_CHARACTERS.get(char_name, {})
+            rarity = char_data.get("rarity", "Common")
+            element = char_data.get("element", "None")
+            
+            rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+            element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+            
+            print_colored(f"  {i}. {rarity_color}{char_name}{ENDC} - {element_color}{element}{ENDC}", WHITE)
+    else:
+        print_colored("  No characters in party", YELLOW)
+    
+    print()
+    print_colored("Choose an action:", CYAN)
+    print_colored("1. Add Character to Party", WHITE)
+    print_colored("2. Remove Character from Party", WHITE)
+    print_colored("3. Clear Party", WHITE)
+    print_colored("4. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an option (1-4): {ENDC}"))
+        
+        if choice == 1:
+            add_character_to_party()
+        elif choice == 2:
+            remove_character_from_party()
+        elif choice == 3:
+            user_data["gacha"]["current_party"] = []
+            print_colored("Party cleared.", GREEN)
+        elif choice == 4:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+
+def add_character_to_party() -> None:
+    """Add a character to the active party"""
+    clear_screen()
+    print_header("Add Character to Party")
+    
+    current_party = user_data["gacha"]["current_party"]
+    characters = user_data["gacha"]["characters"]
+    
+    # Check if party is full
+    if len(current_party) >= 4:
+        print_colored("Your party is full! Remove a character first.", RED)
+        wait_for_input()
+        return
+    
+    # Display available characters not in party
+    available_chars = [char for char in characters if char not in current_party]
+    
+    if not available_chars:
+        print_colored("All your characters are already in the party!", YELLOW)
+        wait_for_input()
+        return
+    
+    for i, char_name in enumerate(available_chars, 1):
+        char_data = GACHA_CHARACTERS.get(char_name, {})
+        rarity = char_data.get("rarity", "Common")
+        element = char_data.get("element", "")
+        
+        rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+        element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+        
+        print_colored(f"{i}. {rarity_color}{char_name}{ENDC} - {element_color}{element}{ENDC}", WHITE)
+    
+    print_colored(f"{len(available_chars)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Select a character to add (1-{len(available_chars)+1}): {ENDC}"))
+        
+        if choice == len(available_chars)+1:
+            return
+        
+        if 1 <= choice <= len(available_chars):
+            selected_char = available_chars[choice-1]
+            user_data["gacha"]["current_party"].append(selected_char)
+            print_colored(f"{selected_char} added to party!", GREEN)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+
+def remove_character_from_party() -> None:
+    """Remove a character from the active party"""
+    clear_screen()
+    print_header("Remove Character from Party")
+    
+    current_party = user_data["gacha"]["current_party"]
+    
+    if not current_party:
+        print_colored("There are no characters in your party!", YELLOW)
+        wait_for_input()
+        return
+    
+    for i, char_name in enumerate(current_party, 1):
+        char_data = GACHA_CHARACTERS.get(char_name, {})
+        rarity = char_data.get("rarity", "Common")
+        element = char_data.get("element", "")
+        
+        rarity_color = CHARACTER_RARITIES.get(rarity, {}).get("color", WHITE)
+        element_color = CHARACTER_ELEMENTS.get(element, WHITE)
+        
+        print_colored(f"{i}. {rarity_color}{char_name}{ENDC} - {element_color}{element}{ENDC}", WHITE)
+    
+    print_colored(f"{len(current_party)+1}. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Select a character to remove (1-{len(current_party)+1}): {ENDC}"))
+        
+        if choice == len(current_party)+1:
+            return
+        
+        if 1 <= choice <= len(current_party):
+            removed_char = current_party.pop(choice-1)
+            print_colored(f"{removed_char} removed from party!", GREEN)
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+
+def gacha_shop() -> None:
+    """Shop for gacha-related items"""
+    clear_screen()
+    print_header("Wish Shop")
+    
+    primogems = user_data["gacha"]["primogems"]
+    stardust = user_data["gacha"]["stardust"]
+    
+    print_colored(f"Your Primogems: {primogems}", CYAN)
+    print_colored(f"Your Stardust: {stardust}", BLUE)
+    print()
+    
+    print_colored("Available Items:", YELLOW)
+    print_colored("1. 60 Primogems (100 Gold)", WHITE)
+    print_colored("2. 300 Primogems (500 Gold)", WHITE)
+    print_colored("3. 1 Wish (160 Primogems)", WHITE)
+    print_colored("4. Character Enhancement Material (50 Stardust)", WHITE)
+    print_colored("5. Back", RED)
+    
+    try:
+        choice = int(input(f"\n{YELLOW}Choose an item to purchase (1-5): {ENDC}"))
+        
+        if choice == 1:
+            if user_data["gold"] >= 100:
+                user_data["gold"] -= 100
+                user_data["gacha"]["primogems"] += 60
+                print_colored("Purchased 60 Primogems!", GREEN)
+            else:
+                print_colored("Not enough Gold!", RED)
+        elif choice == 2:
+            if user_data["gold"] >= 500:
+                user_data["gold"] -= 500
+                user_data["gacha"]["primogems"] += 300
+                print_colored("Purchased 300 Primogems!", GREEN)
+            else:
+                print_colored("Not enough Gold!", RED)
+        elif choice == 3:
+            if user_data["gacha"]["primogems"] >= 160:
+                # Perform a wish
+                user_data["gacha"]["primogems"] -= 160
+                user_data["gacha"]["standard_pulls"] += 1
+                print_colored("Performing a Standard Wish:", CYAN)
+                pull_character("standard")
+            else:
+                print_colored("Not enough Primogems!", RED)
+        elif choice == 4:
+            if user_data["gacha"]["stardust"] >= 50:
+                user_data["gacha"]["stardust"] -= 50
+                # Give enhancement material (could be implemented fully in a future update)
+                print_colored("Purchased Character Enhancement Material!", GREEN)
+                print_colored("(This would be used to level up characters in a full implementation)", YELLOW)
+            else:
+                print_colored("Not enough Stardust!", RED)
+        elif choice == 5:
+            return
+        else:
+            print_colored("Invalid choice.", RED)
+    except ValueError:
+        print_colored("Please enter a number.", RED)
+    
+    wait_for_input()
+    gacha_shop()
 
 def create_character() -> None:
     if user_data["class"] is not None:
@@ -17026,6 +24255,11 @@ def main_game():
     sys.stdout.write("\033[0m")  # Reset all colors first
     sys.stdout.flush()
     
+    # Initialize world expansion features and new systems
+    print_colored("World expansion activated: Sealtea continent and The Dead Sea world border added!", GREEN)
+    print_colored("Pet system enhanced: Use /pets to manage both regular and legendary pets", CYAN)
+    print_colored("Sailing system loaded: Use /sail, /ships, or /maps to access", CYAN)
+    
     # Display welcome header with explicit color codes
     sys.stdout.write(f"{BOLD}{CYAN}{'='*60}\n")
     sys.stdout.write(f"{BOLD}{CYAN}{' '*14}Welcome to Legacies of our Legends RPG!{' '*14}\n")
@@ -17061,6 +24295,222 @@ def main_game():
         except Exception as e:
             print(f"{FAIL}Error: {e}{ENDC}")
             print_animated("Type '/help' for available commands.", YELLOW)
+
+# New system implementations
+
+def process_skills_command(command_parts):
+    """Process the /skills command"""
+    result = feature_integration.process_skills_command(user_data, command_parts)
+    print(result)
+    
+def display_constructs():
+    """Display all mechanical constructs owned by the player"""
+    clear_screen()
+    print_header("Mechanical Constructs")
+    
+    # Initialize mechanical systems if needed
+    mechanical_system.initialize_mechanical_systems(user_data)
+    
+    # Display constructs
+    print(mechanical_system.display_constructs(user_data))
+    
+    print_colored("\nUse /blueprints to view available construct blueprints.", CYAN)
+    print_colored("Use /craft_construct [construct_id] to create a new construct.", CYAN)
+    
+    input("\nPress Enter to continue...")
+    
+def display_blueprints():
+    """Display all known mechanical construct blueprints"""
+    clear_screen()
+    print_header("Construct Blueprints")
+    
+    # Initialize mechanical systems if needed
+    mechanical_system.initialize_mechanical_systems(user_data)
+    
+    # Display blueprints
+    print(mechanical_system.display_blueprints(user_data))
+    
+    print_colored("\nLearn more blueprints by finding and reading mechanical manuals.", CYAN)
+    print_colored("Use /craft_construct [construct_id] to create a construct.", CYAN)
+    
+    input("\nPress Enter to continue...")
+    
+def handle_construct_command(command_parts):
+    """Process the craft construct command"""
+    if len(command_parts) < 2:
+        print_colored("Usage: /craft_construct [construct_id]", RED)
+        print_colored("Use /blueprints to see available constructs.", CYAN)
+        return
+    
+    construct_id = command_parts[1].lower()
+    
+    # Initialize mechanical systems if needed
+    mechanical_system.initialize_mechanical_systems(user_data)
+    
+    # Attempt to craft the construct
+    success, message = mechanical_system.craft_construct(user_data, construct_id)
+    
+    if success:
+        print_colored(message, GREEN)
+    else:
+        print_colored(message, RED)
+        
+    input("\nPress Enter to continue...")
+
+def process_ability_command(command_parts):
+    """Process the /ability command"""
+    result = feature_integration.process_ability_command(user_data, command_parts)
+    print(result)
+
+def show_knowledge():
+    """Display player's knowledge levels"""
+    clear_screen()
+    print_header("Knowledge Levels")
+    
+    if "knowledge" not in user_data:
+        feature_integration.initialize_new_systems(user_data)
+        print(f"{YELLOW}You haven't acquired any specialized knowledge yet.{ENDC}")
+        return
+    
+    for knowledge_type, level in user_data["knowledge"].items():
+        description = game_features.get_knowledge_description(knowledge_type, level)
+        print(f"{knowledge_type.capitalize()}: {CYAN}Level {level}{ENDC}")
+        print(f"  {description}")
+        print()
+    
+    print(f"\n{YELLOW}Increase your knowledge by reading books or studying artifacts.{ENDC}")
+
+def show_active_buffs():
+    """Display active buffs and their effects"""
+    clear_screen()
+    print_header("Active Buffs")
+    
+    if "active_buffs" not in user_data or not user_data["active_buffs"]:
+        print(f"{YELLOW}You don't have any active buffs.{ENDC}")
+        return
+    
+    for buff, duration in user_data["active_buffs"].items():
+        description = game_features.BUFF_TYPES.get(buff, "Unknown effect")
+        print(f"{buff.capitalize()}: {GREEN}{description}{ENDC}")
+        print(f"  Remaining battles: {duration}")
+        print()
+    
+    print(f"\n{YELLOW}Buffs gradually wear off after battles.{ENDC}")
+
+def show_elemental_resistance():
+    """Display elemental resistances"""
+    clear_screen()
+    print_header("Elemental Resistances")
+    
+    if "elemental_resistance" not in user_data:
+        feature_integration.initialize_new_systems(user_data)
+        print(f"{YELLOW}You don't have any elemental resistances yet.{ENDC}")
+        return
+    
+    for element, resistance in user_data["elemental_resistance"].items():
+        color = CYAN
+        if resistance >= 20:
+            color = GREEN
+        elif resistance <= -10:
+            color = RED
+            
+        print(f"{element.capitalize()}: {color}{resistance}%{ENDC}")
+    
+    print(f"\n{YELLOW}Increase resistances through equipment, skills, and knowledge.{ENDC}")
+
+def show_one_time_spells():
+    """Display one-time spells available for use"""
+    clear_screen()
+    print_header("Spell Scrolls & Consumables")
+    
+    if "consumables" not in user_data or not user_data["consumables"]:
+        print(f"{YELLOW}You don't have any spell scrolls or magical consumables.{ENDC}")
+        return
+    
+    for spell, count in user_data["consumables"].items():
+        if spell in game_features.ONE_TIME_SPELLS:
+            spell_data = game_features.ONE_TIME_SPELLS[spell]
+            rarity_color = WHITE
+            if spell_data["rarity"] == "Uncommon":
+                rarity_color = GREEN
+            elif spell_data["rarity"] == "Rare":
+                rarity_color = BLUE
+            elif spell_data["rarity"] == "Epic":
+                rarity_color = MAGENTA
+            elif spell_data["rarity"] == "Legendary":
+                rarity_color = YELLOW
+                
+            print(f"{spell} {rarity_color}({spell_data['rarity']}){ENDC} x{count}")
+            print(f"  Element: {spell_data['element'].capitalize()}")
+            print(f"  Effect: {spell_data['effect']}")
+            print()
+    
+    print(f"\n{YELLOW}Use scrolls during battle with '/use [scroll name]' command.{ENDC}")
+
+# Mechanical Constructs System Functions
+def show_constructs():
+    """Display all constructs owned by the player"""
+    clear_screen()
+    print_header("Mechanical Constructs")
+    
+    # Initialize if needed
+    mechanical_system.initialize_mechanical_systems(user_data)
+    
+    result = mechanical_system.display_constructs(user_data)
+    print(result)
+    
+    input("\nPress Enter to continue...")
+
+def show_blueprints():
+    """Display all known construct blueprints"""
+    clear_screen()
+    print_header("Known Blueprints")
+    
+    # Initialize if needed
+    mechanical_system.initialize_mechanical_systems(user_data)
+    
+    result = mechanical_system.display_blueprints(user_data)
+    print(result)
+    
+    input("\nPress Enter to continue...")
+
+def craft_construct_command(command_parts):
+    """Process the command to craft a construct"""
+    clear_screen()
+    print_header("Craft Mechanical Construct")
+    
+    # Initialize if needed
+    mechanical_system.initialize_mechanical_systems(user_data)
+    
+    if len(command_parts) < 2:
+        # Display available constructs to craft
+        print("Usage: /craft_construct [construct_id]")
+        print("Use /blueprints to see all available blueprints.")
+        input("\nPress Enter to continue...")
+        return
+    
+    construct_id = command_parts[1]
+    success, message = mechanical_system.craft_construct(user_data, construct_id)
+    
+    if success:
+        print(f"{GREEN}{message}{ENDC}")
+    else:
+        print(f"{RED}{message}{ENDC}")
+    
+    input("\nPress Enter to continue...")
+
+def read_mechanical_manual(book_data):
+    """
+    Display mechanical manual information and call the feature integration
+    module to process the effect.
+    """
+    print(f"\n{CYAN}This manual contains blueprints for mechanical constructs.{ENDC}")
+    
+    # Process the book effect through feature integration
+    result = feature_integration.process_book_effect(user_data, book_data)
+    print(result)
+    
+    input("\nPress Enter to continue...")
 
 # Main loop
 if __name__ == "__main__":
