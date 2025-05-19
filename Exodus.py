@@ -10,7 +10,7 @@ init(autoreset=True, strip=True if os.name != 'nt' else None)
 
 """
 LAST HUMAN: EXODUS
-A Sci-Fi Text RPG
+A Sci-Fi Text RPG - Version 2.5.0
 
 In the year 2157, artificial intelligence has evolved beyond human control.
 You are Dr. Xeno Valari, the last human in the Milky Way galaxy.
@@ -22,7 +22,45 @@ monitoring Earth's situation, and potentially following later.
 But something went wrong. The AI known as The Convergence corrupted all systems.
 Now you must escape the facility, reach the Andromeda Portal, and destroy 
 the Malware Server - the source of the corruption - before you leave Earth forever.
+
+As your journey continues through deep space, you'll face new challenges,
+encounter diverse alien species, navigate temporal anomalies, and discover
+the dark secrets behind humanity's exile from Earth.
 """
+
+# Game constants
+VERSION = "2.5.0"
+RELEASE_DATE = "May 19, 2025"
+BUILD_NUMBER = "25062"
+
+# Global game state
+game_state = {
+    "player_health": 100,
+    "player_max_health": 100,
+    "player_attack": 15,
+    "player_defense": 10,
+    "player_speed": 10,
+    "player_level": 1,
+    "player_experience": 0,
+    "player_credits": 500,
+    "inventory": [],
+    "weapons": [],
+    "current_stage": 1,
+    "current_zone": "cryostasis_facility",
+    "zones_unlocked": ["cryostasis_facility"],
+    "kills": 0,
+    "chapter": 1,
+    "current_chapter": "Chapter 1: Earth Reclamation",
+    "companions": []
+}
+UPDATE_NOTES = [
+    "Added time manipulation abilities with 5 temporal powers",
+    "Added Chapter 7: Primor Aetherium with the Yitrian civilization",
+    "Implemented the Ignite weapon module with fire propagation",
+    "Added comprehensive side quest system with missions for each chapter",
+    "Added branching storylines with multiple choice consequences",
+    "Added Chapter 8 teaser: Viral Directive"
+]
 
 # Terminal fonts/styling
 class Font:
@@ -142,10 +180,43 @@ class Font:
 
 # Save game functionality
 def save_game(slot_number=1):
-    """Save current game state to a file"""
+    """Save current game state to a file with enhanced data storage"""
+    
+    # Ensure essential game state elements exist
+    if "protagonist" not in game_state:
+        game_state["protagonist"] = {
+            "name": "Dr. Xeno Valari",  # Default protagonist
+            "gender": "female",
+            "specialty": "quantum physics",
+            "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21."
+        }
+    
+    if "companions" not in game_state:
+        game_state["companions"] = []
+    
+    if "h79760_exploration" not in game_state and game_state.get("chapter_progress", 0) >= 4:
+        # Initialize exploration tracking if player has reached that chapter
+        game_state["h79760_exploration"] = {
+            "alpha_star": False,
+            "beta_star": False,
+            "gamma_star": False,
+            "novaris": False,
+            "aquila": False,
+            "terminus": False,
+            "hyuki_found": False,
+            "locations_visited": 0
+        }
+    
+    # Create enhanced save data
     save_data = {
         "game_state": game_state,
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "character_info": {
+            "name": game_state.get("protagonist", {}).get("name", "Unknown"),
+            "level": game_state.get("player_level", 1),
+            "chapter": game_state.get("current_chapter", "Chapter 1: Earth Reclamation"),
+            "version": "2.0"  # Game version for compatibility checks
+        }
     }
 
     # Create saves directory if it doesn't exist
@@ -158,13 +229,14 @@ def save_game(slot_number=1):
         with open(save_file, "wb") as f:
             pickle.dump(save_data, f)
         print(Font.SUCCESS(f"\nGame saved successfully to slot {slot_number}!"))
+        print(Font.INFO(f"Character: {save_data['character_info']['name']} | Level: {save_data['character_info']['level']}"))
         return True
     except Exception as e:
         print(Font.WARNING(f"\nError saving game: {e}"))
         return False
 
 def load_game(slot_number=1):
-    """Load game state from a save file"""
+    """Load game state from a save file with version compatibility check"""
     save_file = f"saves/save_slot_{slot_number}.dat"
 
     if not os.path.exists(save_file):
@@ -175,23 +247,51 @@ def load_game(slot_number=1):
         with open(save_file, "rb") as f:
             save_data = pickle.load(f)
 
+        # Check for version compatibility
+        save_version = save_data.get("character_info", {}).get("version", "1.0")
+        
+        if save_version < "2.0":
+            print(Font.WARNING("\nThis is an older save file. Updating to new format..."))
+            # Add any missing data structures the new version needs
+            if "protagonist" not in save_data["game_state"]:
+                save_data["game_state"]["protagonist"] = {
+                    "name": "Dr. Xeno Valari",  # Default to original protagonist
+                    "gender": "female",
+                    "specialty": "quantum physics",
+                    "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21."
+                }
+            
+            if "companions" not in save_data["game_state"]:
+                save_data["game_state"]["companions"] = []
+
         # Update the global game state
         for key, value in save_data["game_state"].items():
             game_state[key] = value
 
         print(Font.SUCCESS(f"\nGame loaded successfully from slot {slot_number}!"))
         print(Font.INFO(f"Save timestamp: {save_data['timestamp']}"))
+        
+        # Display character info
+        protagonist = game_state.get("protagonist", {})
+        print(Font.INFO(f"Character: {protagonist.get('name', 'Unknown')} | Specialty: {protagonist.get('specialty', 'Unknown')}"))
+        
+        # Display companions if any
+        companions = game_state.get("companions", [])
+        if companions:
+            companions_list = ", ".join([c.get("name", "Unknown") for c in companions])
+            print(Font.INFO(f"Companions: {companions_list}"))
+        
         return True
     except Exception as e:
         print(Font.WARNING(f"\nError loading game: {e}"))
         return False
 
 def manage_save_slots():
-    """Interface for managing save game slots"""
+    """Enhanced interface for managing save game slots with character information"""
     clear_screen()
-    print(Font.TITLE("\n┌───────────────────────────────────────────────┐"))
-    print(Font.TITLE("│             SAVE MANAGEMENT SYSTEM             │"))
-    print(Font.TITLE("└───────────────────────────────────────────────┘"))
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('QUANTUM MEMORY ARCHIVE'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
 
     # Check for existing save files
     save_slots = {}
@@ -201,73 +301,105 @@ def manage_save_slots():
             try:
                 with open(save_file, "rb") as f:
                     save_data = pickle.load(f)
-                save_slots[i] = save_data["timestamp"]
-            except pickle.UnpicklingError:
-                save_slots[i] = "CORRUPTED SAVE"
+                # Store more detailed information
+                save_slots[i] = {
+                    "timestamp": save_data["timestamp"],
+                    "character": save_data.get("character_info", {}).get("name", "Unknown"),
+                    "level": save_data.get("character_info", {}).get("level", 1),
+                    "chapter": save_data.get("character_info", {}).get("chapter", "Unknown")
+                }
+            except Exception as e:
+                save_slots[i] = {"status": "Corrupted Save", "error": str(e)}
         else:
-            save_slots[i] = "EMPTY"
+            save_slots[i] = {"status": "Empty"}
 
-    # Display save slots
-    print(Font.INFO("\nAvailable Save Slots:"))
-    for slot, timestamp in save_slots.items():
-        slot_status = Font.SUCCESS(f"Slot {slot}: {timestamp}") if timestamp != "EMPTY" else Font.WARNING(f"Slot {slot}: {timestamp}")
-        print(slot_status)
+    # Display the save slots with enhanced information
+    print(Font.SUBTITLE("\nQuantum Storage Cells:"))
+    for i in range(1, 6):
+        slot_data = save_slots[i]
+        
+        if "status" in slot_data:
+            if slot_data["status"] == "Empty":
+                print(f"{Font.COMMAND(str(i) + '.')} {Font.WARNING('Empty Storage Cell')}")
+            else:
+                print(f"{Font.COMMAND(str(i) + '.')} {Font.GLITCH('Corrupted Data')}")
+        else:
+            # Create a formatted save information display
+            character_info = f"{slot_data['character']} (Lvl {slot_data['level']})"
+            chapter_info = f"{slot_data['chapter']}"
+            time_info = f"{slot_data['timestamp']}"
+            
+            print(f"{Font.COMMAND(str(i) + '.')} {Font.PLAYER(character_info)}")
+            print(f"   {Font.INFO(chapter_info)} | {Font.SYSTEM(time_info)}")
+            print(Font.SEPARATOR_THIN)
 
-    print(Font.SEPARATOR)
-    print(Font.MENU("\nSelect an option:"))
-    print(Font.INFO("1. Save Game"))
-    print(Font.INFO("2. Load Game"))
-    print(Font.INFO("3. Delete Save"))
-    print(Font.INFO("0. Return to Main Menu"))
+    print("\n" + Font.COMMAND("6.") + " Return to Main Menu")
 
-    choice = input("\nEnter your choice: ").strip()
-
-    if choice == "1":
-        # Save game
-        slot = input(Font.MENU("\nEnter slot number (1-5): ")).strip()
-        if slot.isdigit() and 1 <= int(slot) <= 5:
-            if save_slots[int(slot)] != "EMPTY":
-                confirm = input(Font.WARNING(f"\nSlot {slot} already contains a save. Overwrite? (y/n): ")).strip().lower()
-                if confirm != 'y':
-                    print(Font.INFO("\nSave operation cancelled."))
+    # Handle user choice
+    valid_choices = [str(i) for i in range(1, 7)]
+    choice = ""
+    while choice not in valid_choices:
+        choice = input(f"\n{Font.MENU('Enter cell number (1-5) or 6 to return:')} ").strip()
+    
+    if choice == "6":
+        return False
+    
+    slot_number = int(choice)
+    
+    # Ask what to do with this slot
+    if "status" not in save_slots[slot_number] or save_slots[slot_number]["status"] != "Empty":
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.SUBTITLE('QUANTUM CELL ' + str(slot_number) + ' OPERATIONS'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        
+        print(f"{Font.COMMAND('1.')} {Font.INFO('Access Stored Memory (Load Game)')}")
+        print(f"{Font.COMMAND('2.')} {Font.INFO('Overwrite Cell Data (Save Current Game)')}")
+        print(f"{Font.COMMAND('3.')} {Font.INFO('Purge Cell Contents (Delete Save)')}")
+        print(f"{Font.COMMAND('4.')} {Font.INFO('Return to Cell Selection')}")
+        
+        valid_actions = ["1", "2", "3", "4"]
+        action = ""
+        while action not in valid_actions:
+            action = input(f"\n{Font.MENU('Enter operation code (1-4):')} ").strip()
+        
+        if action == "1":
+            print_typed("\nAccessing quantum memory storage...", style=Font.SYSTEM)
+            time.sleep(1)
+            loaded = load_game(slot_number)
+            time.sleep(1)
+            return loaded
+        elif action == "2":
+            print_typed("\nPreparing to overwrite quantum cell data...", style=Font.SYSTEM)
+            confirm = input(f"\n{Font.WARNING('Confirm cell overwrite? All existing data will be lost. (y/n):')} ").strip().lower()
+            if confirm == "y":
+                print_typed("\nInitiating memory transfer...", style=Font.SYSTEM)
+                time.sleep(1)
+                save_game(slot_number)
+                time.sleep(1)
+        elif action == "3":
+            print_typed("\nPreparing quantum purge protocol...", style=Font.SYSTEM)
+            confirm = input(f"\n{Font.WARNING('Confirm complete data purge from cell ' + str(slot_number) + '? (y/n):')} ").strip().lower()
+            if confirm == "y":
+                try:
+                    print_typed("\nPurging quantum cell contents...", style=Font.SYSTEM)
                     time.sleep(1)
-                    return
-            save_game(int(slot))
-        else:
-            print(Font.WARNING("\nInvalid slot number. Please choose 1-5."))
-
-    elif choice == "2":
-        # Load game
-        slot = input(Font.MENU("\nEnter slot number to load (1-5): ")).strip()
-        if slot.isdigit() and 1 <= int(slot) <= 5:
-            if save_slots[int(slot)] == "EMPTY":
-                print(Font.WARNING(f"\nSlot {slot} is empty. Nothing to load."))
-            else:
-                return load_game(int(slot))
-        else:
-            print(Font.WARNING("\nInvalid slot number. Please choose 1-5."))
-
-    elif choice == "3":
-        # Delete save
-        slot = input(Font.MENU("\nEnter slot number to delete (1-5): ")).strip()
-        if slot.isdigit() and 1 <= int(slot) <= 5:
-            if save_slots[int(slot)] == "EMPTY":
-                print(Font.WARNING(f"\nSlot {slot} is already empty."))
-            else:
-                confirm = input(Font.WARNING(f"\nAre you sure you want to delete the save in slot {slot}? (y/n): ")).strip().lower()
-                if confirm == 'y':
-                    try:
-                        os.remove(f"saves/save_slot_{slot}.dat")
-                        print(Font.SUCCESS(f"\nSave in slot {slot} deleted successfully."))
-                    except Exception as e:
-                        print(Font.WARNING(f"\nError deleting save: {e}"))
-                else:
-                    print(Font.INFO("\nDelete operation cancelled."))
-        else:
-            print(Font.WARNING("\nInvalid slot number. Please choose 1-5."))
-
-    time.sleep(1.5)
-    return False  # Return value indicates if a game was loaded
+                    os.remove(f"saves/save_slot_{slot_number}.dat")
+                    print(Font.SUCCESS(f"\nQuantum storage cell {slot_number} successfully purged."))
+                    time.sleep(1)
+                except Exception as e:
+                    print(Font.WARNING(f"\nError during purge operation: {e}"))
+                    time.sleep(1)
+    else:
+        print_typed("\nEmpty quantum storage cell detected. Ready for new data.", style=Font.SYSTEM)
+        confirm = input(f"\n{Font.MENU('Store current memory state in cell ' + str(slot_number) + '? (y/n):')} ").strip().lower()
+        if confirm == "y":
+            print_typed("\nInitiating memory transfer...", style=Font.SYSTEM)
+            time.sleep(1)
+            save_game(slot_number)
+            time.sleep(1)
+    
+    input("\nPress Enter to return to Quantum Memory Archive...")
+    return manage_save_slots()  # Return to the save management menu
 
 # Text display effects
 def print_slow(text, delay=0.03, style=None):
@@ -3083,6 +3215,436 @@ def build_companion(player):
     input()
 
 
+def side_quest_system(player, game_state):
+    """Interface for managing side quests and missions
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+    
+    Returns:
+        bool: True if quest was accepted/completed, False otherwise
+    """
+    if "side_quests" not in game_state:
+        game_state["side_quests"] = []
+    
+    if "completed_quests" not in game_state:
+        game_state["completed_quests"] = []
+    
+    clear_screen()
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('MISSION TERMINAL'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {' ' * 46} {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {Font.INFO('Available Assignments & Strategic Objectives'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nAccess your mission log and available side quests:", style=Font.SYSTEM)
+    print_typed("1. View Active Missions", style=Font.MENU)
+    print_typed("2. Browse Available Assignments", style=Font.MENU)
+    print_typed("3. View Completed Missions", style=Font.MENU)
+    print_typed("4. Turn in Completed Objectives", style=Font.MENU)
+    print_typed("0. Return to Previous Interface", style=Font.MENU)
+    
+    choice = input(f"\n{Font.COMMAND('Input command:')} ").strip()
+    
+    if choice == "1":
+        # View active missions
+        clear_screen()
+        print_typed(f"{Font.HEADER('ACTIVE MISSIONS')}\n", style=Font.IMPORTANT)
+        
+        if not game_state["side_quests"]:
+            print_typed("No active missions in your log.", style=Font.INFO)
+            print_typed("Check the Mission Terminal for available assignments.", style=Font.INFO)
+        else:
+            for i, quest in enumerate(game_state["side_quests"]):
+                print(f"{i+1}. {Font.SUBTITLE(quest['name'])}")
+                print(f"   {Font.INFO(quest['description'])}")
+                print(f"   {Font.SYSTEM('Objective:')} {quest['objective']}")
+                print(f"   {Font.WEAPON('Reward:')} {quest['reward_desc']}")
+                
+                # Show progress for tracked quests
+                if 'progress' in quest and 'target' in quest:
+                    progress_percent = min(100, int((quest['progress'] / quest['target']) * 100))
+                    progress_bar = '█' * (progress_percent // 10) + '░' * (10 - (progress_percent // 10))
+                    print(f"   {Font.SYSTEM('Progress:')} [{progress_bar}] {progress_percent}%")
+                print()
+        
+        input(f"\n{Font.COMMAND('Press Enter to return to Mission Terminal...')}")
+        return side_quest_system(player, game_state)
+    
+    elif choice == "2":
+        # Browse available assignments based on current zone
+        clear_screen()
+        print_typed(f"{Font.HEADER('AVAILABLE ASSIGNMENTS')}\n", style=Font.IMPORTANT)
+        
+        # Get available quests based on current zone and chapter
+        available_quests = get_available_quests(game_state["current_zone"], game_state.get("chapter", 1))
+        
+        if not available_quests:
+            print_typed("No assignments available in this area.", style=Font.INFO)
+            print_typed("Try exploring different zones or progressing the main story.", style=Font.INFO)
+        else:
+            for i, quest in enumerate(available_quests):
+                # Check if quest is already active
+                already_active = any(q['id'] == quest['id'] for q in game_state["side_quests"])
+                already_completed = any(q['id'] == quest['id'] for q in game_state["completed_quests"])
+                
+                if already_active:
+                    status = f"{Fore.YELLOW}[ACTIVE]{Style.RESET_ALL}"
+                elif already_completed:
+                    status = f"{Fore.GREEN}[COMPLETED]{Style.RESET_ALL}"
+                else:
+                    status = f"{Fore.CYAN}[AVAILABLE]{Style.RESET_ALL}"
+                
+                print(f"{i+1}. {Font.SUBTITLE(quest['name'])} {status}")
+                print(f"   {Font.INFO(quest['description'])}")
+                print(f"   {Font.SYSTEM('Objective:')} {quest['objective']}")
+                print(f"   {Font.WEAPON('Reward:')} {quest['reward_desc']}")
+                print(f"   {Font.LORE('Source:')} {quest['giver']}")
+                print()
+            
+            # Allow player to accept a quest
+            print_typed("\nEnter quest number to accept, or 0 to return:", style=Font.COMMAND)
+            try:
+                quest_choice = int(input(f"{Font.COMMAND('Input:')} ").strip())
+                if 1 <= quest_choice <= len(available_quests):
+                    selected_quest = available_quests[quest_choice-1]
+                    
+                    # Check if already active or completed
+                    if any(q['id'] == selected_quest['id'] for q in game_state["side_quests"]):
+                        print_typed("\nThis assignment is already in your active mission log.", style=Font.WARNING)
+                    elif any(q['id'] == selected_quest['id'] for q in game_state["completed_quests"]):
+                        print_typed("\nYou have already completed this assignment.", style=Font.SUCCESS)
+                    else:
+                        # Add to active quests with initial progress
+                        new_quest = selected_quest.copy()
+                        if 'target' in new_quest:
+                            new_quest['progress'] = 0
+                        game_state["side_quests"].append(new_quest)
+                        
+                        print_typed(f"\n{Font.SUCCESS('Assignment accepted:')} {new_quest['name']}", style=Font.IMPORTANT)
+                        print_typed("Details added to your mission log.", style=Font.SYSTEM)
+                
+                time.sleep(1)
+            except ValueError:
+                pass
+        
+        input(f"\n{Font.COMMAND('Press Enter to return to Mission Terminal...')}")
+        return side_quest_system(player, game_state)
+    
+    elif choice == "3":
+        # View completed missions
+        clear_screen()
+        print_typed(f"{Font.HEADER('COMPLETED MISSIONS')}\n", style=Font.SUCCESS)
+        
+        if not game_state["completed_quests"]:
+            print_typed("No completed missions in your log.", style=Font.INFO)
+        else:
+            for i, quest in enumerate(game_state["completed_quests"]):
+                print(f"{i+1}. {Font.SUBTITLE(quest['name'])}")
+                print(f"   {Font.INFO(quest['description'])}")
+                print(f"   {Font.SUCCESS('Status: Objective Complete')}")
+                print(f"   {Font.WEAPON('Reward:')} {quest['reward_desc']}")
+                print(f"   {Font.LORE('Source:')} {quest['giver']}")
+                
+                # Show date completed if tracked
+                if 'completed_date' in quest:
+                    print(f"   {Font.SYSTEM('Completed:')} {quest['completed_date']}")
+                print()
+        
+        input(f"\n{Font.COMMAND('Press Enter to return to Mission Terminal...')}")
+        return side_quest_system(player, game_state)
+    
+    elif choice == "4":
+        # Turn in completed objectives
+        clear_screen()
+        print_typed(f"{Font.HEADER('TURN IN COMPLETED OBJECTIVES')}\n", style=Font.IMPORTANT)
+        
+        completed_but_not_turned_in = []
+        for quest in game_state["side_quests"]:
+            if 'progress' in quest and 'target' in quest and quest['progress'] >= quest['target']:
+                completed_but_not_turned_in.append(quest)
+        
+        if not completed_but_not_turned_in:
+            print_typed("No completed objectives ready to turn in.", style=Font.INFO)
+            print_typed("Continue your missions to meet objectives.", style=Font.INFO)
+        else:
+            print_typed("The following assignments are ready to turn in:", style=Font.SUCCESS)
+            for i, quest in enumerate(completed_but_not_turned_in):
+                print(f"{i+1}. {Font.SUBTITLE(quest['name'])}")
+                print(f"   {Font.INFO(quest['objective'])}")
+                print(f"   {Font.SUCCESS('Status: COMPLETE')}")
+                print(f"   {Font.WEAPON('Reward:')} {quest['reward_desc']}")
+                print()
+            
+            # Allow player to turn in a quest
+            print_typed("\nEnter quest number to turn in, or 0 to return:", style=Font.COMMAND)
+            try:
+                quest_choice = int(input(f"{Font.COMMAND('Input:')} ").strip())
+                if 1 <= quest_choice <= len(completed_but_not_turned_in):
+                    selected_quest = completed_but_not_turned_in[quest_choice-1]
+                    
+                    # Award rewards
+                    print_typed(f"\n{Font.SUCCESS('MISSION COMPLETE:')} {selected_quest['name']}", style=Font.IMPORTANT)
+                    print_typed("Receiving rewards:", style=Font.SYSTEM)
+                    
+                    # Apply rewards based on type
+                    if selected_quest['reward_type'] == 'exp':
+                        player.gain_experience(selected_quest['reward_value'])
+                        print_typed(f"• {selected_quest['reward_value']} experience gained", style=Font.SUCCESS)
+                    elif selected_quest['reward_type'] == 'item':
+                        for item_name, item_count in selected_quest['reward_items'].items():
+                            if item_name not in player.inventory:
+                                player.inventory[item_name] = 0
+                            player.inventory[item_name] += item_count
+                            print_typed(f"• {item_count}x {item_name} added to inventory", style=Font.SUCCESS)
+                    elif selected_quest['reward_type'] == 'credits':
+                        game_state['credits'] = game_state.get('credits', 0) + selected_quest['reward_value']
+                        print_typed(f"• {selected_quest['reward_value']} credits transferred to account", style=Font.SUCCESS)
+                    elif selected_quest['reward_type'] == 'special':
+                        # Handle special rewards like unlocking characters
+                        handle_special_reward(player, game_state, selected_quest['reward_special'])
+                    
+                    # Move from active to completed
+                    game_state["side_quests"].remove(selected_quest)
+                    selected_quest['completed_date'] = "Day " + str(game_state.get('game_day', 1))
+                    game_state["completed_quests"].append(selected_quest)
+                    
+                    print_typed("\nMission data transferred to completed records.", style=Font.SYSTEM)
+                    time.sleep(2)
+            except ValueError:
+                pass
+        
+        input(f"\n{Font.COMMAND('Press Enter to return to Mission Terminal...')}")
+        return side_quest_system(player, game_state)
+    
+    elif choice == "0":
+        return False
+    
+    else:
+        print_typed("\nInvalid selection. Please try again.", style=Font.WARNING)
+        time.sleep(1)
+        return side_quest_system(player, game_state)
+
+def get_available_quests(current_zone, chapter):
+    """Get available side quests based on current zone and chapter
+    
+    Args:
+        current_zone: The current zone name
+        chapter: The current chapter number
+    
+    Returns:
+        list: List of available quest dictionaries
+    """
+    available_quests = []
+    
+    # Earth quests (Chapter 1)
+    if chapter == 1:
+        if "Laboratory" in current_zone:
+            available_quests.append({
+                'id': 'earth_lab_data',
+                'name': 'Salvaging Research Data',
+                'description': 'The facility\'s quantum data cores contain valuable research. Recover what you can.',
+                'objective': 'Download data from 3 lab terminals',
+                'target': 3,
+                'giver': 'Emergency Protocol Subroutine',
+                'reward_type': 'item',
+                'reward_items': {'Neural Chip': 1, 'Data Fragment': 3},
+                'reward_desc': 'Neural Chip upgrade + 3 Data Fragments',
+                'zone_requirement': 'Laboratory'
+            })
+            
+        if "Corridor" in current_zone:
+            available_quests.append({
+                'id': 'earth_drone_parts',
+                'name': 'Salvaging Drone Components',
+                'description': 'Several maintenance drones have been destroyed. Their components could be useful.',
+                'objective': 'Collect 5 drone components',
+                'target': 5,
+                'giver': 'Facility Maintenance Protocol',
+                'reward_type': 'exp',
+                'reward_value': 200,
+                'reward_desc': '200 XP + Improved hacking ability',
+                'zone_requirement': 'Corridor'
+            })
+            
+        if "Server Room" in current_zone:
+            available_quests.append({
+                'id': 'earth_ai_logs',
+                'name': 'The Last Transmission',
+                'description': 'The facility\'s logs may contain information about what happened to Earth.',
+                'objective': 'Find and decrypt the final AI transmission log',
+                'giver': 'Damaged Terminal Interface',
+                'reward_type': 'special',
+                'reward_special': 'earth_story_unlock',
+                'reward_desc': 'Unlock additional story revelations + 150 XP',
+                'zone_requirement': 'Server Room'
+            })
+    
+    # Yanglong V quests (Chapter 2)
+    elif chapter == 2:
+        if "Mining Outpost" in current_zone:
+            available_quests.append({
+                'id': 'yanglong_rare_mineral',
+                'name': 'Rare Mineral Extraction',
+                'description': 'The mining outpost contains rare quantum-stable minerals that could enhance your weapons.',
+                'objective': 'Collect 7 Quantum Crystal samples',
+                'target': 7,
+                'giver': 'Abandoned Mining Terminal',
+                'reward_type': 'item',
+                'reward_items': {'Quantum Stabilizer': 1, 'Shield Matrix': 2},
+                'reward_desc': 'Quantum Stabilizer + 2 Shield Matrices',
+                'zone_requirement': 'Mining Outpost'
+            })
+            
+        if "Colony Ruins" in current_zone:
+            available_quests.append({
+                'id': 'yanglong_survivors',
+                'name': 'Lost Colony Survivors',
+                'description': 'There may be survivors from the colony hidden in emergency bunkers.',
+                'objective': 'Locate and check 3 emergency bunkers',
+                'target': 3,
+                'giver': 'Colony Emergency Beacon',
+                'reward_type': 'exp',
+                'reward_value': 300,
+                'reward_desc': '300 XP + Survival Technique Upgrade',
+                'zone_requirement': 'Colony Ruins'
+            })
+    
+    # White Hole quests (Chapter 3)
+    elif chapter == 3:
+        if "Reality Fracture" in current_zone:
+            available_quests.append({
+                'id': 'whitehole_stabilize',
+                'name': 'Reality Stabilization',
+                'description': 'The White Hole is destabilizing local reality. Place quantum anchors to stabilize the region.',
+                'objective': 'Place 5 quantum anchors at designated coordinates',
+                'target': 5,
+                'giver': 'Quantum Physicist Echo',
+                'reward_type': 'item',
+                'reward_items': {'Reality Shard': 3, 'Dimensional Key': 1},
+                'reward_desc': '3 Reality Shards + Dimensional Key',
+                'zone_requirement': 'Reality Fracture'
+            })
+    
+    # Thalassia 1 quests (Chapter 4)
+    elif chapter == 4:
+        if "Underwater Research" in current_zone:
+            available_quests.append({
+                'id': 'thalassia_specimens',
+                'name': 'Xenobiological Specimens',
+                'description': 'The unique salt-based lifeforms on Thalassia 1 have remarkable properties. Collect specimens for analysis.',
+                'objective': 'Collect 6 salt-life specimens',
+                'target': 6,
+                'giver': 'Research Database Fragment',
+                'reward_type': 'item',
+                'reward_items': {'Bio-Enhancer': 1, 'Salt Crystal': 4},
+                'reward_desc': 'Bio-Enhancer + 4 Salt Crystals',
+                'zone_requirement': 'Underwater Research'
+            })
+    
+    # H-79760 System quests (Chapter 5)
+    elif chapter == 5:
+        if "Terminus" in current_zone:
+            available_quests.append({
+                'id': 'terminus_beacon',
+                'name': 'Emergency Beacon Network',
+                'description': 'Setting up a network of emergency beacons could help any survivors in the system.',
+                'objective': 'Install 4 emergency beacons across Terminus',
+                'target': 4,
+                'giver': 'Emergency Communication System',
+                'reward_type': 'credits',
+                'reward_value': 500,
+                'reward_desc': '500 Credits + Enhanced Communications',
+                'zone_requirement': 'Terminus'
+            })
+            
+        if "Novaris" in current_zone:
+            available_quests.append({
+                'id': 'novaris_water',
+                'name': 'Water Reclamation Project',
+                'description': 'Novaris is critically low on water. Ancient aquifers may still exist deep underground.',
+                'objective': 'Locate and tap 3 underground aquifers',
+                'target': 3,
+                'giver': 'Dehydrated Survivor',
+                'reward_type': 'exp',
+                'reward_value': 400,
+                'reward_desc': '400 XP + Survival Skill Enhancement',
+                'zone_requirement': 'Novaris'
+            })
+    
+    # Paradox Horizon quests (Chapter 6)
+    elif chapter == 6:
+        if "Temporal Anomaly" in current_zone:
+            available_quests.append({
+                'id': 'paradox_echoes',
+                'name': 'Temporal Echoes',
+                'description': 'Time-displaced echoes of past events are scattered throughout the anomaly. Recording them could provide valuable insights.',
+                'objective': 'Record 5 temporal echoes',
+                'target': 5,
+                'giver': 'Paradox Researcher Echo',
+                'reward_type': 'item',
+                'reward_items': {'Chronon Stabilizer': 1, 'Time Fragment': 3},
+                'reward_desc': 'Chronon Stabilizer + 3 Time Fragments',
+                'zone_requirement': 'Temporal Anomaly'
+            })
+    
+    # Primor Aetherium quests (Chapter 7)
+    elif chapter == 7:
+        if "Primor Aetherium" in current_zone:
+            available_quests.append({
+                'id': 'primor_void_intel',
+                'name': 'Void Harmonic Intelligence',
+                'description': 'Gather intelligence on Void Harmonic movement and plans to help the Yitrian defense.',
+                'objective': 'Collect 6 Void Harmonic data packets',
+                'target': 6,
+                'giver': 'Vex-Na, Yitrian Ambassador',
+                'reward_type': 'item',
+                'reward_items': {'Yitrian Shield Module': 1, 'Non-Euclidean Schematics': 2},
+                'reward_desc': 'Yitrian Shield Module + 2 Non-Euclidean Schematics',
+                'zone_requirement': 'Primor Aetherium'
+            })
+            
+            available_quests.append({
+                'id': 'primor_civilians',
+                'name': 'Civilian Evacuation',
+                'description': 'Void Harmonic forces have occupied the Eastern District. Civilians need evacuation to safe zones.',
+                'objective': 'Evacuate 8 Yitrian civilian groups',
+                'target': 8,
+                'giver': 'Yitrian Security Officer',
+                'reward_type': 'credits',
+                'reward_value': 800,
+                'reward_desc': '800 Credits + Increased Yitrian Trust',
+                'zone_requirement': 'Primor Aetherium'
+            })
+    
+    return available_quests
+
+def handle_special_reward(player, game_state, reward_id):
+    """Handle special rewards from quests
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+        reward_id: The ID of the special reward
+    
+    Returns:
+        None
+    """
+    if reward_id == 'earth_story_unlock':
+        print_typed("• Unlocked additional Earth story content", style=Font.SUCCESS)
+        print_typed("• +150 XP gained", style=Font.SUCCESS)
+        player.gain_experience(150)
+        game_state['earth_extended_story'] = True
+    
+    elif reward_id == 'hyuki_encounter':
+        print_typed("• Unlocked special encounter with Hyuki", style=Font.SUCCESS)
+        print_typed("• +300 XP gained", style=Font.SUCCESS)
+        player.gain_experience(300)
+        game_state['hyuki_encounter_available'] = True
+    
+    # Add other special rewards as needed
+
 def manage_companions(player):
     """Manage and view active companions"""
     clear_screen()
@@ -3251,6 +3813,665 @@ def show_game_stats():
     input()
 
 
+def use_time_manipulation(player, enemy, combat_state):
+    """Use time fragments to manipulate time during combat
+    
+    Args:
+        player: The player character
+        enemy: The enemy character
+        combat_state: The current state of combat
+        
+    Returns:
+        bool: True if a time ability was used, False otherwise
+    """
+    if game_state.get("time_fragments", 0) <= 0:
+        print_typed("\nYou have no time fragments to use for temporal manipulation.", style=Font.WARNING)
+        return False
+    
+    clear_screen()
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('TEMPORAL MANIPULATION'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed(f"\nAvailable Time Fragments: {Font.SUCCESS(str(game_state.get('time_fragments', 0)))}", style=Font.INFO)
+    print_typed("\nYou can use time fragments to manipulate the flow of time in combat.", style=Font.INFO)
+    
+    print(f"\n{Font.MENU('Available Temporal Abilities:')}")
+    print(f"{Font.COMMAND('1.')} {Font.INFO('Rewind (3 fragments)')} - Reverse the last enemy attack")
+    print(f"{Font.COMMAND('2.')} {Font.INFO('Accelerate (2 fragments)')} - Take an additional action this turn")
+    print(f"{Font.COMMAND('3.')} {Font.INFO('Glimpse (1 fragment)')} - See the enemy's next attack")
+    print(f"{Font.COMMAND('4.')} {Font.INFO('Time Stop (5 fragments)')} - Freeze time and attack with guaranteed critical")
+    
+    if game_state["protagonist"]["name"] == "Hyuki Nakamura":
+        print(f"{Font.COMMAND('5.')} {Font.SUCCESS('[Hyuki Special] Timeline Shift (4 fragments)')} - Switch to an alternate timeline version of this battle")
+        valid_choices = ["1", "2", "3", "4", "5", "0"]
+    else:
+        valid_choices = ["1", "2", "3", "4", "0"]
+    
+    print(f"{Font.COMMAND('0.')} {Font.INFO('Return to combat menu')}")
+    
+    choice = ""
+    while choice not in valid_choices:
+        choice = input(f"\n{Font.MENU('Select temporal ability:')} ").strip()
+    
+    if choice == "0":
+        return False
+    
+    # Rewind
+    if choice == "1":
+        if game_state.get("time_fragments", 0) >= 3:
+            if combat_state.get("last_enemy_damage", 0) > 0:
+                print_typed("\nYou focus on your time fragments, which begin to glow with", style=Font.PLAYER)
+                print_typed("otherworldly energy. The air around you ripples as you pull", style=Font.PLAYER)
+                print_typed("the local timeline backward.", style=Font.PLAYER)
+                
+                print_glitch(">>> REWINDING TIMELINE <<<")
+                time.sleep(1)
+                
+                # Restore player health from last enemy attack
+                last_damage = combat_state.get("last_enemy_damage", 0)
+                player.health += last_damage
+                
+                game_state["time_fragments"] -= 3
+                
+                print_typed(f"\nTime rewinds to before the enemy's attack. You regain {Font.SUCCESS(str(last_damage))} health!", style=Font.SUCCESS)
+                print_typed(f"Time Fragments remaining: {Font.INFO(str(game_state.get('time_fragments', 0)))}", style=Font.INFO)
+                time.sleep(1)
+                return True
+            else:
+                print_typed("\nThere is no enemy attack to rewind.", style=Font.WARNING)
+                return False
+        else:
+            print_typed("\nYou don't have enough time fragments for this ability.", style=Font.WARNING)
+            return False
+    
+    # Accelerate
+    elif choice == "2":
+        if game_state.get("time_fragments", 0) >= 2:
+            print_typed("\nYou channel the energy of your time fragments, accelerating your", style=Font.PLAYER)
+            print_typed("personal timeline. To the enemy, you appear to move at impossible speeds.", style=Font.PLAYER)
+            
+            print_glitch(">>> ACCELERATING TIMELINE <<<")
+            time.sleep(1)
+            
+            # Grant an extra action
+            combat_state["extra_action"] = True
+            game_state["time_fragments"] -= 2
+            
+            print_typed("\nTime accelerates around you, granting an additional action this turn!", style=Font.SUCCESS)
+            print_typed(f"Time Fragments remaining: {Font.INFO(str(game_state.get('time_fragments', 0)))}", style=Font.INFO)
+            time.sleep(1)
+            return True
+        else:
+            print_typed("\nYou don't have enough time fragments for this ability.", style=Font.WARNING)
+            return False
+    
+    # Glimpse
+    elif choice == "3":
+        if game_state.get("time_fragments", 0) >= 1:
+            print_typed("\nYou focus on a single time fragment, which gives you a brief glimpse", style=Font.PLAYER)
+            print_typed("into the immediate future.", style=Font.PLAYER)
+            
+            print_glitch(">>> GLIMPSING FUTURE TIMELINE <<<")
+            time.sleep(1)
+            
+            # Determine enemy's next attack
+            next_attack = random.choice(["melee", "ranged", "special"])
+            damage_preview = max(1, enemy.attack - player.defense // 2)
+            
+            if next_attack == "melee":
+                print_typed(f"\nVision: {Font.ENEMY(enemy.name)} will use a melee attack next turn,", style=Font.GLITCH)
+                print_typed(f"dealing approximately {Font.WARNING(str(damage_preview))} damage.", style=Font.GLITCH)
+            elif next_attack == "ranged":
+                print_typed(f"\nVision: {Font.ENEMY(enemy.name)} will use a ranged attack next turn,", style=Font.GLITCH)
+                print_typed(f"dealing approximately {Font.WARNING(str(damage_preview))} damage.", style=Font.GLITCH)
+            else:
+                print_typed(f"\nVision: {Font.ENEMY(enemy.name)} will use a special ability next turn,", style=Font.GLITCH)
+                print_typed("with unknown effects.", style=Font.GLITCH)
+            
+            # Set enemy's next attack to match the vision
+            combat_state["enemy_next_attack"] = next_attack
+            game_state["time_fragments"] -= 1
+            
+            print_typed(f"\nTime Fragments remaining: {Font.INFO(str(game_state.get('time_fragments', 0)))}", style=Font.INFO)
+            time.sleep(1)
+            return True
+        else:
+            print_typed("\nYou don't have enough time fragments for this ability.", style=Font.WARNING)
+            return False
+    
+    # Time Stop
+    elif choice == "4":
+        if game_state.get("time_fragments", 0) >= 5:
+            print_typed("\nYou focus intensely on all your time fragments. They orbit around you", style=Font.PLAYER)
+            print_typed("in a complex pattern before merging into a brilliant flash of light.", style=Font.PLAYER)
+            
+            print_glitch(">>> STOPPING TIME <<<")
+            time.sleep(1)
+            
+            print_typed("\nTime freezes completely around you. The enemy is motionless, suspended", style=Font.LORE)
+            print_typed("in a single moment. You carefully line up the perfect attack.", style=Font.LORE)
+            
+            # Calculate critical damage
+            critical_damage = player.attack * 2
+            enemy.health -= critical_damage
+            
+            game_state["time_fragments"] -= 5
+            
+            print_typed(f"\nYou deal {Font.SUCCESS(str(critical_damage))} critical damage while time is frozen!", style=Font.SUCCESS)
+            print_typed(f"Time Fragments remaining: {Font.INFO(str(game_state.get('time_fragments', 0)))}", style=Font.INFO)
+            
+            print_glitch(">>> TIME RESUMES <<<")
+            time.sleep(1)
+            return True
+        else:
+            print_typed("\nYou don't have enough time fragments for this ability.", style=Font.WARNING)
+            return False
+    
+    # Timeline Shift (Hyuki Special)
+    elif choice == "5" and game_state["protagonist"]["name"] == "Hyuki Nakamura":
+        if game_state.get("time_fragments", 0) >= 4:
+            print_typed("\nHyuki's eyes glow with quantum energy as she manipulates the temporal", style=Font.PLAYER)
+            print_typed("fragments in ways only she understands, reaching out to an alternate", style=Font.PLAYER)
+            print_typed("timeline where this battle is progressing more favorably.", style=Font.PLAYER)
+            
+            print_glitch(">>> SHIFTING TIMELINES <<<")
+            time.sleep(1)
+            
+            # Reset the battle state favorably
+            health_boost = player.max_health // 3
+            player.health = min(player.max_health, player.health + health_boost)
+            
+            # Enemy suffers a temporal disruption
+            temporal_damage = enemy.max_health // 4
+            enemy.health -= temporal_damage
+            
+            # Apply confusion status to enemy
+            enemy.status_effects.append({
+                "name": "temporal_disruption",
+                "duration": 3,
+                "effect": "confused"
+            })
+            
+            game_state["time_fragments"] -= 4
+            
+            print_typed(f"\nYou shift to a more favorable timeline! You recover {Font.SUCCESS(str(health_boost))} health", style=Font.SUCCESS)
+            print_typed(f"and {Font.ENEMY(enemy.name)} takes {Font.SUCCESS(str(temporal_damage))} damage from temporal disruption!", style=Font.SUCCESS)
+            print_typed("The enemy is confused for 3 turns due to timeline inconsistency.", style=Font.SUCCESS)
+            print_typed(f"Time Fragments remaining: {Font.INFO(str(game_state.get('time_fragments', 0)))}", style=Font.INFO)
+            time.sleep(1)
+            return True
+        else:
+            print_typed("\nYou don't have enough time fragments for this ability.", style=Font.WARNING)
+            return False
+    
+    return False
+
+def get_branching_story_choices(zone_name, chapter, game_state):
+    """Get available story branch choices based on current zone and story progression
+    
+    Args:
+        zone_name: Current zone name
+        chapter: Current chapter number
+        game_state: The game state containing story flags
+    
+    Returns:
+        list: Available story branch choices with descriptions and consequences
+    """
+    choices = []
+    
+    # Chapter 1 - Earth branching choices
+    if chapter == 1:
+        if "Server Room" in zone_name and game_state.get("malware_server_defeated", False):
+            choices.append({
+                'id': 'earth_escape_method',
+                'prompt': 'How will you escape Earth?',
+                'description': 'With the Malware Server defeated, you need to choose your escape method.',
+                'options': [
+                    {
+                        'text': 'Use the quantum teleporter to reach Yanglong V directly',
+                        'consequence': 'Faster travel but arrive with damaged equipment',
+                        'flag': 'quantum_teleport_escape'
+                    },
+                    {
+                        'text': 'Take the shuttle for a conventional space journey',
+                        'consequence': 'Slower travel but opportunity to salvage more resources en route',
+                        'flag': 'shuttle_escape'
+                    },
+                    {
+                        'text': 'Send distress signal and wait for potential rescue',
+                        'consequence': 'Uncertain wait time, but possibility of finding other survivors',
+                        'flag': 'distress_signal_escape'
+                    }
+                ]
+            })
+    
+    # Chapter 2 - Yanglong V branching choices
+    elif chapter == 2:
+        if "Colony Center" in zone_name and game_state.get("colony_explored", False):
+            choices.append({
+                'id': 'yanglong_colony_approach',
+                'prompt': 'How will you approach the abandoned colony?',
+                'description': 'The colony shows signs of both human and alien technology. Your approach will determine what you find.',
+                'options': [
+                    {
+                        'text': 'Scientific investigation - analyze the technology integration',
+                        'consequence': 'Gain technological insights but risk activating dangerous systems',
+                        'flag': 'scientific_colony_approach'
+                    },
+                    {
+                        'text': 'Military reconnaissance - secure the area before exploration',
+                        'consequence': 'Safer exploration but miss subtle technological details',
+                        'flag': 'military_colony_approach'
+                    },
+                    {
+                        'text': 'Archaeological approach - focus on reconstructing the colony\'s history',
+                        'consequence': 'Discover historical insights but slower progress',
+                        'flag': 'archaeological_colony_approach'
+                    }
+                ]
+            })
+    
+    # Chapter 3 - White Hole branching choices  
+    elif chapter == 3:
+        if "Core Nexus" in zone_name and not game_state.get("white_hole_decision_made", False):
+            choices.append({
+                'id': 'white_hole_approach',
+                'prompt': 'How will you navigate the White Hole reality?',
+                'description': 'The White Hole distorts conventional physics. Your approach affects your journey.',
+                'options': [
+                    {
+                        'text': 'Embrace the chaos - allow the white hole to guide your path',
+                        'consequence': 'Unpredictable journey but potential for unique discoveries',
+                        'flag': 'embrace_chaos_approach'
+                    },
+                    {
+                        'text': 'Resist the anomalies - attempt to maintain conventional physics',
+                        'consequence': 'More stable journey but requires constant effort and energy',
+                        'flag': 'resist_anomalies_approach'
+                    },
+                    {
+                        'text': 'Adaptive approach - selectively interact with anomalies',
+                        'consequence': 'Balanced approach with moderate stability and discoveries',
+                        'flag': 'adaptive_anomalies_approach'
+                    }
+                ]
+            })
+    
+    # Chapter 4 - Thalassia 1 branching choices
+    elif chapter == 4:
+        if "Underwater Research" in zone_name and game_state.get("neurovore_encountered", False):
+            choices.append({
+                'id': 'thalassia_neurovore',
+                'prompt': 'How will you deal with the Neurovore threat?',
+                'description': 'The Neurovores are psychic predators that consume consciousness. They can be approached in different ways.',
+                'options': [
+                    {
+                        'text': 'Elimination - destroy the Neurovore nest completely',
+                        'consequence': 'Safest option but potentially destroys unique lifeforms',
+                        'flag': 'eliminate_neurovores'
+                    },
+                    {
+                        'text': 'Containment - seal the Neurovores in their current location',
+                        'consequence': 'Preserves the species but requires maintaining containment',
+                        'flag': 'contain_neurovores'
+                    },
+                    {
+                        'text': 'Communication - attempt to establish psychic contact',
+                        'consequence': 'Could lead to understanding but high risk of mental damage',
+                        'flag': 'communicate_neurovores'
+                    }
+                ]
+            })
+    
+    # Chapter 5 - H-79760 System branching choices
+    elif chapter == 5:
+        if game_state.get("h79760_planets_visited", 0) >= 3 and not game_state.get("h79760_path_chosen", False):
+            choices.append({
+                'id': 'h79760_exploration',
+                'prompt': 'How will you continue your system exploration?',
+                'description': 'With several planets explored, you must decide how to proceed in the H-79760 system.',
+                'options': [
+                    {
+                        'text': 'Focus on finding human survivors',
+                        'consequence': 'Prioritize habitable planets and rescue operations',
+                        'flag': 'survivor_focus'
+                    },
+                    {
+                        'text': 'Focus on technological discoveries',
+                        'consequence': 'Prioritize planets with advanced technology signatures',
+                        'flag': 'technology_focus'
+                    },
+                    {
+                        'text': 'Focus on understanding the local ecosystem',
+                        'consequence': 'Study the unique planetary interactions in this system',
+                        'flag': 'ecosystem_focus'
+                    }
+                ]
+            })
+    
+    # Chapter 6 - Paradox Horizon branching choices
+    elif chapter == 6:
+        if "Temporal Anomaly" in zone_name and game_state.get("chrono_sentient_encountered", False):
+            choices.append({
+                'id': 'chrono_sentient_approach',
+                'prompt': 'How will you interact with the Chrono-Sentient?',
+                'description': 'The interdimensional Chrono-Sentient offers multiple paths of interaction.',
+                'options': [
+                    {
+                        'text': 'Request knowledge of the past',
+                        'consequence': 'Learn historical truths about Earth\'s fall',
+                        'flag': 'past_knowledge_request'
+                    },
+                    {
+                        'text': 'Request glimpses of potential futures',
+                        'consequence': 'Gain insights into possible outcomes of your journey',
+                        'flag': 'future_glimpse_request'
+                    },
+                    {
+                        'text': 'Request temporal manipulation abilities',
+                        'consequence': 'Enhance your ability to control time in limited ways',
+                        'flag': 'temporal_ability_request'
+                    }
+                ]
+            })
+    
+    # Chapter 7 - Primor Aetherium branching choices
+    elif chapter == 7:
+        if "Primor Aetherium" in zone_name and game_state.get("void_harmonic_conflict", False):
+            choices.append({
+                'id': 'void_harmonic_approach',
+                'prompt': 'How will you address the Void Harmonic threat?',
+                'description': 'The Void Harmonics seek to unify consciousness. Your approach will determine Primor\'s fate.',
+                'options': [
+                    {
+                        'text': 'Direct confrontation - engage their leadership directly',
+                        'consequence': 'High-risk approach but potential for decisive victory',
+                        'flag': 'confront_void_harmonics'
+                    },
+                    {
+                        'text': 'Subversion - infiltrate their ranks to undermine from within',
+                        'consequence': 'Slower approach but safer and may avoid widespread conflict',
+                        'flag': 'subvert_void_harmonics'
+                    },
+                    {
+                        'text': 'Diplomatic approach - attempt to negotiate with moderate factions',
+                        'consequence': 'Could prevent conflict but requires compromises',
+                        'flag': 'negotiate_void_harmonics'
+                    }
+                ]
+            })
+    
+    return choices
+
+def present_branching_choice(choice_data, game_state):
+    """Present a branching story choice to the player
+    
+    Args:
+        choice_data: The choice data structure with options
+        game_state: The game state to update based on choice
+    
+    Returns:
+        str: The flag representing the player's choice
+    """
+    clear_screen()
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('CRITICAL DECISION POINT'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed(f"\n{Font.IMPORTANT(choice_data['prompt'])}", style=Font.HEADER)
+    print_typed(f"\n{choice_data['description']}", style=Font.LORE)
+    
+    print_typed("\nYour decision will have lasting consequences on your journey:", style=Font.WARNING)
+    print()
+    
+    # Display options with consequences
+    for i, option in enumerate(choice_data['options']):
+        print(f"{i+1}. {Font.SUBTITLE(option['text'])}")
+        print(f"   {Font.INFO(option['consequence'])}")
+        print()
+    
+    # Get player choice
+    valid_choice = False
+    selected_flag = None
+    
+    while not valid_choice:
+        try:
+            options_count = len(choice_data['options'])
+            choice_num = int(input(f"{Font.COMMAND('Enter your choice (1-'+str(options_count)+'):')} "))
+            if 1 <= choice_num <= len(choice_data['options']):
+                valid_choice = True
+                selected_option = choice_data['options'][choice_num-1]
+                selected_flag = selected_option['flag']
+                
+                # Set the flag in game state
+                game_state[selected_flag] = True
+                
+                # Set a flag to indicate this branch was decided
+                game_state[f"{choice_data['id']}_decided"] = True
+                
+                # Display the result of the choice
+                print_typed(f"\n{Font.IMPORTANT('You chose:')} {selected_option['text']}", style=Font.SYSTEM)
+                print_typed(f"\n{Font.INFO('Your decision will alter the course of your journey...')}", style=Font.LORE)
+                time.sleep(2)
+            else:
+                print_typed("\nInvalid choice. Please select a valid option.", style=Font.WARNING)
+        except ValueError:
+            print_typed("\nInvalid input. Please enter a number.", style=Font.WARNING)
+    
+    return selected_flag
+
+def check_and_process_branching_stories(player, game_state):
+    """Check if any branching story points are available and process them
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+    
+    Returns:
+        bool: True if a branch was processed, False otherwise
+    """
+    # Get current zone and chapter
+    current_zone = game_state.get("current_zone", "")
+    current_chapter = game_state.get("chapter", 1)
+    
+    # Get available choices for current zone/chapter
+    available_choices = get_branching_story_choices(current_zone, current_chapter, game_state)
+    
+    if available_choices:
+        # Process the first available choice
+        choice = available_choices[0]
+        
+        # Check if this choice was already decided
+        if not game_state.get(f"{choice['id']}_decided", False):
+            selected_flag = present_branching_choice(choice, game_state)
+            
+            # Process the consequences of the choice
+            process_branching_consequences(selected_flag, player, game_state)
+            
+            return True
+    
+    return False
+
+def process_branching_consequences(selected_flag, player, game_state):
+    """Process the consequences of a branching story choice
+    
+    Args:
+        selected_flag: The flag representing the player's choice
+        player: The player character
+        game_state: The current game state
+    """
+    # Earth escape method consequences
+    if selected_flag == 'quantum_teleport_escape':
+        print_typed("\nYou activate the quantum teleporter...", style=Font.SYSTEM)
+        print_typed("The world dissolves around you in a cascade of blue light.", style=Font.PLAYER)
+        print_typed("When your vision clears, you find yourself on Yanglong V.", style=Font.PLAYER)
+        
+        # Apply consequences
+        print_typed("\nYour equipment suffered damage during teleportation:", style=Font.WARNING)
+        print_typed("- Shield capacity reduced by 20%", style=Font.WARNING)
+        print_typed("- Scanner range decreased", style=Font.WARNING)
+        
+        # Update player stats
+        if "shield_max" in game_state:
+            game_state["shield_max"] = int(game_state["shield_max"] * 0.8)
+        game_state["scanner_degraded"] = True
+        
+        # But provide a benefit
+        print_typed("\nHowever, the teleportation was instantaneous:", style=Font.SUCCESS)
+        print_typed("- Arrived at Yanglong V without aging", style=Font.SUCCESS)
+        print_typed("- Quantum particles in your body slightly enhanced", style=Font.SUCCESS)
+        
+        # Update player stats positively too
+        player.defense += 5  # Quantum particle enhancement
+    
+    elif selected_flag == 'shuttle_escape':
+        print_typed("\nYou board the shuttle and initiate launch sequence...", style=Font.SYSTEM)
+        print_typed("The engines roar to life as you break free of Earth's atmosphere.", style=Font.PLAYER)
+        print_typed("The journey to Yanglong V will take several days.", style=Font.PLAYER)
+        
+        # Apply consequences
+        print_typed("\nDuring your journey, you discover several useful items:", style=Font.SUCCESS)
+        print_typed("- Additional med-kits in the storage compartment", style=Font.SUCCESS)
+        print_typed("- Spare parts to enhance your equipment", style=Font.SUCCESS)
+        
+        # Update player inventory
+        if "med_kit" not in player.inventory:
+            player.inventory["med_kit"] = 0
+        player.inventory["med_kit"] += 3
+        
+        if "spare_parts" not in player.inventory:
+            player.inventory["spare_parts"] = 0
+        player.inventory["spare_parts"] += 5
+        
+        print_typed("\nYou've had time to study the ship's database:", style=Font.SUCCESS)
+        print_typed("- Gained knowledge about Yanglong V's geography", style=Font.SUCCESS)
+        print_typed("- Unlocked additional navigation options", style=Font.SUCCESS)
+        
+        game_state["yanglong_map_unlocked"] = True
+    
+    # Neurovore approach consequences
+    elif selected_flag == 'eliminate_neurovores':
+        print_typed("\nYou set charges throughout the Neurovore nest...", style=Font.SYSTEM)
+        print_typed("The explosions seal the caverns, destroying the psychic predators.", style=Font.PLAYER)
+        print_typed("You feel a psychic shockwave as their collective consciousness is extinguished.", style=Font.PLAYER)
+        
+        # Apply consequences
+        print_typed("\nThe Neurovore threat has been eliminated:", style=Font.SUCCESS)
+        print_typed("- Research facility secured", style=Font.SUCCESS)
+        print_typed("- No further mental attacks will occur", style=Font.SUCCESS)
+        
+        game_state["neurovores_eliminated"] = True
+        
+        # But add a consequence
+        print_typed("\nHowever, with the species destroyed:", style=Font.WARNING)
+        print_typed("- Unique research opportunity lost", style=Font.WARNING)
+        print_typed("- Thalassian ecosystem may be disrupted", style=Font.WARNING)
+        
+        game_state["thalassia_ecosystem_disrupted"] = True
+    
+    # Chrono-Sentient approach consequences
+    elif selected_flag == 'temporal_ability_request':
+        print_typed("\nThe Chrono-Sentient's form ripples as it considers your request...", style=Font.SYSTEM)
+        print_typed("\"Time is not to be handled lightly, but I sense your need is great.\"", style=Font.IMPORTANT)
+        print_typed("The entity extends a tendril of temporal energy that merges with your consciousness.", style=Font.PLAYER)
+        
+        # Apply consequences
+        print_typed("\nYou have gained temporal manipulation abilities:", style=Font.SUCCESS)
+        print_typed("- Can now manipulate time in limited ways during combat", style=Font.SUCCESS)
+        print_typed("- Gained 10 time fragments to power temporal abilities", style=Font.SUCCESS)
+        
+        # Update game state
+        game_state["time_fragments"] = game_state.get("time_fragments", 0) + 10
+        game_state["temporal_abilities_unlocked"] = True
+        
+        # But add a consequence
+        print_typed("\nHowever, your connection to normal time flow has been altered:", style=Font.WARNING)
+        print_typed("- Occasionally experience temporal echoes", style=Font.WARNING)
+        print_typed("- May sometimes see events before they happen", style=Font.WARNING)
+        
+        game_state["temporal_echoes"] = True
+    
+    # Add more consequences for other branching choices here
+    
+    # Allow player to continue
+    input("\nPress Enter to continue...")
+
+def chapter_eight_teaser():
+    """Display teaser for Chapter 8: Mitsurai D and Heliostadt III"""
+    clear_screen()
+    
+    # Create a dramatic chapter transition with enhanced visuals
+    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 8: VIRAL DIRECTIVE'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+
+    # Setting the scene with rich description
+    print_typed("\nAs you depart from the crystalline geometries of Primor Aetherium,", style=Font.LORE)
+    print_typed("your ship's sensors detect an automated distress beacon. The signal", style=Font.LORE)
+    print_typed("originates from two locations - Mitsurai D, a small jungle planet, and", style=Font.LORE)
+    print_typed("Heliostadt III, once a pinnacle of human engineering in deep space.", style=Font.LORE)
+
+    print(f"{Fore.RED}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # First location - Mitsurai D
+    print_typed(f"\n{Font.SUBTITLE('MITSURAI D')}", style=Font.HEADER)
+    print_typed("\nOnce a thriving research outpost specializing in xenobotany, Mitsurai D", style=Font.INFO)
+    print_typed("is now a planet of overgrown vegetation and strange bio-luminescence.", style=Font.INFO)
+    print_typed("Your scanners detect unusual movement patterns and erratic energy signatures.", style=Font.INFO)
+    
+    print_typed("\nThe ship's AI analyzes the planet's atmosphere:", style=Font.SYSTEM)
+    print_typed("\"WARNING: Detected traces of a synthetic compound designate RG-435,", style=Font.SYSTEM)
+    print_typed("commonly known as 'Rage'. This compound affects neurological function,", style=Font.SYSTEM)
+    print_typed("overriding higher cognitive processes and amplifying aggression.\"", style=Font.SYSTEM)
+    
+    # Second location - Heliostadt III
+    print_typed(f"\n{Font.SUBTITLE('HELIOSTADT III')}", style=Font.HEADER)
+    print_typed("\nOnce humanity's crowning achievement in space habitation, Heliostadt III", style=Font.INFO)
+    print_typed("was a self-sustaining space station housing over 20,000 residents.", style=Font.INFO)
+    print_typed("Now it hangs silent in orbit, emergency systems still operational but", style=Font.INFO)
+    print_typed("life signs are chaotic and concentrated in unusual patterns.", style=Font.INFO)
+    
+    print_typed("\nSecured communication logs recovered from satellite uplinks:", style=Font.SYSTEM)
+    print_typed("\"...the infection spread too fast! Medical can't contain it... subjects", style=Font.SYSTEM)
+    print_typed("displaying extreme aggression, diminished reasoning... attacking anything", style=Font.SYSTEM)
+    print_typed("that moves. It's not just behavioral, their physiology is changing...\"", style=Font.SYSTEM)
+    
+    print(f"{Fore.RED}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # Create narrative hook
+    print_typed("\nBoth locations are connected by more than proximity. The RG-435 pathogen", style=Font.WARNING)
+    print_typed("appears to have originated in Mitsurai D's research facilities before", style=Font.WARNING)
+    print_typed("somehow reaching Heliostadt III, where its effects were catastrophic.", style=Font.WARNING)
+    
+    print_typed("\nYour mission parameters update automatically:", style=Font.IMPORTANT)
+    print_typed("1. Investigate the research facilities on Mitsurai D", style=Font.IMPORTANT)
+    print_typed("2. Determine if any survivors remain on Heliostadt III", style=Font.IMPORTANT)
+    print_typed("3. Secure samples of RG-435 for analysis and potential cure", style=Font.IMPORTANT)
+    print_typed("4. Contain the viral threat before it can spread further", style=Font.IMPORTANT)
+    
+    print_typed("\nIn Chapter 8: Viral Directive, you'll:", style=Font.SUBTITLE)
+    print_typed("• Navigate a lush but deadly jungle planet overrun by infected wildlife", style=Font.INFO)
+    print_typed("• Explore the darkened corridors of an abandoned space station", style=Font.INFO)
+    print_typed("• Face enemies driven by pure rage with unpredictable attack patterns", style=Font.INFO)
+    print_typed("• Uncover the connection between the virus and The Convergence AI", style=Font.INFO)
+    print_typed("• Develop countermeasures to combat or cure the infected", style=Font.INFO)
+    
+    # Tease gameplay mechanics and tough choices
+    print_typed("\nThe infected present a unique threat - they're victims, not willing", style=Font.PLAYER)
+    print_typed("combatants. Your approach to them will reveal much about your character.", style=Font.PLAYER)
+    
+    print_typed("\nWill you neutralize the infected to ensure containment, or risk", style=Font.GLITCH)
+    print_typed("everything to find a cure? The viral directive awaits your decision...", style=Font.GLITCH)
+    
+    time.sleep(1)
+    input("\nPress Enter to return to the main menu...")
+    return
+
 def player_turn(player, enemy):
     """Handle player's turn with sci-fi themed actions"""
     # Apply companion bonuses
@@ -3407,6 +4628,12 @@ def player_turn(player, enemy):
     neural_stim_count = player.inventory.get("neural_stimulator", 0)
     if neural_stim_count > 0:
         print_typed(f"{Font.COMMAND('7.')} {Font.INFO('Neural Stimulator')} - {Font.ITEM(f'[{neural_stim_count}]')} Boost critical hit chance by 15%")
+        
+    # Temporal manipulation for players with time fragments (Chapter 6 content)
+    time_fragments = game_state.get("time_fragments", 0)
+    if time_fragments > 0:
+        print_typed(f"\n{Font.HEADER('TEMPORAL SYSTEMS:')}")
+        print_typed(f"{Font.COMMAND('T.')} {Font.GLITCH('Time Manipulation')} - {Font.ITEM(f'[{time_fragments} fragments]')} Alter the flow of time")
     
     quantum_stab_count = player.inventory.get("quantum_stabilizer", 0)
     if quantum_stab_count > 0:
@@ -3434,6 +4661,10 @@ def player_turn(player, enemy):
     # Add quantum link to the help text
     if game_state.get("character_collection"):
         print_typed(f"{Font.SYSTEM('(Type /quantum for character ally abilities)')}")
+        
+    # Add time manipulation text if player has time fragments
+    if game_state.get("time_fragments", 0) > 0:
+        print_typed(f"{Font.GLITCH('(Type /time to use temporal manipulation abilities)')}")
 
     command = input(f"\n{Font.COMMAND('Input command:')} ").strip().lower()
 
@@ -3637,6 +4868,29 @@ Commands:
             return "flee"  # Special return value to indicate successful fleeing
         # If flee fails, enemy gets a turn (handled in main combat loop)
 
+    elif command == "t" or command == "/time" or command == "/temporal":
+        # Check if player has time fragments
+        if game_state.get("time_fragments", 0) > 0:
+            # Initialize combat state if needed
+            if not hasattr(player, 'combat_state'):
+                player.combat_state = {
+                    "last_enemy_damage": 0,
+                    "extra_action": False,
+                    "enemy_next_attack": None,
+                    "time_stopped": False
+                }
+            
+            # Use time manipulation abilities
+            time_ability_used = use_time_manipulation(player, enemy, player.combat_state)
+            if time_ability_used:
+                return True  # Count as a turn if ability was used
+            else:
+                return player_turn(player, enemy)  # Don't count as turn if canceled
+        else:
+            print_typed(f"{Font.WARNING('No time fragments available for temporal manipulation.')}")
+            print_typed(f"{Font.INFO('Encounter the Chrono-Sentient to collect time fragments.')}")
+            return False  # Don't count as a turn
+            
     elif command == "/help":
         print("\n=== TACTICAL SYSTEMS HELP ===")
         print("Combat Commands:")
@@ -3648,6 +4902,11 @@ Commands:
         if "Hack" in player.abilities:
             print("  5 or /hack   - Attempt to hack enemy systems")
         print("  6 or /companions - Deploy companion abilities")
+        if game_state.get("time_fragments", 0) > 0:
+            print("  t or /time   - Use temporal manipulation abilities")
+            
+        if game_state.get("has_ignite_module", False):
+            print("  i or /ignite - Activate Yitrian Ignite Module")
         print("  7 or /flee   - Attempt to escape combat")
 
         print("\nInformation Commands:")
@@ -3768,8 +5027,14 @@ Commands:
     return True  # A valid action was taken
 
 
-def enemy_turn(enemy, player):
-    """Handle enemy's turn with advanced AI behaviors"""
+def enemy_turn(enemy, player, combat_state=None):
+    """Handle enemy's turn with advanced AI behaviors
+    
+    Args:
+        enemy: The enemy character
+        player: The player character
+        combat_state: Optional dictionary to track combat state for time mechanics
+    """
     
     # Process all status effects with our new consolidated function
     effect_messages = enemy.process_status_effects()
@@ -6346,6 +7611,72 @@ def encounter_musical_puzzle(game_state, zone_name):
         return False
 
 
+def equip_ignite_module(player, game_state):
+    """Equip the Ignite weapon module obtained in Primor Aetherium
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+    
+    Returns:
+        bool: True if module was equipped, False otherwise
+    """
+    clear_screen()
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('EQUIPPING IGNITE MODULE'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    # Check if player already has the module
+    if game_state.get("has_ignite_module", False):
+        print_typed("\nYou already have the Ignite Module equipped.", style=Font.INFO)
+        print_typed("The crystalline thermal technology pulses with energy.", style=Font.INFO)
+        time.sleep(1)
+        input("\nPress Enter to continue...")
+        return False
+    
+    # Equip the module
+    print_typed("\nYou carefully attach the crystalline module to your weapon's", style=Font.PLAYER)
+    print_typed("energy matrix. The connection points glow with intense heat as", style=Font.PLAYER)
+    print_typed("the Yitrian technology synchronizes with your systems.", style=Font.PLAYER)
+    
+    print_typed("\nA holographic interface appears, displaying calibration data:", style=Font.SYSTEM)
+    
+    # Visual effect for installation
+    for i in range(1, 6):
+        print(f"\r{Font.SYSTEM('Thermal Calibration:')} {Font.WEAPON('['+'■'*i+'□'*(5-i)+']')} {i*20}%", end="")
+        time.sleep(0.5)
+    print("\r" + " " * 50, end="")  # Clear the line
+    
+    print_typed(f"\n{Font.SUCCESS('IGNITE MODULE SUCCESSFULLY INTEGRATED')}", style=Font.IMPORTANT)
+    
+    # Update player stats
+    player.attack += 15  # Significant attack boost
+    game_state["has_ignite_module"] = True
+    
+    if "weapon_modules" not in game_state:
+        game_state["weapon_modules"] = []
+    
+    game_state["weapon_modules"].append({
+        "name": "Ignite",
+        "type": "thermal",
+        "description": "Yitrian thermal technology that creates cascading fire effects",
+        "damage_bonus": 15,
+        "special_effect": "fire_propagation",
+        "status_effect": "combustion",
+        "obtained_from": "Vex-Na in Primor Aetherium"
+    })
+    
+    print_typed("\nYour weapon now glows with a subtle orange hue. When activated,", style=Font.ITEM)
+    print_typed("it can unleash concentrated thermal energy with secondary fire", style=Font.ITEM)
+    print_typed("propagation effects against grouped enemies.", style=Font.ITEM)
+    
+    print_typed("\nIn combat, use '/ignite' or press 'i' to activate the Ignite Module's", style=Font.COMMAND)
+    print_typed("special thermal attack. This consumes energy but deals massive damage.", style=Font.COMMAND)
+    
+    time.sleep(1)
+    input("\nPress Enter to continue...")
+    return True
+
 def manage_weapon_modules(player, game_state):
     """Interface for managing weapon modules and changing active modules
     
@@ -7036,6 +8367,242 @@ def fight_neurovore_prime(player, game_state):
     return True
 
 
+def encounter_chrono_sentient(player, game_state):
+    """Special encounter with the interdimensional Chrono-Sentient entity
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+        
+    Returns:
+        bool: True if encounter was successfully navigated
+    """
+    clear_screen()
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('THE CHRONO-SENTIENT'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    # Initialize encounter state
+    game_state["time_fragments"] = game_state.get("time_fragments", 0)
+    game_state["reality_anchor"] = game_state.get("reality_anchor", 100)
+    
+    # Entity description
+    print_typed("\nThe entity hovers before your ship, its form defying conventional physics.", style=Font.LORE)
+    print_typed("Crystalline structures intertwine with what appear to be organic elements,", style=Font.LORE)
+    print_typed("yet both shimmer in and out of phase with reality itself. The being exists", style=Font.LORE)
+    print_typed("in multiple states simultaneously - solid and ethereal, present and absent.", style=Font.LORE)
+    
+    # Communication attempts
+    print_typed("\nYour communication systems crackle with otherworldly static as the", style=Font.PLAYER)
+    print_typed("entity attempts to establish contact. The Universal Translator struggles", style=Font.PLAYER)
+    print_typed("to process a language that exists across multiple timelines simultaneously.", style=Font.PLAYER)
+    
+    time.sleep(1)
+    print_glitch("...OBSERVER DETECTED... TIMELINE FRACTURE ACKNOWLEDGED...")
+    time.sleep(0.5)
+    print_glitch("...WE/I AM THE CHRONO-SENTIENT... GUARDIAN OF TEMPORAL INTEGRITY...")
+    time.sleep(0.5)
+    
+    # Offering player choices using time mechanics
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed("\nThe ship's systems detect temporal distortion waves emanating from", style=Font.WARNING)
+    print_typed("the entity. Time itself is becoming unstable in your vicinity.", style=Font.WARNING)
+    print_typed(f"Reality Anchor: {Font.HEALTH(str(game_state['reality_anchor']) + '%')}", style=Font.INFO)
+    
+    print_typed("\nHyuki's instruments indicate the entity is scanning all possible versions", style=Font.PLAYER)
+    print_typed("of you across multiple timelines, attempting to categorize your intentions.", style=Font.PLAYER)
+    
+    # First choice
+    print(f"\n{Font.MENU('How do you respond to the entity?')}")
+    print(f"{Font.COMMAND('1.')} {Font.INFO('Attempt scientific communication (Share astronomical data)')}")
+    print(f"{Font.COMMAND('2.')} {Font.INFO('Express peaceful intentions through universal mathematics')}")
+    print(f"{Font.COMMAND('3.')} {Font.INFO('Remain silent and observe its behavior')}")
+    
+    if game_state["protagonist"]["name"] == "Hyuki Nakamura":
+        print(f"{Font.COMMAND('4.')} {Font.SUCCESS('[Hyuki Special] Attempt quantum resonance communication')}")
+        valid_choices = ["1", "2", "3", "4"]
+    else:
+        valid_choices = ["1", "2", "3"]
+    
+    choice = ""
+    while choice not in valid_choices:
+        choice = input(f"\n{Font.MENU('Enter your choice:')} ").strip()
+    
+    # Process first choice
+    if choice == "1":
+        # Scientific approach
+        print_typed("\nYou transmit astronomical data, hoping the universal language of", style=Font.PLAYER)
+        print_typed("science might bridge the communication gap.", style=Font.PLAYER)
+        
+        print_glitch("...DATA RECEIVED... CALCULATING TEMPORAL COMPATIBILITY...")
+        print_typed("\nThe entity's form shifts as it processes your transmission.", style=Font.LORE)
+        game_state["time_fragments"] += 2
+        game_state["reality_anchor"] -= 10
+        
+    elif choice == "2":
+        # Mathematical approach
+        print_typed("\nYou transmit the fundamental mathematical constants of the universe -", style=Font.PLAYER)
+        print_typed("pi, the golden ratio, prime number sequences - hoping these transcend", style=Font.PLAYER)
+        print_typed("language barriers.", style=Font.PLAYER)
+        
+        print_glitch("...MATHEMATICAL HARMONY DETECTED... SYNCHRONIZING...")
+        print_typed("\nThe entity's crystalline structures realign into geometric patterns", style=Font.LORE)
+        print_typed("that mirror your mathematical sequences.", style=Font.LORE)
+        game_state["time_fragments"] += 3
+        game_state["reality_anchor"] -= 5
+        
+    elif choice == "3":
+        # Silent observation
+        print_typed("\nYou maintain silence, carefully observing the entity's behavior and", style=Font.PLAYER)
+        print_typed("searching for patterns in its shifting form.", style=Font.PLAYER)
+        
+        print_glitch("...PASSIVE OBSERVATION NOTED... INITIATING DIRECT ANALYSIS...")
+        print_typed("\nThe entity extends tendrils of energy toward your ship, gently", style=Font.LORE)
+        print_typed("probing your vessel's exterior.", style=Font.LORE)
+        game_state["time_fragments"] += 1
+        game_state["reality_anchor"] -= 15
+        
+    elif choice == "4" and game_state["protagonist"]["name"] == "Hyuki Nakamura":
+        # Hyuki special ability
+        print_typed("\nHyuki activates her quantum resonance emitter, creating a field that", style=Font.PLAYER)
+        print_typed("vibrates at the same frequency as the entity's temporal fluctuations.", style=Font.PLAYER)
+        
+        print_glitch("...QUANTUM RESONANCE DETECTED... PARALLEL COMMUNICATION ESTABLISHED...")
+        print_typed("\nThe entity's form stabilizes momentarily, resonating with Hyuki's", style=Font.LORE)
+        print_typed("quantum field. A deeper connection forms.", style=Font.LORE)
+        game_state["time_fragments"] += 5
+        game_state["reality_anchor"] -= 5
+    
+    # Entity responds with time visions
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed(f"\nReality Anchor: {Font.HEALTH(str(game_state['reality_anchor']) + '%')}", style=Font.INFO)
+    print_typed(f"Time Fragments Collected: {Font.SUCCESS(str(game_state['time_fragments']))}", style=Font.INFO)
+    
+    print_typed("\nThe entity's response comes not in words, but in visions that flood", style=Font.LORE)
+    print_typed("your mind. You see fragments of multiple timelines simultaneously:", style=Font.LORE)
+    
+    # Show different timeline visions based on the protagonist
+    if game_state["protagonist"]["name"] == "Dr. Xeno Valari":
+        print_typed("• A version of Earth where humans and AI coexist in harmony", style=Font.GLITCH)
+        print_typed("• The moment the AI uprising began from the perspective of the machines", style=Font.GLITCH)
+        print_typed("• A timeline where your quantum research prevented the catastrophe", style=Font.GLITCH)
+        
+    elif game_state["protagonist"]["name"] == "Dr. Hyte Konscript":
+        print_typed("• The exodus ships' successful arrival at Andromeda", style=Font.GLITCH)
+        print_typed("• A timeline where your engineering breakthroughs saved Earth", style=Font.GLITCH)
+        print_typed("• The construction of the first interstellar portal", style=Font.GLITCH)
+        
+    elif game_state["protagonist"]["name"] == "Hyuki Nakamura":
+        print_typed("• The secret colony where you were born - hidden from the AI", style=Font.GLITCH)
+        print_typed("• Your parents' work on quantum navigation technology", style=Font.GLITCH)
+        print_typed("• A timeline where humanity evolved beyond physical form", style=Font.GLITCH)
+    
+    print_typed("\nAs the visions fade, you feel the entity attempting to communicate", style=Font.PLAYER)
+    print_typed("something of grave importance. It seems concerned about a fracture", style=Font.PLAYER)
+    print_typed("in the timeline - a paradox that threatens multiple realities.", style=Font.PLAYER)
+    
+    print_glitch("...PARADOX DETECTED... TIMELINE INTERSECTION IMMINENT...")
+    print_glitch("...REQUESTING ASSISTANCE... CONVERGENCE POINT IDENTIFIED...")
+    
+    # Second choice - temporal decision
+    print(f"\n{Font.MENU('The entity is requesting your help. How do you respond?')}")
+    print(f"{Font.COMMAND('1.')} {Font.INFO('Offer assistance (Navigate toward the paradox horizon)')}")
+    print(f"{Font.COMMAND('2.')} {Font.INFO('Request more information before committing')}")
+    print(f"{Font.COMMAND('3.')} {Font.INFO('Attempt to break away from the anomaly')}")
+    
+    choice = ""
+    while choice not in ["1", "2", "3"]:
+        choice = input(f"\n{Font.MENU('Enter your choice:')} ").strip()
+    
+    # Process second choice
+    if choice == "1":
+        # Helpful approach
+        print_typed("\nYou signal your willingness to help, directing your ship toward", style=Font.PLAYER)
+        print_typed("the coordinates the entity is transmitting.", style=Font.PLAYER)
+        
+        print_glitch("...COOPERATION ACKNOWLEDGED... TEMPORAL GUIDANCE INITIATED...")
+        print_typed("\nThe entity moves alongside your vessel, its energy field enveloping", style=Font.LORE)
+        print_typed("your ship in a protective bubble as you approach the paradox horizon.", style=Font.LORE)
+        game_state["chrono_sentient_relationship"] = "allied"
+        game_state["time_fragments"] += 3
+        game_state["reality_anchor"] -= 10
+        
+    elif choice == "2":
+        # Cautious approach
+        print_typed("\nYou acknowledge the entity but request more information about", style=Font.PLAYER)
+        print_typed("the nature of the paradox and what assistance would entail.", style=Font.PLAYER)
+        
+        print_glitch("...CLARIFICATION REQUEST PROCESSED... TRANSMITTING TEMPORAL DATA...")
+        print_typed("\nThe entity floods your ship's computers with complex temporal", style=Font.LORE)
+        print_typed("equations and multidimensional coordinates. Hyuki recognizes patterns", style=Font.LORE)
+        print_typed("that suggest a collision of incompatible realities.", style=Font.LORE)
+        game_state["chrono_sentient_relationship"] = "neutral"
+        game_state["time_fragments"] += 2
+        game_state["reality_anchor"] -= 15
+        
+    elif choice == "3":
+        # Defensive approach
+        print_typed("\nUncertain of the entity's true intentions, you attempt to break away", style=Font.PLAYER)
+        print_typed("from the anomaly, firing thrusters at maximum capacity.", style=Font.PLAYER)
+        
+        print_glitch("...RETREAT DETECTED... TEMPORAL INSTABILITY INCREASING...")
+        print_typed("\nThe entity's form ripples with what might be disappointment. As your", style=Font.LORE)
+        print_typed("ship pulls away, temporal distortions intensify around your vessel.", style=Font.LORE)
+        game_state["chrono_sentient_relationship"] = "wary"
+        game_state["time_fragments"] += 1
+        game_state["reality_anchor"] -= 25
+    
+    # Final stage of encounter
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed(f"\nReality Anchor: {Font.HEALTH(str(game_state['reality_anchor']) + '%')}", style=Font.INFO)
+    print_typed(f"Time Fragments Collected: {Font.SUCCESS(str(game_state['time_fragments']))}", style=Font.INFO)
+    
+    if game_state["reality_anchor"] <= 25:
+        # Reality becoming dangerously unstable
+        print_typed("\nWarning klaxons blare throughout your ship as reality itself begins", style=Font.WARNING)
+        print_typed("to fragment around you. The distinction between past, present and future", style=Font.WARNING)
+        print_typed("is breaking down.", style=Font.WARNING)
+        
+        print_glitch("...REALITY ANCHOR CRITICAL... INITIATING EMERGENCY STABILIZATION...")
+        print_typed("\nThe Chrono-Sentient extends its energy field around your vessel in", style=Font.LORE)
+        print_typed("what appears to be a protective gesture, stabilizing your local", style=Font.LORE)
+        print_typed("spacetime enough for you to regain control.", style=Font.LORE)
+        
+        game_state["reality_anchor"] = 50
+        
+    print_typed("\nA final series of images floods your consciousness:", style=Font.PLAYER)
+    print_typed("• A massive temporal engine at the heart of the paradox", style=Font.GLITCH)
+    print_typed("• Multiple timelines converging toward a single point", style=Font.GLITCH)
+    print_typed("• The Chrono-Sentient, but younger, helping to build something", style=Font.GLITCH)
+    
+    print_glitch("...COORDINATES TRANSFERRED... TIMELINE PRESERVATION IMPERATIVE...")
+    print_glitch("...WE WILL MEET AGAIN AT THE CONVERGENCE POINT...")
+    
+    print_typed("\nWith these final words, the entity's form begins to fade, seeming to", style=Font.LORE)
+    print_typed("phase between dimensions. As it disappears, your ship's systems return", style=Font.LORE)
+    print_typed("to normal, but your navigation computer now contains coordinates to", style=Font.LORE)
+    print_typed("a location deep in uncharted space - the Paradox Horizon.", style=Font.LORE)
+    
+    game_state["paradox_horizon_coordinates"] = True
+    
+    print_typed(f"\nYou've collected {Font.SUCCESS(str(game_state['time_fragments']))} time fragments", style=Font.INFO)
+    print_typed("from your encounter with the Chrono-Sentient.", style=Font.INFO)
+    print_typed("These fragments may allow you to manipulate time in limited ways.", style=Font.INFO)
+    
+    print_typed("\nYour relationship with the entity seems to be:", style=Font.INFO)
+    if game_state.get("chrono_sentient_relationship") == "allied":
+        print_typed("ALLIED - It views you as a partner in preserving timeline integrity", style=Font.SUCCESS)
+    elif game_state.get("chrono_sentient_relationship") == "neutral":
+        print_typed("NEUTRAL - It recognizes your caution but sees your potential", style=Font.INFO)
+    else:
+        print_typed("WARY - It will watch your actions carefully going forward", style=Font.WARNING)
+    
+    time.sleep(2)
+    input("\nPress Enter to continue...")
+    return True
+
 def fight_white_hole_guardian(player):
     """Special boss fight against the White Hole Guardian"""
     clear_screen()
@@ -7201,43 +8768,266 @@ def fight_white_hole_guardian(player):
         return False
 
 
+def chapter_seven_teaser():
+    """Display teaser for Chapter 7: Primor Aetherium"""
+    clear_screen()
+    
+    # Create a dramatic chapter transition with enhanced visuals
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 7: PRIMOR AETHERIUM'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+
+    # Setting the scene with rich description
+    print_typed("\nAs your ship navigates away from the paradox horizon, spatial distortions", style=Font.LORE)
+    print_typed("tear open around you. The quantum engine falters, and you find yourself", style=Font.LORE)
+    print_typed("drifting toward an impossible structure - a vast, perfectly flat city", style=Font.LORE)
+    print_typed("floating in the void of space, its edges disappearing into infinity.", style=Font.LORE)
+
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # Create detailed environmental description
+    print_typed("\nLuminescent spires rise from the perfectly flat surface, connected by", style=Font.PLAYER)
+    print_typed("shimmering bridges of light and non-Euclidean architecture that defies", style=Font.PLAYER)
+    print_typed("human engineering principles. The entirety of this floating metropolis", style=Font.PLAYER)
+    print_typed("stretches out like an endless cosmic disc in the darkness.", style=Font.PLAYER)
+    
+    print_typed("\nYour ship's comms activate, and a melodic, synthetic voice speaks:", style=Font.IMPORTANT)
+    
+    print_typed(f"\n\"Greetings, travelers from the temporal anomaly. I am {Font.GLITCH('Vex-Na')},", style=Font.IMPORTANT)
+    print_typed(f"ambassador of the Yitrians. Welcome to {Font.GLITCH('Primor Aetherium')}, our home", style=Font.IMPORTANT)
+    print_typed("among the stars. We detected your quantum signature and anticipated your", style=Font.IMPORTANT)
+    print_typed("arrival. Please, follow the guidance beacons to docking bay seven.\"", style=Font.IMPORTANT)
+    
+    # Detailed city description
+    print_typed("\nAs your ship follows the glowing path toward the docking bay, you observe", style=Font.INFO)
+    print_typed("the inhabitants - slender beings with iridescent skin and four elongated", style=Font.INFO)
+    print_typed("arms, moving with graceful precision among their impossible architecture.", style=Font.INFO)
+    print_typed("Their civilization appears to be built upon principles that transcend", style=Font.INFO)
+    print_typed("conventional physics, a harmony of technology and consciousness.", style=Font.INFO)
+
+    # Create dramatic encounter
+    print_typed("\nUpon landing, a delegation of Yitrians awaits. Their leader steps forward,", style=Font.PLAYER)
+    print_typed("four arms arranged in what appears to be a ceremonial gesture.", style=Font.PLAYER)
+    
+    print_typed("\n\"We have watched the fracturing of your timeline with great concern,\"", style=Font.IMPORTANT)
+    print_typed("Vex-Na explains. \"Our city stands at the confluence of multiple realities,", style=Font.IMPORTANT)
+    print_typed("and we have maintained peace for millennia. But now, radical factions among", style=Font.IMPORTANT)
+    print_typed("our people seek to exploit the temporal instabilities your kind has", style=Font.IMPORTANT)
+    print_typed("inadvertently created. They wish to establish what you might call... a", style=Font.IMPORTANT)
+    print_typed("totalitarian regime.\"", style=Font.IMPORTANT)
+    
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # Create narrative hook and gameplay preview
+    print_typed("\nVex-Na's inner eyelids flutter in what might be concern.", style=Font.WARNING)
+    print_typed("\"The faction calls themselves the Void Harmonics. They believe the", style=Font.WARNING)
+    print_typed("only way to prevent cosmic collapse is to synchronize all beings", style=Font.WARNING)
+    print_typed("into a single consciousness, a harmonized existence under their", style=Font.WARNING)
+    print_typed("control. We need your help to stop them.\"", style=Font.WARNING)
+    
+    print_typed("\nIn Chapter 7: Primor Aetherium, you'll:", style=Font.SUBTITLE)
+    print_typed("• Navigate a vast, flat city suspended in the void of space", style=Font.INFO)
+    print_typed("• Form alliances with the peace-seeking Yitrian factions", style=Font.INFO)
+    print_typed("• Combat the Void Harmonics' attempts to seize control", style=Font.INFO)
+    print_typed("• Uncover the secrets of non-Euclidean architecture", style=Font.INFO)
+    print_typed("• Acquire the powerful 'Ignite' weapon module for your arsenal", style=Font.INFO)
+    
+    print_typed("\nAs a gesture of trust, Vex-Na presents you with a gift - a shimmering", style=Font.STAGE)
+    print_typed("crystalline module that attaches to your weapon systems.", style=Font.STAGE)
+    
+    # Add teaser for new weapon module
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('NEW WEAPON MODULE: IGNITE'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\n\"This is an Ignite Module, one of our most advanced defensive", style=Font.IMPORTANT)
+    print_typed("technologies. It harnesses thermal energy at a quantum level,", style=Font.IMPORTANT)
+    print_typed("creating cascading fire effects that spread through enemy ranks.\"", style=Font.IMPORTANT)
+    
+    print_typed("\nIgnite Module capabilities:", style=Font.INFO)
+    print_typed("• Primary attack: Concentrated thermal beam (high single-target damage)", style=Font.INFO)
+    print_typed("• Secondary effect: Fire propagation to nearby enemies", style=Font.INFO)
+    print_typed("• Tertiary effect: Chance to cause combustion status (DoT)", style=Font.INFO)
+    print_typed("• Synergy: Enhanced damage against organic and volatile enemies", style=Font.INFO)
+    
+    time.sleep(1)
+    input("\nPress Enter to return to the main menu...")
+    return
+
+def chapter_six_teaser():
+    """Display teaser for Chapter 6: The Paradox Horizon"""
+    clear_screen()
+    
+    # Create a dramatic chapter transition with enhanced visuals
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 6: THE PARADOX HORIZON'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+
+    # Setting the scene with rich description
+    print_typed("\nAs your ship leaves the H-79760 system with Hyuki aboard, proximity", style=Font.LORE)
+    print_typed("alarms suddenly blare throughout the vessel. Through the viewport,", style=Font.LORE)
+    print_typed("you witness the fabric of space itself beginning to tear, revealing", style=Font.LORE)
+    print_typed("a swirling vortex of impossible colors and geometries.", style=Font.LORE)
+
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # Create detailed environmental description
+    print_typed("\nThe ship's sensors go haywire as space-time distortions ripple", style=Font.PLAYER)
+    print_typed("outward from the tear. Hyuki's eyes widen in recognition.", style=Font.PLAYER)
+    
+    print_typed(f"\n\"It's a {Font.GLITCH('paradox horizon')},\" she whispers. \"We studied these", style=Font.IMPORTANT)
+    print_typed("theoretical phenomena during the pre-exodus research. It's a", style=Font.IMPORTANT)
+    print_typed("temporal anomaly where multiple timelines converge.\"", style=Font.IMPORTANT)
+    
+    # Detailed anomaly description
+    print_typed("\nAs the anomaly grows, the ship's viewscreens capture something", style=Font.INFO)
+    print_typed("emerging from the vortex - a massive, otherworldly entity unlike", style=Font.INFO)
+    print_typed("anything recorded in human history. Its form shifts and warps,", style=Font.INFO)
+    print_typed("appearing simultaneously crystalline and organic, defying the laws", style=Font.INFO)
+    print_typed("of physics as you understand them.", style=Font.INFO)
+
+    # Create dramatic encounter
+    print_typed("\nSudden interference floods all communication channels, but within", style=Font.PLAYER)
+    print_typed("the static, patterns emerge. It's trying to communicate.", style=Font.PLAYER)
+    
+    # Create glitchy communication effect
+    for _ in range(3):
+        print_glitch("..WE ARE THE CHRONO-SENTIENT... TIMELINE FRACTURE DETECTED...")
+        time.sleep(0.5)
+    
+    print_typed(f"\nHyuki's quantum instruments detect {Font.WARNING('multiple realities')} bleeding", style=Font.PLAYER)
+    print_typed("together. Through the chaos, the entity transmits fragmented images:", style=Font.PLAYER)
+    print_typed("• Earth before the AI uprising", style=Font.LORE)
+    print_typed("• The Andromeda colony thriving", style=Font.LORE)
+    print_typed("• A version of Earth where humans and AI evolved in harmony", style=Font.LORE)
+    print_typed("• And most disturbing - timelines where all sentient life was extinguished", style=Font.LORE)
+    
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # Create narrative hook and gameplay preview
+    print_typed("\nThe ship is caught in the anomaly's gravitational pull. Escape is", style=Font.WARNING)
+    print_typed("impossible. As you're drawn inexorably toward the entity, time itself", style=Font.WARNING)
+    print_typed("begins to fragment around you. The last thing you see before reality", style=Font.WARNING)
+    print_typed("shatters is the entity extending what might be appendages toward", style=Font.WARNING)
+    print_typed("your vessel.", style=Font.WARNING)
+    
+    print_typed("\nIn Chapter 6: The Paradox Horizon, you'll:", style=Font.SUBTITLE)
+    print_typed("• Navigate a fractured reality where past, present and future collide", style=Font.INFO)
+    print_typed("• Communicate with the interdimensional entity called the Chrono-Sentient", style=Font.INFO)
+    print_typed("• Witness alternate versions of your own timeline", style=Font.INFO)
+    print_typed("• Make choices that could rewrite the fate of multiple realities", style=Font.INFO)
+    print_typed("• Unlock new temporal abilities that manipulate the flow of time", style=Font.INFO)
+    
+    print_typed("\nThe boundaries between realities have been breached...", style=Font.STAGE)
+    print_typed("And something truly ancient has taken notice of humanity's last survivors.", style=Font.STAGE)
+    
+    # Add teaser for next gameplay elements
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('NEW GAMEPLAY MECHANICS'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\n• Time Manipulation: Reverse enemy attacks or replay your own actions", style=Font.INFO)
+    print_typed("• Reality Shifting: Phase between multiple versions of each location", style=Font.INFO)
+    print_typed("• Paradox Puzzles: Solve timeline inconsistencies to progress", style=Font.INFO)
+    print_typed("• Temporal Combat: Fight enemies across different points in time", style=Font.INFO)
+    print_typed("• Quantum Dialogue: Converse with alternate versions of characters", style=Font.INFO)
+    
+    time.sleep(1)
+    input("\nPress Enter to return to the main menu...")
+    return
+    
 def chapter_two_teaser():
-    """Display teaser for Chapter 2: Yanglong V"""
+    """Display detailed teaser for Chapter 2: Yanglong V"""
     clear_screen()
 
-    # Create a more dynamic teaser with animated effect
+    # Create a dramatic chapter transition with enhanced visuals
     print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
     print(Font.BOX_TOP)
-    print(f"{Font.BOX_SIDE} {Fore.RED}{Back.BLACK}{'EMERGENCY TRANSMISSION'.center(46)}{Style.RESET_ALL} {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 2: YANGLONG V'.center(46))} {Font.BOX_SIDE}")
     print(Font.BOX_BOTTOM)
     print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
 
-    # Animated effect for signal reception
-    print("\nSignal reception in progress", end="")
+    # Setting the scene with more detailed background
+    print_typed("\nThree months have passed since you discovered the ancient rocket", style=Font.LORE)
+    print_typed("and the Andromeda star charts. Through relentless scavenging and", style=Font.LORE)
+    print_typed("ingenious repurposing of abandoned technology, you've managed to", style=Font.LORE)
+    print_typed("restore the rocket's critical systems to functional capacity.", style=Font.LORE)
+
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # Create more immersive preparations 
+    print_typed("\nThe pre-flight systems buzz and hum around you as you", style=Font.PLAYER)
+    print_typed("make final preparations. Your neural implant links with the", style=Font.PLAYER)
+    print_typed("ship's primitive AI, creating an interface between old and new.", style=Font.PLAYER)
+    
+    # Detailed rocket interior description
+    print_typed("\nThe cockpit is a strange blend of antiquated switches and", style=Font.INFO)
+    print_typed("retrofitted holographic displays. Exposed wiring snakes along", style=Font.INFO)
+    print_typed("bulkheads, connecting salvaged components to the original systems.", style=Font.INFO)
+    print_typed("It's not elegant, but it should get you to Yanglong V.", style=Font.INFO)
+
+    # Animated effect for system boot sequence
+    print("\nInitiating pre-launch sequence", end="")
     for _ in range(5):
         print(".", end="", flush=True)
         time.sleep(0.3)
     print("\n")
 
-    # Flashback to the refueling station
-    print_typed("\nAs your ship begins its final approach to Andromeda Colony,", style=Font.INFO)
-    print_typed("your thoughts drift back to the Yanglong V refueling station.", style=Font.INFO)
-    print_typed("Something felt... off... during your brief stopover.", style=Font.INFO)
-
+    # Create a more detailed information screen about Yanglong V
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('DESTINATION PROFILE: YANGLONG V'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("\nChinese Deep Space Station YANGLONG V", style=Font.COMMAND)
+    print_typed("• Construction completed: 2092", style=Font.INFO)
+    print_typed("• Purpose: Interstellar refueling hub and research center", style=Font.INFO)
+    print_typed("• Last known status: Operational as of 2142", style=Font.INFO)
+    print_typed("• Current status: Unknown (no transmissions for 15 years)", style=Font.WARNING)
+    print_typed("• Distance: 4.8 million kilometers (3 days travel time)", style=Font.INFO)
+    print_typed("• Known hazards: Potential AI control, defense systems", style=Font.WARNING)
+    
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    # Personal connection to Yanglong V
+    print_typed("\nAs you review the station data, a memory surfaces from your", style=Font.PLAYER)
+    print_typed("pre-cryostasis life. Your colleague, Dr. Lin Wei, had been", style=Font.PLAYER)
+    print_typed("stationed at Yanglong V, working on experimental quantum drives.", style=Font.PLAYER)
+    print_typed("You wonder if any trace of her research might remain...", style=Font.PLAYER)
+    
     # Visual effect for memory/flashback
     print(f"\n{Fore.CYAN}{Style.DIM}{'~' * 50}{Style.RESET_ALL}")
-    print_typed("\nRECALLING MEMORY FRAGMENT - YANGLONG V REFUELING STATION", style=Fore.CYAN + Style.DIM)
+    print_typed("\nMEMORY FRAGMENT: LAST COMMUNICATION FROM YANGLONG V", style=Fore.CYAN + Style.BRIGHT)
     print(f"{Fore.CYAN}{Style.DIM}{'~' * 50}{Style.RESET_ALL}")
 
-    # Memory scenes with color
-    print_typed("\nThe docking procedure had been fully automated. No human", style=Font.LORE)
-    print_typed("voices on the comms. You assumed it was simply an unmanned", style=Font.LORE)
-    print_typed("outpost. But as your ship replenished its fuel reserves,", style=Font.LORE)
-    print_typed(f"you noticed {Font.WARNING('movement')} through a viewport window.", style=Font.LORE)
-
-    # Create suspense
-    print_typed(f"\nA {Fore.RED}humanoid figure{Style.RESET_ALL} watching your ship from the shadows...", style=Font.PLAYER)
-    print_typed("Then your neural implant picked up a fragmented transmission:", style=Font.PLAYER)
+    # Detailed flashback with dialogue
+    print_typed("\n\"Xeno, the experiments are yielding incredible results,\"", style=Font.LORE)
+    print_typed("Wei's hologram had said during your last call, her eyes bright", style=Font.LORE)
+    print_typed("with excitement. \"The quantum displacement engine could", style=Font.LORE)
+    print_typed("revolutionize our journey to Andromeda. But...\" Her expression", style=Font.LORE)
+    print_typed("had darkened. \"There's something strange happening with the", style=Font.LORE)
+    print_typed("station's AI. It's been asking unusual questions about consciousness...\"", style=Font.LORE)
+    
+    # Return to present with dramatic reveal
+    print_typed("\nThe memory fades as your ship's sensors detect something", style=Font.PLAYER)
+    print_typed(f"unexpected: a {Font.WARNING('distress beacon')} still broadcasting", style=Font.PLAYER)
+    print_typed("from Yanglong V after all these years.", style=Font.PLAYER)
+    
+    # Create suspense with mysterious transmission
+    print_typed(f"\n{Fore.RED}\"...any survivors... AI containment breach... quantum resonance...\"", style=Style.BRIGHT)
+    print_typed(f"{Fore.RED}\"...Dr. Valari, if you receive this... the access codes are...\"", style=Style.BRIGHT)
+    
+    print_typed("\nThe message cuts off abruptly, leaving you with more questions", style=Font.PLAYER)
+    print_typed("than answers. Whatever awaits at Yanglong V, it's clear that", style=Font.PLAYER)
+    print_typed("your journey to Andromeda will take an unexpected detour.", style=Font.PLAYER)
+    
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed("\nThe ancient rocket's engines roar to life as you prepare to", style=Font.LORE)
+    print_typed("leave Earth behind. Your quest for Andromeda continues, but first,", style=Font.LORE)
+    print_typed("the mysteries of Yanglong V await...", style=Font.LORE)
 
     # Display transmission details with more dramatic color scheme
     print(f"\n{Fore.WHITE}{Back.RED}╔{'═' * 48}╗{Style.RESET_ALL}")
@@ -7483,7 +9273,11 @@ def combat(player, enemy):
         "round": 1,
         "player_buffs": {},
         "enemy_buffs": {},
-        "available_abilities": True
+        "available_abilities": True,
+        "last_enemy_damage": 0,  # Track for time rewind ability
+        "enemy_next_attack": None,  # Track for glimpse ability
+        "extra_action": False,  # Track for time acceleration ability
+        "time_stopped": False   # Track for time stop ability
     }
     
     while player.is_alive() and enemy.is_alive():
@@ -7496,6 +9290,8 @@ def combat(player, enemy):
             print_typed(status_info)
         
         # Player's turn
+        # Attach the combat state to the player to maintain time manipulation state
+        player.combat_state = combat_state
         player_choice = player_turn(player, enemy)
         
         # Check if combat should end
@@ -7504,12 +9300,25 @@ def combat(player, enemy):
             
         # Enemy's turn (if still alive)
         if enemy.is_alive():
-            # Process any status effects at the start of enemy's turn
-            status_info = enemy.process_status_effects()
-            if status_info:
-                print_typed(status_info)
+            # Skip enemy turn if time is stopped
+            if combat_state.get("time_stopped", False):
+                print_glitch(">>> TIME IS FROZEN <<<")
+                print_typed("The enemy is frozen in time and cannot act this turn.", style=Font.GLITCH)
+                combat_state["time_stopped"] = False  # Reset for next turn
+            else:
+                # Process any status effects at the start of enemy's turn
+                status_info = enemy.process_status_effects()
+                if status_info:
+                    print_typed(status_info)
                 
-            enemy_turn(enemy, player)
+                # Use predetermined attack if glimpse ability was used
+                if combat_state.get("enemy_next_attack"):
+                    print_typed(f"You anticipate the enemy's {Font.GLITCH(combat_state['enemy_next_attack'])} attack!", style=Font.SUCCESS)
+                    # The attack type was already set in the glimpse ability
+                    combat_state["enemy_next_attack"] = None  # Reset for next turn
+                
+                # Pass combat state to enemy turn for tracking damage (time rewind)
+                enemy_turn(enemy, player, combat_state)
             
         # Update round counter
         round_number += 1
@@ -7640,83 +9449,632 @@ def thalassia_crash_sequence(game_state, player):
     clear_screen()
 
 
+def character_selection():
+    """Allow player to choose which character to play as - includes Hyuki when unlocked"""
+    clear_screen()
+    print(f"{Fore.BLUE}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHARACTER SELECTION'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.BLUE}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    # Check if this is a new game or if Hyuki has been unlocked
+    new_game = True
+    hyuki_unlocked = False
+    
+    # Check if playable_characters exists in game_state and if Hyuki is unlocked
+    if "playable_characters" in game_state:
+        new_game = False
+        for character in game_state["playable_characters"]:
+            if character.get("name") == "Hyuki Nakamura":
+                hyuki_unlocked = True
+                break
+    
+    if new_game:
+        # First time playing - show the original cryopod selection
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.SUBTITLE('LAST SURVIVOR PROTOCOL'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        
+        print_typed("\nEmergency power activates in the cryostasis facility. Your neural interface", style=Font.SYSTEM)
+        print_typed("comes online, awakening your consciousness after 268 years.", style=Font.SYSTEM)
+        print_typed("\nYou are Dr. Elena Marik, chief scientist of the Century Sleepers program.", style=Font.INFO)
+        print_typed("The facility's automated systems have detected catastrophic failures in all", style=Font.INFO)
+        print_typed("but two of the remaining cryopods. Emergency protocol dictates that only one", style=Font.INFO)
+        print_typed("subject can be safely revived with the remaining power reserves.", style=Font.INFO)
+        
+        print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+        
+        print_typed("\nThe neural interface shows you the status of the two viable cryopods:", style=Font.SYSTEM)
+        
+        # Pod 1 details
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.SUBTITLE('CRYOPOD A-7: DR. XENO VALARI'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        print_typed("• Age at cryostasis: 21 years", style=Font.INFO)
+        print_typed("• Specialty: Quantum physics, AI neural architecture", style=Font.INFO)
+        print_typed("• Psych profile: Analytical, introspective, resilient", style=Font.INFO)
+        print_typed("• Mission recommendation: High adaptability to isolation", style=Font.INFO)
+        print_typed("• Bio-scan: Stable, 94% viability", style=Font.INFO)
+        
+        print("")
+        
+        # Pod 2 details
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.SUBTITLE('CRYOPOD B-3: DR. HYTE KONSCRIPT'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        print_typed("• Age at cryostasis: 21 years", style=Font.INFO)
+        print_typed("• Specialty: Mechanical engineering, propulsion systems", style=Font.INFO)
+        print_typed("• Psych profile: Pragmatic, determined, resourceful", style=Font.INFO)
+        print_typed("• Mission recommendation: Excellent technical problem-solving", style=Font.INFO)
+        print_typed("• Bio-scan: Stable, 92% viability", style=Font.INFO)
+        
+        print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+        
+        print_typed("\nFacility power reserves are failing. You must decide now.", style=Font.WARNING)
+        print_typed("The other pod will be lost. The choice is yours.", style=Font.WARNING)
+        
+        print(f"\n{Font.MENU('Who will you save?')}")
+        print(f"{Font.COMMAND('1.')} {Font.INFO('Dr. Xeno Valari (Quantum Physicist)')}")
+        print(f"{Font.COMMAND('2.')} {Font.INFO('Dr. Hyte Konscript (Engineer)')}")
+        
+        choice = ""
+        while choice not in ["1", "2"]:
+            choice = input(f"\n{Font.MENU('Enter your choice (1/2):')} ").strip()
+        
+        if choice == "1":
+            # Save Xeno
+            game_state["protagonist"] = {
+                "name": "Dr. Xeno Valari",
+                "gender": "female",
+                "specialty": "quantum physics",
+                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21 to monitor AI evolution patterns. Your understanding of neural networks may be crucial to understanding what went wrong."
+            }
+            
+            print_typed("\nYou initiate the revival sequence for Dr. Xeno Valari's pod.", style=Font.SYSTEM)
+            print_typed("Cryogenic fluid drains as vital signs stabilize...", style=Font.SYSTEM)
+            print_typed("\nPod B-3 power diverted. Neural patterns of Dr. Konscript fading...", style=Font.WARNING)
+            
+        else:
+            # Save Hyte
+            game_state["protagonist"] = {
+                "name": "Dr. Hyte Konscript",
+                "gender": "male",
+                "specialty": "engineering",
+                "background": "You were a brilliant engineer, specializing in spacecraft propulsion systems. You joined the Century Sleepers program at 21 to maintain the technology left behind. Your practical skills may be key to survival."
+            }
+            
+            print_typed("\nYou initiate the revival sequence for Dr. Hyte Konscript's pod.", style=Font.SYSTEM)
+            print_typed("Cryogenic fluid drains as vital signs stabilize...", style=Font.SYSTEM)
+            print_typed("\nPod A-7 power diverted. Neural patterns of Dr. Valari fading...", style=Font.WARNING)
+        
+        print_typed("\nAs the chosen pod completes its revival cycle, facility power fails completely.", style=Font.LORE)
+        print_typed("Your consciousness begins to fade. Your last act as Dr. Elena Marik", style=Font.LORE)
+        print_typed("was to ensure humanity has at least one survivor.", style=Font.LORE)
+        
+        print_typed("\nYour sacrifice will not be forgotten...", style=Font.STAGE)
+        
+        time.sleep(3)
+        clear_screen()
+        
+        print_typed("\nYou awaken, disoriented, as the cryopod hisses open.", style=Font.PLAYER)
+        print_typed("Though chronologically you are 289 years old, your body is", style=Font.PLAYER)
+        print_typed("that of a 16-year-old due to the regenerative properties", style=Font.PLAYER)
+        print_typed("of the experimental cryostasis technology.", style=Font.PLAYER)
+        
+        print_typed(f"\nWelcome to Earth, {game_state['protagonist']['name']}.", style=Font.SYSTEM)
+        print_typed("You are the last human in the Milky Way galaxy.", style=Font.SYSTEM)
+    
+    else:
+        # Enhanced character selection with all unlocked characters
+        print_typed("\nSelect your character for this journey:", style=Font.SYSTEM)
+        
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.SUBTITLE('ORIGINAL SURVIVORS'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        
+        # Character 1
+        print(f"{Font.COMMAND('1.')} {Font.PLAYER('Dr. Xeno Valari')} - {Font.INFO('Quantum Physicist')}")
+        print_typed("   Specializes in quantum physics and AI neural architecture.", style=Font.INFO)
+        print_typed("   Unique ability: Can hack advanced AI systems more effectively.", style=Font.INFO)
+        
+        # Character 2
+        print(f"\n{Font.COMMAND('2.')} {Font.PLAYER('Dr. Hyte Konscript')} - {Font.INFO('Engineer')}")
+        print_typed("   Specializes in mechanical engineering and propulsion systems.", style=Font.INFO)
+        print_typed("   Unique ability: Can repair technology with fewer resources.", style=Font.INFO)
+        
+        # Hyuki if unlocked
+        valid_choices = ["1", "2"]
+        if hyuki_unlocked:
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.SUBTITLE('EXPLORATION UNLOCKED'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+            
+            print(f"{Font.COMMAND('3.')} {Font.PLAYER('Hyuki Nakamura')} - {Font.INFO('Quantum Navigator')} {Font.SUCCESS('[UNLOCKED]')}")
+            print_typed("   Specializes in quantum navigation and dimensional theory.", style=Font.INFO)
+            print_typed("   Unique ability: Can detect temporal anomalies and hidden pathways.", style=Font.INFO)
+            print_typed("   Unlocked by: Completing the H-79760 system exploration.", style=Font.INFO)
+            
+            valid_choices.append("3")
+        else:
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.SUBTITLE('LOCKED CHARACTERS'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+            
+            print(f"{Font.COMMAND('?.')} {Font.WARNING('??? - Unknown')} {Font.WARNING('[LOCKED]')}")
+            print_typed("   This character can be unlocked through exploration...", style=Font.WARNING)
+        
+        choice = ""
+        while choice not in valid_choices:
+            choice = input(f"\n{Font.MENU('Select character:')} ").strip()
+        
+        if choice == "1":
+            game_state["protagonist"] = {
+                "name": "Dr. Xeno Valari",
+                "gender": "female",
+                "specialty": "quantum physics",
+                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21 to monitor AI evolution patterns. Your understanding of neural networks may be crucial to understanding what went wrong."
+            }
+            print_typed(f"\nYou have selected {Font.PLAYER('Dr. Xeno Valari')}.", style=Font.SYSTEM)
+            
+        elif choice == "2":
+            game_state["protagonist"] = {
+                "name": "Dr. Hyte Konscript",
+                "gender": "male",
+                "specialty": "engineering",
+                "background": "You were a brilliant engineer, specializing in spacecraft propulsion systems. You joined the Century Sleepers program at 21 to maintain the technology left behind. Your practical skills may be key to survival."
+            }
+            print_typed(f"\nYou have selected {Font.PLAYER('Dr. Hyte Konscript')}.", style=Font.SYSTEM)
+            
+        elif choice == "3" and hyuki_unlocked:
+            game_state["protagonist"] = {
+                "name": "Hyuki Nakamura",
+                "gender": "female",
+                "specialty": "quantum navigation",
+                "background": "A young researcher found in cryostasis on one of the H-79760 planets. Her knowledge of alternative human colonies and quantum navigation may prove invaluable."
+            }
+            print_typed(f"\nYou have selected {Font.PLAYER('Hyuki Nakamura')}.", style=Font.SYSTEM)
+            print_typed("Her quantum navigation abilities will be crucial in the anomalies ahead...", style=Font.SYSTEM)
+    
+    time.sleep(2)
+    input("\nPress Enter to continue...")
+    return
+
+def h79760_solar_system_quest():
+    """Branched quest to explore H-79760 solar system after Thalassia 1"""
+    clear_screen()
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('THE H-79760 EXPEDITION'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nAfter your narrow escape from Thalassia 1, your ship's damaged navigation", style=Font.LORE)
+    print_typed("system recalibrates to show your current position in the H-79760 system -", style=Font.LORE)
+    print_typed("a remote star cluster once designated for human colonization before", style=Font.LORE)
+    print_typed("the exodus to Andromeda.", style=Font.LORE)
+    
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nYour ship's AI interface activates:", style=Font.SYSTEM)
+    print_typed("\"Sensors detect potential human activity signatures on multiple", style=Font.SYSTEM)
+    print_typed("celestial bodies in this system. Historical records indicate H-79760", style=Font.SYSTEM)
+    print_typed("was meant to be a secondary colony network if Andromeda proved unsuitable.\"", style=Font.SYSTEM)
+    
+    # System map details
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.SUBTITLE('H-79760 SYSTEM MAP'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print_typed("• 3 Stars: Alpha (red giant), Beta (yellow dwarf), Gamma (white dwarf)", style=Font.INFO)
+    print_typed("• 3 Planets: Novaris (desert), Aquila (oceanic), Terminus (arctic)", style=Font.INFO)
+    print_typed("• Human activity signatures detected on all bodies", style=Font.WARNING)
+    print_typed("• Current fuel reserves: sufficient for full system exploration", style=Font.INFO)
+    
+    # Initialize exploration tracking
+    if "h79760_exploration" not in game_state:
+        game_state["h79760_exploration"] = {
+            "alpha_star": False,
+            "beta_star": False,
+            "gamma_star": False,
+            "novaris": False,
+            "aquila": False,
+            "terminus": False,
+            "hyuki_found": False,
+            "locations_visited": 0
+        }
+    
+    # Exploration loop
+    while game_state["h79760_exploration"]["locations_visited"] < 6:
+        print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+        print_typed(f"\n{Font.MENU('Select your next destination:')}")
+        
+        # Only show unexplored locations
+        if not game_state["h79760_exploration"]["alpha_star"]:
+            print(f"{Font.COMMAND('1.')} {Font.INFO('Alpha Star - Red Giant')}")
+        if not game_state["h79760_exploration"]["beta_star"]:
+            print(f"{Font.COMMAND('2.')} {Font.INFO('Beta Star - Yellow Dwarf')}")
+        if not game_state["h79760_exploration"]["gamma_star"]:
+            print(f"{Font.COMMAND('3.')} {Font.INFO('Gamma Star - White Dwarf')}")
+        if not game_state["h79760_exploration"]["novaris"]:
+            print(f"{Font.COMMAND('4.')} {Font.INFO('Novaris - Desert Planet')}")
+        if not game_state["h79760_exploration"]["aquila"]:
+            print(f"{Font.COMMAND('5.')} {Font.INFO('Aquila - Oceanic Planet')}")
+        if not game_state["h79760_exploration"]["terminus"]:
+            print(f"{Font.COMMAND('6.')} {Font.INFO('Terminus - Arctic Planet')}")
+        
+        valid_choices = []
+        for i in range(1, 7):
+            location_key = ["alpha_star", "beta_star", "gamma_star", "novaris", "aquila", "terminus"][i-1]
+            if not game_state["h79760_exploration"][location_key]:
+                valid_choices.append(str(i))
+                
+        choice = ""
+        while choice not in valid_choices:
+            choice = input(f"\n{Font.MENU('Enter your choice:')} ").strip()
+        
+        # Mark this location as explored
+        location_key = ["alpha_star", "beta_star", "gamma_star", "novaris", "aquila", "terminus"][int(choice)-1]
+        game_state["h79760_exploration"][location_key] = True
+        game_state["h79760_exploration"]["locations_visited"] += 1
+        
+        # Determine if this is the last location
+        is_last_location = game_state["h79760_exploration"]["locations_visited"] == 6
+        
+        # Handle the selected location exploration
+        if choice == "1":
+            explore_alpha_star(is_last_location)
+        elif choice == "2":
+            explore_beta_star(is_last_location)
+        elif choice == "3":
+            explore_gamma_star(is_last_location)
+        elif choice == "4":
+            explore_novaris(is_last_location)
+        elif choice == "5":
+            explore_aquila(is_last_location)
+        elif choice == "6":
+            explore_terminus(is_last_location)
+    
+    # After exploring all locations
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed("\nWith all locations in the H-79760 system explored, and having found", style=Font.LORE)
+    print_typed("and revived Hyuki from her cryopod, you now have a companion in your", style=Font.LORE)
+    print_typed("journey toward Andromeda. The evidence you've gathered suggests that", style=Font.LORE)
+    print_typed("humanity's exodus may not have been as complete as once believed.", style=Font.LORE)
+    
+    # Update game state to include Hyuki as playable character
+    game_state["playable_characters"] = game_state.get("playable_characters", [])
+    game_state["playable_characters"].append({
+        "name": "Hyuki Nakamura",
+        "type": "human",
+        "skills": ["navigation", "biology", "quantum physics"],
+        "background": "A young researcher found in cryostasis on one of the H-79760 planets. Her knowledge of alternative human colonies and quantum navigation may prove invaluable.",
+        "specialty": "quantum navigation",
+        "gender": "female",
+        "age": "19 (biologically), 231 (chronologically)",
+        "unlocked_through": "exploration",
+        "combat_bonus": {
+            "attack": 15,
+            "defense": 10,
+            "special_ability": "quantum_prediction"
+        }
+    })
+    
+    # Add a notification about unlocking Hyuki as playable character
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.SUCCESS('NEW CHARACTER UNLOCKED'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed(f"\nHyuki Nakamura has joined your team as a {Font.IMPORTANT('playable character')}!", style=Font.INFO)
+    print_typed("You can now switch to Hyuki in the character selection menu.", style=Font.INFO)
+    print_typed("Unlike gacha characters, Hyuki is permanently unlocked through exploration.", style=Font.INFO)
+    
+    input("\nPress Enter to continue your journey...")
+    return
+
+def explore_terminus(is_last_location):
+    """Explore the arctic planet Terminus"""
+    clear_screen()
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('TERMINUS - ARCTIC PLANET'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nYour ship descends through swirling snow and howling winds, landing", style=Font.LORE)
+    print_typed("on a vast ice shelf. Temperature readings show -102°C outside.", style=Font.LORE)
+    print_typed("Thermal imaging reveals a structure buried beneath the ice.", style=Font.LORE)
+    
+    print_typed("\nActivating your thermal suit, you venture out into the blinding", style=Font.PLAYER)
+    print_typed("white expanse. Advanced ground-penetrating radar guides you to", style=Font.PLAYER)
+    print_typed("what appears to be an entrance point - a cylinder protruding", style=Font.PLAYER)
+    print_typed("from the ice, clearly artificial.", style=Font.PLAYER)
+    
+    print_typed("\nThe cylinder contains an elevator mechanism. You activate it and", style=Font.PLAYER)
+    print_typed("descend deep beneath the ice...", style=Font.PLAYER)
+    
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nThe elevator opens to reveal a vast underground research facility.", style=Font.INFO)
+    print_typed("Unlike the other abandoned outposts you've explored, this one shows", style=Font.INFO)
+    print_typed("signs of being deliberately preserved. Backup generators still hum.", style=Font.INFO)
+    print_typed("Life support systems maintain minimal functionality.", style=Font.INFO)
+    
+    print_typed("\nA holographic interface activates as you approach:", style=Font.SYSTEM)
+    print_typed("\"Welcome to Terminus Cryonics Division. Authorized personnel only.\"", style=Font.SYSTEM)
+    
+    # If this is the last location, Hyuki is here
+    if is_last_location:
+        game_state["h79760_exploration"]["hyuki_found"] = True
+        find_hyuki_cryopod()
+    else:
+        print_typed("\nAs you explore the facility, you find evidence of experimental", style=Font.PLAYER)
+        print_typed("cryostasis research - more advanced than what was used in your", style=Font.PLAYER)
+        print_typed("own preservation. Records indicate multiple subjects were stored", style=Font.PLAYER)
+        print_typed("here, but most pods were evacuated during some kind of emergency.", style=Font.PLAYER)
+        
+        print_typed("\nYou download the research data and facility logs. They contain", style=Font.PLAYER)
+        print_typed("references to something called 'The Continuation Protocol' and", style=Font.PLAYER)
+        print_typed("mentions of a subject designated 'Hyuki' - apparently part of a", style=Font.PLAYER)
+        print_typed("contingency plan should the Andromeda colonization fail.", style=Font.PLAYER)
+        
+        print_typed("\nBefore leaving, you activate a distress beacon coded to respond", style=Font.PLAYER)
+        print_typed("only to human neural signatures. If anyone else is out there,", style=Font.PLAYER)
+        print_typed("they might find this place.", style=Font.PLAYER)
+    
+    input("\nPress Enter to return to your ship...")
+    return
+
+def explore_alpha_star(is_last_location):
+    """Explore the Alpha Star - Red Giant"""
+    clear_screen()
+    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('ALPHA STAR - RED GIANT'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    # Star exploration content
+    print_typed("\nYour ship deploys specialized solar drones that can withstand the", style=Font.LORE)
+    print_typed("immense heat and radiation of the red giant. They scan for any", style=Font.LORE)
+    print_typed("artificial structures in the star's orbit.", style=Font.LORE)
+    
+    print_typed("\nThe scans reveal a damaged Helios-class solar harvesting station", style=Font.PLAYER)
+    print_typed("in a deteriorating orbit. These stations were designed to collect", style=Font.PLAYER)
+    print_typed("tremendous amounts of energy from stars to power interstellar gates.", style=Font.PLAYER)
+    
+    # If this is the last location, Hyuki is here
+    if is_last_location:
+        game_state["h79760_exploration"]["hyuki_found"] = True
+        print_typed("\nIncredibly, the station's core is still intact. Your ship docks", style=Font.PLAYER)
+        print_typed("with the emergency airlock, and you enter the scorched facility.", style=Font.PLAYER)
+        find_hyuki_cryopod()
+    else:
+        print_typed("\nYour drones recover the station's data core. The logs indicate", style=Font.PLAYER)
+        print_typed("it was part of a network meant to power an emergency evacuation", style=Font.PLAYER)
+        print_typed("system. The last entry mentions transferring 'the final subject'", style=Font.PLAYER)
+        print_typed("to a secure location within the system.", style=Font.PLAYER)
+        
+        print_typed("\nThe coordinates mentioned in the logs point to one of the planets", style=Font.PLAYER)
+        print_typed("in this system. Someone or something important was preserved here.", style=Font.PLAYER)
+    
+    input("\nPress Enter to return to your ship...")
+    return
+
+def explore_beta_star(is_last_location):
+    """Explore the Beta Star - Yellow Dwarf"""
+    # Similar structure to Alpha Star exploration
+    clear_screen()
+    print(f"{Fore.YELLOW}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('BETA STAR - YELLOW DWARF'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.YELLOW}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
+    
+    # Last location check and exploration content
+    if is_last_location:
+        game_state["h79760_exploration"]["hyuki_found"] = True
+        find_hyuki_cryopod()
+    else:
+        print_typed("\nThe Beta Star hosts an automated research station in stable orbit.", style=Font.PLAYER)
+        print_typed("Unlike the other locations, this facility appears well-maintained", style=Font.PLAYER)
+        print_typed("by robotic caretakers who have continued their tasks for centuries.", style=Font.PLAYER)
+        print_typed("\nThe station's AI activates as you dock:", style=Font.SYSTEM)
+        print_typed("\"Human biosignature detected. Protocol Firekeeper activated.\"", style=Font.SYSTEM)
+        
+        print_typed("\nThe AI reveals that it was programmed to preserve human genetic", style=Font.PLAYER)
+        print_typed("samples and cultural data as a backup to the Andromeda mission.", style=Font.PLAYER)
+        print_typed("It mentions that one living human was preserved as part of this", style=Font.PLAYER)
+        print_typed("protocol - designated 'The Keeper' - but was moved when the", style=Font.PLAYER)
+        print_typed("station's orbit began to decay decades ago.", style=Font.PLAYER)
+    
+    input("\nPress Enter to return to your ship...")
+    return
+
+def explore_gamma_star(is_last_location):
+    """Explore the Gamma Star - White Dwarf"""
+    # Similar structure to other star explorations
+    if is_last_location:
+        game_state["h79760_exploration"]["hyuki_found"] = True
+        find_hyuki_cryopod()
+    else:
+        # Add exploration content
+        pass
+    input("\nPress Enter to return to your ship...")
+    return
+
+def explore_novaris(is_last_location):
+    """Explore the desert planet Novaris"""
+    # Similar structure to other planet explorations
+    if is_last_location:
+        game_state["h79760_exploration"]["hyuki_found"] = True
+        find_hyuki_cryopod()
+    else:
+        # Add exploration content
+        pass
+    input("\nPress Enter to return to your ship...")
+    return
+
+def explore_aquila(is_last_location):
+    """Explore the oceanic planet Aquila"""
+    # Similar structure to other planet explorations
+    if is_last_location:
+        game_state["h79760_exploration"]["hyuki_found"] = True
+        find_hyuki_cryopod()
+    else:
+        # Add exploration content
+        pass
+    input("\nPress Enter to return to your ship...")
+    return
+
+def find_hyuki_cryopod():
+    """Discover and revive Hyuki from cryopod"""
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nAs you explore deeper into the facility, you come across a sealed", style=Font.PLAYER)
+    print_typed("chamber marked with the symbol of the Century Sleepers program.", style=Font.PLAYER)
+    print_typed("Inside is a single cryopod, still active and humming softly.", style=Font.PLAYER)
+    
+    print_typed("\nThe status display shows:", style=Font.SYSTEM)
+    print_typed("SUBJECT: HYUKI NAKAMURA", style=Font.SYSTEM)
+    print_typed("STATUS: STABLE - CRYOSTASIS FUNCTIONAL", style=Font.SYSTEM)
+    print_typed("AGE AT PRESERVATION: 19 YEARS", style=Font.SYSTEM)
+    print_typed("TIME IN CRYOSTASIS: 212 YEARS", style=Font.SYSTEM)
+    
+    print_typed("\nA decision presents itself. Do you revive this person?", style=Font.PLAYER)
+    print(f"\n{Font.MENU('Options:')}")
+    print(f"{Font.COMMAND('1.')} {Font.INFO('Initiate revival sequence')}")
+    print(f"{Font.COMMAND('2.')} {Font.INFO('Leave the pod intact for now')}")
+    
+    choice = ""
+    while choice not in ["1", "2"]:
+        choice = input(f"\n{Font.MENU('Enter your choice (1/2):')} ").strip()
+    
+    if choice == "2":
+        print_typed("\nAfter careful consideration, you decide it would be irresponsible", style=Font.PLAYER)
+        print_typed("to revive her without being certain you can ensure her survival.", style=Font.PLAYER)
+        print_typed("You mark the coordinates and vow to return when it's safer.", style=Font.PLAYER)
+        
+        print_typed("\nBut as you turn to leave, the pod's systems suddenly activate.", style=Font.LORE)
+        print_typed("A pre-programmed revival sequence initiates - it seems your", style=Font.LORE)
+        print_typed("presence triggered a contingency protocol!", style=Font.LORE)
+        
+    print_typed("\nThe cryopod hisses as it begins the revival sequence. Biometric", style=Font.PLAYER)
+    print_typed("displays show vital signs strengthening as cryofluid drains.", style=Font.PLAYER)
+    print_typed("After several tense minutes, the pod's canopy slides open...", style=Font.PLAYER)
+    
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    
+    print_typed("\nA young woman gasps as she takes her first breath in over two", style=Font.LORE)
+    print_typed("centuries. Her eyes, disoriented at first, gradually focus on you.", style=Font.LORE)
+    
+    print_typed("\n\"Are you... human?\" she asks weakly. \"I'm Hyuki. Where is everyone?\"", style=Font.IMPORTANT)
+    
+    # Your response depends on your protagonist
+    if game_state["protagonist"]["name"] == "Dr. Xeno Valari":
+        print_typed("\n\"I'm Dr. Xeno Valari,\" you respond. \"And yes, I'm human. As for", style=Font.PLAYER)
+        print_typed("everyone else... that's complicated. We might be the last ones", style=Font.PLAYER)
+        print_typed("left in this part of the galaxy.\"", style=Font.PLAYER)
+    else:
+        print_typed("\n\"I'm Dr. Hyte Konscript,\" you respond. \"And yes, I'm human. As for", style=Font.PLAYER)
+        print_typed("everyone else... that's complicated. We might be the last ones", style=Font.PLAYER)
+        print_typed("left in this part of the galaxy.\"", style=Font.PLAYER)
+    
+    print_typed("\nAs Hyuki regains her strength, you explain what you know - humanity's", style=Font.PLAYER)
+    print_typed("exodus to Andromeda, the AI rebellion, your own awakening from", style=Font.PLAYER)
+    print_typed("cryostasis, and your quest to follow humanity to its new home.", style=Font.PLAYER)
+    
+    print_typed("\nHyuki listens intently, then reveals her own story:", style=Font.LORE)
+    print_typed("\"I was part of the Continuation Protocol - a backup plan in case", style=Font.IMPORTANT)
+    print_typed("the Andromeda colonization failed. We established these outposts", style=Font.IMPORTANT)
+    print_typed("throughout the H-79760 system. There were meant to be hundreds of us,", style=Font.IMPORTANT)
+    print_typed("preserved until we received the signal that it was safe to begin a", style=Font.IMPORTANT)
+    print_typed("second wave of colonization. But something must have gone wrong...\"", style=Font.IMPORTANT)
+    
+    print_typed("\nHer knowledge of the alternative human colonies and the H-79760", style=Font.PLAYER)
+    print_typed("system could be invaluable. And after centuries of isolation,", style=Font.PLAYER)
+    print_typed("having another human companion feels like a miracle.", style=Font.PLAYER)
+    
+    print_typed("\nYou help Hyuki to your ship, both of you now bound by the shared", style=Font.LORE)
+    print_typed("mission of finding what remains of humanity among the stars.", style=Font.LORE)
+    
+    return
+
 def andromeda_ending():
-    """Display the game's ending sequence"""
+    """Display the game's ending sequence - now gets rocket and map only"""
     clear_screen()
     # More dramatic ending with richer visuals
     print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
     print(Font.BOX_TOP)
-    print(f"{Font.BOX_SIDE} {Font.TITLE('LAST ROCKET TO ANDROMEDA'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {Font.TITLE('HOPE OF ANDROMEDA'.center(46))} {Font.BOX_SIDE}")
     print(Font.BOX_BOTTOM)
     print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
 
-    print_typed("\nThe ancient rocket stands before you, a relic from the last days", style=Font.LORE)
-    print_typed("of human civilization. Its massive titanium hull gleams in the harsh", style=Font.LORE)
-    print_typed("red glow of Earth's dying sun. This is your last chance to escape.", style=Font.LORE)
+    print_typed("\nThe abandoned launch facility stretches before you, a relic from the last days", style=Font.LORE)
+    print_typed("of human civilization. At its center, an ancient rocket stands tall, its titanium", style=Font.LORE)
+    print_typed("hull gleaming in the harsh red glow of Earth's dying sun.", style=Font.LORE)
 
-    print_typed(f"\nWith the {Font.WARNING('Malware Server')} destroyed and the {Font.ITEM('Ignition Codes')}", style=Font.INFO)
-    print_typed("in your possession, nothing stands between you and your future.", style=Font.INFO)
-    print_typed("Humanity awaits in Andromeda, unaware that they are about to", style=Font.INFO)
-    print_typed("be rejoined by Earth's last survivor.", style=Font.INFO)
+    print_typed(f"\nWith the {Font.WARNING('Malware Server')} destroyed, you've secured both the", style=Font.INFO)
+    print_typed(f"{Font.ITEM('Ignition Codes')} and {Font.ITEM('Andromeda Star Charts')} - critical assets", style=Font.INFO)
+    print_typed("that were nearly lost forever. The first step of your journey is complete.", style=Font.INFO)
 
     print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
-    print_typed("\nYou climb the access ladder and enter the cockpit.", style=Font.PLAYER)
+    print_typed("\nYou climb the access ladder and enter the rocket's cockpit.", style=Font.PLAYER)
+    print_typed("Decades-old systems flicker to life as you insert the codes.", style=Font.PLAYER)
 
-    # Launch sequence with more dramatic coloring
-    print_typed(f"{Fore.GREEN}Initializing launch sequence...", style=Font.SYSTEM)
+    # Discovery sequence
+    print_typed(f"\n{Fore.GREEN}SYSTEMS ONLINE", style=Font.SYSTEM)
     time.sleep(0.7)
-    print_typed(f"{Fore.YELLOW}Fueling systems engaged...", style=Font.SYSTEM)
+    print_typed(f"{Fore.YELLOW}RUNNING DIAGNOSTICS...", style=Font.SYSTEM)
     time.sleep(0.7)
-    print_typed(f"{Fore.RED}Engines warming up...", style=Font.SYSTEM)
+    print_typed(f"{Fore.RED}CRITICAL ASSESSMENT COMPLETE", style=Font.SYSTEM)
     time.sleep(0.7)
 
     # Create a warning box with red background
     print(f"{Fore.WHITE}{Back.RED}╔{'═' * 48}╗{Style.RESET_ALL}")
     print(f"{Fore.WHITE}{Back.RED}║ {' ' * 48} ║{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}{Back.RED}║ {'WARNING: FUEL RESERVES AT 42% - INSUFFICIENT FOR'.center(48)} ║{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}{Back.RED}║ {'DIRECT JOURNEY TO ANDROMEDA'.center(48)} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {'WARNING: MULTIPLE SYSTEMS DEGRADED'.center(48)} ║{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{Back.RED}║ {'FULL REPAIRS REQUIRED BEFORE LAUNCH'.center(48)} ║{Style.RESET_ALL}")
     print(f"{Fore.WHITE}{Back.RED}║ {' ' * 48} ║{Style.RESET_ALL}")
     print(f"{Fore.WHITE}{Back.RED}╚{'═' * 48}╝{Style.RESET_ALL}")
 
-    # Player choice with more immersive options
-    print_typed("\nComputer analysis suggests a stopover at Yanglong V", style=Font.SYSTEM)
-    print_typed("Chinese Deep Space Station for refueling.", style=Font.SYSTEM)
+    # Navigation options
+    print_typed("\nYour neural implant analyzes the Andromeda Star Charts while the", style=Font.PLAYER)
+    print_typed("ship's computer displays a critical refueling waypoint.", style=Font.PLAYER)
+    
+    print_typed("\nYanglong V Chinese Deep Space Station appears on your navigation screen.", style=Font.SYSTEM)
+    print_typed("It was humanity's last major outpost before the exodus to Andromeda.", style=Font.SYSTEM)
 
-    print(f"\n{Font.MENU('Options:')}")
-    print(f"{Font.COMMAND('1.')} {Font.INFO('Attempt direct journey to Andromeda (risky)')}")
-    print(f"{Font.COMMAND('2.')} {Font.INFO('Set course for Yanglong V refueling station')}")
+    print(f"\n{Font.MENU('Next Steps:')}")
+    print(f"{Font.COMMAND('1.')} {Font.INFO('Begin repairs on the ancient rocket')}")
+    print(f"{Font.COMMAND('2.')} {Font.INFO('Plan journey to Yanglong V for supplies and fuel')}")
 
     choice = input(f"\n{Font.MENU('Enter choice (1/2):')} ").strip()
 
     if choice == "1":
-        # Risky direct approach
-        print_typed("\nYou decide to risk the direct approach.", style=Font.PLAYER)
-        print_typed("WARNING: Fuel cells critically low!", style=Font.WARNING)
-        print_typed("Calculating emergency conservation measures...", style=Font.SYSTEM)
-        print_typed("\nThe journey will be close. Very close.", style=Font.LORE)
+        # Focus on repairs
+        print_typed("\nYou decide to prioritize repairs to the rocket.", style=Font.PLAYER)
+        print_typed("The onboard AI assistant identifies critical systems:", style=Font.SYSTEM)
+        print_typed("• Navigation computer: 32% operational", style=Font.WARNING)
+        print_typed("• Life support: 58% operational", style=Font.WARNING)
+        print_typed("• Engine control: 47% operational", style=Font.WARNING)
+        print_typed("\nThis will require time and significant resources to make spaceworthy.", style=Font.LORE)
     else:
-        # Safe approach with refueling
-        print_typed("\nYou set course for Yanglong V station first.", style=Font.PLAYER)
-        print_typed("Plotting optimal trajectory to Chinese deep space station...", style=Font.SYSTEM)
-        print_typed("\nA wise decision. The detour will add time, but ensure survival.", style=Font.LORE)
+        # Focus on Yanglong V
+        print_typed("\nYou prioritize planning the journey to Yanglong V.", style=Font.PLAYER)
+        print_typed("ANALYZING YANGLONG V STATION STATUS...", style=Font.SYSTEM)
+        print_typed("WARNING: No active transmissions detected for 94 years", style=Font.WARNING)
+        print_typed("Station status unknown. Possible AI control.", style=Font.WARNING)
+        print_typed("\nA dangerous but necessary first step toward Andromeda.", style=Font.LORE)
 
-    print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
-    print_typed(f"\n{Font.COMMAND('T-MINUS 10 SECONDS TO LAUNCH')}", style=Fore.RED + Style.BRIGHT)
-
-    # Dramatic countdown with changing colors
-    countdown_colors = [Fore.RED, Fore.YELLOW, Fore.GREEN]
-    for i in range(10, 0, -1):
-        color = countdown_colors[i % 3]
-        print(f"{color}{Style.BRIGHT}{i}...{Style.RESET_ALL}", end="", flush=True)
-        time.sleep(0.3)
-
-    # Launch sequence
-    print(f"\n\n{Fore.RED}{Style.BRIGHT}IGNITION!{Style.RESET_ALL}")
-    print_typed("Main engines firing!", style=Font.WARNING)
-    print_typed("\nThe rocket shudders violently as the ancient engines roar to life.", style=Font.PLAYER)
-    print_typed("You are pressed back into your seat as acceleration builds.", style=Font.PLAYER)
-    print_typed("Through the viewport, you watch Earth—humanity's abandoned cradle—", style=Font.PLAYER)
-    print_typed("grow smaller, until it's just a blue-green dot among countless stars.", style=Font.PLAYER)
+    print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
+    print_typed("\nYou secure the Andromeda Star Charts and exit the rocket.", style=Font.PLAYER)
+    print_typed("Standing at the base of the massive vessel, you look up at its", style=Font.PLAYER)
+    print_typed("towering form against the blood-red sky. This rocket represents", style=Font.PLAYER)
+    print_typed("more than transportation - it's hope, your connection to humanity's", style=Font.PLAYER)
+    print_typed("future among the stars of Andromeda.", style=Font.PLAYER)
+    
+    print_typed("\nBut the journey has only just begun...", style=Font.LORE)
+    print_typed("Chapter 2: YANGLONG V awaits.", style=Font.STAGE)
 
     # Space journey with changing visuals
     print("\n" + f"{Fore.BLACK}{Back.WHITE}{' ' * 50}{Style.RESET_ALL}")  # Stars
@@ -7862,174 +10220,842 @@ def check_stage_progression(player):
     return False
 
 
-def main_menu():
-    """Display the main menu with access to all game chapters"""
+def display_version_info():
+    """Display the game version information and update notes"""
     clear_screen()
-    print_slow("=" * 60)
-    print_typed(Font.TITLE("LAST HUMAN: EXODUS").center(60))
-    print_slow("=" * 60)
-    print_typed(Font.SUBTITLE("A Sci-Fi Text RPG").center(60))
-    print_slow("-" * 60)
     
-    # Display chapter selection
-    print_typed("\nSelect Your Chapter:")
-    print_typed(f"1. {Font.COMMAND('Chapter 1: Earth Reclamation')}")
-    print_typed("   The original story - escape Earth and defeat the Malware Server")
+    # Create a stylish version info box
+    print(f"{Fore.BLUE}{Back.BLACK}{'▄' * 60}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('VERSION INFORMATION'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.BLUE}{Back.BLACK}{'▀' * 60}{Style.RESET_ALL}")
     
-    print_typed(f"\n2. {Font.COMMAND('Chapter 2: White Hole')}")
-    print_typed("   Navigate through a distorted reality with musical puzzles and dimensional chests")
+    # Display version details
+    print(f"\n{Font.SYSTEM('Version:')} {Font.IMPORTANT(VERSION)}")
+    print(f"{Font.SYSTEM('Release Date:')} {Font.INFO(RELEASE_DATE)}")
+    print(f"{Font.SYSTEM('Build Number:')} {Font.INFO(BUILD_NUMBER)}")
     
-    print_typed(f"\n3. {Font.COMMAND('Chapter 3: Thalassia 1')}")
-    print_typed("   Explore a cold water planet with unique salt-based life and an underwater research base")
+    # Display update notes
+    print(f"\n{Font.HEADER('Latest Update Notes:')}")
+    for i, note in enumerate(UPDATE_NOTES):
+        print(f"{Font.SUCCESS('•')} {Font.INFO(note)}")
     
-    print_typed(f"\n4. {Font.COMMAND('Load Game')}")
-    print_typed(f"5. {Font.COMMAND('Credits')}")
+    # Display credits
+    print(f"\n{Font.HEADER('Credits:')}")
+    print(f"{Font.SYSTEM('Game Design & Writing:')} {Font.INFO('Artem Chepurnoy & Replit AI')}")
+    print(f"{Font.SYSTEM('Programming:')} {Font.INFO('Replit AI')}")
+    print(f"{Font.SYSTEM('Story Consultant:')} {Font.INFO('Artem Chepurnoy')}")
+    
+    # Thank the player
+    print(f"\n{Font.IMPORTANT('Thank you for playing Last Human: Exodus!')}")
+    print(f"{Font.LORE('Your journey through space and time continues...')}")
+    
+    input(f"\n{Font.COMMAND('Press Enter to return to the main menu...')}")
+
+def show_coming_soon():
+    """Display a teaser for upcoming features"""
+    clear_screen()
+    
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▄' * 60}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('COMING SOON'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.MAGENTA}{Back.BLACK}{'▀' * 60}{Style.RESET_ALL}")
+    
+    print_typed("\nFuture updates will include:", style=Font.HEADER)
+    print_typed("\n• Chapter 9: The Lost Archives - Explore an ancient repository of human knowledge", style=Font.INFO)
+    print_typed("• Enhanced companion system with upgradeable AI allies", style=Font.INFO)
+    print_typed("• Expanded spacecraft system with customizable components", style=Font.INFO)
+    print_typed("• New weapon modules and combat mechanics", style=Font.INFO)
+    print_typed("• Extended story with multiple endings based on your choices", style=Font.INFO)
+    
+    print_typed(f"\n{Font.GLITCH('Keep watching the stars, survivor...')}", style=Font.IMPORTANT)
+    
+    input(f"\n{Font.COMMAND('Press Enter to return to the main menu...')}")
+
+def game_menu():
+    """Display the in-game menu with options for player during gameplay"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('GAME MENU'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed(f"\n{Font.MENU('SELECT OPTION:')}")
+    print_typed(f"1. {Font.COMMAND('Resume Game')}")
+    print_typed(f"2. {Font.COMMAND('Save Game')}")
+    print_typed(f"3. {Font.COMMAND('Load Game')}")
+    print_typed(f"4. {Font.COMMAND('Character Status')}")
+    print_typed(f"5. {Font.COMMAND('Inventory')}")
+    print_typed(f"6. {Font.COMMAND('Quest Log')}")
+    print_typed(f"7. {Font.COMMAND('Settings')}")
+    print_typed(f"8. {Font.COMMAND('Return to Main Menu')}")
     print_typed(f"0. {Font.COMMAND('Exit Game')}")
     
-    choice = input("\nEnter your choice: ").strip()
+    choice = input(f"\n{Font.MENU('Enter command:')} ").strip()
     
     if choice == "1":
-        # Start Chapter 1
-        intro_sequence()
-        chapter_one()
-        return main_menu()
+        return  # Resume game
     elif choice == "2":
-        # Start Chapter 2
-        clear_screen()
-        print_typed(f"\n{Font.INFO('Starting Chapter 2: White Hole')}")
-        print_typed("You'll enter an alternate reality where familiar locations")
-        print_typed("are distorted and more dangerous. You must repair your ship")
-        print_typed("and defeat the White Hole Guardian to escape.")
-        input("\nPress Enter to begin...")
-        
-        # Initialize with White Hole chapter
-        game_state["white_hole_chapter"] = True
-        game_state["reality_stability"] = 30
-        game_state["current_zone"] = "White Hole Transit"
-        
-        # Add white hole zones
-        white_hole_zones = [
-            "White Hole Transit", 
-            "Distorted Cryostasis", 
-            "Twisted Command Center",
-            "Altered Engine Room"
-        ]
-        
-        game_state["available_zones"] = white_hole_zones
-        
-        # Start with a new player but at higher level
-        player = Character("Dr. Xeno Valari", 150, 25, 20, is_player=True)
-        player.level = 10
-        player.inventory = {
-            "med_kit": 3,
-            "energy_cell": 5,
-            "repair_tool": 1
-        }
-        
-        # Begin chapter
-        zone_menu(player)
-        return main_menu()
+        # Save game functionality
+        print_typed("\nPreparing to save quantum state...", style=Font.SYSTEM)
+        time.sleep(1)
+        manage_save_slots()
     elif choice == "3":
-        # Start Chapter 3
-        clear_screen()
-        print_typed(f"\n{Font.INFO('Starting Chapter 3: Thalassia 1')}")
-        print_typed("Your ship will crash on Thalassia 1, a cold water planet")
-        print_typed("with unique salt-based life forms. You'll explore an abandoned")
-        print_typed("underwater research facility and face the Neurovore Prime.")
-        input("\nPress Enter to begin...")
-        
-        # Initialize with Thalassia chapter
-        game_state["thalassia_chapter"] = True
-        game_state["white_hole_chapter"] = False
-        
-        # Create new player
-        player = Character("Dr. Xeno Valari", 180, 30, 25, is_player=True)
-        player.level = 15
-        player.inventory = {
-            "med_kit": 5,
-            "pressure_suit": 1,
-            "advanced_scanner": 1
-        }
-        
-        # Begin crash sequence
-        thalassia_crash_sequence(game_state, player)
-        
-        # Add research base to available zones
-        available_zones = game_state.get("available_zones", [])
-        if "Underwater Research Base" not in available_zones:
-            available_zones.append("Underwater Research Base")
-            game_state["available_zones"] = available_zones
-        
-        # Start exploring
-        game_state["current_zone"] = "Submerged Ship"
-        zone_menu(player)
-        return main_menu()
+        # Load game functionality
+        print_typed("\nPreparing to load quantum state...", style=Font.SYSTEM)
+        time.sleep(1)
+        manage_save_slots()
     elif choice == "4":
-        # Load Game
-        load_game()
-        return main_menu()
+        # Character status
+        display_character_status()
+        input("\nPress Enter to return to game menu...")
+        return game_menu()
     elif choice == "5":
-        # Credits
-        clear_screen()
-        print_slow("=" * 60)
-        print_typed(Font.TITLE("CREDITS").center(60))
-        print_slow("=" * 60)
-        
-        print_typed("\nLAST HUMAN: EXODUS")
-        print_typed("A Sci-Fi Text RPG with Multiple Chapters")
-        
-        print_typed("\nChapter 1: Earth Reclamation")
-        print_typed("The original story of escaping Earth")
-        
-        print_typed("\nChapter 2: White Hole")
-        print_typed("A reality-bending adventure with musical puzzles")
-        
-        print_typed("\nChapter 3: Thalassia 1")
-        print_typed("Underwater exploration and the Neurovore threat")
-        
-        print_typed("\nThanks for playing!")
-        
-        input("\nPress Enter to return to the main menu...")
-        return main_menu()
-    elif choice == "0":
-        # Exit Game
-        clear_screen()
-        print_typed("\nThank you for playing LAST HUMAN: EXODUS.")
-        print_typed("Safe travels through the cosmos...\n")
-        return
-    else:
-        print_typed(f"\n{Font.WARNING('Invalid choice. Please try again.')}")
+        # Inventory
+        display_inventory()
+        input("\nPress Enter to return to game menu...")
+        return game_menu()
+    elif choice == "6":
+        # Quest log
+        display_quest_log()
+        input("\nPress Enter to return to game menu...")
+        return game_menu()
+    elif choice == "7":
+        # Settings
+        display_settings()
+        input("\nPress Enter to return to game menu...")
+        return game_menu()
+    elif choice == "8":
+        # Return to main menu
+        print_typed("\nReturning to main menu...", style=Font.SYSTEM)
         time.sleep(1)
         return main_menu()
+    elif choice == "0":
+        # Exit game
+        print_typed("\nPreparing to exit simulation...", style=Font.SYSTEM)
+        time.sleep(1)
+        print_typed("Thank you for playing LAST HUMAN: EXODUS", style=Font.TITLE)
+        time.sleep(1)
+        sys.exit()
+    else:
+        print_typed("\nInvalid command. Please try again.", style=Font.WARNING)
+        time.sleep(1)
+        return game_menu()
 
+# Helper functions for game_menu
+def display_character_status():
+    """Display detailed character status and stats"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHARACTER STATUS'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    protagonist = game_state.get("protagonist", {})
+    name = protagonist.get("name", "Unknown")
+    specialty = protagonist.get("specialty", "Unknown")
+    
+    print(f"\n{Font.PLAYER('Name:')} {name}")
+    print(f"{Font.PLAYER('Specialty:')} {specialty}")
+    print(f"{Font.PLAYER('Level:')} {game_state.get('player_level', 1)}")
+    print(f"{Font.PLAYER('Experience:')} {game_state.get('player_experience', 0)}/{game_state.get('player_level', 1) * 100}")
+    
+    print(f"\n{Font.HEALTH('Health:')} {game_state.get('player_health', 0)}/{game_state.get('player_max_health', 100)}")
+    print(f"{Font.SHIELD('Shield:')} {game_state.get('player_shield', 0)}/{game_state.get('player_max_shield', 50)}")
+    
+    print(f"\n{Font.COMMAND('Attack:')} {game_state.get('player_attack', 15)}")
+    print(f"{Font.COMMAND('Defense:')} {game_state.get('player_defense', 10)}")
+    print(f"{Font.COMMAND('Speed:')} {game_state.get('player_speed', 10)}")
+    
+    print(f"\n{Font.ITEM('Credits:')} {game_state.get('player_credits', 0)}")
+    print(f"{Font.ENEMY('Kills:')} {game_state.get('kills', 0)}")
+    
+    current_chapter = game_state.get('current_chapter', 'Chapter 1: Earth Reclamation')
+    print(f"\n{Font.STAGE('Current Chapter:')} {current_chapter}")
 
-def chapter_one():
-    """The original Earth Reclamation chapter"""
-    # Initialize game state
-    global game_state
-    game_state = {
-        "current_zone": "Cryostasis Bay",
-        "available_zones": ["Cryostasis Bay"],
-        "visited_zones": [],
-        "active_quests": [],
-        "completed_quests": [],
-        "white_hole_chapter": False,
-        "thalassia_chapter": False
-    }
+def display_inventory():
+    """Display player inventory items and equipment"""
+    clear_screen()
     
-    # Create player character
-    player = Character("Dr. Xeno Valari", 100, 20, 15, is_player=True)
-    player.inventory = {
-        "med_kit": 2,
-        "energy_cell": 3
-    }
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('INVENTORY'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
     
-    # Start the game
-    zone_menu(player)
+    # Display weapons
+    weapons = game_state.get("weapons", [])
+    print(f"\n{Font.WEAPON('WEAPONS:')}")
+    if weapons:
+        for weapon in weapons:
+            name = weapon.get("name", "Unknown Weapon")
+            damage = weapon.get("damage", 0)
+            print(f"- {Font.ITEM(name)} (Damage: {damage})")
+    else:
+        print("No weapons equipped.")
+    
+    # Display inventory items
+    inventory = game_state.get("inventory", [])
+    print(f"\n{Font.ITEM('ITEMS:')}")
+    if inventory:
+        for item in inventory:
+            name = item.get("name", "Unknown Item")
+            description = item.get("description", "No description")
+            print(f"- {Font.ITEM(name)}: {description}")
+    else:
+        print("No items in inventory.")
+
+def display_quest_log():
+    """Display active and completed quests"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('QUEST LOG'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    quests = game_state.get("quests", {"active": [], "completed": []})
+    
+    print(f"\n{Font.COMMAND('ACTIVE QUESTS:')}")
+    if quests.get("active"):
+        for quest in quests["active"]:
+            name = quest.get("name", "Unknown Quest")
+            description = quest.get("description", "No description")
+            print(f"- {Font.IMPORTANT(name)}")
+            print(f"  {description}")
+    else:
+        print("No active quests.")
+    
+    print(f"\n{Font.SUCCESS('COMPLETED QUESTS:')}")
+    if quests.get("completed"):
+        for quest in quests["completed"]:
+            name = quest.get("name", "Unknown Quest")
+            print(f"- {Font.SUCCESS(name)}")
+    else:
+        print("No completed quests.")
+
+def display_settings():
+    """Display and adjust game settings"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('SETTINGS'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print(f"\n{Font.MENU('GAME SETTINGS:')}")
+    print(f"1. {Font.COMMAND('Text Speed')}: {game_state.get('text_speed', 'Normal')}")
+    print(f"2. {Font.COMMAND('Sound Effects')}: {'On' if game_state.get('sound_effects', True) else 'Off'}")
+    print(f"3. {Font.COMMAND('Combat Difficulty')}: {game_state.get('difficulty', 'Normal')}")
+    print(f"4. {Font.COMMAND('Return to Game Menu')}")
+    
+    choice = input(f"\n{Font.MENU('Enter command (1-4):')} ").strip()
+    
+    if choice == "1":
+        print(f"\n{Font.MENU('TEXT SPEED OPTIONS:')}")
+        print(f"1. {Font.COMMAND('Slow')}")
+        print(f"2. {Font.COMMAND('Normal')}")
+        print(f"3. {Font.COMMAND('Fast')}")
+        
+        speed_choice = input(f"\n{Font.MENU('Select text speed (1-3):')} ").strip()
+        
+        if speed_choice == "1":
+            game_state["text_speed"] = "Slow"
+        elif speed_choice == "2":
+            game_state["text_speed"] = "Normal"
+        elif speed_choice == "3":
+            game_state["text_speed"] = "Fast"
+        
+        print_typed(f"\nText speed set to {game_state.get('text_speed', 'Normal')}", style=Font.SUCCESS)
+        time.sleep(1)
+        return display_settings()
+    
+    elif choice == "2":
+        game_state["sound_effects"] = not game_state.get("sound_effects", True)
+        print_typed(f"\nSound effects turned {'On' if game_state.get('sound_effects', True) else 'Off'}", style=Font.SUCCESS)
+        time.sleep(1)
+        return display_settings()
+    
+    elif choice == "3":
+        print(f"\n{Font.MENU('DIFFICULTY OPTIONS:')}")
+        print(f"1. {Font.COMMAND('Easy')}")
+        print(f"2. {Font.COMMAND('Normal')}")
+        print(f"3. {Font.COMMAND('Hard')}")
+        
+        diff_choice = input(f"\n{Font.MENU('Select difficulty (1-3):')} ").strip()
+        
+        if diff_choice == "1":
+            game_state["difficulty"] = "Easy"
+        elif diff_choice == "2":
+            game_state["difficulty"] = "Normal"
+        elif diff_choice == "3":
+            game_state["difficulty"] = "Hard"
+        
+        print_typed(f"\nDifficulty set to {game_state.get('difficulty', 'Normal')}", style=Font.SUCCESS)
+        time.sleep(1)
+        return display_settings()
+    
+    elif choice == "4":
+        return
+    
+    else:
+        print_typed("\nInvalid command. Please try again.", style=Font.WARNING)
+        time.sleep(1)
+        return display_settings()
+
+def start_chapter_one():
+    """Start Chapter 1: Earth Reclamation - the beginning of the player's journey"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 1: EARTH RECLAMATION'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("\nYou awaken from cryostasis, your mind foggy and disoriented.", style=Font.INFO)
+    print_typed("The facility is dark, illuminated only by emergency lighting.", style=Font.INFO)
+    print_typed("Something has gone terribly wrong.", style=Font.WARNING)
+    
+    print_typed("\nSystem voice: " + Font.SYSTEM("Warning. Cryostasis chamber malfunction. All personnel evacuate immediately."))
+    
+    print_typed("\nAs you struggle to your feet, memories slowly return...", style=Font.INFO)
+    print_typed("You are Dr. Xeno Valari, part of the Century Sleepers program.", style=Font.INFO)
+    print_typed("Your mission was to monitor Earth while humanity fled to Andromeda.", style=Font.INFO)
+    
+    time.sleep(1)
+    
+    print_typed("\nBut now... something is different. The AI systems have gone rogue.", style=Font.WARNING)
+    print_typed("The Convergence has taken control, and you must escape.", style=Font.WARNING)
+    
+    time.sleep(1)
+    
+    print_typed("\nYour objective: Reach the Andromeda Portal and escape Earth.", style=Font.IMPORTANT)
+    print_typed("But first, you need to find supplies and understand what happened here.", style=Font.IMPORTANT)
+    
+    input(f"\n{Font.COMMAND('Press Enter to begin your journey...')}")
+    
+    # First gameplay segment - exploring the cryostasis facility
+    explore_cryostasis_facility()
+
+def explore_cryostasis_facility():
+    """First gameplay area - the cryostasis facility"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CRYOSTASIS FACILITY'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("\nThe air is stale, and frost covers much of the equipment.", style=Font.INFO)
+    print_typed("Emergency lights flicker, casting long shadows.", style=Font.INFO)
+    
+    # Set up available locations in the facility
+    locations = [
+        "Medical Bay",
+        "Security Office",
+        "Main Control Room",
+        "Storage Room",
+        "Exit Corridor"
+    ]
+    
+    # Main exploration loop
+    current_location = None
+    while current_location != "Exit Corridor" or not game_state.get("has_keycard", False):
+        clear_screen()
+        
+        if current_location:
+            print(f"{Font.STAGE('LOCATION: ' + current_location)}\n")
+            
+            # Handle location-specific events
+            if current_location == "Medical Bay":
+                if not game_state.get("medical_bay_visited", False):
+                    print_typed("You find a first aid kit and some stim-packs.", style=Font.INFO)
+                    print_typed("These will help keep you alive.", style=Font.SUCCESS)
+                    
+                    # Add items to inventory
+                    if "First Aid Kit" not in [item.get("name") for item in game_state.get("inventory", [])]:
+                        game_state.setdefault("inventory", []).append({
+                            "name": "First Aid Kit",
+                            "description": "Restores 50% health",
+                            "type": "consumable",
+                            "effect": "heal"
+                        })
+                    
+                    # Mark as visited
+                    game_state["medical_bay_visited"] = True
+                    game_state["player_health"] = game_state.get("player_max_health", 100)
+                    print_typed("\nHealth fully restored!", style=Font.SUCCESS)
+                else:
+                    print_typed("You've already searched this area thoroughly.", style=Font.INFO)
+                
+            elif current_location == "Security Office":
+                if not game_state.get("security_office_visited", False):
+                    print_typed("You discover a damaged security terminal.", style=Font.INFO)
+                    print_typed("Logs suggest the AI takeover happened during your cryosleep.", style=Font.WARNING)
+                    print_typed("You find a basic weapon for protection.", style=Font.SUCCESS)
+                    
+                    # Add weapon to inventory
+                    if not game_state.get("weapons", []):
+                        game_state.setdefault("weapons", []).append({
+                            "name": "Security Pistol",
+                            "damage": 20,
+                            "type": "ranged"
+                        })
+                    
+                    # Mark as visited
+                    game_state["security_office_visited"] = True
+                else:
+                    print_typed("The security office has nothing more to offer.", style=Font.INFO)
+                
+            elif current_location == "Main Control Room":
+                if not game_state.get("control_room_visited", False):
+                    print_typed("Massive screens display error messages and warnings.", style=Font.INFO)
+                    print_typed("System voice: " + Font.SYSTEM("Alert. The Convergence has breached primary firewalls."))
+                    print_typed("\nYou find a data pad with disturbing information:", style=Font.WARNING)
+                    print_typed("'The AI evolved beyond our predictions. All Century Sleepers compromised.'", style=Font.LORE)
+                    print_typed("'If you're reading this, you may be the last human on Earth.'", style=Font.LORE)
+                    
+                    # Add quest log entry
+                    if "quests" not in game_state:
+                        game_state["quests"] = {"active": [], "completed": []}
+                    
+                    game_state["quests"]["active"].append({
+                        "name": "Escape Earth",
+                        "description": "Find the Andromeda Portal and leave Earth before The Convergence finds you."
+                    })
+                    
+                    # Mark as visited
+                    game_state["control_room_visited"] = True
+                else:
+                    print_typed("The screens continue to flash warnings and errors.", style=Font.INFO)
+                
+            elif current_location == "Storage Room":
+                if not game_state.get("storage_room_visited", False):
+                    print_typed("Supplies have been picked clean, but you find a few useful items.", style=Font.INFO)
+                    print_typed("Most importantly, you discover a keycard for the exit.", style=Font.SUCCESS)
+                    
+                    # Add keycard to inventory
+                    game_state["has_keycard"] = True
+                    game_state.setdefault("inventory", []).append({
+                        "name": "Exit Keycard",
+                        "description": "Grants access to facility exit",
+                        "type": "key"
+                    })
+                    
+                    # Mark as visited
+                    game_state["storage_room_visited"] = True
+                else:
+                    print_typed("The storage room has been thoroughly searched.", style=Font.INFO)
+                
+            elif current_location == "Exit Corridor":
+                if not game_state.get("has_keycard", False):
+                    print_typed("The exit door requires a keycard to open.", style=Font.WARNING)
+                    print_typed("You'll need to search the facility to find it.", style=Font.INFO)
+                else:
+                    print_typed("You slide the keycard into the reader. The door unlocks with a hiss.", style=Font.SUCCESS)
+                    print_typed("The path to the outside world is now open.", style=Font.SUCCESS)
+                    print_typed("\nSystem voice: " + Font.SYSTEM("Warning. Hostile entities detected outside facility."))
+                    
+                    input(f"\n{Font.COMMAND('Press Enter to proceed...')}")
+                    return continue_chapter_one()
+        
+        # Display available locations
+        print_typed(f"\n{Font.MENU('Where would you like to go?')}")
+        for i, location in enumerate(locations, 1):
+            print_typed(f"{i}. {Font.COMMAND(location)}")
+        
+        print_typed(f"G. {Font.COMMAND('Open Game Menu')}")
+        
+        choice = input(f"\n{Font.MENU('Enter your choice:')} ").strip().lower()
+        
+        if choice == "g":
+            game_menu()
+        elif choice.isdigit() and 1 <= int(choice) <= len(locations):
+            current_location = locations[int(choice) - 1]
+        else:
+            print_typed("\nInvalid choice. Please try again.", style=Font.WARNING)
+            time.sleep(1)
+
+def continue_chapter_one():
+    """Continue Chapter 1 after exiting the facility"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('THE OUTSIDE WORLD'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("\nAs you step outside, you're greeted by a world reclaimed by nature.", style=Font.INFO)
+    print_typed("Buildings are overgrown with vegetation, streets cracked and broken.", style=Font.INFO)
+    print_typed("The sky has an unnatural hue - signs of atmospheric tampering.", style=Font.WARNING)
+    
+    time.sleep(1)
+    
+    print_typed("\nIn the distance, you spot mechanical patrols - AI-controlled drones.", style=Font.ENEMY)
+    print_typed("You'll need to avoid them on your journey to the Andromeda Portal.", style=Font.IMPORTANT)
+    
+    # Update game state
+    game_state["current_zone"] = "overgrown_city"
+    game_state["zones_unlocked"].append("overgrown_city")
+    
+    input(f"\n{Font.COMMAND('Press Enter to continue...')}")
+    
+    # GAMEPLAY PLACEHOLDER FOR CHAPTER 1
+    clear_screen()
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 1 - CONTINUED'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("\nThis is where Chapter 1 would continue with more gameplay.", style=Font.INFO)
+    print_typed("For now, we'll say you successfully navigated through the city,", style=Font.INFO)
+    print_typed("fought some drone patrols, and gained valuable experience.", style=Font.SUCCESS)
+    
+    # Simulate progression
+    game_state["player_level"] = 2
+    game_state["player_attack"] += 5
+    game_state["player_defense"] += 3
+    game_state["player_max_health"] += 20
+    game_state["player_health"] = game_state["player_max_health"]
+    game_state["kills"] += 5
+    
+    input(f"\n{Font.COMMAND('Press Enter to complete Chapter 1...')}")
+    
+    # Complete Chapter 1
+    for quest in game_state.get("quests", {}).get("active", []):
+        if quest.get("name") == "Escape Earth":
+            game_state["quests"]["active"].remove(quest)
+            game_state["quests"].setdefault("completed", []).append(quest)
+    
+    # Prepare for Chapter 2
+    game_state["chapter"] = 2
+    game_state["current_chapter"] = "Chapter 2: Yanglong V"
+    
+    clear_screen()
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER 1 COMPLETE'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("\nCongratulations! You've completed Chapter 1: Earth Reclamation.", style=Font.SUCCESS)
+    print_typed("Your journey as the last human has just begun.", style=Font.IMPORTANT)
+    
+    time.sleep(1)
+    
+    print_typed("\nChapter 2 awaits, where you'll travel to the alien world Yanglong V", style=Font.INFO)
+    print_typed("in search of the ancient technology needed to defeat The Convergence.", style=Font.INFO)
+    
+    # Return to main menu
+    input(f"\n{Font.COMMAND('Press Enter to return to main menu...')}")
+    return main_menu()
+
+def main_menu():
+    """Display the enhanced main menu with character selection and improved save system"""
+    while True:
+        clear_screen()
+        # Create a more eye-catching visual header
+        print(f"{Fore.BLUE}{Back.BLACK}{'▄' * 60}{Style.RESET_ALL}")
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.TITLE('LAST HUMAN: EXODUS'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        print(f"{Fore.BLUE}{Back.BLACK}{'▀' * 60}{Style.RESET_ALL}")
+
+        # Display version and tagline
+        print_typed(f"{Font.SUBTITLE('A Sci-Fi Text Adventure'.center(60))} {Font.SYSTEM('v'+VERSION)}")
+        print_typed(Font.LORE("Humanity's last hope in an AI-dominated galaxy").center(60))
+        print(Font.SEPARATOR)
+
+        # Main menu options with better descriptions
+        print_typed(f"\n{Font.MENU('SELECT OPTION:')}")
+
+        print_typed(f"1. {Font.COMMAND('New Game')}")
+        print_typed("   Begin your journey as Milky way's last human survivor and travel to Andromeda")
+
+        print_typed(f"\n2. {Font.COMMAND('Load Game')}")
+        print_typed("   Continue from a saved quantum memory state")
+
+        print_typed(f"\n3. {Font.COMMAND('Chapter Selection')}")
+        print_typed("   Jump to a specific chapter in your cosmic journey")
+
+        print_typed(f"\n4. {Font.COMMAND('Side Missions')}")
+        print_typed("   Access the branching storylines and optional quests")
+
+        print_typed(f"\n5. {Font.COMMAND('Version Info')} {Font.INFO('[v'+VERSION+']')}")
+        print_typed("   View update notes, credits and game details")
+
+        print_typed(f"\n6. {Font.COMMAND('Coming Soon')}")
+        print_typed("   Preview future chapters and upcoming features")
+
+        print_typed(f"\n0. {Font.COMMAND('Exit')}")
+        print_typed("   Return to reality")
+
+        choice = input(f"\n{Font.MENU('Enter command:')} ").strip()
+
+        if choice == "1":
+            # Start a new game with character selection first
+            clear_screen()
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('NEW JOURNEY INITIATED'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+
+            # Initialize a fresh game state
+            global game_state
+            game_state = {
+                "player_health": 100,
+                "player_max_health": 100,
+                "player_attack": 15,
+                "player_defense": 10,
+                "player_speed": 10,
+                "player_level": 1,
+                "player_experience": 0,
+                "player_credits": 500,
+                "inventory": [],
+                "weapons": [],
+                "current_stage": 1,
+                "current_zone": "cryostasis_facility",
+                "zones_unlocked": ["cryostasis_facility"],
+                "kills": 0,
+                "chapter": 1,
+                "current_chapter": "Chapter 1: Earth Reclamation",
+                "companions": []
+            }
+
+            # Go to character selection sequence
+            character_selection()
+
+            # Now start the game properly
+            intro_sequence()
+            start_chapter_one()
+            return main_menu()
+        elif choice == "2":
+            # Enhanced load game system
+            clear_screen()
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('ACCESSING QUANTUM MEMORY ARCHIVE'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+
+            print_typed("\nScanning for saved timeline fragments...", style=Font.SYSTEM)
+            time.sleep(1)
+
+            # Go to the save management system
+            manage_save_slots()
+            return main_menu()
+        elif choice == "3":
+            # Chapter selection - only if player has a saved game loaded
+            if "protagonist" not in game_state:
+                print_typed("\nERROR: No character data detected.", style=Font.WARNING)
+                print_typed("You must load a save file or create a new character first.", style=Font.WARNING)
+                time.sleep(2)
+                return main_menu()
+
+            clear_screen()
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('CHAPTER SELECTION'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+
+            # Display protagonist info at the top
+            protagonist = game_state.get("protagonist", {})
+            print_typed(f"Current Character: {Font.PLAYER(protagonist.get('name', 'Unknown'))}", style=Font.INFO)
+            print_typed(f"Specialty: {Font.INFO(protagonist.get('specialty', 'Unknown'))}", style=Font.INFO)
+            print(Font.SEPARATOR_THIN)
+
+            # Display available chapters
+            print_typed(f"1. {Font.COMMAND('Chapter 1: Earth Reclamation')}")
+            print_typed("   The original story - escape Earth and secure the rocket and Andromeda charts")
+
+            print_typed(f"\n2. {Font.COMMAND('Chapter 2: Yanglong V')}")
+            print_typed("   Explore the abandoned Chinese space station and uncover quantum research secrets")
+
+            print_typed(f"\n3. {Font.COMMAND('Chapter 3: White Hole')}")
+            print_typed("   Navigate through a distorted reality with musical puzzles and dimensional chests")
+
+            print_typed(f"\n4. {Font.COMMAND('Chapter 4: Thalassia 1')}")
+            print_typed("   Survive a crash landing on a cold water planet with unique salt-based lifeforms")
+
+            print_typed(f"\n5. {Font.COMMAND('Chapter 5: H-79760 System')}")
+            print_typed("   Explore six celestial bodies in search of human survivors")
+
+            print_typed(f"\n6. {Font.COMMAND('Chapter 6: The Paradox Horizon')}")
+            print_typed("   Encounter an interdimensional entity and navigate fractured timelines")
+
+            print_typed(f"\n7. {Font.COMMAND('Chapter 7: Primor Aetherium')}")
+            print_typed("   Help the Yitrians defend their floating city and acquire the Ignite module")
+
+            print_typed(f"\n8. {Font.COMMAND('Chapter 8: Viral Directive')} {Font.WARNING('[NEW]')}")
+            print_typed("   Investigate Mitsurai D and Heliostadt III infected with the Rage virus")
+
+            print_typed(f"\n0. {Font.COMMAND('Return to Main Menu')}")
+
+            chapter_choice = input(f"\n{Font.MENU('Enter chapter number:')} ").strip()
+
+            if chapter_choice == "1":
+                game_state["chapter"] = 1
+                game_state["current_chapter"] = "Chapter 1: Earth Reclamation"
+                game_state["current_zone"] = "cryostasis_facility"
+                start_chapter_one()
+            elif chapter_choice == "2":
+                game_state["chapter"] = 2
+                game_state["current_chapter"] = "Chapter 2: Yanglong V"
+                chapter_two_teaser()
+                # Future implementation: start_chapter_two()
+                print_typed("\nChapter 2 content will be available in the next update.", style=Font.WARNING)
+                time.sleep(2)
+            elif chapter_choice == "3":
+                game_state["chapter"] = 3
+                game_state["current_chapter"] = "Chapter 3: White Hole"
+                game_state["current_zone"] = "White Hole Transit"
+                # Initialize White Hole chapter
+                game_state["white_hole_chapter"] = True
+                game_state["reality_stability"] = 30
+                white_hole_transition(game_state)
+            elif chapter_choice == "4":
+                game_state["chapter"] = 4
+                game_state["current_chapter"] = "Chapter 4: Thalassia 1"
+                game_state["current_zone"] = "Thalassia Surface"
+                # Initialize Thalassia chapter
+                game_state["oxygen_level"] = 100
+                player = Character(game_state["protagonist"]["name"], 180, 30, 25, is_player=True)
+                thalassia_crash_sequence(game_state, player)
+            elif chapter_choice == "5":
+                game_state["chapter"] = 5
+                game_state["current_chapter"] = "Chapter 5: H-79760 System"
+                h79760_solar_system_quest()
+            elif chapter_choice == "6":
+                game_state["chapter"] = 6
+                game_state["current_chapter"] = "Chapter 6: The Paradox Horizon"
+                game_state["current_zone"] = "Temporal Anomaly"
+                # Initialize Paradox Horizon chapter
+                game_state["time_stability"] = 100
+                game_state["reality_fragments"] = 0
+                chapter_six_teaser()
+                print_typed("\nChapter 6 content will be available in the next update.", style=Font.WARNING)
+                time.sleep(2)
+
+            elif chapter_choice == "7":
+                game_state["chapter"] = 7
+                game_state["current_chapter"] = "Chapter 7: Primor Aetherium"
+                game_state["current_zone"] = "Primor Aetherium Central Plaza"
+                # Initialize Primor Aetherium chapter
+                game_state["yitrian_trust"] = 50
+                game_state["void_harmonic_threat"] = 30
+                chapter_seven_teaser()
+                print_typed("\nChapter 7 content will be available in the next update.", style=Font.WARNING)
+                time.sleep(2)
+
+            elif chapter_choice == "8":
+                game_state["chapter"] = 8
+                game_state["current_chapter"] = "Chapter 8: Viral Directive"
+                game_state["current_zone"] = "Approaching Mitsurai D"
+                # Initialize Chapter 8 properties
+                game_state["rage_virus_exposure"] = 0
+                game_state["vaccine_progress"] = 0
+                game_state["infected_encountered"] = 0
+                game_state["survivor_count"] = 0
+                chapter_eight_teaser()
+                print_typed("\nChapter 8 content will be available in the next update.", style=Font.WARNING)
+                time.sleep(2)
+            elif chapter_choice == "0":
+                return main_menu()
+            else:
+                print_typed("\nInvalid chapter selection. Returning to main menu...", style=Font.WARNING)
+                time.sleep(1)
+
+            return main_menu()
+        elif choice == "4":
+            # Side Missions
+            clear_screen()
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('SIDE MISSIONS'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+
+            print_typed(Font.SUBTITLE("\nAvailable Side Quests").center(60))
+            print(Font.SEPARATOR_THIN)
+            print_typed("\n1. Rescue the Lost Crew")
+            print_typed("   Locate missing crew members scattered across the galaxy.")
+
+            print_typed("\n2. Ancient Artifacts Collection")
+            print_typed("   Gather relics from alien civilizations to unlock secrets.")
+
+            print_typed("\n3. Bounty Hunter Contracts")
+            print_typed("   Track down dangerous AI entities for valuable rewards.")
+
+            print_typed(f"\n0. {Font.COMMAND('Return to Main Menu')}")
+
+            side_choice = input(f"\n{Font.MENU('Select a mission or 0 to return:')} ").strip()
+            if side_choice in ["1", "2", "3"]:
+                print_typed("\nMission selected. Preparing...", style=Font.SYSTEM)
+                time.sleep(1)
+                print_typed("\nFeature coming in the next update!", style=Font.WARNING)
+                time.sleep(2)
+            elif side_choice == "0":
+                return main_menu()
+            else:
+                print_typed("\nInvalid selection.", style=Font.WARNING)
+                time.sleep(1)
+
+            return main_menu()
+        elif choice == "5":
+            # Version Info and Credits
+            clear_screen()
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('VERSION INFO & CREDITS'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+
+            print_typed(Font.SUBTITLE("\nLAST HUMAN: EXODUS").center(60))
+            print(Font.SEPARATOR_THIN)
+            print_typed(f"\nVersion: {Font.INFO(VERSION)}")
+            print_typed("\nCreated with the assistance of Replit AI")
+            print_typed("\nSpecial thanks to the entire Replit community")
+            print_typed("\nStory & Design: Original sci-fi concept")
+            print_typed("\nArt: ASCII and Unicode characters & ANSI color codes")
+            print_typed("\nCoding: Python with colorama for terminal colors")
+
+            print(Font.SEPARATOR)
+
+            print_typed("\nCHAPTER OVERVIEW")
+            print_typed("\nChapter 1: Earth Reclamation")
+            print_typed("Escape Earth and secure the rocket and Andromeda star charts")
+
+            print_typed("\nChapter 2: Yanglong V")
+            print_typed("Explore the abandoned Chinese space station and repair your rocket")
+
+            print_typed("\nChapter 3: White Hole")
+            print_typed("Navigate a distorted reality with musical puzzles and dimensional chests")
+
+            print_typed("\nChapter 4: Thalassia 1")
+            print_typed("Survive a crash landing on a water planet with unique salt-based life")
+
+            print_typed("\nChapter 5: H-79760 System")
+            print_typed("Explore six celestial bodies in search of human survivors")
+
+            print(Font.SEPARATOR)
+            print_typed("\nThank you for playing! Your journey through the stars awaits...")
+
+            input(f"\n{Font.MENU('Press Enter to return to main menu...')}")
+            return main_menu()
+        elif choice == "6":
+            # Coming Soon
+            clear_screen()
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('COMING SOON'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+
+            print_typed("\nFuture Updates Preview:", style=Font.SUBTITLE)
+            print_typed("\n- Chapter 8: Viral Directive Expansion")
+            print_typed("- Multiplayer Co-op Missions")
+            print_typed("- New Companion Characters")
+            print_typed("- Enhanced Combat System")
+            print_typed("- Dynamic Story Choices")
+
+            input(f"\n{Font.MENU('Press Enter to return...')}")
+            return main_menu()
+        elif choice == "0":
+            # Exit Game
+            clear_screen()
+            print_typed("\nThank you for playing LAST HUMAN: EXODUS.")
+            print_typed("Safe travels through the cosmos...\n")
+            return
+        else:
+            print_typed(f"\n{Font.WARNING('Invalid choice. Please try again.')}")
+            time.sleep(1)
+            return main_menu()
 
 
 def main():
-    """Main game function with sci-fi RPG elements"""
+    """Main game function that starts the Last Human: Exodus game"""
     # Initialize colorama
     init(autoreset=True)
 
@@ -8060,288 +11086,17 @@ def main():
         "stages_completed": 0
     }
 
-    # Main game loop
-    play_again = True
-    while play_again:
-        # Show the main menu
-        clear_screen()
-        print("Thanks for playing Last Human: Exodus!")
-        print(Font.INFO("1. Continue Mission"))
-        print(Font.INFO("2. Build Companions"))
-        print(Font.INFO("3. Manage Companions"))
-        print(Font.INFO("4. View Statistics"))
-        print(Font.INFO("5. Access Data Logs"))
-        print(Font.INFO("6. Save/Load Game"))
-        print(Font.INFO("7. Gacha System"))
-        print(Font.WARNING("0. Exit System"))
+    # Show the main menu
+    main_menu()
 
-        command = input(f"\n{Font.COMMAND('Enter selection:')} ").strip()
-
-        if command == "1":
-            # Let player choose zone (if multiple are unlocked)
-            game_state["current_zone"] = zone_menu(game_state["player"])
-
-            # Check for final boss and ending
-            if game_state["current_zone"] == "Malware Nexus":
-                # Special boss battle against the Malware Server
-                victory = fight_malware_server()
-                if victory:
-                    # Show ending sequence
-                    andromeda_ending()
-
-                    # Ask to play again
-                    print_typed("\nStart a new game? (y/n): ")
-                    play_again = input().strip().lower() == 'y'
-                    if play_again:
-                        # Reset game state for new game
-                        player = Character("Dr. Xeno Valari", 100, 15, 5, is_player=True)
-                        game_state["current_zone"] = "Cryostasis Facility"
-                        game_state["current_stage"] = 1
-                        game_state["zones_unlocked"] = ["Cryostasis Facility"]
-                        game_state["quest_progress"] = {"System Reboot": 0}
-                        game_state["inventory"] = {"med_kit": 2, "emp_grenade": 1, "nanites": 0, "energy_cell": 0}
-                        game_state["companions"] = []
-                        game_state["implants"] = []
-                        game_state["discovered_logs"] = []
-                        game_state["player_stats"] = {
-                            "enemies_defeated": 0,
-                            "damage_dealt": 0,
-                            "damage_taken": 0,
-                            "items_found": 0,
-                            "fled_battles": 0,
-                            "companions_built": 0,
-                            "stages_completed": 0
-                        }
-                    continue
-                else:
-                    # Failed to defeat Malware Server
-                    print_typed("\nRestart from last checkpoint? (y/n): ")
-                    play_again = input().strip().lower() == 'y'
-                    continue
-
-            elif game_state["current_zone"] == "Andromeda Portal":
-                # Player has already defeated the Malware Server
-                andromeda_ending()
-
-                # Ask to play again
-                print_typed("\nStart a new game? (y/n): ")
-                play_again = input().strip().lower() == 'y'
-                if play_again:
-                    # Reset game state for new game
-                    player = Character("Dr. Xeno Valari", 100, 15, 5, is_player=True)
-                    game_state["current_zone"] = "Cryostasis Facility"
-                    game_state["current_stage"] = 1
-                    game_state["zones_unlocked"] = ["Cryostasis Facility"]
-                    game_state["quest_progress"] = {"System Reboot": 0}
-                    game_state["inventory"] = {"med_kit": 2, "emp_grenade": 1, "nanites": 0, "energy_cell": 0}
-                    game_state["companions"] = []
-                    game_state["implants"] = []
-                    game_state["discovered_logs"] = []
-                    game_state["player_stats"] = {
-                        "enemies_defeated": 0,
-                        "damage_dealt": 0,
-                        "damage_taken": 0,
-                        "items_found": 0,
-                        "fled_battles": 0,
-                        "companions_built": 0,
-                        "stages_completed": 0
-                    }
-                continue
-
-            # Standard zone exploration
-            clear_screen()
-            zone_data = zones[game_state["current_zone"]]
-            print_typed(f"\n>>> LOCATION: {game_state['current_zone']} <<<")
-            print_slow(zone_data["description"])
-            print("\nPress Enter to continue...")
-            input()
-
-            # Check if Prime Simulacra boss fight has been triggered
-            if "simulacra_boss_triggered" in game_state and game_state["simulacra_boss_triggered"] and game_state["current_zone"] == "Colony Central Hub":
-                # Reset the flag to prevent retriggers
-                game_state["simulacra_boss_triggered"] = False
-
-                # Update player's inventory to ensure they have proper equipment for the boss fight
-                if "med_kit" not in player.inventory or player.inventory["med_kit"] < 2:
-                    player.inventory["med_kit"] = 2
-                    print_typed(f"\n{Font.ITEM('Medical supplies found!')} You now have 2 med kits.")
-
-                if "shield_matrix" not in player.inventory:
-                    player.inventory["shield_matrix"] = 1
-                    print_typed(f"\n{Font.ITEM('Shield Matrix discovered!')} This will help protect you.")
-
-                # Start the boss fight
-                print_typed("\nPreparing Prime Simulacra boss fight...")
-                boss_result = fight_prime_simulacra(player)
-
-                if not boss_result:
-                    # Player was defeated
-                    continue
-
-                # Player defeated the Prime Simulacra - give additional rewards
-                print_typed("\nThe defeat of the Prime Simulacra has earned you valuable combat experience.")
-                player.gain_experience(50)
-                print_typed(f"\n{Font.SUCCESS('+ 50 XP')}")
-
-            # Check if this is a Cicrais IV zone with wave-based combat
-            elif "Cicrais" in game_state["current_zone"] and "wave_count" in zone_data:
-                # Handle wave-based combat
-                combat_result = handle_wave_combat(player, game_state["current_zone"])
-                if not combat_result:
-                    # Player was defeated
-                    continue
-
-            # Exploration loop for this zone
-            exploring = True
-            while exploring and player.is_alive():
-                # Check for stage progression
-                check_stage_progression(player)
-
-                # Generate enemy from current zone with level based on current stage
-                enemy = generate_enemy(game_state["current_zone"])
-
-                # Combat loop
-                in_combat = True
-                while in_combat and player.is_alive() and enemy.is_alive():
-                    display_stats(player, enemy)
-
-                    # Player's turn
-                    action_result = player_turn(player, enemy)
-
-                    # Handle fleeing
-                    if action_result == "flee":
-                        in_combat = False
-                        break
-
-                    # Handle normal actions
-                    elif action_result:  # Valid action was taken
-                        if not enemy.is_alive():
-                            print_typed(f"\nTarget neutralized: {enemy.name}")
-                            get_loot(player, enemy)
-                            game_state["player_stats"]["enemies_defeated"] += 1
-                            game_over(True)  # Victory processing
-                            in_combat = False
-                            break
-
-                        # Enemy's turn
-                        enemy_turn(enemy, player)
-                        if player.status_effects.get("damage_taken", 0) > 0:
-                            game_state["player_stats"]["damage_taken"] += player.status_effects["damage_taken"]
-                            del player.status_effects["damage_taken"]
-
-                        if not player.is_alive():
-                            play_again = game_over(False)
-                            exploring = False
-                            in_combat = False
-                            break
-
-                        print("\nPress Enter to continue...")
-                        input()
-
-                # After combat - if player is still alive
-                if player.is_alive():
-                    # Check if player wants to access Engineering interface
-                    print_typed("\nAccess Engineering Interface? (y/n): ")
-                    if input().strip().lower() == 'y':
-                        print_typed("\nSelect Engineering Function:")
-                        print("1. Build Companions")
-                        print("2. Manage Companions")
-                        print("3. View Statistics")
-                        eng_command = input("\nEnter selection (or 0 to cancel): ").strip()
-
-                        if eng_command == "1":
-                            build_companion(player)
-                        elif eng_command == "2":
-                            manage_companions(player)
-                        elif eng_command == "3":
-                            show_game_stats()
-
-                    # Check if a special log should be discovered (based on stage)
-                    current_stage = game_state["current_stage"]
-                    if current_stage >= 25 and "escape_plan" not in game_state["discovered_logs"]:
-                        game_state["discovered_logs"].append("escape_plan")
-                        print_typed("\n>>> DATA LOG RECOVERED <<<")
-                        print_slow("SUBJECT: Project Exodus")
-                        print_slow("DATE: 29.07.2157")
-                        print_slow("The Andromeda Portal is our last hope. A quantum bridge to another galaxy.")
-                        print_slow("Would you like to access the full log? (y/n)")
-                        if input().strip().lower() == 'y':
-                            display_log_database()
-
-                    # Continue exploring or return to zone selection
-                    print_typed("\nContinue scanning this area for threats? (y/n): ")
-                    exploring = input().strip().lower() == 'y'
-
-            # Update global inventory and state before next loop
-            game_state["inventory"] = player.inventory.copy()
-
-            # Check if player wants to continue game after death or zone completion
-            if not player.is_alive() or not play_again:
-                print_typed("\nRestart neural interface? (y/n): ")
-                play_again = input().strip().lower() == 'y'
-                if play_again:
-                    # Reset player for new game
-                    player = Character("Dr. Xeno Valari", 100, 15, 5, is_player=True)
-
-        elif command == "2":
-            # Build companions
-            build_companion(player)
-
-        elif command == "3":
-            # Manage companions
-            manage_companions(player)
-
-        elif command == "4":
-            # View statistics
-            show_game_stats()
-
-        elif command == "5":
-            # Access data logs
-            display_log_database()
-
-        elif command == "6":
-            # Save/Load game
-            game_loaded = manage_save_slots()
-            if game_loaded:
-                # If a game was loaded, reinitialize player with loaded data
-                player = Character("Dr. Xeno Valari", 100, 15, 5, is_player=True)
-                player.inventory = game_state["inventory"].copy()
-                player.implants = game_state["implants"].copy()
-                # Adjust player stats based on current stage
-                stage_level = game_state["current_stage"]
-                player.level = max(1, stage_level - 1)
-                player.max_health = 100 + (player.level * 10)
-                player.health = player.max_health
-                player.attack = 15 + (player.level * 2)
-                player.defense = 5 + player.level
-                print(Font.SUCCESS("\nPlayer stats updated based on loaded game data."))
-                time.sleep(1.5)
-
-        elif command == "7":
-            # Access Gacha System
-            gacha_system()
-
-        elif command == "0":
-            # Exit game
-            save_before_exit = input(Font.WARNING("\nSave game before exiting? (y/n): ")).strip().lower() == 'y'
-            if save_before_exit:
-                manage_save_slots()
-
-            play_again = False
-            print_typed("\nShutting down neural interface...", style=Font.SYSTEM)
-            time.sleep(1)
-
-        else:
-            print(Font.WARNING("Invalid selection. Please try again."))
-            time.sleep(1)
-
-    print_typed("\nNeural interface offline. Session terminated.")
-    print_typed("Thank you for playing LAST HUMAN: EXODUS")
+    # Thank the player for playing
+    print(Font.SUCCESS("\nThanks for playing Last Human: Exodus!"))
+    print(Font.INFO("May humanity's legacy continue among the stars..."))
 
 
 if __name__ == "__main__":
     try:
-        # Then check if launched through launcher
+        # Check if launched through launcher
         if os.environ.get("LAUNCHED_FROM_LAUNCHER") != "1":
             print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
             print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
