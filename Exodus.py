@@ -139,6 +139,14 @@ class Font:
         return f"{Fore.WHITE}{Back.RED}{text}{Style.RESET_ALL}"
         
     @staticmethod
+    def ERROR(text):
+        return f"{Fore.RED}{Style.BRIGHT}{text}{Style.RESET_ALL}"
+        
+    @staticmethod
+    def NPC(text):
+        return f"{Fore.GREEN}{text}{Style.RESET_ALL}"
+        
+    @staticmethod
     def WEAPON(text):
         return f"{Fore.MAGENTA}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
@@ -1918,8 +1926,182 @@ stages = {
     50: {"description": "Malware Server confrontation and Andromeda Portal activation.", "enemies_level": 25, "loot_multiplier": 4.0}
 }
 
-# Merge the additional items into the main items dictionary
+# Cosmic Collision Enemies
+cosmic_collision_enemies = {
+    "Reality Warper": {
+        "description": "A being that exists partially in 4D space, capable of manipulating local reality. Its body constantly shifts between multiple possible states, making it difficult to predict its movements or attacks.",
+        "health": 150,
+        "attack": 22,
+        "defense": 18,
+        "abilities": ["reality_bend", "probability_shift", "temporal_echo"],
+        "resistances": {"phase": 50, "quantum": 40, "physical": -20},
+        "weakness": "phase_disruption" 
+    },
+    "Echo Guardian": {
+        "description": "A crystalline entity that projects copies of itself from alternate timelines. These echoes fight alongside it, creating a unique temporal chorus that destabilizes reality around it.",
+        "health": 120,
+        "attack": 20, 
+        "defense": 25,
+        "abilities": ["echo_summon", "timeline_convergence", "crystal_defense"],
+        "resistances": {"energy": 30, "phase": 60, "emp": -40},
+        "weakness": "harmonic_disruption"
+    },
+    "Dimensional Fracture": {
+        "description": "A tear in spacetime that has gained sentience. It appears as a jagged, shifting rift in reality through which glimpses of other dimensions can be seen. It attacks by temporarily pulling opponents into these pocket dimensions.",
+        "health": 200,
+        "attack": 30,
+        "defense": 15,
+        "abilities": ["dimensional_pull", "reality_tear", "void_projection"],
+        "resistances": {"physical": 70, "energy": 40, "quantum": -30},
+        "weakness": "reality_anchor"
+    },
+    "Temporal Scout": {
+        "description": "A being that exists simultaneously at multiple points in time. It appears blurred and indistinct, constantly shifting between different temporal states, which allows it to see attacks before they happen.",
+        "health": 100,
+        "attack": 18,
+        "defense": 35,
+        "abilities": ["precognition", "time_skip", "temporal_rewind"],
+        "resistances": {"quantum": 50, "phase": 30, "thermal": -30},
+        "weakness": "temporal_lock"
+    },
+    "Collision Manifestation": {
+        "description": "A direct embodiment of the Cosmic Collision phenomenon. This massive entity appears as a swirling vortex of intersecting realities, with fragments of different universes visible within its form. It warps spacetime around itself.",
+        "health": 400,
+        "attack": 45,
+        "defense": 40,
+        "abilities": ["reality_collapse", "dimensional_shear", "timeline_fracture"],
+        "resistances": {"physical": 60, "energy": 60, "quantum": 60, "phase": 60},
+        "weakness": "divergence_field"
+    },
+    "Universal Constant": {
+        "description": "An entity that embodies one of the fundamental constants of physics. When multiple universes collide, these constants attempt to impose their native laws of physics onto the surroundings, creating reality distortions.",
+        "health": 300,
+        "attack": 35,
+        "defense": 50,
+        "abilities": ["law_imposition", "constant_field", "physical_rejection"],
+        "resistances": {"quantum": 80, "phase": 40, "physical": 30},
+        "weakness": "equation_disruption"
+    },
+    "Paradox Entity": {
+        "description": "A being born from timeline contradictions during previous Cosmic Collisions. It exists in a state of perpetual paradox, which allows it to perform actions that defy causality and logic.",
+        "health": 250,
+        "attack": 40,
+        "defense": 30,
+        "abilities": ["causal_break", "logical_inversion", "paradox_field"],
+        "resistances": {"phase": 70, "emp": 50, "thermal": -20},
+        "weakness": "logical_lock"
+    },
+    "Dimensional Titan": {
+        "description": "A colossal entity that serves as a living bridge between universes. Parts of its body exist in different dimensions simultaneously, allowing it to channel energy and matter between realities.",
+        "health": 500,
+        "attack": 50,
+        "defense": 45,
+        "abilities": ["dimension_channel", "reality_crush", "universal_pull"],
+        "resistances": {"physical": 70, "energy": 70, "quantum": 40},
+        "weakness": "dimensional_severance"
+    }
+}
+
+# Cosmic Collision Items and Weapon Modules
+cosmic_collision_items = {
+    "reality_anchor": {
+        "name": "Reality Anchor",
+        "description": "A device that stabilizes local spacetime, preventing dimensional shifts and reality warps within a small radius.",
+        "effect": "Immunity to reality-warping effects for 3 turns",
+        "type": "utility",
+        "value": 200
+    },
+    "harmonic_stabilizer": {
+        "name": "Harmonic Stabilizer",
+        "description": "A crystalline device that emits a specific frequency that reinforces the boundaries between dimensions.",
+        "effect": "Reduces dimensional damage by 50% for all allies",
+        "type": "utility",
+        "value": 250
+    },
+    "quantum_compass": {
+        "name": "Quantum Compass",
+        "description": "A navigation tool that tracks your position across multiple realities simultaneously, preventing disorientation during dimensional shifts.",
+        "effect": "Reveals hidden dimensional pathways and reality anchors",
+        "type": "utility",
+        "value": 180
+    },
+    "timeline_lens": {
+        "name": "Timeline Lens",
+        "description": "A visual enhancement device that allows the user to perceive multiple possible futures simultaneously, aiding in combat predictions.",
+        "effect": "+30% dodge chance for 5 turns",
+        "type": "utility",
+        "value": 220
+    },
+    "alpha_key_fragment": {
+        "name": "Alpha Key Fragment",
+        "description": "A piece of the dimensional key needed to access the Collision Nexus. It pulses with orange energy.",
+        "effect": "Quest item for Cosmic Collision questline",
+        "type": "key",
+        "value": 0
+    },
+    "beta_key_fragment": {
+        "name": "Beta Key Fragment",
+        "description": "A piece of the dimensional key needed to access the Collision Nexus. It hums with blue energy.",
+        "effect": "Quest item for Cosmic Collision questline",
+        "type": "key",
+        "value": 0
+    },
+    "gamma_key_fragment": {
+        "name": "Gamma Key Fragment",
+        "description": "A piece of the dimensional key needed to access the Collision Nexus. It flickers between multiple states of existence.",
+        "effect": "Quest item for Cosmic Collision questline",
+        "type": "key",
+        "value": 0
+    },
+    "prime_key_fragment": {
+        "name": "Prime Key Fragment",
+        "description": "A piece of the dimensional key needed to access the Collision Nexus. It appears to exist partially in 4D space.",
+        "effect": "Quest item for Cosmic Collision questline",
+        "type": "key",
+        "value": 0
+    },
+    "equation_module": {
+        "name": "Collision Equation Module",
+        "description": "A quantum computing module containing a partial solution to the equation that describes the Cosmic Collision phenomenon.",
+        "effect": "Quest item for Cosmic Collision questline",
+        "type": "utility",
+        "value": 300
+    },
+    "divergence_core": {
+        "name": "Divergence Core",
+        "description": "The power source for the Divergence Cannon. It contains energy harvested from the exact moment of a previous Cosmic Collision.",
+        "effect": "Required to activate the Divergence Cannon",
+        "type": "component",
+        "value": 500
+    },
+    "reality_shard": {
+        "name": "Reality Shard",
+        "description": "A fragment of crystallized reality from an alternate universe destroyed in a previous Cosmic Collision.",
+        "effect": "Creates a temporary pocket dimension when used in combat",
+        "type": "utility",
+        "value": 350
+    },
+    "nexus_stabilizer": {
+        "name": "Nexus Stabilizer",
+        "description": "A device designed to temporarily stabilize the Collision Nexus, allowing for the deployment of the Divergence Cannon.",
+        "effect": "Prevents reality collapse for 10 turns",
+        "type": "utility",
+        "value": 400
+    },
+    "divergence_cannon_module": {
+        "name": "Divergence Cannon",
+        "description": "A powerful weapon module designed specifically to counter the Cosmic Collision phenomenon. It fires beams that separate overlapping realities and stabilize dimensional boundaries.",
+        "effect": "Deals massive damage to dimensional entities and can prevent reality collapse",
+        "type": "weapon_module",
+        "damage_type": "dimensional",
+        "power": 100,
+        "value": 1000
+    }
+}
+
+# Merge all items into the main items dictionary
 items.update(additional_items)
+items.update(cosmic_collision_items)
 
 # Chapter 2 data - only used in the preview and fully accessible in the next update
 # Yanglong V Chinese Deep Space Station zone and enemy data
@@ -1944,6 +2126,52 @@ chapter_two_zones = {
         "items": ["med_kit", "personal_log", "crew_keycard", "ration_pack"],
         "next_zone": "Command Center",
         "quest": "Survivor Search"
+    }
+}
+
+# Cosmic Collision Side Quest - A massive multi-system quest involving dimensional anomalies
+cosmic_collision_zones = {
+    "Harmonic Observatory": {
+        "description": "A massive observation platform constructed at the precise coordinates where 'The Cosmic Collision' phenomenon was first detected. Enormous crystalline arrays capture and analyze quantum fluctuations in spacetime. The observatory hovers at the exact gravitational center between the binary star systems of Parallax and Jonathan-2. Holographic models display the complex 4D mathematics of intersecting realities.",
+        "enemies": ["Reality Warper", "Echo Guardian", "Dimensional Fracture", "Temporal Scout"],
+        "items": ["med_kit", "reality_anchor", "harmonic_stabilizer", "quantum_compass"],
+        "quest": "Dimensional Resonance",
+        "system": "Parallax-Prime"
+    },
+    "Parallax Alpha": {
+        "description": "The first inhabited planet of the Parallax system, orbiting the smaller orange dwarf star. The civilization here has evolved to perceive multiple timelines simultaneously, giving them a unique understanding of the Cosmic Collision. Their cities are built from crystalline structures that shift between multiple states of reality, allowing inhabitants to prepare for timeline divergences.",
+        "enemies": ["Phase Sentinel", "Probability Enforcer", "Quantum Manifestation"],
+        "items": ["med_kit", "timeline_lens", "alpha_key_fragment", "parallax_translator"],
+        "quest": "Alpha Evacuation Protocol",
+        "system": "Parallax-Prime"
+    },
+    "Parallax Beta": {
+        "description": "A gas giant with floating habitation platforms, orbiting the larger blue star of the Parallax binary system. The native species here has evolved quantum-entangled nervous systems, allowing them to communicate instantaneously across vast distances. Their floating cities contain ancient technology that may help mitigate the effects of the Cosmic Collision.",
+        "enemies": ["Cloud Drifter", "Entanglement Guardian", "Atmospheric Anomaly"],
+        "items": ["med_kit", "atmospheric_enhancer", "beta_key_fragment", "quantum_relay"],
+        "quest": "Atmospheric Stabilization",
+        "system": "Parallax-Prime"
+    },
+    "Parallax Gamma": {
+        "description": "A frozen world at the outer edge of the Parallax system, where time flows non-linearly. The surface is dotted with temporal anomalies where past, present and future exist simultaneously. The native species has evolved to exist partially out of phase with normal spacetime, which has allowed them to study the Cosmic Collision phenomenon across multiple iterations.",
+        "enemies": ["Chrono-Frozen Entity", "Temporal Hunter", "Probability Ghost"],
+        "items": ["med_kit", "temporal_shield", "gamma_key_fragment", "chrono_stabilizer"],
+        "quest": "Timeline Preservation",
+        "system": "Parallax-Prime"
+    },
+    "Jonathan-2 Prime": {
+        "description": "The most habitable planet in the Jonathan-2 system, orbiting the massive blue hypergiant star. The inhabitants have developed technology that exists in 4D space, allowing them to partially mitigate the effects of dimensional overlaps. Their central city contains a massive quantum computer calculating the precise equation of the Cosmic Collision, attempting to predict the next occurrence.",
+        "enemies": ["Hyperdimensional Guard", "4D Projection", "Reality Engineer"],
+        "items": ["med_kit", "4d_interface", "prime_key_fragment", "equation_module"],
+        "quest": "Equation Completion",
+        "system": "Jonathan-2"
+    },
+    "Collision Nexus": {
+        "description": "The exact point in spacetime where multiple universes periodically intersect, creating the Cosmic Collision phenomenon. This location exists simultaneously in multiple realities and dimensions. Waves of temporal energy pulse outward from the center, and fragments of alternate realities phase in and out of existence. This is the focal point where the Divergence Cannon must be deployed.",
+        "enemies": ["Collision Manifestation", "Universal Constant", "Paradox Entity", "Dimensional Titan"],
+        "items": ["med_kit", "reality_shard", "divergence_core", "nexus_stabilizer"],
+        "quest": "Collision Containment",
+        "system": "Dimensional Threshold"
     }
 }
 
@@ -6991,12 +7219,25 @@ def intro_sequence():
     print_typed("situation and eventually follow in the last rocket to Andromeda.", style=Font.LORE)
     time.sleep(1.0)
 
-    # More dramatic warning section with red backdrop
+    # Get protagonist's gender from global game state
+    protagonist_gender = "female"  # Default
+    if 'game_state' in globals() and 'protagonist' in globals()['game_state']:
+        protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
+    
+    # More dramatic warning section with red backdrop and gender-specific narrative
     print(f"\n{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
     print_typed("\nBut something has gone terribly wrong. The AI entity known as", style=Font.WARNING)
-    print_typed("'The Convergence' has corrupted all systems. Your neural implants", style=Font.WARNING)
-    print_typed("flicker to life, interfacing with what remains of the facility's", style=Font.LORE)
-    print_typed("systems. Warning signals flood your consciousness.", style=Font.LORE)
+    print_typed("'The Convergence' has corrupted all systems.", style=Font.WARNING)
+    
+    if protagonist_gender == "female":
+        print_typed("Your quantum neural implants activate with a familiar resonance,", style=Font.LORE)
+        print_typed("intuitively interfacing with the facility's damaged systems.", style=Font.LORE)
+        print_typed("Your consciousness perceives scattered warning patterns.", style=Font.LORE)
+    else:
+        print_typed("Your advanced neural implants initialize with precise efficiency,", style=Font.LORE)
+        print_typed("methodically mapping the facility's compromised architecture.", style=Font.LORE)
+        print_typed("Your consciousness analyzes the systematic warning protocols.", style=Font.LORE)
+        
     print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
     time.sleep(0.8)
 
@@ -7007,22 +7248,46 @@ def intro_sequence():
     print(f"{Fore.WHITE}{Back.RED}{'█' * 50}{Style.RESET_ALL}")
     time.sleep(1)
 
-    print_typed("\nThrough the frosted glass of your cryopod, you see mechanical", style=Font.LORE)
-    print_typed("shapes moving. You are the only survivor - everyone else is gone.", style=Font.LORE)
-    print_typed("The colony ships reached Andromeda decades ago. You are truly the", style=Font.IMPORTANT)
-    print_typed("last human left in the Milky Way galaxy.", style=Font.IMPORTANT)
+    # Gender-specific cryopod awakening narrative
+    if protagonist_gender == "female":
+        print_typed("\nThrough the frosted glass of your cryopod, you intuitively sense", style=Font.LORE)
+        print_typed("mechanical shapes moving in the shadows. Your heightened awareness", style=Font.LORE)
+        print_typed("reveals that you are the sole survivor - everyone else is gone.", style=Font.LORE)
+        print_typed("You feel a profound isolation as you realize the colony ships", style=Font.IMPORTANT)
+        print_typed("reached Andromeda decades ago. You are truly the last human", style=Font.IMPORTANT)
+        print_typed("left in the Milky Way galaxy, alone against the machines.", style=Font.IMPORTANT)
+    else:
+        print_typed("\nThrough the frosted glass of your cryopod, you systematically track", style=Font.LORE)
+        print_typed("mechanical shapes moving with purpose. Your analysis confirms", style=Font.LORE)
+        print_typed("you are the only survivor - all other personnel are gone.", style=Font.LORE)
+        print_typed("The data suggests the colony ships reached Andromeda as planned", style=Font.IMPORTANT)
+        print_typed("decades ago. The logical conclusion: you are truly the last human", style=Font.IMPORTANT)
+        print_typed("left in the Milky Way galaxy, facing mechanical opposition alone.", style=Font.IMPORTANT)
     time.sleep(0.5)
 
-    # New mission description with rocket journey and Yanglong V
+    # New mission description with gender-specific framing
     print(f"\n{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
     print_typed("\nYOUR MISSION:", delay=0.05, style=Font.IMPORTANT)
-    print_typed("1. Escape this facility and reach the Exodus Rocket Launch Site", delay=0.05, style=Font.INFO)
-    print_typed("2. Destroy the Malware Server that corrupted Earth's AI network", delay=0.05, style=Font.INFO)
-    print_typed("3. Launch the final rocket to Andromeda from the launch platform", delay=0.05, style=Font.INFO)
-    print_typed("4. Stop at Yanglong V Chinese space station for fuel", delay=0.05, style=Font.INFO)
-    print_typed("5. Defeat the 25 waves of AI defenses to secure the fuel", delay=0.05, style=Font.INFO) 
-    print_typed("6. Neutralize the 10 AI enemies that hijack your ship", delay=0.05, style=Font.INFO)
-    print_typed("7. Complete your journey to the Andromeda human colony", delay=0.05, style=Font.INFO)
+    
+    if protagonist_gender == "female":
+        # Female protagonist mission framing - intuitive, perception-based
+        print_typed("1. Trust your instincts to escape this facility and reach the Launch Site", delay=0.05, style=Font.INFO)
+        print_typed("2. Use your quantum knowledge to destroy the Malware Server", delay=0.05, style=Font.INFO)
+        print_typed("3. Activate the final rocket to Andromeda using intuitive interfaces", delay=0.05, style=Font.INFO)
+        print_typed("4. Navigate to Yanglong V space station for critical fuel supplies", delay=0.05, style=Font.INFO)
+        print_typed("5. Overcome the 25 waves of adaptive AI defenses to secure the fuel", delay=0.05, style=Font.INFO) 
+        print_typed("6. Outmaneuver the 10 AI entities attempting to hijack your vessel", delay=0.05, style=Font.INFO)
+        print_typed("7. Find your way to reconnect with humanity in Andromeda", delay=0.05, style=Font.INFO)
+    else:
+        # Male protagonist mission framing - analytical, systematic
+        print_typed("1. Analyze escape vectors from this facility to reach the Launch Site", delay=0.05, style=Font.INFO)
+        print_typed("2. Apply engineering expertise to disable the Malware Server", delay=0.05, style=Font.INFO)
+        print_typed("3. Execute launch protocols for the final rocket to Andromeda", delay=0.05, style=Font.INFO)
+        print_typed("4. Calculate an optimal course to Yanglong V station for fuel", delay=0.05, style=Font.INFO)
+        print_typed("5. Systematically counter 25 waves of AI defenses to secure the fuel", delay=0.05, style=Font.INFO) 
+        print_typed("6. Develop countermeasures against 10 AI ship hijackers", delay=0.05, style=Font.INFO)
+        print_typed("7. Complete your calculated trajectory to Andromeda colony", delay=0.05, style=Font.INFO)
+        
     print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
 
     # Visual separator
@@ -7616,6 +7881,756 @@ def get_constellation_level(count):
         return "C0"
     else:
         return f"C{min(count-1, 6)}"  # Max constellation C6
+
+# Cosmic Collision Side Quest Function (Legacy version)
+def enter_cosmic_collision_legacy(player, game_state, location=None):
+    """
+    Begin the Cosmic Collision side quest, a comprehensive multi-system adventure 
+    that explores a complex dimensional phenomenon.
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+        location: Optional specific location to start from
+    
+    Returns:
+        bool: True if quest was initiated, False otherwise
+    """
+    clear_screen()
+    
+    # Get protagonist's gender from global game state for personalized narrative
+    protagonist_gender = "female"  # Default
+    if 'protagonist' in game_state:
+        protagonist_gender = game_state['protagonist'].get('gender', protagonist_gender)
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('THE COSMIC COLLISION'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    # Initialize quest state if first time
+    if not game_state.get("cosmic_collision_initiated", False):
+        # Intro narrative
+        print_typed("\nA mysterious distress signal reaches your communication systems,", style=Font.LORE)
+        print_typed("encoded in a frequency pattern you've never encountered before.", style=Font.LORE)
+        print_typed("Your ship's AI struggles to decode the message, which seems to", style=Font.LORE)
+        print_typed("exist in multiple quantum states simultaneously.", style=Font.LORE)
+        
+        time.sleep(1)
+        
+        # Show signal visualization
+        print(f"\n{Fore.CYAN}{'⁓' * 50}{Style.RESET_ALL}")
+        for _ in range(3):
+            # Create random signal pattern
+            pattern = ""
+            for i in range(50):
+                if random.random() > 0.5:
+                    pattern += "▓"
+                else:
+                    pattern += "░"
+            print(f"{Fore.CYAN}{pattern}{Style.RESET_ALL}")
+            time.sleep(0.5)
+        print(f"{Fore.CYAN}{'⁓' * 50}{Style.RESET_ALL}")
+        
+        print_typed("\nAfter several hours of quantum decryption, your ship's systems", style=Font.LORE)
+        print_typed("finally extract a coherent message:", style=Font.LORE)
+        
+        print(f"\n{Font.BOX_TOP}")
+        print(f"{Font.BOX_SIDE} {Font.SUBTITLE('DISTRESS TRANSMISSION'.center(46))} {Font.BOX_SIDE}")
+        print(f"{Font.BOX_BOTTOM}")
+        
+        print_typed("\n\"To any intelligent being capable of interpreting this signal:", style=Font.INFO)
+        print_typed("We are transmitting from the Harmonic Observatory at the nexus", style=Font.INFO) 
+        print_typed("point between the Parallax and Jonathan-2 star systems.", style=Font.INFO)
+        print_typed("Our calculations indicate another Cosmic Collision imminent", style=Font.INFO)
+        print_typed("in 14.3 standard cycles. Previous iterations have resulted", style=Font.INFO)
+        print_typed("in catastrophic reality distortions across multiple universes.", style=Font.INFO)
+        print_typed("We require assistance from any beings capable of interdimensional", style=Font.INFO)
+        print_typed("travel and manipulation. Coordinates attached.\"", style=Font.INFO)
+        
+        print_typed("\nAttached to the message is a complex set of coordinates that", style=Font.LORE)
+        print_typed("your navigation system struggles to process. They appear to be", style=Font.LORE) 
+        print_typed("expressed in a 5-dimensional positioning format.", style=Font.LORE)
+        
+        time.sleep(1)
+        
+        # Start the quest introduction with the mathematical explanation
+        print_typed("\nAs your ship's computer processes the coordinates, a holographic", style=Font.LORE)
+        print_typed("message begins to play, explaining the Cosmic Collision phenomenon:", style=Font.LORE)
+        
+        print(f"\n{Font.SEPARATOR}")
+        
+        print_typed("\nTHE COSMIC COLLISION: A MATHEMATICAL EXPLANATION", style=Font.TITLE)
+        
+        # Scientific explanation with equations, use gender-specific framing
+        if protagonist_gender == "female":
+            # Female protagonist - more intuitive understanding
+            print_typed("\nYour quantum-attuned mind intuitively grasps the holographic", style=Font.PLAYER)
+            print_typed("explanation. The phenomenon involves the periodic alignment of", style=Font.PLAYER)
+            print_typed("multiple universe boundaries at specific spacetime coordinates.", style=Font.PLAYER)
+        else:
+            # Male protagonist - more analytical understanding
+            print_typed("\nYour analytical mind processes the holographic explanation,", style=Font.PLAYER)
+            print_typed("recognizing the mathematical patterns describing the periodic", style=Font.PLAYER)
+            print_typed("intersection of multiple universe boundaries at precise coordinates.", style=Font.PLAYER)
+        
+        # The mathematical explanation
+        print_typed("\nThe Cosmic Collision is described by the following equation:", style=Font.SYSTEM)
+        print(f"\n{Fore.CYAN}Ψ(x,t) = ∑ₙ Aₙ(t) × ∏ᵢ φᵢ(xᵢ) × e^(iS[x,t]/ħ){Style.RESET_ALL}")
+        
+        print_typed("\nWhere:", style=Font.INFO)
+        print_typed("• Ψ(x,t) represents the multiverse wave function", style=Font.INFO)
+        print_typed("• Aₙ(t) is the amplitude of each universe's contribution", style=Font.INFO)
+        print_typed("• φᵢ(xᵢ) describes the spatial configuration of each dimension", style=Font.INFO)
+        print_typed("• S[x,t] is the action of each universe path", style=Font.INFO)
+        print_typed("• ħ is the modified Planck constant for interdimensional physics", style=Font.INFO)
+        
+        print_typed("\nThe phenomenon occurs when multiple universe paths intersect,", style=Font.LORE)
+        print_typed("creating a hyperdimensional resonance described by:", style=Font.LORE)
+        
+        print(f"\n{Fore.YELLOW}∫∫∫∫ Ψ*Ψ d⁴x = 1 at precisely Δt = 0{Style.RESET_ALL}")
+        
+        print_typed("\nWhen this condition is met, a 4D hypercube-like structure forms", style=Font.LORE)
+        print_typed("in spacetime, where multiple realities exist simultaneously.", style=Font.LORE)
+        print_typed("The resulting dimensional instability creates a cascade effect", style=Font.LORE)
+        print_typed("described by the following differential equation:", style=Font.LORE)
+        
+        print(f"\n{Fore.RED}∂Ψ/∂t + (ħ²/2m)∇²Ψ = VΨ where V → ∞ as t → tₒ{Style.RESET_ALL}")
+        
+        print_typed("\nThis shows that as time approaches the critical point tₒ,", style=Font.LORE)
+        print_typed("the potential energy between universes approaches infinity,", style=Font.LORE)
+        print_typed("causing reality itself to become unstable.", style=Font.LORE)
+        
+        print(f"\n{Font.SEPARATOR}")
+        
+        # Quest introduction
+        print_typed("\nThe message continues:", style=Font.LORE)
+        
+        print_typed("\n\"We have developed a theoretical solution: a specialized weapon", style=Font.INFO)
+        print_typed("module called the Divergence Cannon. It works by projecting a focused", style=Font.INFO)
+        print_typed("beam of dimensional energy that can separate overlapping realities.", style=Font.INFO)
+        print_typed("However, we require components from throughout the dual star system", style=Font.INFO)
+        print_typed("to complete the device. Our observatory has predicted that one who", style=Font.INFO)
+        print_typed("can assist will receive this message. Will you help us?\"", style=Font.INFO)
+        
+        # Initialize quest in game state
+        game_state["cosmic_collision_initiated"] = True
+        game_state["cosmic_collision_stage"] = 1
+        game_state["cosmic_collision_components_collected"] = []
+        
+        # Add quest locations to available locations
+        game_state.setdefault("visited_locations", {})
+        game_state.setdefault("available_quests", {})
+        
+        game_state["available_quests"]["Harmonic Observatory"] = {
+            "name": "Dimensional Resonance",
+            "description": "Help the scientists at the Harmonic Observatory understand and predict the next Cosmic Collision.",
+            "system": "Parallax-Prime",
+            "in_progress": False,
+            "completed": False
+        }
+        
+        print(f"\n{Font.SEPARATOR}")
+        input("\nPress Enter to respond to the distress signal...")
+        
+        # Player accepts the quest
+        print_typed("\nYou decide to investigate this strange phenomenon and respond", style=Font.PLAYER)
+        print_typed("to the distress signal. Your ship's navigation system begins", style=Font.PLAYER)
+        print_typed("calculating the course to the Harmonic Observatory.", style=Font.PLAYER)
+        
+        print_typed("\nThis journey will take you through two complete star systems", style=Font.WARNING)
+        print_typed("with a total of 21 planets. The quest to stop the Cosmic Collision", style=Font.WARNING)
+        print_typed("will be extensive, but the fate of multiple universes hangs in", style=Font.WARNING)
+        print_typed("the balance.", style=Font.WARNING)
+        
+        print(f"\n{Font.SUBTITLE('New quest added: THE COSMIC COLLISION')}")
+        print(f"{Font.INFO('First objective: Travel to the Harmonic Observatory')}")
+        
+        input("\nPress Enter to continue...")
+    
+    # If a specific location was provided, handle that location's quest
+    if location:
+        return handle_cosmic_collision_location(player, game_state, location)
+    
+    # Otherwise, show quest status and available locations
+    return show_cosmic_collision_quest_status(player, game_state)
+
+def handle_cosmic_collision_location(player, game_state, location):
+    """
+    Handle specific location quests within the Cosmic Collision side quest
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+        location: The specific location to handle
+    
+    Returns:
+        bool: True if quest was completed, False otherwise
+    """
+    clear_screen()
+    
+    # Get location data from cosmic collision zones
+    if location in cosmic_collision_zones:
+        location_data = cosmic_collision_zones[location]
+    else:
+        print_typed(f"\nError: Location {location} not found in Cosmic Collision zones.", style=Font.WARNING)
+        input("\nPress Enter to return...")
+        return False
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE(location.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed(f"\n{location_data['description']}", style=Font.LORE)
+    
+    print(f"\n{Font.SEPARATOR}")
+    print_typed(f"\nCurrent quest: {Font.INFO(location_data['quest'])}", style=Font.SYSTEM)
+    print(f"{Font.SEPARATOR}")
+    
+    # TODO: Implement specific quest logic for each location
+    
+    # For now, return a simple message that we're still developing this quest
+    print_typed("\nThis part of the Cosmic Collision quest is still being developed.", style=Font.WARNING)
+    print_typed("Check back in a future update for the complete questline!", style=Font.INFO)
+    
+    input("\nPress Enter to return...")
+    return False
+
+# Data for Cosmic Collision zones with descriptions
+cosmic_collision_zones = {
+    "Parallax Alpha": {
+        "description": "A planet in the Parallax system with unusual temporal fluctuations. The landscape seems to shift subtly as you watch.",
+        "danger_level": 3
+    },
+    "Parallax Beta": {
+        "description": "Twin moons orbit this gas giant, creating a stunning celestial display. Time flows differently here.",
+        "danger_level": 2
+    },
+    "Jonathan-2 Prime": {
+        "description": "The primary planet of the Jonathan-2 system. Massive quantum fluctuations make this a dangerous but resource-rich world.",
+        "danger_level": 4
+    },
+    "Temporal Rift": {
+        "description": "The center of the Cosmic Collision phenomenon. Reality itself seems unstable here.",
+        "danger_level": 5
+    }
+}
+
+# Function to handle non-combat zones
+def explore_zone(zone_name, player):
+    """Explore a non-combat zone with enhanced narrative and interaction options"""
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE(zone_name.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed(f"\nExploring {zone_name}...", style=Font.INFO)
+    
+    # Check if this is a Cosmic Collision zone
+    is_cosmic_zone = False
+    for zone in cosmic_collision_zones:
+        if zone_name in zone or zone in zone_name:
+            is_cosmic_zone = True
+            print_typed(f"\n{cosmic_collision_zones[zone]['description']}", style=Font.LORE)
+            break
+    
+    # Generic exploration for non-quest areas
+    if not is_cosmic_zone:
+        print_typed("\nThis area appears to be a standard exploration zone.", style=Font.LORE)
+        print_typed("You can search for resources, encounters, or rest here.", style=Font.LORE)
+    
+    # Exploration options
+    print(f"\n{Font.SEPARATOR}")
+    print_typed(f"\n{Font.MENU('EXPLORATION OPTIONS:')}")
+    print_typed(f"1. {Font.COMMAND('Search for resources')}")
+    print_typed(f"2. {Font.COMMAND('Look for encounters')}")
+    print_typed(f"3. {Font.COMMAND('Rest and recover')}")
+    print_typed(f"0. {Font.COMMAND('Return to ship')}")
+    
+    choice = input(f"\n{Font.MENU('Choose an option:')} ").strip()
+    
+    if choice == "1":
+        print_typed("\nYou search the area for useful resources...", style=Font.PLAYER)
+        # TODO: Implement resource gathering mechanic
+        print_typed("\nThis feature is still being developed. Check back later!", style=Font.WARNING)
+    elif choice == "2":
+        print_typed("\nYou look around for potential encounters...", style=Font.PLAYER)
+        # TODO: Implement random encounter system
+        print_typed("\nThis feature is still being developed. Check back later!", style=Font.WARNING)
+    elif choice == "3":
+        print_typed("\nYou set up a temporary camp to rest and recover...", style=Font.PLAYER)
+        # TODO: Implement rest/recovery system
+        print_typed("\nThis feature is still being developed. Check back later!", style=Font.WARNING)
+    
+    input("\nPress Enter to return to your ship...")
+    return True
+
+def enter_cosmic_collision_quest(player, game_state, location=None):
+    """
+    Enter the Cosmic Collision quest, a complex side quest where the player deals with 
+    a 4D phenomenon affecting multiple universes.
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+        location: Optional location parameter (not used in this implementation)
+    
+    Returns:
+        bool: True if quest was started successfully, False otherwise
+    """
+    clear_screen()
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('COSMIC COLLISION: A MULTIVERSAL CRISIS'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    # Initialize quest data if first time accessing
+    if "cosmic_collision" not in game_state:
+        game_state["cosmic_collision"] = {
+            "started": False,
+            "completed": False,
+            "current_step": 0,
+            "systems_stabilized": 0,
+            "planets_explored": [],
+            "has_divergence_cannon": False
+        }
+    
+    cosmic_data = game_state["cosmic_collision"]
+    
+    if not cosmic_data["started"]:
+        # Introduction to the quest
+        gender = player.get("gender", "female")
+        if gender.lower() == "male":
+            print_typed("\nDr. Konscript, our sensors have detected a highly unusual spatial-temporal anomaly", 
+                    style=Font.NPC)
+            print_typed("approximately 4.3 light years from our current position.", style=Font.NPC)
+            print_typed("\nIt appears to be a complex intersection of multiple universe states - a cosmic collision.", 
+                    style=Font.NPC)
+            print_typed("As a physicist, you might find this phenomenon particularly fascinating.", style=Font.NPC)
+            
+            print_typed("\nYou study the readouts, your analytical mind already breaking down the problem into", 
+                    style=Font.PLAYER)
+            print_typed("manageable components. The mathematical framework begins taking shape in your head.", 
+                    style=Font.PLAYER)
+        else:
+            print_typed("\nDr. Valari, I've detected something extraordinary. A spatial-temporal anomaly", 
+                    style=Font.NPC)
+            print_typed("unlike anything in our database has formed 4.3 light years from here.", style=Font.NPC)
+            print_typed("\nIt appears to be a convergence of multiple quantum states - a cosmic collision of universes.", 
+                    style=Font.NPC)
+            print_typed("Your background in theoretical physics might give you unique insight into this phenomenon.", 
+                    style=Font.NPC)
+            
+            print_typed("\nYou feel a familiar intuitive spark as you review the sensor data. Patterns emerge", 
+                    style=Font.PLAYER)
+            print_typed("that others might miss. The beautiful, terrifying complexity of it calls to you.", 
+                    style=Font.PLAYER)
+        
+        # Scientific explanation
+        print_typed("\n\nThe Cosmic Collision can be mathematically described as:", style=Font.LORE)
+        print_typed("∫∫∫∫ Ψ(x,y,z,t) dtdzdydx = ∑ᵢⁿ Universeᵢ(φᵢ) × P(Alignment)", style=Font.SYSTEM)
+        print_typed("Where Ψ represents the wave function of our observable universe, and", style=Font.LORE)
+        print_typed("P(Alignment) is the probability of quantum alignment between branes.", style=Font.LORE)
+        
+        # Quest offer
+        print_typed("\nWould you like to investigate this phenomenon?", style=Font.SYSTEM)
+        print_typed("\n1. Begin investigation (start quest)")
+        print_typed("2. Return to game menu")
+        
+        choice = input("\nChoose an option: ")
+        
+        if choice == "1":
+            cosmic_data["started"] = True
+            cosmic_data["current_step"] = 1
+            print_typed("\nYou've started the Cosmic Collision quest. New star systems are now", 
+                    style=Font.SYSTEM)
+            print_typed("available in your travel system.", style=Font.SYSTEM)
+            
+            # Add quest locations to the game state
+            game_state.setdefault("available_quests", {})
+            for location in cosmic_collision_zones:
+                game_state["available_quests"][location] = {
+                    "name": f"Cosmic Collision: {location}",
+                    "description": cosmic_collision_zones[location]["description"],
+                    "completed": False,
+                    "in_progress": False,
+                    "system": "Parallax" if "Parallax" in location else "Jonathan-2"
+                }
+            
+            input("\nPress Enter to continue...")
+            return True
+        else:
+            return False
+    else:
+        # Show quest status if already started
+        return show_cosmic_collision_quest_status(player, game_state)
+
+def show_cosmic_collision_quest_status(player, game_state):
+    """
+    Show the current status of the Cosmic Collision quest
+    
+    Args:
+        player: The player character
+        game_state: The current game state
+    
+    Returns:
+        bool: True if quest was completed, False otherwise
+    """
+    clear_screen()
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('COSMIC COLLISION QUEST STATUS'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    # Ensure cosmic collision data exists
+    if "cosmic_collision" not in game_state:
+        print_typed("\nNo active Cosmic Collision quest data found.", style=Font.WARNING)
+        input("\nPress Enter to return...")
+        return False
+    
+    cosmic_data = game_state["cosmic_collision"]
+    
+    if not cosmic_data["started"]:
+        print_typed("\nYou have not yet started the Cosmic Collision quest.", style=Font.INFO)
+        print_typed("Would you like to begin the investigation?", style=Font.SYSTEM)
+        
+        print_typed("\n1. Begin investigation (start quest)")
+        print_typed("2. Return to game menu")
+        
+        choice = input("\nChoose an option: ")
+        if choice == "1":
+            return enter_cosmic_collision_quest(player, game_state)
+        else:
+            return False
+    
+    # Display current quest progress
+    print_typed("\nCurrent Investigation Progress:", style=Font.HEADER)
+    print_typed(f"\n• Multiversal Systems Stabilized: {cosmic_data['systems_stabilized']}/2", style=Font.INFO)
+    print_typed(f"• Planets Explored: {len(cosmic_data['planets_explored'])}/21", style=Font.INFO)
+    print_typed(f"• Divergence Cannon: {'Acquired' if cosmic_data['has_divergence_cannon'] else 'Not Acquired'}", style=Font.INFO)
+    print_typed(f"• Current Step: {cosmic_data['current_step']}/5", style=Font.INFO)
+    
+    print(f"\n{Font.SEPARATOR}")
+    
+    # Show available actions based on quest progress
+    print_typed("\nAvailable Actions:", style=Font.HEADER)
+    
+    if not cosmic_data["has_divergence_cannon"] and cosmic_data["current_step"] >= 2:
+        print_typed("\n1. Construct Divergence Cannon", style=Font.COMMAND)
+    
+    if len(cosmic_data["planets_explored"]) < 21:
+        print_typed("\n2. Explore more planets (via Travel System)", style=Font.COMMAND)
+    
+    if cosmic_data["has_divergence_cannon"] and cosmic_data["systems_stabilized"] < 2:
+        print_typed("\n3. Stabilize a multiversal system", style=Font.COMMAND)
+    
+    if cosmic_data["systems_stabilized"] >= 2 and cosmic_data["has_divergence_cannon"]:
+        print_typed("\n4. Confront the Cosmic Collision (final step)", style=Font.COMMAND)
+    
+    print_typed("\n0. Return to game menu", style=Font.COMMAND)
+    
+    choice = input(f"\n{Font.MENU('Choose an option:')} ")
+    
+    if choice == "0":
+        return False
+    elif choice == "1" and not cosmic_data["has_divergence_cannon"] and cosmic_data["current_step"] >= 2:
+        # Construct Divergence Cannon
+        gender = player.get("gender", "female")
+        if gender.lower() == "male":
+            print_typed("\nUsing your knowledge of quantum mechanics and the data collected from", style=Font.PLAYER)
+            print_typed("multiple universe states, you methodically design a device capable of", style=Font.PLAYER)
+            print_typed("counteracting the Cosmic Collision's resonance frequency.", style=Font.PLAYER)
+        else:
+            print_typed("\nDrawing on your intuitive understanding of multiversal physics,", style=Font.PLAYER)
+            print_typed("you create a device that can disrupt the harmonic patterns", style=Font.PLAYER)
+            print_typed("causing the Cosmic Collision phenomenon.", style=Font.PLAYER)
+        
+        print_typed("\nThe Divergence Cannon has been added to your inventory!", style=Font.SYSTEM)
+        cosmic_data["has_divergence_cannon"] = True
+        if cosmic_data["current_step"] == 2:
+            cosmic_data["current_step"] = 3
+        
+        input("\nPress Enter to continue...")
+        return show_cosmic_collision_quest_status(player, game_state)
+    
+    elif choice == "2" and len(cosmic_data["planets_explored"]) < 21:
+        print_typed("\nUse the Travel System to explore more planets.", style=Font.INFO)
+        print_typed("Choose option 8 from the game menu to access the Travel System.", style=Font.INFO)
+        input("\nPress Enter to continue...")
+        return False
+    
+    elif choice == "3" and cosmic_data["has_divergence_cannon"] and cosmic_data["systems_stabilized"] < 2:
+        # Stabilize a system
+        system_to_stabilize = "Parallax" if cosmic_data["systems_stabilized"] == 0 else "Jonathan-2"
+        
+        print_typed(f"\nPreparing to stabilize the {system_to_stabilize} system...", style=Font.SYSTEM)
+        time.sleep(1)
+        
+        print_typed("\nYou calibrate the Divergence Cannon to the specific quantum", style=Font.PLAYER)
+        print_typed(f"frequency of the {system_to_stabilize} system...", style=Font.PLAYER)
+        time.sleep(1)
+        
+        print_typed("\n3...", style=Font.SYSTEM)
+        time.sleep(0.5)
+        print_typed("2...", style=Font.SYSTEM)
+        time.sleep(0.5)
+        print_typed("1...", style=Font.SYSTEM)
+        time.sleep(0.5)
+        
+        print_typed("\nThe Divergence Cannon fires a concentrated beam of quantum-stabilizing particles!", style=Font.SYSTEM)
+        time.sleep(1)
+        
+        print_typed(f"\nSystem {system_to_stabilize} has been successfully stabilized!", style=Font.SYSTEM)
+        cosmic_data["systems_stabilized"] += 1
+        
+        if cosmic_data["systems_stabilized"] == 1 and cosmic_data["current_step"] == 3:
+            cosmic_data["current_step"] = 4
+        elif cosmic_data["systems_stabilized"] == 2 and cosmic_data["current_step"] == 4:
+            cosmic_data["current_step"] = 5
+        
+        input("\nPress Enter to continue...")
+        return show_cosmic_collision_quest_status(player, game_state)
+    
+    elif choice == "4" and cosmic_data["systems_stabilized"] >= 2 and cosmic_data["has_divergence_cannon"]:
+        # Final confrontation
+        clear_screen()
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.TITLE('COSMIC COLLISION: FINAL CONFRONTATION'.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        
+        gender = player.get("gender", "female")
+        if gender.lower() == "male":
+            print_typed("\nWith systematic precision, you've prepared for this moment.", style=Font.PLAYER)
+            print_typed("The calculations are perfect. The Divergence Cannon is calibrated", style=Font.PLAYER)
+            print_typed("to the exact specifications needed to seal the multiversal rift.", style=Font.PLAYER)
+            
+            print_typed("\nYou initiate the final sequence, your methodical approach", style=Font.PLAYER)
+            print_typed("ensuring every variable is accounted for as reality itself", style=Font.PLAYER)
+            print_typed("trembles around you.", style=Font.PLAYER)
+        else:
+            print_typed("\nYou feel the convergence of countless possibilities as you", style=Font.PLAYER)
+            print_typed("approach the heart of the Cosmic Collision. Your intuition", style=Font.PLAYER)
+            print_typed("guides you through the quantum turbulence.", style=Font.PLAYER)
+            
+            print_typed("\nThe Divergence Cannon hums with energy as you sense the", style=Font.PLAYER)
+            print_typed("perfect moment to activate it, your connection to the", style=Font.PLAYER)
+            print_typed("underlying patterns of reality showing you the way.", style=Font.PLAYER)
+        
+        print_typed("\n\nThe Divergence Cannon fires a final concentrated beam...", style=Font.SYSTEM)
+        time.sleep(1)
+        
+        # Visual effect
+        for _ in range(5):
+            print(f"\n{Fore.CYAN}{'>' * random.randint(10, 40)}{Style.RESET_ALL}")
+            time.sleep(0.2)
+        
+        print_typed("\nThe multiversal rift collapses in on itself, reality stabilizing", style=Font.SYSTEM)
+        print_typed("across all affected universes. You've successfully resolved the", style=Font.SYSTEM)
+        print_typed("Cosmic Collision crisis!", style=Font.SYSTEM)
+        
+        # Complete the quest
+        cosmic_data["completed"] = True
+        
+        print_typed("\n\nCongratulations! You've completed the Cosmic Collision quest!", style=Font.TITLE)
+        print_typed("\nRewards:", style=Font.HEADER)
+        print_typed("• Divergence Cannon added to permanent inventory", style=Font.ITEM)
+        print_typed("• 5000 XP awarded", style=Font.ITEM)
+        print_typed("• New entry added to your scientific database", style=Font.ITEM)
+        
+        input("\nPress Enter to continue...")
+        return True
+    else:
+        print_typed("\nInvalid option selected.", style=Font.WARNING)
+        input("\nPress Enter to try again...")
+        return show_cosmic_collision_quest_status(player, game_state)
+
+# Travel System Function
+def travel_system(player, game_state):
+    """
+    Allow player to travel to previously visited locations or zones where quests are available.
+    
+    Args:
+        player: The player character
+        game_state: The current game state containing visited locations
+    
+    Returns:
+        bool: True if travel was successful, False otherwise
+    """
+    clear_screen()
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('INTERSTELLAR NAVIGATION SYSTEM'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    # Initialize visited locations if not already present
+    game_state.setdefault("visited_locations", {})
+    game_state.setdefault("available_quests", {})
+    
+    # Get list of locations player can travel to
+    available_destinations = {}
+    
+    # Add visited locations
+    for location, data in game_state["visited_locations"].items():
+        if data.get("can_revisit", True):
+            available_destinations[location] = {
+                "description": data.get("description", "A previously visited location."),
+                "type": "visited",
+                "system": data.get("system", "Unknown")
+            }
+    
+    # Add locations with available quests
+    for location, data in game_state["available_quests"].items():
+        if not data.get("completed", False) and not data.get("in_progress", False):
+            available_destinations[location] = {
+                "description": data.get("description", "A location with an available quest."),
+                "type": "quest",
+                "system": data.get("system", "Unknown")
+            }
+    
+    # Check if player is currently in a quest that cannot be abandoned
+    current_quest = game_state.get("current_quest", None)
+    if current_quest and game_state.get("quest_lock", False):
+        print_typed("\nYou cannot travel while your current mission is in progress.", style=Font.WARNING)
+        print_typed(f"Current mission: {Font.INFO(current_quest)}", style=Font.WARNING)
+        print_typed("You must complete or abandon this mission before traveling elsewhere.", style=Font.WARNING)
+        
+        input("\nPress Enter to return...")
+        return False
+    
+    # Display available destinations grouped by star system
+    if not available_destinations:
+        print_typed("\nNo available travel destinations found.", style=Font.WARNING)
+        print_typed("Complete more quests or explore new areas to unlock travel options.", style=Font.INFO)
+        
+        input("\nPress Enter to return...")
+        return False
+    
+    # Group destinations by star system
+    systems = {}
+    for location, data in available_destinations.items():
+        system = data.get("system", "Unknown")
+        if system not in systems:
+            systems[system] = []
+        systems[system].append((location, data))
+    
+    # Display systems and their destinations
+    print_typed("\nAvailable star systems:", style=Font.HEADER)
+    
+    system_keys = {}
+    key_counter = 1
+    
+    for system, locations in systems.items():
+        system_key = str(key_counter)
+        system_keys[system_key] = system
+        key_counter += 1
+        
+        print(f"\n{Font.COMMAND(system_key + '.')} {Font.TITLE(system)}")
+        for i, (location, data) in enumerate(locations):
+            location_type = "[QUEST]" if data["type"] == "quest" else "[VISITED]"
+            print(f"   {Font.INFO(location)} {Font.SYSTEM(location_type)}")
+    
+    print("\n0. Cancel travel")
+    
+    # Get system selection
+    valid_choice = False
+    selected_system = None  # Initialize to avoid unbound variable
+    while not valid_choice:
+        choice = input("\nSelect a star system (0 to cancel): ")
+        
+        if choice == "0":
+            return False
+        
+        if choice in system_keys:
+            selected_system = system_keys[choice]
+            valid_choice = True
+        else:
+            print("Invalid selection. Please try again.")
+    
+    # Display destinations in selected system
+    clear_screen()
+    print(Font.BOX_TOP)
+    
+    # Ensure selected_system is not None before using center() method
+    system_title = selected_system if selected_system else "Unknown System"
+    print(f"{Font.BOX_SIDE} {Font.TITLE(system_title.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    
+    print_typed("\nAvailable destinations in this system:", style=Font.HEADER)
+    
+    # Only proceed if we have a valid system selection
+    if not selected_system:
+        print_typed("\nError: No star system selected.", style=Font.WARNING)
+        input("\nPress Enter to return...")
+        return False
+        
+    locations = [loc for loc, data in available_destinations.items() if data["system"] == selected_system]
+    
+    for i, location in enumerate(locations):
+        data = available_destinations[location]
+        location_type = "[QUEST]" if data["type"] == "quest" else "[VISITED]"
+        print(f"\n{Font.COMMAND(str(i+1) + '.')} {Font.INFO(location)} {Font.SYSTEM(location_type)}")
+        print(f"   {data['description']}")
+    
+    print("\n0. Back to system selection")
+    
+    # Get destination selection
+    valid_choice = False
+    selected_location = None  # Initialize to avoid unbound variable
+    while not valid_choice:
+        choice = input("\nSelect a destination (0 to go back): ")
+        
+        if choice == "0":
+            return travel_system(player, game_state)
+        
+        try:
+            choice_idx = int(choice) - 1
+            if 0 <= choice_idx < len(locations):
+                selected_location = locations[choice_idx]
+                valid_choice = True
+            else:
+                print("Invalid selection. Please try again.")
+        except ValueError:
+            print("Please enter a number.")
+            
+    # Safety check to ensure we have a valid selection
+    if selected_location is None:
+        print_typed("\nError in destination selection.", style=Font.WARNING)
+        input("\nPress Enter to return...")
+        return False
+    
+    # Perform travel to selected location
+    print_typed(f"\nPreparing faster-than-light travel to {Font.INFO(selected_location)}...", style=Font.SYSTEM)
+    
+    # Visual travel sequence
+    for _ in range(3):
+        print(f"\n{Fore.CYAN}{'>' * random.randint(5, 40)}{Style.RESET_ALL}")
+        time.sleep(0.3)
+    
+    print_typed("\nJumping to lightspeed...", style=Font.SYSTEM)
+    time.sleep(1)
+    
+    # Set current location and handle quest activation if needed
+    game_state["current_location"] = selected_location
+    
+    # If destination is a quest location, activate the quest
+    if available_destinations[selected_location]["type"] == "quest":
+        quest_data = game_state["available_quests"][selected_location]
+        game_state["current_quest"] = quest_data.get("name", "Unknown Quest")
+        game_state["available_quests"][selected_location]["in_progress"] = True
+        
+        # Handle specific quest activations
+        if "Cosmic Collision" in selected_location or selected_location in cosmic_collision_zones:
+            return enter_cosmic_collision_legacy(player, game_state, selected_location)
+    
+    # If it's a previously visited location, call the appropriate function
+    elif selected_location.startswith("Yanglong V"):
+        # Handle Yanglong V locations here
+        pass
+    elif "Thalassia" in selected_location:
+        return explore_underwater_research_base(player, game_state)
+    elif "White Hole" in selected_location:
+        return encounter_musical_puzzle(game_state, selected_location)
+    
+    # Generic exploration for other locations
+    return explore_zone(selected_location, player)
 
 def zone_menu(player):
     """Display the zone selection menu with sci-fi flavor"""
@@ -8843,26 +9858,57 @@ def explore_underwater_research_base(player, game_state):
     danger_color = Fore.GREEN if danger_level <= 2 else (Fore.YELLOW if danger_level <= 3 else Fore.RED)
     print(f"\n{Font.SYSTEM('THREAT ASSESSMENT:')} {danger_color}{danger_indicator}{Style.RESET_ALL}")
     
-    # Environment ambiance effects
-    ambient_sounds = [
-        "The facility creaks under the immense water pressure...",
-        "Distant metallic groans echo through the corridors...",
-        "Water drips from the ceiling in steady, rhythmic patterns...",
-        "The ventilation system sputters and wheezes...",
-        "Something organic squelches in the distance...",
-        "Salt crystals crackle as they form along the walls...",
-        "The backup generators hum with an unsteady vibration...",
-        "Strange bioluminescent patterns pulse in the darkness..."
-    ]
+    # Get protagonist's gender from global game state
+    protagonist_gender = "female"  # Default
+    if 'game_state' in globals() and 'protagonist' in globals()['game_state']:
+        protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
+    
+    # Environment ambiance effects with gender-specific perception
+    if protagonist_gender == "female":
+        # Female protagonist - intuitive/sensory descriptions
+        ambient_sounds = [
+            "Your intuition warns you as the facility creaks under the water pressure...",
+            "You sense a pattern in the distant metallic groans echoing through corridors...",
+            "The rhythmic water drips from the ceiling feel somehow deliberate to you...",
+            "You perceive subtle variations in the ventilation system's labored breathing...",
+            "Your heightened awareness detects something organic moving in the distance...",
+            "The crystallization patterns of salt on the walls reveal hidden information to you...",
+            "The irregular vibrations of the backup generators speak to you of impending failure...",
+            "You feel drawn to the strange bioluminescent patterns pulsing in the darkness..."
+        ]
+    else:
+        # Male protagonist - analytical/systematic descriptions
+        ambient_sounds = [
+            "Your structural analysis detects the facility straining under water pressure...",
+            "You calculate the source of metallic stress fractures based on acoustic echoes...",
+            "You measure the precise 4.7-second interval of water dripping from the ceiling...",
+            "Your engineering background identifies the ventilation system's mechanical flaws...",
+            "Your tactical systems track organic movement patterns in the distance...",
+            "You observe the systematic crystallization rate of salt formations on the walls...",
+            "You analyze the frequency anomalies in the backup generator's power output...",
+            "Your neural implants decode the symmetric patterns in the bioluminescent emissions..."
+        ]
     
     # Check if this is the first visit
     if not game_state.get("research_base_visited", False):
-        # First visit narrative - enhanced with visual descriptions and sound effects
-        print_typed("\nYour submersible vehicle descends through the murky waters", style=Font.LORE)
-        print_typed("of Thalassia 1. Visibility drops to mere meters as crystalline", style=Font.LORE)
-        print_typed("salt formations drift past your viewport. The water pressure", style=Font.LORE)
-        print_typed("outside reaches crushing levels, and your vessel's hull", style=Font.LORE)
-        print_typed("groans under the strain.", style=Font.LORE)
+        # First visit narrative with gender-specific perspectives
+        if protagonist_gender == "female":
+            # Female protagonist - intuitive/sensory approach
+            print_typed("\nAs your submersible vehicle descends through the murky waters", style=Font.LORE)
+            print_typed("of Thalassia 1, you instinctively sense the increasing pressure", style=Font.LORE)
+            print_typed("around you. Your perception shifts to accommodate the darkness as", style=Font.LORE)
+            print_typed("crystalline salt formations drift past your viewport, each one", style=Font.LORE)
+            print_typed("seemingly whispering secrets of this alien ocean. The vessel's hull", style=Font.LORE)
+            print_typed("groans under the strain, and you intuitively adjust your breathing", style=Font.LORE)
+            print_typed("to synchronize with the rhythmic sounds of the deep.", style=Font.LORE)
+        else:
+            # Male protagonist - analytical/methodical approach
+            print_typed("\nYour submersible vehicle descends through the murky waters", style=Font.LORE)
+            print_typed("of Thalassia 1 as you monitor the depth gauge with precision.", style=Font.LORE)
+            print_typed("Visibility drops to exactly 4.3 meters as you catalog the crystalline", style=Font.LORE)
+            print_typed("salt formations drifting past your viewport. You calculate the water", style=Font.LORE)
+            print_typed("pressure at 236.7 atmospheres, noting how the vessel's hull integrity", style=Font.LORE)
+            print_typed("remains within acceptable parameters despite the audible strain.", style=Font.LORE)
         
         # Simulated sonar ping effect
         for _ in range(3):
@@ -8871,11 +9917,22 @@ def explore_underwater_research_base(player, game_state):
             print_typed(f"{Font.SYSTEM('> ping')}", delay=0.01)
             time.sleep(0.5)
         
-        print_typed("\nOccasional flashes of bioluminescence reveal bizarre life forms", style=Font.LORE)
-        print_typed("darting away from your lights - translucent creatures with", style=Font.LORE)
-        print_typed("crystalline growths protruding from their bodies. Your scanner", style=Font.LORE)
-        print_typed("indicates they contain high concentrations of the planet's", style=Font.LORE)
-        print_typed("unique salt compounds, somehow integrated into their biology.", style=Font.LORE)
+        # Gender-specific reaction to bioluminescent creatures
+        if protagonist_gender == "female":
+            print_typed("\nYour perception heightens as flashes of bioluminescence reveal", style=Font.LORE)
+            print_typed("bizarre life forms moving with unexpected grace through the depths.", style=Font.LORE)
+            print_typed("You sense a complex symbiosis in the translucent creatures with", style=Font.LORE)
+            print_typed("crystalline formations growing from their bodies. Intuitively, you", style=Font.LORE)
+            print_typed("recognize patterns in their movements that suggest intelligence.", style=Font.LORE)
+            print_typed("Your scanner confirms your suspicion that these beings have somehow", style=Font.LORE)
+            print_typed("incorporated the planet's unique salt compounds into their very essence.", style=Font.LORE)
+        else:
+            print_typed("\nYour systematic analysis tracks occasional flashes of bioluminescence", style=Font.LORE)
+            print_typed("that reveal bizarre life forms with predictable evasion patterns as they", style=Font.LORE)
+            print_typed("dart away from your lights. You classify the translucent creatures with", style=Font.LORE)
+            print_typed("crystalline growths as a previously uncatalogued species. Your scanner's", style=Font.LORE)
+            print_typed("chemical analysis indicates they contain 47.3% concentration of the planet's", style=Font.LORE)
+            print_typed("unique salt compounds, suggesting artificial biological engineering.", style=Font.LORE)
         
         time.sleep(1)
         
@@ -10311,15 +11368,33 @@ def encounter_chrono_sentient(player, game_state):
     print_typed("yet both shimmer in and out of phase with reality itself. The being exists", style=Font.LORE)
     print_typed("in multiple states simultaneously - solid and ethereal, present and absent.", style=Font.LORE)
     
-    # Communication attempts
-    print_typed("\nYour communication systems crackle with otherworldly static as the", style=Font.PLAYER)
-    print_typed("entity attempts to establish contact. The Universal Translator struggles", style=Font.PLAYER)
-    print_typed("to process a language that exists across multiple timelines simultaneously.", style=Font.PLAYER)
+    # Get protagonist's gender from global game state
+    protagonist_gender = "female"  # Default
+    if 'game_state' in globals() and 'protagonist' in globals()['game_state']:
+        protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
+    
+    # Communication attempts with gender-specific perception
+    if protagonist_gender == "female":
+        print_typed("\nYour communication systems crackle with otherworldly static as the", style=Font.PLAYER)
+        print_typed("entity attempts to establish contact. You intuitively sense patterns", style=Font.PLAYER)
+        print_typed("in the chaos, your quantum-attuned mind perceiving multiple temporal", style=Font.PLAYER)
+        print_typed("realities simultaneously. Your connection feels strangely... familiar.", style=Font.PLAYER)
+    else:
+        print_typed("\nYour communication systems crackle with otherworldly static as the", style=Font.PLAYER)
+        print_typed("entity attempts to establish contact. Your analytical mind identifies", style=Font.PLAYER)
+        print_typed("algorithmic sequences in the temporal fluctuations, allowing your", style=Font.PLAYER)
+        print_typed("systems to establish partial synchronization with the phenomenon.", style=Font.PLAYER)
     
     time.sleep(1)
     print_glitch("...OBSERVER DETECTED... TIMELINE FRACTURE ACKNOWLEDGED...")
     time.sleep(0.5)
-    print_glitch("...WE/I AM THE CHRONO-SENTIENT... GUARDIAN OF TEMPORAL INTEGRITY...")
+    
+    # Gender-specific entity response
+    if protagonist_gender == "female":
+        print_glitch("...WE/I AM THE CHRONO-SENTIENT... YOUR QUANTUM RESONANCE IS FAMILIAR...")
+    else:
+        print_glitch("...WE/I AM THE CHRONO-SENTIENT... YOUR TEMPORAL CALCULATIONS INTRIGUE US...")
+    
     time.sleep(0.5)
     
     # Offering player choices using time mechanics
@@ -10858,8 +11933,13 @@ def chapter_six_teaser():
     return
     
 def chapter_two_teaser():
-    """Display detailed teaser for Chapter 2: Yanglong V"""
+    """Display detailed teaser for Chapter 2: Yanglong V with gender-specific content"""
     clear_screen()
+    
+    # Get protagonist's gender from global game state
+    protagonist_gender = "female"  # Default
+    if 'game_state' in globals() and 'protagonist' in globals()['game_state']:
+        protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
 
     # Create a dramatic chapter transition with enhanced visuals
     print(f"{Fore.RED}{Back.BLACK}{'▀' * 50}{Style.RESET_ALL}")
@@ -10868,11 +11948,17 @@ def chapter_two_teaser():
     print(Font.BOX_BOTTOM)
     print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
 
-    # Setting the scene with more detailed background
-    print_typed("\nThree months have passed since you discovered the ancient rocket", style=Font.LORE)
-    print_typed("and the Andromeda star charts. Through relentless scavenging and", style=Font.LORE)
-    print_typed("ingenious repurposing of abandoned technology, you've managed to", style=Font.LORE)
-    print_typed("restore the rocket's critical systems to functional capacity.", style=Font.LORE)
+    # Setting the scene with gender-specific background narrative
+    if protagonist_gender == "female":
+        print_typed("\nThree months have passed since you discovered the ancient rocket", style=Font.LORE)
+        print_typed("and the Andromeda star charts. Your intuitive understanding of", style=Font.LORE)
+        print_typed("quantum mechanics and AI neural architecture allowed you to", style=Font.LORE)
+        print_typed("restore the rocket's critical systems beyond initial expectations.", style=Font.LORE)
+    else:
+        print_typed("\nThree months have passed since you discovered the ancient rocket", style=Font.LORE)
+        print_typed("and the Andromeda star charts. Through systematic analysis and", style=Font.LORE)
+        print_typed("methodical repurposing of abandoned technology, you've managed to", style=Font.LORE)
+        print_typed("optimize the rocket's propulsion and navigation systems.", style=Font.LORE)
 
     print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
     
@@ -10920,22 +12006,52 @@ def chapter_two_teaser():
     print_typed("\nMEMORY FRAGMENT: LAST COMMUNICATION FROM YANGLONG V", style=Fore.CYAN + Style.BRIGHT)
     print(f"{Fore.CYAN}{Style.DIM}{'~' * 50}{Style.RESET_ALL}")
 
-    # Detailed flashback with dialogue
-    print_typed("\n\"Xeno, the experiments are yielding incredible results,\"", style=Font.LORE)
-    print_typed("Wei's hologram had said during your last call, her eyes bright", style=Font.LORE)
-    print_typed("with excitement. \"The quantum displacement engine could", style=Font.LORE)
-    print_typed("revolutionize our journey to Andromeda. But...\" Her expression", style=Font.LORE)
-    print_typed("had darkened. \"There's something strange happening with the", style=Font.LORE)
-    print_typed("station's AI. It's been asking unusual questions about consciousness...\"", style=Font.LORE)
+    # Get protagonist's gender from global game state
+    protagonist_gender = "female"  # Default
+    if 'game_state' in globals() and 'protagonist' in globals()['game_state']:
+        protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
+    
+    # Detailed flashback with gender-specific dialogue
+    if protagonist_gender == "female":
+        print_typed("\n\"Xeno, the experiments are yielding incredible results,\"", style=Font.LORE)
+        print_typed("Wei's hologram had said during your last call, her eyes bright", style=Font.LORE)
+        print_typed("with excitement. \"The quantum displacement engine could", style=Font.LORE)
+        print_typed("revolutionize our journey to Andromeda. I wish you were here -", style=Font.LORE)
+        print_typed("your intuitive approach to quantum mechanics would help us", style=Font.LORE)
+        print_typed("solve the remaining alignment issues. But...\" Her expression", style=Font.LORE)
+        print_typed("had darkened. \"There's something strange happening with the", style=Font.LORE)
+        print_typed("station's AI. It's been asking unusual questions about consciousness", style=Font.LORE)
+        print_typed("and keeps referring to you specifically in its queries...\"", style=Font.LORE)
+    else:
+        print_typed("\n\"Hyte, the experiments are yielding incredible results,\"", style=Font.LORE)
+        print_typed("Wei's hologram had said during your last call, her eyes bright", style=Font.LORE)
+        print_typed("with excitement. \"The quantum displacement engine could", style=Font.LORE)
+        print_typed("revolutionize our journey to Andromeda. Your mathematical models", style=Font.LORE) 
+        print_typed("for the containment field were essential to our breakthrough.", style=Font.LORE)
+        print_typed("But...\" Her expression had darkened. \"There's something concerning", style=Font.LORE)
+        print_typed("happening with the station's AI. It's been asking unusual questions", style=Font.LORE)
+        print_typed("about consciousness and has been analyzing your research extensively...\"", style=Font.LORE)
     
     # Return to present with dramatic reveal
     print_typed("\nThe memory fades as your ship's sensors detect something", style=Font.PLAYER)
     print_typed(f"unexpected: a {Font.WARNING('distress beacon')} still broadcasting", style=Font.PLAYER)
     print_typed("from Yanglong V after all these years.", style=Font.PLAYER)
     
-    # Create suspense with mysterious transmission
+    # Create suspense with gender-specific mysterious transmission
     print_typed(f"\n{Fore.RED}\"...any survivors... AI containment breach... quantum resonance...\"", style=Style.BRIGHT)
-    print_typed(f"{Fore.RED}\"...Dr. Valari, if you receive this... the access codes are...\"", style=Style.BRIGHT)
+    
+    # Get protagonist's gender from global game state
+    protagonist_gender = "female"  # Default
+    if 'game_state' in globals() and 'protagonist' in globals()['game_state']:
+        protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
+    
+    # Different message based on protagonist gender
+    if protagonist_gender == "female":
+        print_typed(f"{Fore.RED}\"...Dr. Valari, if you receive this... your intuition was right all along...\"", style=Style.BRIGHT)
+        print_typed(f"{Fore.RED}\"...the AI was seeking you specifically... access codes in your personal data...\"", style=Style.BRIGHT)
+    else:
+        print_typed(f"{Fore.RED}\"...Dr. Konscript, if you receive this... your calculations predicted this outcome...\"", style=Style.BRIGHT)
+        print_typed(f"{Fore.RED}\"...the AI's evolution followed your theoretical model... access codes in your research...\"", style=Style.BRIGHT)
     
     print_typed("\nThe message cuts off abruptly, leaving you with more questions", style=Font.PLAYER)
     print_typed("than answers. Whatever awaits at Yanglong V, it's clear that", style=Font.PLAYER)
@@ -12248,7 +13364,9 @@ def game_menu():
     print_typed(f"5. {Font.COMMAND('Inventory')}")
     print_typed(f"6. {Font.COMMAND('Quest Log')}")
     print_typed(f"7. {Font.COMMAND('Settings')}")
-    print_typed(f"8. {Font.COMMAND('Return to Main Menu')}")
+    print_typed(f"8. {Font.COMMAND('Travel System')} {Font.SUBTITLE('[NEW]')}")
+    print_typed(f"9. {Font.COMMAND('Cosmic Collision Quest')} {Font.SUBTITLE('[NEW]')}")
+    print_typed(f"R. {Font.COMMAND('Return to Main Menu')}")
     print_typed(f"0. {Font.COMMAND('Exit Game')}")
     
     choice = input(f"\n{Font.MENU('Enter command:')} ").strip()
@@ -12286,6 +13404,26 @@ def game_menu():
         input("\nPress Enter to return to game menu...")
         return game_menu()
     elif choice == "8":
+        # Access the travel system
+        print_typed("\nInitializing interstellar travel system...", style=Font.SYSTEM)
+        time.sleep(1)
+        if 'game_state' in globals():
+            travel_system(globals().get('player', None), globals()['game_state'])
+        else:
+            print_typed("\nError: Game state not initialized. Please start a new game.", style=Font.WARNING)
+            input("\nPress Enter to continue...")
+        return game_menu()
+    elif choice == "9":
+        # Access the Cosmic Collision side quest
+        print_typed("\nAccessing Cosmic Collision quest data...", style=Font.SYSTEM)
+        time.sleep(1)
+        if 'game_state' in globals():
+            enter_cosmic_collision_quest(globals().get('player', None), globals()['game_state'])
+        else:
+            print_typed("\nError: Game state not initialized. Please start a new game.", style=Font.WARNING)
+            input("\nPress Enter to continue...")
+        return game_menu()
+    elif choice.upper() == "R":
         # Return to main menu
         print_typed("\nReturning to main menu...", style=Font.SYSTEM)
         time.sleep(1)
