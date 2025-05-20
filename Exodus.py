@@ -3,10 +3,17 @@ import time
 import os
 import sys
 import pickle
+import re
 from colorama import Fore, Back, Style, init
 
 # Initialize colorama
 init(autoreset=True, strip=True if os.name != 'nt' else None)
+
+# Game version information
+VERSION = "2.5.0"
+SAVE_FORMAT_VERSION = "3.0"  # Version of save file format
+BUILD_NUMBER = "20250520"  # Format YYYYMMDD
+RELEASE_DATE = "May 20, 2025"
 
 """
 LAST HUMAN: EXODUS
@@ -29,9 +36,6 @@ the dark secrets behind humanity's exile from Earth.
 """
 
 # Game constants
-VERSION = "2.5.0"
-RELEASE_DATE = "May 19, 2025"
-BUILD_NUMBER = "25062"
 
 # Global game state
 game_state = {
@@ -163,6 +167,7 @@ class Font:
     SEPARATOR = f"{Fore.BLUE}{Style.DIM}{'─' * 50}{Style.RESET_ALL}"
     SEPARATOR_THIN = f"{Fore.BLUE}{Style.DIM}{'┄' * 50}{Style.RESET_ALL}"
     BOX_TOP = f"{Fore.BLUE}{Style.DIM}┌{'─' * 48}┐{Style.RESET_ALL}"
+    BOX_MID = f"{Fore.BLUE}{Style.DIM}├{'─' * 48}┤{Style.RESET_ALL}"
     BOX_BOTTOM = f"{Fore.BLUE}{Style.DIM}└{'─' * 48}┘{Style.RESET_ALL}"
     BOX_SIDE = f"{Fore.BLUE}{Style.DIM}│{Style.RESET_ALL}"
 
@@ -196,8 +201,9 @@ def save_game(slot_number=1):
             "name": "Dr. Xeno Valari",  # Default protagonist
             "gender": "female",
             "specialty": "quantum physics",
-            "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21.",
-            "age": 29,
+            "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 27.",
+            "age": 140,
+            "physical_age": 16,
             "origin": "New Tokyo Arcology",
             "personal_log_entries": []
         }
@@ -309,36 +315,521 @@ def save_game(slot_number=1):
         print(Font.WARNING(f"\nError saving game: {e}"))
         return False
 
+def attempt_save_recovery(save_file):
+    """
+    Advanced save file recovery system that tries to extract partial data from corrupted files
+    
+    Args:
+        save_file (str): Path to the corrupted save file
+        
+    Returns:
+        tuple: (bool success, dict recovered_data or None, str recovery_details)
+    """
+    try:
+        # First, try to read the file as binary data
+        with open(save_file, "rb") as f:
+            raw_data = f.read()
+            
+        # Check if file has enough content to attempt recovery
+        if len(raw_data) < 20:
+            return False, None, "File too small for recovery"
+            
+        # Recovery strategy 1: Look for valid dictionary structure markers
+        # This is a basic text search approach that can sometimes extract meaningful information
+        recovery_notes = []
+        
+        # Base recovery data with minimal structure
+        recovery_data = {
+            "game_state": {
+                "player_health": 100,
+                "player_max_health": 100,
+                "player_level": 1,
+                "recovery_mode": True,
+                "protagonist": {"name": "Unknown", "gender": "unknown"}
+            },
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "character_info": {
+                "name": "Unknown",
+                "level": 1,
+                "version": VERSION
+            },
+            "technical_info": {
+                "recovery_method": "basic",
+                "recovery_time": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+        }
+        
+        # Try to extract character name
+        name_patterns = [
+            b'Dr. Xeno Valari',
+            b'Dr. Hyte Konscript',
+            b'"name":\\s*"([^"]+)"'
+        ]
+        
+        for pattern in name_patterns:
+            if isinstance(pattern, bytes) and pattern in raw_data:
+                char_name = pattern.decode('utf-8', errors='ignore')
+                recovery_data["game_state"]["protagonist"]["name"] = char_name
+                recovery_data["character_info"]["name"] = char_name
+                recovery_notes.append(f"Recovered character name: {char_name}")
+                
+                # Set gender based on name
+                if "Xeno" in char_name:
+                    recovery_data["game_state"]["protagonist"]["gender"] = "female"
+                elif "Hyte" in char_name:
+                    recovery_data["game_state"]["protagonist"]["gender"] = "male"
+                break
+        
+        # Try to extract level information
+        level_pattern = b'"player_level":\\s*(\\d+)'
+        level_matches = re.findall(level_pattern, raw_data)
+        if level_matches:
+            try:
+                level = int(level_matches[0])
+                if 1 <= level <= 30:  # Validate level range
+                    recovery_data["game_state"]["player_level"] = level
+                    recovery_data["character_info"]["level"] = level
+                    recovery_notes.append(f"Recovered player level: {level}")
+            except (ValueError, IndexError):
+                pass
+        
+        # Try to extract chapter information
+        chapter_patterns = [
+            b'Chapter 1: Earth Reclamation',
+            b'Chapter 2: The White Hole',
+            b'Chapter 3: Thalassia I',
+            b'Chapter 4: The Silent Citadel',
+            b'Chapter 5: Quantum Paradox',
+            b'Chapter 6: The Architect',
+            b'Chapter 7: Convergence',
+            b'Chapter 8: Viral Directive'
+        ]
+        
+        for i, pattern in enumerate(chapter_patterns, 1):
+            if pattern in raw_data:
+                chapter_name = pattern.decode('utf-8', errors='ignore')
+                recovery_data["game_state"]["current_chapter"] = chapter_name
+                recovery_data["character_info"]["chapter"] = chapter_name
+                recovery_notes.append(f"Recovered chapter: {chapter_name}")
+                break
+        
+        # Recovery successful with partial data
+        recovery_data["technical_info"]["recovery_notes"] = recovery_notes
+        return True, recovery_data, "Partial data recovery successful"
+        
+    except Exception as e:
+        return False, None, f"Recovery failed: {str(e)}"
+
+def verify_save_integrity(save_file):
+    """
+    Verify the integrity of a save file and attempt repairs if possible
+    
+    Args:
+        save_file (str): Path to the save file
+        
+    Returns:
+        tuple: (bool success, dict save_data or None, str error_message or None)
+    """
+    if not os.path.exists(save_file):
+        return False, None, "File does not exist"
+    
+    # Try normal loading first
+    try:
+        with open(save_file, "rb") as f:
+            save_data = pickle.load(f)
+        
+        # Basic structure validation
+        if not isinstance(save_data, dict):
+            return False, None, "Save file is not a valid game save (not a dictionary)"
+            
+        if "game_state" not in save_data:
+            return False, None, "Save file missing game_state data"
+            
+        # Check for data corruption by validating key game state elements
+        game_state = save_data.get("game_state", {})
+        if not isinstance(game_state, dict):
+            return False, None, "Game state is corrupted (not a dictionary)"
+            
+        # Validate essential player stats
+        player_level = game_state.get("player_level", None)
+        if player_level is not None and not isinstance(player_level, int):
+            return False, None, "Player level data is corrupted"
+            
+        player_health = game_state.get("player_health", None)
+        if player_health is not None and not isinstance(player_health, int):
+            return False, None, "Player health data is corrupted"
+            
+        # Passed all validation
+        return True, save_data, None
+            
+    except (pickle.UnpicklingError, EOFError, AttributeError, ImportError, IndexError) as e:
+        # These are common pickle corruption errors
+        error_msg = f"Save corruption detected: {str(e)}"
+        print(Font.WARNING(f"Save file corruption detected: {str(e)}"))
+        print(Font.INFO("Attempting to recover save data..."))
+        
+        # Try advanced recovery methods
+        recovery_success, recovered_data, recovery_details = attempt_save_recovery(save_file)
+        
+        if recovery_success and recovered_data:
+            print(Font.SUCCESS("Partial save data recovered!"))
+            print(Font.INFO(recovery_details))
+            
+            # Mark the save as recovered
+            if "technical_info" not in recovered_data:
+                recovered_data["technical_info"] = {}
+            recovered_data["technical_info"]["recovered"] = True
+            recovered_data["technical_info"]["original_error"] = str(e)
+            
+            return True, recovered_data, "Partial data recovery successful"
+        
+        # Recovery failed    
+        return False, None, error_msg
+    
+    except Exception as e:
+        # Other unexpected errors
+        return False, None, f"Unknown error: {str(e)}"
+
+def fix_save_version(save_data):
+    """
+    Update save data format to the latest version with intelligent protagonist detection
+    
+    Args:
+        save_data (dict): The loaded save data
+        
+    Returns:
+        dict: Updated save data
+    """
+    if "game_state" not in save_data:
+        save_data["game_state"] = {}
+    
+    game_state = save_data["game_state"]
+    
+    # Check for older save versions and extract player info
+    old_save_version = save_data.get("character_info", {}).get("version", "1.0") if "character_info" in save_data else "1.0"
+    old_character_name = save_data.get("character_info", {}).get("name", "") if "character_info" in save_data else ""
+    
+    # Log version information for debugging
+    print(Font.INFO(f"Upgrading save from version {old_save_version} to {VERSION}"))
+    
+    # Detect gender based on player name from older saves
+    detected_gender = "female"  # Default for backward compatibility
+    detected_name = "Dr. Xeno Valari"  # Default female protagonist
+    detected_specialty = "quantum physics"
+    detected_background = "You were a prodigy in quantum computing, joining the Century Sleepers program at 27."
+    
+    # Check if we can determine a male protagonist from older save data
+    if old_character_name and "Hyte" in old_character_name or "Konscript" in old_character_name:
+        detected_gender = "male"
+        detected_name = "Dr. Hyte Konscript" 
+        detected_background = "Your breakthrough in quantum barrier calculation earned you a place in the Century Sleepers program at 30."
+    
+    # Ensure protagonist data with all required fields
+    if "protagonist" not in game_state:
+        # Create new protagonist based on detected information
+        game_state["protagonist"] = {
+            "name": detected_name, 
+            "gender": detected_gender,
+            "specialty": detected_specialty,
+            "background": detected_background,
+            "age": 140 if detected_gender == "female" else 200,
+            "physical_age": 16 if detected_gender == "female" else 18,
+            "origin": "New Tokyo Arcology" if detected_gender == "female" else "Neo Boston Research Complex",
+            "personal_log_entries": []
+        }
+        print(f"Detected protagonist {detected_name} ({detected_gender}) from save data")
+    else:
+        # Update existing protagonist with any missing fields
+        protagonist = game_state["protagonist"]
+        
+        # Preserve existing data but add defaults for missing fields
+        current_gender = protagonist.get("gender", "")
+        
+        # If no gender is specified, use detected gender
+        if not current_gender:
+            protagonist["gender"] = detected_gender
+            
+        # Set appropriate defaults based on gender
+        if protagonist.get("gender", "") == "male":
+            protagonist.setdefault("name", "Dr. Hyte Konscript")
+            protagonist.setdefault("specialty", "quantum physics")
+            protagonist.setdefault("background", "Your breakthrough in quantum barrier calculation earned you a place in the Century Sleepers program at 30.")
+            protagonist.setdefault("age", 200)
+            protagonist.setdefault("physical_age", 18)
+            protagonist.setdefault("origin", "Neo Boston Research Complex")
+        else:
+            protagonist.setdefault("name", "Dr. Xeno Valari")
+            protagonist.setdefault("specialty", "quantum physics")
+            protagonist.setdefault("background", "You were a prodigy in quantum computing, joining the Century Sleepers program at 27.")
+            protagonist.setdefault("age", 140)
+            protagonist.setdefault("physical_age", 16)
+            protagonist.setdefault("origin", "New Tokyo Arcology")
+            
+        protagonist.setdefault("personal_log_entries", [])
+    
+    # Import player level and XP from old format saves
+    old_player_level = save_data.get("character_info", {}).get("level", 1) if "character_info" in save_data else 1
+    
+    # In some old versions, level was stored directly in game_state
+    direct_player_level = game_state.get("player_level", 1) if "player_level" in game_state else 1
+    
+    # Use the highest level value available
+    final_player_level = max(old_player_level, direct_player_level)
+    
+    # Calculate appropriate XP for the level
+    # Base XP formula: level * 500 - 100
+    calculated_experience = (final_player_level * 500) - 100 if final_player_level > 1 else 0
+    
+    # Core game state fields - with consideration for existing player progress
+    game_state.setdefault("player_health", 100 + (final_player_level - 1) * 10)  # Health increases with level
+    game_state.setdefault("player_max_health", 100 + (final_player_level - 1) * 10)
+    game_state.setdefault("player_attack", 15 + (final_player_level - 1) * 2)  # Attack increases with level
+    game_state.setdefault("player_defense", 5 + (final_player_level - 1))  # Defense increases with level
+    game_state.setdefault("player_speed", 10)
+    game_state.setdefault("player_level", final_player_level)
+    game_state.setdefault("player_experience", calculated_experience)
+    
+    # Determine appropriate chapter based on player level
+    chapter_num = 1
+    if final_player_level >= 25:
+        chapter_num = 8  # Upcoming Chapter 8: Viral Directive
+    elif final_player_level >= 20:
+        chapter_num = 7
+    elif final_player_level >= 15:
+        chapter_num = 6
+    elif final_player_level >= 12:
+        chapter_num = 5
+    elif final_player_level >= 9:
+        chapter_num = 4
+    elif final_player_level >= 6:
+        chapter_num = 3
+    elif final_player_level >= 3:
+        chapter_num = 2
+    
+    # Map chapter numbers to chapter names
+    chapter_names = {
+        1: "Chapter 1: Earth Reclamation",
+        2: "Chapter 2: The White Hole",
+        3: "Chapter 3: Thalassia I",
+        4: "Chapter 4: The Silent Citadel",
+        5: "Chapter 5: Quantum Paradox",
+        6: "Chapter 6: The Architect",
+        7: "Chapter 7: Convergence",
+        8: "Chapter 8: Viral Directive"
+    }
+    
+    # Set chapter progress
+    game_state.setdefault("chapter_progress", 0)
+    game_state.setdefault("current_chapter", chapter_names.get(chapter_num, "Chapter 1: Earth Reclamation"))
+    
+    # Print level migration information
+    if old_player_level != direct_player_level or (old_player_level > 1 or direct_player_level > 1):
+        print(Font.INFO(f"Migrated player level: {final_player_level} | XP: {calculated_experience}"))
+        print(Font.INFO(f"Updated chapter: {chapter_names.get(chapter_num)}"))
+    
+    # Quest and exploration data
+    game_state.setdefault("companions", [])
+    game_state.setdefault("available_quests", {})
+    game_state.setdefault("completed_quests", [])
+    game_state.setdefault("visited_locations", {})
+    
+    # Cosmic Collision quest data
+    game_state.setdefault("cosmic_collision", {
+        "started": False,
+        "completed": False,
+        "current_step": 0,
+        "systems_stabilized": 0,
+        "planets_explored": [],
+        "has_divergence_cannon": False
+    })
+    
+    # Inventory and skills
+    game_state.setdefault("inventory", {
+        "weapons": [],
+        "armor": [],
+        "consumables": [],
+        "key_items": [],
+        "artifacts": []
+    })
+    
+    game_state.setdefault("skills", {
+        "hacking": 1,
+        "engineering": 1,
+        "quantum_theory": 1,
+        "xenobiology": 1,
+        "persuasion": 1,
+        "survival": 1
+    })
+    
+    # Settings
+    game_state.setdefault("settings", {
+        "text_speed": "normal",
+        "color_scheme": "default",
+        "difficulty": "normal",
+        "tutorial_enabled": True,
+        "auto_save": True
+    })
+    
+    # Update technical information
+    save_data.setdefault("technical_info", {
+        "save_version": "3.0",
+        "game_build": BUILD_NUMBER,
+        "save_count": game_state.get("save_count", 0) + 1,
+        "checksum": hash(str(game_state))
+    })
+    
+    # Update character info
+    save_data.setdefault("character_info", {
+        "name": game_state.get("protagonist", {}).get("name", "Unknown"),
+        "gender": game_state.get("protagonist", {}).get("gender", "female"),
+        "level": game_state.get("player_level", 1),
+        "experience": game_state.get("player_experience", 0),
+        "chapter": game_state.get("current_chapter", "Chapter 1: Earth Reclamation"),
+        "location": game_state.get("current_location", "Cryogenic Facility"),
+        "playtime": game_state.get("playtime", 0),
+        "version": VERSION
+    })
+    
+    # Update timestamp if missing
+    save_data.setdefault("timestamp", time.strftime("%Y-%m-%d %H:%M:%S"))
+    
+    return save_data
+
 def load_game(slot_number=1):
     """Load game state from a save file with enhanced version compatibility and data validation"""
+    # Declare global variable at the beginning of the function
+    global game_state
+    
     save_file = f"saves/save_slot_{slot_number}.dat"
 
     if not os.path.exists(save_file):
         print(Font.WARNING(f"\nNo save file found in slot {slot_number}."))
         return False
 
+    # Check file integrity and attempt recovery if needed
+    integrity_result, save_data, error_message = verify_save_integrity(save_file)
+    
+    # Handle corrupted or invalid save data
+    if not integrity_result or save_data is None:
+        print(Font.WARNING(f"\nSave file error: {error_message}"))
+        print(Font.INFO("Attempting to recover or create a new game state..."))
+        
+        # Create backup of corrupted file
+        try:
+            backup_file = f"saves/corrupted_slot_{slot_number}_{int(time.time())}.bak"
+            import shutil
+            shutil.copy2(save_file, backup_file)
+            print(Font.INFO(f"Backup of corrupted save created: {backup_file}"))
+        except Exception as backup_error:
+            print(Font.WARNING(f"Could not create backup: {backup_error}"))
+        
+        # Ensure we have the saves directory
+        os.makedirs("saves", exist_ok=True)
+        
+        # Initialize minimal recovery state
+        save_data = {
+            "game_state": {
+                "player_health": 100,
+                "player_max_health": 100,
+                "player_level": 1,
+                "recovery_mode": True,
+                "protagonist": {
+                    "name": "Dr. Xeno Valari",
+                    "gender": "female",
+                    "specialty": "quantum physics"
+                }
+            },
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "character_info": {
+                "name": "Dr. Xeno Valari",
+                "gender": "female",
+                "level": 1,
+                "chapter": "Chapter 1: Earth Reclamation",
+                "version": VERSION
+            },
+            "technical_info": {
+                "save_version": "3.0",
+                "game_build": BUILD_NUMBER,
+                "save_count": 0,
+                "recovery_created": True,
+                "checksum": 0
+            }
+        }
+        print(Font.INFO("Created recovery save state. Some progress may be lost."))
+        
+        # Try to immediately save the recovery state to prevent future issues
+        try:
+            with open(save_file, "wb") as f:
+                pickle.dump(save_data, f)
+            print(Font.SUCCESS("Recovery state saved successfully."))
+        except Exception as save_error:
+            print(Font.WARNING(f"Could not save recovery state: {save_error}"))
+            # If we can't even save a recovery state, things are seriously wrong
+            # Return early and let the player start a new game
+            game_state = save_data["game_state"]
+            return False
+    
+    # Now we should have valid save_data
     try:
-        with open(save_file, "rb") as f:
-            save_data = pickle.load(f)
-
-        # Check for version compatibility
-        save_version = save_data.get("character_info", {}).get("version", "1.0")
+        # Add more sanity checks as a safeguard
+        if not isinstance(save_data, dict):
+            raise ValueError("Invalid save data structure (not a dictionary)")
+            
+        if "game_state" not in save_data or not isinstance(save_data["game_state"], dict):
+            raise ValueError("Invalid game state structure")
+            
+        if "character_info" not in save_data or not isinstance(save_data["character_info"], dict):
+            # Initialize character_info if missing
+            save_data["character_info"] = {
+                "name": "Unknown",
+                "gender": "female",
+                "level": 1,
+                "version": "1.0" 
+            }
+        
+        # Check for version compatibility - with safe fallbacks for missing values
+        character_info = save_data.get("character_info", {})
+        current_save_version = character_info.get("version", "1.0") if character_info else "1.0"
+        
         technical_info = save_data.get("technical_info", {})
-        save_format_version = technical_info.get("save_version", "1.0")
+        current_format_version = technical_info.get("save_version", "1.0") if technical_info else "1.0"
         
         # Handle version update
-        needs_upgrade = save_version < VERSION or save_format_version < "3.0"
-        if needs_upgrade:
-            print(Font.WARNING(f"\nThis is an older save file (version {save_version}). Updating to new format..."))
+        needs_upgrade = False
+        try:
+            # Safely compare versions, handling potential type issues
+            needs_upgrade = current_save_version < str(VERSION) or current_format_version < SAVE_FORMAT_VERSION
             
-            # Add any missing data structures the new version needs
-            if "protagonist" not in save_data["game_state"]:
+            # Log the version comparison for debugging
+            if needs_upgrade:
+                print(Font.INFO(f"Save version: {current_save_version}, Current game version: {VERSION}"))
+                print(Font.INFO(f"Save format: {current_format_version}, Required format: 3.0"))
+        except Exception as version_error:
+            # If comparison fails, assume upgrade is needed
+            print(Font.WARNING(f"Version comparison error: {version_error}"))
+            needs_upgrade = True
+            
+        if needs_upgrade:
+            print(Font.WARNING(f"\nThis is an older save file (version {current_save_version}). Updating to new format..."))
+            
+            # Use the dedicated version fix function to update all format elements
+            try:
+                # Call our specialized fix function
+                save_data = fix_save_version(save_data)
+                print(Font.SUCCESS("Save data successfully upgraded to latest format!"))
+            except (ValueError, KeyError, TypeError, AttributeError) as e:
+                print(Font.WARNING(f"Error during save format upgrade: {e}"))
+                print(Font.INFO("Attempting basic compatibility fixes..."))
+                
+            # For backward compatibility - ensure game state has a protagonist
+            if save_data and "game_state" in save_data and "protagonist" not in save_data["game_state"]:
                 save_data["game_state"]["protagonist"] = {
                     "name": "Dr. Xeno Valari",  # Default to original protagonist
                     "gender": "female",
                     "specialty": "quantum physics",
-                    "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21.",
-                    "age": 29,
+                    "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 27.",
+                    "age": 140,
+                    "physical_age": 16,
                     "origin": "New Tokyo Arcology",
                     "personal_log_entries": []
                 }
@@ -350,119 +841,224 @@ def load_game(slot_number=1):
                     "personal_log_entries": []
                 })
             
-            # Initialize additional data structures if missing
-            if "companions" not in save_data["game_state"]:
-                save_data["game_state"]["companions"] = []
+            # We need to ensure we have a valid game_state to work with
+            if save_data and isinstance(save_data, dict) and "game_state" in save_data and isinstance(save_data["game_state"], dict):
+                # Initialize additional data structures if missing
+                game_state = save_data["game_state"]
                 
-            # Initialize quest data
-            if "available_quests" not in save_data["game_state"]:
-                save_data["game_state"]["available_quests"] = {}
-            
-            if "completed_quests" not in save_data["game_state"]:
-                save_data["game_state"]["completed_quests"] = []
-            
-            # Initialize Cosmic Collision quest data
-            if "cosmic_collision" not in save_data["game_state"]:
-                save_data["game_state"]["cosmic_collision"] = {
-                    "started": False,
-                    "completed": False,
-                    "current_step": 0,
-                    "systems_stabilized": 0,
-                    "planets_explored": [],
-                    "has_divergence_cannon": False
-                }
+                # Add all required structures with safe dictionary access
+                if "companions" not in game_state:
+                    game_state["companions"] = []
+                    
+                # Initialize quest data
+                if "available_quests" not in game_state:
+                    game_state["available_quests"] = {}
                 
-            # Initialize visited locations tracking
-            if "visited_locations" not in save_data["game_state"]:
-                save_data["game_state"]["visited_locations"] = {}
+                if "completed_quests" not in game_state:
+                    game_state["completed_quests"] = []
                 
-            # Initialize inventory system
-            if "inventory" not in save_data["game_state"]:
-                save_data["game_state"]["inventory"] = {
-                    "weapons": [],
-                    "armor": [],
-                    "consumables": [],
-                    "key_items": [],
-                    "artifacts": []
-                }
+                # Initialize Cosmic Collision quest data
+                if "cosmic_collision" not in game_state:
+                    game_state["cosmic_collision"] = {
+                        "started": False,
+                        "completed": False,
+                        "current_step": 0,
+                        "systems_stabilized": 0,
+                        "planets_explored": [],
+                        "has_divergence_cannon": False
+                    }
+                    
+                # Initialize visited locations tracking
+                if "visited_locations" not in game_state:
+                    game_state["visited_locations"] = {}
+                    
+                # Initialize inventory system
+                if "inventory" not in game_state:
+                    game_state["inventory"] = {
+                        "weapons": [],
+                        "armor": [],
+                        "consumables": [],
+                        "key_items": [],
+                        "artifacts": []
+                    }
+                    
+                # Initialize skills and abilities
+                if "skills" not in game_state:
+                    game_state["skills"] = {
+                        "hacking": 1,
+                        "engineering": 1,
+                        "quantum_theory": 1,
+                        "xenobiology": 1,
+                        "persuasion": 1,
+                        "survival": 1
+                    }
+                    
+                # Initialize game settings
+                if "settings" not in game_state:
+                    game_state["settings"] = {
+                        "text_speed": "normal",
+                        "color_scheme": "default",
+                        "difficulty": "normal",
+                        "tutorial_enabled": True,
+                        "auto_save": True
+                    }
+                    
+                # Make sure we have a protagonist field with minimum required data
+                if "protagonist" in game_state and isinstance(game_state["protagonist"], dict):
+                    protagonist = game_state["protagonist"]
+                    # Set default values for required fields if missing
+                    for key, default in [
+                        ("name", "Dr. Xeno Valari"),
+                        ("gender", "female"),
+                        ("specialty", "quantum physics"),
+                        ("age", 140),
+                        ("physical_age", 16),
+                        ("origin", "New Tokyo Arcology")
+                    ]:
+                        if key not in protagonist:
+                            protagonist[key] = default
                 
-            # Initialize skills and abilities
-            if "skills" not in save_data["game_state"]:
-                save_data["game_state"]["skills"] = {
-                    "hacking": 1,
-                    "engineering": 1,
-                    "quantum_theory": 1,
-                    "xenobiology": 1,
-                    "persuasion": 1,
-                    "survival": 1
-                }
-                
-            # Initialize game settings
-            if "settings" not in save_data["game_state"]:
-                save_data["game_state"]["settings"] = {
-                    "text_speed": "normal",
-                    "color_scheme": "default",
-                    "difficulty": "normal",
-                    "tutorial_enabled": True,
-                    "auto_save": True
-                }
-                
-            print(Font.SUCCESS("Save data successfully upgraded to latest format!"))
-
-        # Update the global game state
-        global game_state
-        game_state = save_data["game_state"]
-        
-        # Track loading in game state
-        game_state["last_loaded"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        game_state["load_count"] = game_state.get("load_count", 0) + 1
-
-        # Display enhanced save info
-        print(Font.SUCCESS(f"\nGame loaded successfully from slot {slot_number}!"))
-        print(Font.INFO(f"Save timestamp: {save_data['timestamp']}"))
-        
-        # Display character info
-        protagonist = game_state.get("protagonist", {})
-        gender = protagonist.get("gender", "female")
-        name = protagonist.get("name", "Unknown")
-        specialty = protagonist.get("specialty", "Unknown")
-        
-        print(Font.INFO(f"Character: {name} ({gender}) | Specialty: {specialty}"))
-        
-        # Display progress info
-        level = game_state.get("player_level", 1)
-        exp = game_state.get("player_experience", 0)
-        chapter = game_state.get("current_chapter", "Chapter 1")
-        location = game_state.get("current_location", "Unknown")
-        
-        print(Font.INFO(f"Level: {level} | XP: {exp} | Chapter: {chapter}"))
-        print(Font.INFO(f"Current location: {location}"))
-        
-        # Display quest information if available
-        active_quests = len([q for q in game_state.get("available_quests", {}).values() 
-                           if q.get("in_progress", False) and not q.get("completed", False)])
-        completed_quests = len(game_state.get("completed_quests", []))
-        
-        if active_quests > 0 or completed_quests > 0:
-            print(Font.INFO(f"Active Quests: {active_quests} | Completed Quests: {completed_quests}"))
-        
-        # Display Cosmic Collision quest status if started
-        cosmic_data = game_state.get("cosmic_collision", {})
-        if cosmic_data.get("started", False):
-            if cosmic_data.get("completed", False):
-                print(Font.SUCCESS("Cosmic Collision Quest: COMPLETED"))
+                print(Font.SUCCESS("Save data successfully upgraded to latest format!"))
             else:
-                step = cosmic_data.get("current_step", 0)
-                print(Font.INFO(f"Cosmic Collision Quest: Active (Step {step}/5)"))
-        
-        # Auto-save with the updated format if needed
-        if needs_upgrade:
-            # Wait a moment before saving to ensure player sees the upgrade message
-            time.sleep(1)
-            save_game(slot_number)
-            print(Font.INFO("Auto-saved game with updated format."))
+                # Critical error - could not find valid game state
+                print(Font.WARNING("Could not upgrade save file - critical data structure missing."))
+                # Create basic default structure
+                if not isinstance(save_data, dict):
+                    save_data = {"game_state": {}}
+                elif "game_state" not in save_data:
+                    save_data["game_state"] = {}
+
+        # Safely update the global game state with error checking
+        try:
+            if not save_data or not isinstance(save_data, dict) or "game_state" not in save_data:
+                raise ValueError("Invalid save data structure")
+                
+            if not isinstance(save_data["game_state"], dict):
+                raise ValueError("Game state is not a dictionary")
+                
+            # Update the global game state
+            game_state = save_data["game_state"]
             
-        return True
+            # Track loading in game state
+            game_state["last_loaded"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            game_state["load_count"] = game_state.get("load_count", 0) + 1
+            game_state["recovery_mode"] = game_state.get("recovery_mode", False)
+            
+            # Set a checksum for integrity checking
+            checksum = hash(str(game_state))
+            if "technical_info" not in save_data:
+                save_data["technical_info"] = {}
+            save_data["technical_info"]["checksum"] = checksum
+            
+            # Add verification timestamp
+            save_data["technical_info"]["verified_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    
+            # Display enhanced save info
+            print(Font.SUCCESS(f"\nGame loaded successfully from slot {slot_number}!"))
+            timestamp = save_data.get("timestamp", "Unknown")
+            print(Font.INFO(f"Save timestamp: {timestamp}"))
+            
+            # Display character info
+            protagonist = game_state.get("protagonist", {})
+            gender = protagonist.get("gender", "female") if protagonist else "female"
+            name = protagonist.get("name", "Unknown") if protagonist else "Unknown"
+            specialty = protagonist.get("specialty", "Unknown") if protagonist else "Unknown"
+            
+            print(Font.INFO(f"Character: {name} ({gender}) | Specialty: {specialty}"))
+            
+            # Display progress info
+            level = game_state.get("player_level", 1)
+            exp = game_state.get("player_experience", 0)
+            chapter = game_state.get("current_chapter", "Chapter 1")
+            location = game_state.get("current_location", "Unknown")
+            
+            print(Font.INFO(f"Level: {level} | XP: {exp} | Chapter: {chapter}"))
+            print(Font.INFO(f"Current location: {location}"))
+            
+            # Display recovery mode warning if applicable
+            if game_state.get("recovery_mode", False):
+                print(Font.WARNING("\nThis save was loaded in recovery mode. Some data may be incomplete."))
+                print(Font.INFO("Continue playing to recreate your progress or load a different save."))
+            
+            # Display quest information if available
+            try:
+                available_quests = game_state.get("available_quests", {})
+                if isinstance(available_quests, dict):
+                    active_quests = len([q for q in available_quests.values() 
+                                      if isinstance(q, dict) and q.get("in_progress", False) and not q.get("completed", False)])
+                else:
+                    active_quests = 0
+                
+                completed_quests = len(game_state.get("completed_quests", []))
+                
+                if active_quests > 0 or completed_quests > 0:
+                    print(Font.INFO(f"Active Quests: {active_quests} | Completed Quests: {completed_quests}"))
+            except Exception as quest_error:
+                print(Font.WARNING(f"Error displaying quest information: {quest_error}"))
+            
+            # Display Cosmic Collision quest status if started
+            try:
+                cosmic_data = game_state.get("cosmic_collision", {})
+                if cosmic_data and isinstance(cosmic_data, dict) and cosmic_data.get("started", False):
+                    if cosmic_data.get("completed", False):
+                        print(Font.SUCCESS("Cosmic Collision Quest: COMPLETED"))
+                    else:
+                        step = cosmic_data.get("current_step", 0)
+                        print(Font.INFO(f"Cosmic Collision Quest: Active (Step {step}/5)"))
+            except Exception as cosmic_error:
+                print(Font.WARNING(f"Error displaying Cosmic Collision quest information: {cosmic_error}"))
+            
+            # Auto-save with the updated format if needed
+            if needs_upgrade:
+                # Wait a moment before saving to ensure player sees the upgrade message
+                time.sleep(1)
+                try:
+                    save_game(slot_number)
+                    print(Font.INFO("Auto-saved game with updated format."))
+                except Exception as save_error:
+                    print(Font.WARNING(f"Could not auto-save updated format: {save_error}"))
+                
+            # Perform additional integrity verification
+            try:
+                # Check for required core game state values
+                required_fields = ["player_health", "player_max_health", "player_level"]
+                missing_fields = [field for field in required_fields if field not in game_state]
+                
+                if missing_fields:
+                    print(Font.WARNING(f"Warning: Missing important game data: {', '.join(missing_fields)}"))
+                    print(Font.INFO("Adding default values for missing fields..."))
+                    
+                    # Add defaults for missing fields
+                    if "player_health" not in game_state:
+                        game_state["player_health"] = 100
+                    if "player_max_health" not in game_state:
+                        game_state["player_max_health"] = 100
+                    if "player_level" not in game_state:
+                        game_state["player_level"] = 1
+            except Exception as verify_error:
+                print(Font.WARNING(f"Error during save integrity verification: {verify_error}"))
+                
+            return True
+            
+        except Exception as state_error:
+            print(Font.ERROR(f"Critical error setting game state: {state_error}"))
+            print(Font.WARNING("Loading minimal recovery game state..."))
+            
+            # Create a minimal game state to prevent further errors
+            game_state = {
+                "player_health": 100,
+                "player_max_health": 100,
+                "player_level": 1,
+                "player_experience": 0,
+                "recovery_mode": True,
+                "error_message": str(state_error),
+                "protagonist": {
+                    "name": "Dr. Xeno Valari",
+                    "gender": "female",
+                    "specialty": "quantum physics"
+                }
+            }
+            return False
         
     except Exception as e:
         print(Font.WARNING(f"\nError loading game: {e}"))
@@ -474,11 +1070,10 @@ def load_game(slot_number=1):
                 import shutil
                 shutil.copy2(save_file, backup_file)
                 print(Font.INFO(f"Created backup of potentially corrupted save: {backup_file}"))
-            except:
-                pass
+            except Exception as backup_error:
+                print(Font.WARNING(f"Could not create backup: {backup_error}"))
         
         # Initialize minimal game state to prevent crashes
-        global game_state
         if 'game_state' not in globals() or not isinstance(game_state, dict):
             game_state = {
                 "player_health": 100,
@@ -493,6 +1088,239 @@ def load_game(slot_number=1):
             print(Font.WARNING("Initialized recovery game state to prevent crashes."))
             print(Font.INFO("Please start a new game or try loading a different save."))
             
+        return False
+
+def repair_save_file(slot_number=1):
+    """
+    Attempt to repair a corrupted save file
+    
+    This function will analyze a save file, attempt to repair it if corrupt, 
+    and create a new functioning save with as much recovered data as possible.
+    """
+    save_file = f"saves/save_slot_{slot_number}.dat"
+    
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('SAVE FILE REPAIR UTILITY'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Font.INFO(f'Analyzing save file in slot {slot_number}...')}")
+    print()
+    
+    # First check if the file exists
+    if not os.path.exists(save_file):
+        print(Font.WARNING(f"No save file found in slot {slot_number}."))
+        return False
+    
+    # Create a backup before attempting repairs
+    try:
+        backup_file = f"saves/repair_backup_slot_{slot_number}_{int(time.time())}.bak"
+        import shutil
+        shutil.copy2(save_file, backup_file)
+        print(Font.INFO(f"Created backup before repair: {backup_file}"))
+    except Exception as backup_error:
+        print(Font.WARNING(f"Could not create backup: {backup_error}"))
+    
+    # Step 1: Try to load the file and check integrity
+    try:
+        with open(save_file, "rb") as f:
+            save_data = pickle.load(f)
+        
+        # If we got here, basic unpickling worked
+        print(Font.SUCCESS("✓ Basic file structure is intact."))
+        print(Font.INFO("Checking save data structure..."))
+        
+        # Check for required components
+        has_errors = False
+        
+        # Step 2: Check and recover essential components
+        if not isinstance(save_data, dict):
+            print(Font.WARNING("✗ Save data is not a dictionary. Creating basic structure."))
+            has_errors = True
+            # Create a minimal save data structure
+            save_data = {"game_state": {}, "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")}
+        else:
+            print(Font.SUCCESS("✓ Save data is a dictionary."))
+        
+        # Step 3: Check game state existence and type
+        if "game_state" not in save_data:
+            print(Font.WARNING("✗ No game_state found in save data. Creating empty game state."))
+            save_data["game_state"] = {}
+            has_errors = True
+        elif not isinstance(save_data["game_state"], dict):
+            print(Font.WARNING("✗ Game state is not a dictionary. Creating new empty game state."))
+            # Backup the invalid game state for potential future recovery
+            if isinstance(save_data["game_state"], (list, tuple, set)):
+                print(Font.INFO(f"Found {len(save_data['game_state'])} items in invalid game state."))
+            save_data["game_state"] = {}
+            has_errors = True
+        else:
+            print(Font.SUCCESS("✓ Game state structure is valid."))
+        
+        # Step 4: Check for essential game state fields
+        game_state = save_data["game_state"]
+        essential_fields = [
+            ("player_health", 100), 
+            ("player_max_health", 100),
+            ("player_level", 1),
+            ("player_experience", 0)
+        ]
+        
+        for field, default_value in essential_fields:
+            if field not in game_state:
+                print(Font.WARNING(f"✗ Missing {field}. Setting to default: {default_value}"))
+                game_state[field] = default_value
+                has_errors = True
+            elif not isinstance(game_state[field], (int, float)):
+                print(Font.WARNING(f"✗ {field} has invalid type. Setting to default: {default_value}"))
+                game_state[field] = default_value
+                has_errors = True
+        
+        # Step 5: Check protagonist data
+        if "protagonist" not in game_state:
+            print(Font.WARNING("✗ No protagonist data found. Creating default protagonist."))
+            game_state["protagonist"] = {
+                "name": "Dr. Xeno Valari",
+                "gender": "female",
+                "specialty": "quantum physics",
+                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 27.",
+                "age": 140,
+                "physical_age": 16,
+                "origin": "New Tokyo Arcology"
+            }
+            has_errors = True
+        elif not isinstance(game_state["protagonist"], dict):
+            print(Font.WARNING("✗ Protagonist data is corrupted. Creating default protagonist."))
+            game_state["protagonist"] = {
+                "name": "Dr. Xeno Valari",
+                "gender": "female",
+                "specialty": "quantum physics",
+                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 27.",
+                "age": 140,
+                "physical_age": 16,
+                "origin": "New Tokyo Arcology"
+            }
+            has_errors = True
+        else:
+            # Ensure all required protagonist fields are present
+            protagonist = game_state["protagonist"]
+            protagonist_fields = [
+                ("name", "Dr. Xeno Valari"),
+                ("gender", "female"),
+                ("specialty", "quantum physics")
+            ]
+            
+            for field, default_value in protagonist_fields:
+                if field not in protagonist:
+                    print(Font.WARNING(f"✗ Missing protagonist {field}. Setting to default: {default_value}"))
+                    protagonist[field] = default_value
+                    has_errors = True
+        
+        # Step 6: Add metadata and timestamp
+        if "timestamp" not in save_data:
+            print(Font.WARNING("✗ No timestamp found. Adding current timestamp."))
+            save_data["timestamp"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            has_errors = True
+        
+        if "character_info" not in save_data:
+            print(Font.WARNING("✗ No character info found. Creating from protagonist data."))
+            # Extract character info from protagonist if available
+            protagonist = game_state.get("protagonist", {})
+            save_data["character_info"] = {
+                "name": protagonist.get("name", "Dr. Xeno Valari"),
+                "gender": protagonist.get("gender", "female"),
+                "level": game_state.get("player_level", 1),
+                "experience": game_state.get("player_experience", 0),
+                "chapter": game_state.get("current_chapter", "Chapter 1: Earth Reclamation"),
+                "version": VERSION
+            }
+            has_errors = True
+        
+        # Step 7: Add technical information
+        if "technical_info" not in save_data:
+            print(Font.WARNING("✗ No technical info found. Adding technical metadata."))
+            save_data["technical_info"] = {
+                "save_version": SAVE_FORMAT_VERSION,
+                "game_build": BUILD_NUMBER,
+                "repaired": True,
+                "repair_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "checksum": hash(str(save_data["game_state"]))
+            }
+            has_errors = True
+        else:
+            # Update technical info to reflect repair
+            save_data["technical_info"]["repaired"] = True
+            save_data["technical_info"]["repair_date"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            save_data["technical_info"]["checksum"] = hash(str(save_data["game_state"]))
+        
+        # Step 8: Save the repaired file
+        if has_errors:
+            print(Font.INFO("Saving repaired save file..."))
+            try:
+                with open(save_file, "wb") as f:
+                    pickle.dump(save_data, f)
+                print(Font.SUCCESS("Save file successfully repaired and saved!"))
+                print(Font.INFO("Some game data may have been reset to defaults."))
+                return True
+            except Exception as save_error:
+                print(Font.ERROR(f"Error saving repaired file: {save_error}"))
+                return False
+        else:
+            print(Font.SUCCESS("Save file appears to be intact. No repairs needed."))
+            return True
+            
+    except (pickle.UnpicklingError, EOFError) as e:
+        # Severe corruption - the file can't be unpickled
+        print(Font.ERROR(f"Severe corruption detected: {e}"))
+        print(Font.INFO("Attempting deep recovery..."))
+        
+        # Create a completely new save file with default values
+        default_save = {
+            "game_state": {
+                "player_health": 100,
+                "player_max_health": 100,
+                "player_level": 1,
+                "player_experience": 0,
+                "current_chapter": "Chapter 1: Earth Reclamation",
+                "current_location": "Cryogenic Facility",
+                "recovery_mode": True,
+                "protagonist": {
+                    "name": "Dr. Xeno Valari",
+                    "gender": "female",
+                    "specialty": "quantum physics",
+                    "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21.",
+                    "age": 29,
+                    "origin": "New Tokyo Arcology"
+                }
+            },
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "character_info": {
+                "name": "Dr. Xeno Valari",
+                "gender": "female",
+                "level": 1,
+                "chapter": "Chapter 1: Earth Reclamation",
+                "version": VERSION
+            },
+            "technical_info": {
+                "save_version": "3.0",
+                "game_build": BUILD_NUMBER,
+                "recovery_created": True,
+                "recovery_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "checksum": 0
+            }
+        }
+        
+        print(Font.INFO("Creating new save file with default values..."))
+        try:
+            with open(save_file, "wb") as f:
+                pickle.dump(default_save, f)
+            print(Font.SUCCESS("New save file created successfully!"))
+            print(Font.WARNING("All progress in this save slot has been reset."))
+            return True
+        except Exception as save_error:
+            print(Font.ERROR(f"Error creating new save file: {save_error}"))
+            return False
+            
+    except Exception as e:
+        print(Font.ERROR(f"Unexpected error during repair: {e}"))
         return False
 
 def manage_save_slots():
@@ -12752,7 +13580,7 @@ def character_selection():
         print(Font.BOX_BOTTOM)
         
         print_typed("\nEmergency power activates in the cryostasis facility. Your neural interface", style=Font.SYSTEM)
-        print_typed("comes online, awakening your consciousness after 268 years.", style=Font.SYSTEM)
+        print_typed("comes online, awakening your consciousness after 113 years.", style=Font.SYSTEM)
         print_typed("\nYou are Dr. Elena Marik, chief scientist of the Century Sleepers program.", style=Font.INFO)
         print_typed("The facility's automated systems have detected catastrophic failures in all", style=Font.INFO)
         print_typed("but two of the remaining cryopods. Emergency protocol dictates that only one", style=Font.INFO)
@@ -12766,7 +13594,7 @@ def character_selection():
         print(Font.BOX_TOP)
         print(f"{Font.BOX_SIDE} {Font.SUBTITLE('CRYOPOD A-7: DR. XENO VALARI'.center(46))} {Font.BOX_SIDE}")
         print(Font.BOX_BOTTOM)
-        print_typed("• Age at cryostasis: 21 years", style=Font.INFO)
+        print_typed("• Age at cryostasis: 27 years (Current chronological age: 140, physical appearance: 16)", style=Font.INFO)
         print_typed("• Specialty: Quantum physics, AI neural architecture", style=Font.INFO)
         print_typed("• Psych profile: Analytical, introspective, resilient", style=Font.INFO)
         print_typed("• Mission recommendation: High adaptability to isolation", style=Font.INFO)
@@ -12778,7 +13606,7 @@ def character_selection():
         print(Font.BOX_TOP)
         print(f"{Font.BOX_SIDE} {Font.SUBTITLE('CRYOPOD B-3: DR. HYTE KONSCRIPT'.center(46))} {Font.BOX_SIDE}")
         print(Font.BOX_BOTTOM)
-        print_typed("• Age at cryostasis: 21 years", style=Font.INFO)
+        print_typed("• Age at cryostasis: 30 years (Current chronological age: 200, physical appearance: 18)", style=Font.INFO)
         print_typed("• Specialty: Mechanical engineering, propulsion systems", style=Font.INFO)
         print_typed("• Psych profile: Pragmatic, determined, resourceful", style=Font.INFO)
         print_typed("• Mission recommendation: Excellent technical problem-solving", style=Font.INFO)
@@ -12803,7 +13631,10 @@ def character_selection():
                 "name": "Dr. Xeno Valari",
                 "gender": "female",
                 "specialty": "quantum physics",
-                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21 to monitor AI evolution patterns. Your understanding of neural networks may be crucial to understanding what went wrong."
+                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 27 to monitor AI evolution patterns. Your understanding of neural networks may be crucial to understanding what went wrong.",
+                "age": 140,
+                "physical_age": 16,
+                "origin": "New Tokyo Arcology"
             }
             
             print_typed("\nYou initiate the revival sequence for Dr. Xeno Valari's pod.", style=Font.SYSTEM)
@@ -12816,7 +13647,10 @@ def character_selection():
                 "name": "Dr. Hyte Konscript",
                 "gender": "male",
                 "specialty": "engineering",
-                "background": "You were a brilliant engineer, specializing in spacecraft propulsion systems. You joined the Century Sleepers program at 21 to maintain the technology left behind. Your practical skills may be key to survival."
+                "background": "You were a brilliant engineer, specializing in spacecraft propulsion systems. You joined the Century Sleepers program at 30 to maintain the technology left behind. Your practical skills may be key to survival.",
+                "age": 200,
+                "physical_age": 18,
+                "origin": "Neo Boston Research Complex"
             }
             
             print_typed("\nYou initiate the revival sequence for Dr. Hyte Konscript's pod.", style=Font.SYSTEM)
@@ -12833,9 +13667,14 @@ def character_selection():
         clear_screen()
         
         print_typed("\nYou awaken, disoriented, as the cryopod hisses open.", style=Font.PLAYER)
-        print_typed("Though chronologically you are 289 years old, your body is", style=Font.PLAYER)
-        print_typed("that of a 16-year-old due to the regenerative properties", style=Font.PLAYER)
-        print_typed("of the experimental cryostasis technology.", style=Font.PLAYER)
+        if choice == "1":
+            print_typed("Though chronologically you are 140 years old, your body is", style=Font.PLAYER)
+            print_typed("that of a 16-year-old due to the regenerative properties", style=Font.PLAYER)
+            print_typed("of the experimental cryostasis technology.", style=Font.PLAYER)
+        else:
+            print_typed("Though chronologically you are 200 years old, your body is", style=Font.PLAYER)
+            print_typed("that of an 18-year-old due to the regenerative properties", style=Font.PLAYER)
+            print_typed("of the experimental cryostasis technology.", style=Font.PLAYER)
         
         print_typed(f"\nWelcome to Earth, {game_state['protagonist']['name']}.", style=Font.SYSTEM)
         print_typed("You are the last human in the Milky Way galaxy.", style=Font.SYSTEM)
@@ -12888,7 +13727,10 @@ def character_selection():
                 "name": "Dr. Xeno Valari",
                 "gender": "female",
                 "specialty": "quantum physics",
-                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21 to monitor AI evolution patterns. Your understanding of neural networks may be crucial to understanding what went wrong."
+                "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 27 to monitor AI evolution patterns. Your understanding of neural networks may be crucial to understanding what went wrong.",
+                "age": 140,
+                "physical_age": 16,
+                "origin": "New Tokyo Arcology"
             }
             print_typed(f"\nYou have selected {Font.PLAYER('Dr. Xeno Valari')}.", style=Font.SYSTEM)
             
@@ -12897,7 +13739,10 @@ def character_selection():
                 "name": "Dr. Hyte Konscript",
                 "gender": "male",
                 "specialty": "engineering",
-                "background": "You were a brilliant engineer, specializing in spacecraft propulsion systems. You joined the Century Sleepers program at 21 to maintain the technology left behind. Your practical skills may be key to survival."
+                "background": "You were a brilliant engineer, specializing in spacecraft propulsion systems. You joined the Century Sleepers program at 30 to maintain the technology left behind. Your practical skills may be key to survival.",
+                "age": 200,
+                "physical_age": 18,
+                "origin": "Neo Boston Research Complex"
             }
             print_typed(f"\nYou have selected {Font.PLAYER('Dr. Hyte Konscript')}.", style=Font.SYSTEM)
             
@@ -12906,7 +13751,10 @@ def character_selection():
                 "name": "Hyuki Nakamura",
                 "gender": "female",
                 "specialty": "quantum navigation",
-                "background": "A young researcher found in cryostasis on one of the H-79760 planets. Her knowledge of alternative human colonies and quantum navigation may prove invaluable."
+                "background": "A young researcher found in cryostasis on one of the H-79760 planets. Her knowledge of alternative human colonies and quantum navigation may prove invaluable.",
+                "age": 110,
+                "physical_age": 19,
+                "origin": "H-79760 Colony"
             }
             print_typed(f"\nYou have selected {Font.PLAYER('Hyuki Nakamura')}.", style=Font.SYSTEM)
             print_typed("Her quantum navigation abilities will be crucial in the anomalies ahead...", style=Font.SYSTEM)
@@ -14072,9 +14920,12 @@ def main_menu():
 
         print_typed(f"\n5. {Font.COMMAND('Version Info')} {Font.INFO('[v'+VERSION+']')}")
         print_typed("   View update notes, credits and game details")
-
+        
         print_typed(f"\n6. {Font.COMMAND('Coming Soon')}")
         print_typed("   Preview future chapters and upcoming features")
+        
+        print_typed(f"\n7. {Font.COMMAND('Repair Save')} {Font.WARNING('[Maintenance]')}")
+        print_typed("   Fix corrupted save files and recover game progress")
 
         print_typed(f"\n0. {Font.COMMAND('Exit')}")
         print_typed("   Return to reality")
@@ -14151,13 +15002,13 @@ def main_menu():
 
             # Display available chapters
             print_typed(f"1. {Font.COMMAND('Chapter 1: Earth Reclamation')}")
-            print_typed("   The original story - escape Earth and secure the rocket and Andromeda charts")
+            print_typed("   The original story - escape Earth and secure the rocket to leave the planet")
 
             print_typed(f"\n2. {Font.COMMAND('Chapter 2: Yanglong V')}")
-            print_typed("   Explore the abandoned Chinese space station and uncover quantum research secrets")
+            print_typed("   Explore the abandoned Chinese space station and repair your ship for the journey")
 
             print_typed(f"\n3. {Font.COMMAND('Chapter 3: White Hole')}")
-            print_typed("   Navigate through a distorted reality with musical puzzles and dimensional chests")
+            print_typed("   Navigate through a distorted reality with musical puzzles and dimensional anomalies")
 
             print_typed(f"\n4. {Font.COMMAND('Chapter 4: Thalassia 1')}")
             print_typed("   Survive a crash landing on a cold water planet with unique salt-based lifeforms")
@@ -14304,16 +15155,16 @@ def main_menu():
 
             print_typed("\nCHAPTER OVERVIEW")
             print_typed("\nChapter 1: Earth Reclamation")
-            print_typed("Escape Earth and secure the rocket and Andromeda star charts")
+            print_typed("Escape Earth and secure the rocket to leave the planet")
 
             print_typed("\nChapter 2: Yanglong V")
-            print_typed("Explore the abandoned Chinese space station and repair your rocket")
+            print_typed("Explore the abandoned Chinese space station and repair your ship for the journey")
 
             print_typed("\nChapter 3: White Hole")
-            print_typed("Navigate a distorted reality with musical puzzles and dimensional chests")
+            print_typed("Navigate a distorted reality with musical puzzles and dimensional anomalies")
 
             print_typed("\nChapter 4: Thalassia 1")
-            print_typed("Survive a crash landing on a water planet with unique salt-based life")
+            print_typed("Survive a crash landing on a cold water planet with unique salt-based lifeforms")
 
             print_typed("\nChapter 5: H-79760 System")
             print_typed("Explore six celestial bodies in search of human survivors")
@@ -14338,6 +15189,56 @@ def main_menu():
             print_typed("- Dynamic Story Choices")
 
             input(f"\n{Font.MENU('Press Enter to return...')}")
+            return main_menu()
+        elif choice == "7":
+            # Repair Save Files
+            clear_screen()
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.TITLE('SAVE FILE REPAIR UTILITY'.center(46))} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+            
+            print_typed("\nThis utility can fix corrupted save files and recover game progress.", style=Font.INFO)
+            print_typed("It will attempt to repair data structure issues and restore missing fields.", style=Font.INFO)
+            print_typed("\nSELECT SAVE SLOT TO REPAIR:", style=Font.MENU)
+            
+            # Display available slots
+            slots = []
+            for i in range(1, 6):  # 5 save slots
+                save_file = f"saves/save_slot_{i}.dat"
+                if os.path.exists(save_file):
+                    status = "✓ EXISTS"
+                    slots.append(i)
+                else:
+                    status = "✗ EMPTY"
+                print_typed(f"{i}. Save Slot {i} - {status}", style=Font.COMMAND)
+            
+            print_typed(f"\n0. {Font.COMMAND('Return to Main Menu')}")
+            
+            repair_choice = input(f"\n{Font.MENU('Enter slot number to repair (1-5) or 0 to return:')} ").strip()
+            
+            if repair_choice.isdigit() and 1 <= int(repair_choice) <= 5:
+                slot_num = int(repair_choice)
+                if slot_num in slots:
+                    # Call the repair function
+                    print_typed(f"\nAttempting to repair save slot {slot_num}...", style=Font.SYSTEM)
+                    time.sleep(1)
+                    success = repair_save_file(slot_num)
+                    
+                    if success:
+                        print_typed("\nSave file repair operation completed.", style=Font.SUCCESS)
+                    else:
+                        print_typed("\nSave file could not be fully repaired.", style=Font.WARNING)
+                        print_typed("A new save state has been created with default values.", style=Font.INFO)
+                else:
+                    print_typed(f"\nSave slot {slot_num} is empty. Nothing to repair.", style=Font.WARNING)
+                    
+                input(f"\n{Font.MENU('Press Enter to return to main menu...')}")
+            elif repair_choice == "0":
+                pass
+            else:
+                print_typed("\nInvalid selection.", style=Font.WARNING)
+                time.sleep(1)
+            
             return main_menu()
         elif choice == "0":
             # Exit Game
