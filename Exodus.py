@@ -2483,34 +2483,283 @@ class Character:
         return False
 
     def gain_experience(self, amount):
+        """Gain experience points with improved feedback and tracking
+        
+        Args:
+            amount: The amount of experience to gain
+            
+        Returns:
+            bool: True if leveled up, False otherwise
+        """
         if not self.is_player:
             return False
 
+        # Apply any experience boosters the player might have
+        if hasattr(self, 'inventory') and self.inventory.get('quantum_resonator', 0) > 0:
+            bonus_exp = int(amount * 0.2)  # 20% bonus from quantum resonator
+            amount += bonus_exp
+            print_typed(f"{Font.INFO('Quantum Resonator grants +{bonus_exp} bonus experience!')}")
+            
+        # Display experience gain
+        print_typed(f"\n{Font.SUCCESS(f'+ {amount} EXPERIENCE')}")
+        
+        # Add to player's experience
         self.experience += amount
-        # Check for level up
-        if self.experience >= self.level * 100:
+        
+        # Check for level up - requires more XP at higher levels
+        xp_needed = self.level * 100
+        
+        # Show progress toward next level
+        progress = min(100, int((self.experience / xp_needed) * 100))
+        print_typed(f"{Font.INFO(f'Progress to Level {self.level + 1}: {progress}%')}")
+        
+        # Level up if we've reached the required experience
+        if self.experience >= xp_needed:
+            self.experience -= xp_needed  # Subtract the XP needed for this level
             self.level_up()
+            
+            # Update game_state with new level
+            if 'player_level' in globals():
+                globals()['player_level'] = self.level
+                
+            # Update the game state if it exists
+            if 'game_state' in globals() and globals()['game_state'] is not None:
+                globals()['game_state']['player_level'] = self.level
+                globals()['game_state']['player_experience'] = self.experience
+                
             return True
         return False
 
     def level_up(self):
+        """Level up with enhanced rewards and feedback"""
+        # Increase level and stats with scaling benefits
+        current_level = self.level
         self.level += 1
-        self.max_health += 10
+        
+        # Health increase scales with level (more health at higher levels)
+        health_gain = 10 + (self.level // 2)
+        self.max_health += health_gain
         self.health = self.max_health
-        self.attack += 2
-        self.defense += 1
-
-        print_slow("\n" + "=" * 50)
-        print_slow("LEVEL UP!".center(50))
-        print_slow("=" * 50)
-        print_typed("Neural pathways optimized. Combat effectiveness increased.")
-        print_slow(f"{self.name} is now level {self.level}!")
-        print_slow(f"Health: {self.max_health} | Attack: {self.attack} | Defense: {self.defense}")
-
-        # Unlock new ability at certain levels
-        if self.level == 3:
-            self.abilities.append("Hack")
-            print_slow("New ability unlocked: Hack - Attempt to disable electronic enemies")
+        
+        # Attack increase scales with level
+        attack_gain = 2 + (self.level // 3)
+        self.attack += attack_gain
+        
+        # Defense increases slower but steadily
+        defense_gain = 1 + (self.level // 4)
+        self.defense += defense_gain
+        
+        # Calculate unlocks based on reaching new level thresholds
+        new_unlocks = []
+        
+        # Skill unlocks at specific levels
+        if current_level < 3 and self.level >= 3:
+            new_unlocks.append("Neural Link targeting system")
+            if not hasattr(self, 'abilities'):
+                self.abilities = []
+            if "Hack" not in self.abilities:
+                self.abilities.append("Hack")
+                
+        if current_level < 5 and self.level >= 5:
+            new_unlocks.append("Combat Algorithm 1.5")
+            if hasattr(self, 'inventory'):
+                self.inventory['dimensional_scanner'] = self.inventory.get('dimensional_scanner', 0) + 1
+                
+        if current_level < 7 and self.level >= 7:
+            new_unlocks.append("Advanced Shielding")
+            # Bonus max shields at level 7
+            if hasattr(self, 'max_shields'):
+                self.max_shields = self.max_shields + 15 if hasattr(self, 'max_shields') else 25
+                
+        if current_level < 10 and self.level >= 10:
+            new_unlocks.append("Temporal Perception")
+            if hasattr(self, 'inventory'):
+                self.inventory['chrono_stabilizer'] = self.inventory.get('chrono_stabilizer', 0) + 1
+        
+        # Display impressive level up animation and information
+        clear_screen()
+        # Get protagonist name and gender for proper text
+        protagonist_name = "Dr. Xeno Valari"  # Default
+        protagonist_gender = "female"         # Default
+        
+        # Try to get actual protagonist information from game state
+        if 'game_state' in globals() and globals()['game_state'] is not None:
+            if 'protagonist' in globals()['game_state']:
+                protagonist_name = globals()['game_state']['protagonist'].get('name', protagonist_name)
+                protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
+        
+        # Animated level up display
+        for _ in range(3):  # Flash animation
+            clear_screen()
+            time.sleep(0.1)
+            print(Font.BOX_TOP)
+            print(f"{Font.BOX_SIDE} {Font.IMPORTANT('⚡ LEVEL UP ⚡').center(48)} {Font.BOX_SIDE}")
+            print(f"{Font.BOX_SIDE} {f'{protagonist_name} reaches Level {self.level}!'.center(48)} {Font.BOX_SIDE}")
+            print(Font.BOX_BOTTOM)
+            time.sleep(0.1)
+            
+        print(Font.SEPARATOR)
+        
+        # Animated stat increases with visual bars
+        # Health display with animation
+        print(f"{Font.PLAYER('Maximum Health:')}", end="", flush=True)
+        time.sleep(0.3)
+        print(f" +{health_gain} ", end="", flush=True)
+        time.sleep(0.3)
+        print(f"({self.max_health})")
+        
+        # Visual health bar with growth animation
+        old_health_bar = "█" * min(30, (self.max_health - health_gain) // 5)
+        health_bar = "█" * min(30, self.max_health // 5)
+        print(f"{Fore.RED}{old_health_bar}", end="", flush=True)
+        time.sleep(0.5)
+        # Show the increase
+        for i in range(len(old_health_bar), len(health_bar)):
+            print(f"{Fore.LIGHTRED_EX}█", end="", flush=True)
+            time.sleep(0.05)
+        print(f"{Style.RESET_ALL}")
+        
+        # Attack display with animation
+        print(f"{Font.PLAYER('Attack Power:')}", end="", flush=True)
+        time.sleep(0.3)
+        print(f" +{attack_gain} ", end="", flush=True)
+        time.sleep(0.3)
+        print(f"({self.attack})")
+        
+        # Visual attack bar with growth animation
+        old_attack_bar = "█" * min(25, (self.attack - attack_gain) // 2)
+        attack_bar = "█" * min(25, self.attack // 2)
+        print(f"{Fore.YELLOW}{old_attack_bar}", end="", flush=True)
+        time.sleep(0.5)
+        # Show the increase
+        for i in range(len(old_attack_bar), len(attack_bar)):
+            print(f"{Fore.LIGHTYELLOW_EX}█", end="", flush=True)
+            time.sleep(0.05)
+        print(f"{Style.RESET_ALL}")
+        
+        # Defense display with animation
+        print(f"{Font.PLAYER('Defense Rating:')}", end="", flush=True)
+        time.sleep(0.3)
+        print(f" +{defense_gain} ", end="", flush=True)
+        time.sleep(0.3)
+        print(f"({self.defense})")
+        
+        # Visual defense bar with growth animation
+        old_defense_bar = "█" * min(20, (self.defense - defense_gain) // 2)
+        defense_bar = "█" * min(20, self.defense // 2)
+        print(f"{Fore.BLUE}{old_defense_bar}", end="", flush=True)
+        time.sleep(0.5)
+        # Show the increase
+        for i in range(len(old_defense_bar), len(defense_bar)):
+            print(f"{Fore.LIGHTBLUE_EX}█", end="", flush=True)
+            time.sleep(0.05)
+        print(f"{Style.RESET_ALL}")
+        
+        # Display any new unlocks from level up
+        if new_unlocks:
+            print(Font.SEPARATOR)
+            print_typed(f"{Font.SUCCESS('MILESTONE REACHED: LEVEL ' + str(self.level))}")
+            
+            # Visual unlocks animation
+            for unlock in new_unlocks:
+                print()
+                # Progressive reveal animation
+                for i in range(len(unlock) + 1):
+                    print(f"\r{Font.ITEM(unlock[:i])}", end="", flush=True)
+                    time.sleep(0.02)
+                print()
+                time.sleep(0.5)
+                
+            # Add descriptive text based on milestone levels with gender-specific variations
+            if self.level == 3:
+                print_typed(f"\n{Font.INFO('Neural Link augmentation complete.')}")
+                if protagonist_gender == "female":
+                    print_typed("Your neural implants are now fully synchronized with your")
+                    print_typed("targeting systems. You can now attempt to hack electronic enemies.")
+                    print_typed("The system adapts specifically to your neural patterns.")
+                else:
+                    print_typed("Your neural implants have established a strong connection with")
+                    print_typed("your targeting systems. Electronic enemies can now be hacked.")
+                    print_typed("The system responds well to your neural architecture.")
+                
+            elif self.level == 5:
+                print_typed(f"\n{Font.INFO('Combat Algorithm 1.5 integration complete.')}")
+                if protagonist_gender == "female":
+                    print_typed("Your intuitive understanding of quantum patterns allows your")
+                    print_typed("tactical systems to analyze and identify dimensional anomalies.")
+                    print_typed("The Dimensional Scanner responds to your unique perception.")
+                else:
+                    print_typed("Your methodical approach to spatial analysis enhances your")
+                    print_typed("tactical systems' ability to identify dimensional anomalies.")
+                    print_typed("The Dimensional Scanner amplifies your natural detection abilities.")
+                
+            elif self.level == 7:
+                print_typed(f"\n{Font.INFO('Advanced Shielding protocols enabled.')}")
+                if protagonist_gender == "female":
+                    print_typed("Your shield generators have been recalibrated to match your")
+                    print_typed("movement patterns, increasing durability and efficiency.")
+                    print_typed("Shield capacity increased by 15 points with improved regeneration.")
+                else:
+                    print_typed("Your shield generators now integrate with your combat style,")
+                    print_typed("providing stronger protection during tactical engagements.")
+                    print_typed("Shield capacity increased by 15 points with enhanced recovery rate.")
+                
+            elif self.level == 10:
+                print_typed(f"\n{Font.INFO('Temporal Perception system initialized.')}")
+                if protagonist_gender == "female":
+                    print_typed("Your heightened sensitivity to quantum fluctuations allows you to")
+                    print_typed("perceive subtle variations in the flow of time. The Chrono-Stabilizer")
+                    print_typed("amplifies this ability, enabling limited manipulation of temporal fields.")
+                else:
+                    print_typed("Your analytical comprehension of temporal mechanics allows you to")
+                    print_typed("detect variations in the flow of time. The Chrono-Stabilizer")
+                    print_typed("enhances this perception, granting control over temporal fields.")
+        
+        # Display progression tree with gender-specific variations
+        print(Font.SEPARATOR)
+        print_typed(f"{Font.HEADER('NEURAL IMPLANT PROGRESSION:')}")
+        
+        # Different skill trees based on gender for immersion
+        if protagonist_gender == "female":
+            skill_tiers = [
+                [1, "Quantum Neural Link", True],
+                [2, "Enhanced Perception", True],
+                [3, "Neural Interface Mastery", self.level >= 3],
+                [5, "Advanced Combat Algorithms", self.level >= 5],
+                [7, "Adaptive Shield Harmonics", self.level >= 7],
+                [10, "Temporal Cognition", self.level >= 10],
+                [15, "Quantum Entanglement", self.level >= 15]
+            ]
+        else:
+            skill_tiers = [
+                [1, "Basic Neural Link", True],
+                [2, "Tactical Perception", True],
+                [3, "Systems Interface", self.level >= 3],
+                [5, "Combat Protocols", self.level >= 5],
+                [7, "Shield Matrix Engineering", self.level >= 7],
+                [10, "Temporal Mechanics", self.level >= 10],
+                [15, "Quantum Field Theory", self.level >= 15]
+            ]
+        
+        # Display current progress with visual indicators
+        for tier, skill_name, unlocked in skill_tiers:
+            if unlocked:
+                if tier == self.level:  # Highlight newly unlocked tier
+                    print(f"{Font.SUCCESS('★')} Level {tier}: {Fore.LIGHTCYAN_EX}{skill_name}{Style.RESET_ALL} {Font.IMPORTANT('NEW!')}")
+                else:
+                    print(f"{Font.SUCCESS('✓')} Level {tier}: {skill_name}")
+            else:
+                # Show progression to next tier
+                if tier == self.level + 1:
+                    xp_needed = self.level * 100
+                    progress = min(100, int((self.experience / xp_needed) * 100))
+                    progress_bar = "█" * (progress // 10) + "░" * (10 - (progress // 10))
+                    print(f"{Font.INFO('○')} Level {tier}: {skill_name} {Fore.CYAN}[{progress_bar}]{Style.RESET_ALL} {progress}%")
+                else:
+                    print(f"{Font.INFO('○')} Level {tier}: {skill_name}")
+        
+        # Pause to let player appreciate the level up
+        input("\nPress Enter to continue...")
 
 
 # Helper functions for companions and characters
@@ -2608,6 +2857,9 @@ def use_character_ability(player, enemy, combat_state):
 def solve_musical_puzzle(game_state, puzzle_type):
     """Interface for solving musical puzzles found in the White Hole reality
     
+    Enhanced version with multiple difficulty levels, visual feedback, and
+    more immersive gameplay elements.
+    
     Args:
         game_state: The current game state
         puzzle_type: The type of musical puzzle to solve
@@ -2616,35 +2868,151 @@ def solve_musical_puzzle(game_state, puzzle_type):
         bool: True if puzzle solved, False otherwise
     """
     clear_screen()
-    print_typed(f"\n{Font.HEADER('DIMENSIONAL INTERFACE DETECTED')}")
+    
+    # Visual effects for dimensional interface
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 60}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('DIMENSIONAL INTERFACE DETECTED'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 60}{Style.RESET_ALL}")
+    
     print_typed(f"{Font.SUBTITLE('Musical Interface Calibration Required')}\n")
     
+    # Check for special abilities or upgrades
+    has_musical_augment = "neural_musical_enhancement" in game_state.get("implants", [])
+    has_perfect_pitch = game_state.get("special_abilities", {}).get("perfect_pitch", False)
+    
+    # Game difficulty based on player progression and abilities
+    difficulty_modifier = game_state.get("chapter", 1) * 0.5
+    if has_musical_augment:
+        difficulty_modifier -= 1
+    if has_perfect_pitch:
+        difficulty_modifier -= 0.5
+    
+    # Adjust difficulty (minimum 1)
+    difficulty = max(1, int(difficulty_modifier))
+    
     if puzzle_type == "keypad":
+        # Visual representation of the keypad
         print_typed("Before you stands a strange keypad with musical symbols instead of numbers.")
         print_typed("Each key produces a distinct tone when pressed. A holographic display")
         print_typed("shows a sequence of notes that must be replicated.")
+        
+        # Display virtual keypad
+        print("\n" + Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {' '.join([Font.COMMAND(note) for note in ['C', 'D', 'E']])}  {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {' '.join([Font.COMMAND(note) for note in ['F', 'G', 'A']])}  {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {' '.join([Font.COMMAND(note) for note in ['B', '♯', '♭']])}  {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        
         print_slow("\nThe system appears to accept input...", delay=0.05)
         
-        # Generate a random sequence
-        sequence_length = random.randint(4, 8)
-        notes = ["C", "D", "E", "F", "G", "A", "B"]
+        # Generate a random sequence with increasing difficulty
+        base_length = 4
+        sequence_length = base_length + difficulty
+        
+        # More diverse notes with difficulty
+        if difficulty <= 1:
+            notes = ["C", "D", "E", "F", "G", "A", "B"]
+        elif difficulty == 2:
+            notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+        else:
+            notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", 
+                     "Cm", "Dm", "Em", "Fm", "Gm", "Am", "Bm"]
+        
         correct_sequence = [random.choice(notes) for _ in range(sequence_length)]
         
-        print_typed(f"\n{Font.INFO('The sequence appears to be:')}")
-        print_typed(f"{Font.IMPORTANT(' '.join(correct_sequence))}")
-        print_typed("\nEnter the sequence (notes separated by spaces, e.g., 'C E G B'):")
+        # Visual pattern display with animations
+        print_typed(f"\n{Font.INFO('The sequence begins to play:')}")
+        time.sleep(0.5)
         
-        try:
-            player_input = input().strip().upper().split()
-            if player_input == correct_sequence:
-                print_typed(f"\n{Font.SUCCESS('Sequence accepted! The keypad glows with ethereal light.')}")
-                return True
+        for note in correct_sequence:
+            # Visual feedback for each note
+            if note.endswith('m'):
+                print(f"{Fore.MAGENTA}{note}{Style.RESET_ALL}", end=' ', flush=True)
+            elif '#' in note:
+                print(f"{Fore.YELLOW}{note}{Style.RESET_ALL}", end=' ', flush=True)
             else:
-                print_typed(f"\n{Font.WARNING('Incorrect sequence. The keypad resets itself.')}")
+                print(f"{Fore.CYAN}{note}{Style.RESET_ALL}", end=' ', flush=True)
+            time.sleep(0.5)
+        
+        print() # Newline after sequence
+        
+        # Offer hint if player has augments
+        if has_musical_augment or has_perfect_pitch:
+            print_typed(f"\n{Font.SUCCESS('Your neural augmentation helps you remember the pattern.')}")
+            print_typed(f"{Font.IMPORTANT(' '.join(correct_sequence))}")
+        
+        # Adjustable attempts based on difficulty
+        max_attempts = 3 if difficulty <= 2 else 2
+        attempts = 0
+        
+        while attempts < max_attempts:
+            attempts += 1
+            print_typed(f"\nAttempt {attempts}/{max_attempts}: Enter the sequence (notes separated by spaces):")
+            
+            try:
+                player_input = input().strip().upper().split()
+                
+                # Compare sequences with visual feedback
+                if player_input == correct_sequence:
+                    # Success animation
+                    print_typed(f"\n{Font.SUCCESS('SEQUENCE ACCEPTED!')}")
+                    for _ in range(3):
+                        time.sleep(0.2)
+                        print(f"{Fore.GREEN}■{Style.RESET_ALL}", end='', flush=True)
+                    
+                    # Reward based on attempts and difficulty
+                    fragments_reward = difficulty + (max_attempts - attempts + 1)
+                    
+                    if "time_fragments" not in game_state:
+                        game_state["time_fragments"] = 0
+                    
+                    game_state["time_fragments"] += fragments_reward
+                    
+                    print_typed("\n\nThe keypad glows with ethereal light as the sequence resolves.")
+                    print_typed(f"You receive {Font.SUCCESS(str(fragments_reward))} time fragments from the dimensional resonance!")
+                    print_typed(f"Total fragments: {Font.IMPORTANT(str(game_state['time_fragments']))}")
+                    
+                    time.sleep(1)
+                    return True
+                else:
+                    # Find which notes were correct for partial feedback
+                    feedback = []
+                    min_length = min(len(player_input), len(correct_sequence))
+                    
+                    for i in range(min_length):
+                        if player_input[i] == correct_sequence[i]:
+                            feedback.append(f"{Fore.GREEN}✓{Style.RESET_ALL}")
+                        else:
+                            feedback.append(f"{Fore.RED}✗{Style.RESET_ALL}")
+                    
+                    print_typed(f"\n{Font.WARNING('Incorrect sequence.')}")
+                    print("Feedback: " + " ".join(feedback))
+                    
+                    # Give a hint after failed attempt if not last attempt
+                    if attempts < max_attempts:
+                        print_typed(f"\n{Font.INFO('The keypad flickers, giving you another chance.')}")
+                        
+                        # Provide progressively stronger hints
+                        if attempts == 1:
+                            print_typed(f"Hint: The sequence has {sequence_length} notes.")
+                        elif attempts == 2 and max_attempts > 2:
+                            # Show the first and last notes
+                            print_typed(f"Hint: The sequence begins with {Font.IMPORTANT(correct_sequence[0])} " + 
+                                       f"and ends with {Font.IMPORTANT(correct_sequence[-1])}.")
+                    else:
+                        print_typed(f"\n{Font.WARNING('The keypad dims as your final attempt fails.')}")
+                        return False
+            except ValueError:
+                print_typed(f"\n{Font.WARNING('Invalid input format. Please use space-separated notes.')}")
+                # Don't count format errors against attempts
+                attempts -= 1
+            except Exception as e:
+                print_typed(f"\n{Font.WARNING(f'Error processing input: {e}')}")
                 return False
-        except ValueError:
-            print_typed(f"\n{Font.WARNING('Invalid input. The keypad resets itself.')}")
-            return False
+        
+        return False
     
     elif puzzle_type == "harmonic_resonance":
         print_typed("A translucent console emerges from the wall, displaying what appears")
@@ -2883,72 +3251,343 @@ def find_dimensional_chest(game_state, difficulty=1):
 def open_dimensional_chest(game_state, difficulty=1):
     """Award loot from dimensional chests based on difficulty
     
+    Enhanced version with animated opening sequence, tiered rewards,
+    and dynamic loot based on player progression.
+    
     Args:
         game_state: The current game state
         difficulty: The difficulty level that was overcome (1-3)
     """
     clear_screen()
-    print_typed(f"\n{Font.SUCCESS('DIMENSIONAL CHEST OPENED')}")
     
-    # Scale rewards with difficulty
-    num_items = random.randint(difficulty, difficulty + 2)
+    # Animated chest opening sequence
+    print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 60}{Style.RESET_ALL}")
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.TITLE('DIMENSIONAL ARTIFACT DISCOVERED'.center(46))} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
+    print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 60}{Style.RESET_ALL}")
     
-    # Common items (difficulty 1)
+    chest_types = {
+        1: "Quantum Storage Unit",
+        2: "Dimensional Vault",
+        3: "Reality Nexus Chest",
+        4: "Cosmic Paradox Container"  # Ultra-rare
+    }
+    
+    chest_type = chest_types.get(difficulty, chest_types[1])
+    
+    # Animated opening sequence
+    print_typed(f"\nThe {Font.ITEM(chest_type)} begins to resonate with energy...", style=Font.INFO)
+    time.sleep(1)
+    
+    # Visual animation of chest opening
+    phases = [
+        f"{Fore.BLUE}╔════════════╗\n║            ║\n║   [LOCKED] ║\n║            ║\n╚════════════╝{Style.RESET_ALL}",
+        f"{Fore.CYAN}╔════════════╗\n║            ║\n║  [UNLOCKING]║\n║            ║\n╚════════════╝{Style.RESET_ALL}",
+        f"{Fore.YELLOW}╔════════════╗\n║  ▒▒▒▒▒▒▒▒  ║\n║  ▒UNLOCKING▒║\n║  ▒▒▒▒▒▒▒▒  ║\n╚════════════╝{Style.RESET_ALL}",
+        f"{Fore.GREEN}╔════════════╗\n║  ░░░░░░░░  ║\n║  ░UNLOCKED░║\n║  ░░░░░░░░  ║\n╚════════════╝{Style.RESET_ALL}",
+        f"{Fore.MAGENTA}╔════════════╗\n║            ║\n║   [OPEN]   ║\n║▓▓▓▓▓▓▓▓▓▓▓▓║\n╚════════════╝{Style.RESET_ALL}"
+    ]
+    
+    for phase in phases:
+        clear_screen()
+        print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 60}{Style.RESET_ALL}")
+        print(Font.BOX_TOP)
+        print(f"{Font.BOX_SIDE} {Font.TITLE(chest_type.center(46))} {Font.BOX_SIDE}")
+        print(Font.BOX_BOTTOM)
+        print(f"{Fore.CYAN}{Back.BLACK}{'▀' * 60}{Style.RESET_ALL}")
+        print("\n\n")
+        print(phase)
+        time.sleep(0.5)
+    
+    # Final opening message with special effects
+    clear_screen()
+    print_glitch(">>> DIMENSIONAL ARTIFACT ACCESSED <<<")
+    time.sleep(0.7)
+    print_typed(f"\n{Font.SUCCESS('DIMENSIONAL CHEST OPENED SUCCESSFULLY')}")
+    
+    # Determine player's experience level for reward scaling
+    player_level = game_state.get("player_level", 1)
+    player_chapter = game_state.get("chapter", 1)
+    
+    # Scale rewards with difficulty, player level, and chapter progression
+    base_items = difficulty + 1
+    level_bonus = min(3, player_level // 2)  # Bonus items from player level
+    chapter_bonus = min(2, player_chapter // 2)  # More items in later chapters
+    num_items = random.randint(base_items, base_items + level_bonus + chapter_bonus)
+    
+    # Update quality chances based on player level
+    level_quality_bonus = min(15, player_level * 3)  # Max 15% bonus at level 5
+    
+    # Common items (difficulty 1) - Enhanced with effects
     common_items = {
-        "reality_fragment": "A small crystallized piece of alternate reality",
-        "quantum_shard": "A fragment containing quantum information from multiple timelines",
-        "dimensional_battery": "A power source that draws energy from dimensional boundaries",
-        "echo_circuit": "A technological component that retains echoes of its alternate versions",
-        "temporal_regulator": "A device that stabilizes the user's position in the time stream"
+        "reality_fragment": {
+            "desc": "A small crystallized piece of alternate reality",
+            "effect": "+1 to reality stability checks",
+            "color": Fore.CYAN
+        },
+        "quantum_shard": {
+            "desc": "A fragment containing quantum information from multiple timelines",
+            "effect": "Can be used to learn a historical fact",
+            "color": Fore.BLUE
+        },
+        "dimensional_battery": {
+            "desc": "A power source that draws energy from dimensional boundaries",
+            "effect": "Powers dimensional tech for 24 hours",
+            "color": Fore.YELLOW
+        },
+        "echo_circuit": {
+            "desc": "A technological component that retains echoes of its alternate versions",
+            "effect": "5% chance to duplicate any tech item used",
+            "color": Fore.GREEN
+        },
+        "temporal_regulator": {
+            "desc": "A device that stabilizes the user's position in the time stream",
+            "effect": "Prevents random temporal shifts for 3 encounters",
+            "color": Fore.WHITE
+        }
     }
     
-    # Uncommon items (difficulty 2)
+    # Uncommon items (difficulty 2) - Enhanced with effects
     uncommon_items = {
-        "paradox_crystal": "A crystal formed at the intersection of contradictory timelines",
-        "reality_core": "A dense sphere of crystallized reality with unusual properties",
-        "timeline_splinter": "A fragment showing events from an alternate history",
-        "phase_stabilizer": "A device that prevents uncontrolled phase-shifting between dimensions",
-        "gravity_modulator": "A tool that can locally alter gravitational constants"
+        "paradox_crystal": {
+            "desc": "A crystal formed at the intersection of contradictory timelines",
+            "effect": "10% chance to negate enemy critical hits",
+            "color": Fore.MAGENTA
+        },
+        "reality_core": {
+            "desc": "A dense sphere of crystallized reality with unusual properties",
+            "effect": "Can be used to stabilize unstable environments",
+            "color": Fore.CYAN
+        },
+        "timeline_splinter": {
+            "desc": "A fragment showing events from an alternate history",
+            "effect": "Reveals a hidden choice or path when used",
+            "color": Fore.BLUE
+        },
+        "phase_stabilizer": {
+            "desc": "A device that prevents uncontrolled phase-shifting between dimensions",
+            "effect": "+20% defense against dimensional creatures",
+            "color": Fore.GREEN
+        },
+        "gravity_modulator": {
+            "desc": "A tool that can locally alter gravitational constants",
+            "effect": "Makes heavy objects weightless for short periods",
+            "color": Fore.YELLOW
+        }
     }
     
-    # Rare items (difficulty 3)
+    # Rare items (difficulty 3) - Enhanced with effects
     rare_items = {
-        "white_hole_shard": "A fragment of the white hole's core, pulsing with energy",
-        "reality_stabilizer": "A powerful device capable of anchoring unstable reality pockets",
-        "multiverse_key": "A unique key that can unlock pathways between parallel universes",
-        "dimensional_anchor": "A technology that can fix a specific reality state, preventing shifts",
-        "chronometric_particle": "A particle existing across multiple time states simultaneously"
+        "white_hole_shard": {
+            "desc": "A fragment of the white hole's core, pulsing with energy",
+            "effect": "Can be used to open one dimensional portal",
+            "color": Fore.WHITE
+        },
+        "reality_stabilizer": {
+            "desc": "A powerful device capable of anchoring unstable reality pockets",
+            "effect": "Creates a safe zone in unstable environments",
+            "color": Fore.BLUE
+        },
+        "multiverse_key": {
+            "desc": "A unique key that can unlock pathways between parallel universes",
+            "effect": "Guaranteed escape from any non-boss encounter",
+            "color": Fore.MAGENTA
+        },
+        "dimensional_anchor": {
+            "desc": "A technology that can fix a specific reality state, preventing shifts",
+            "effect": "Prevents reality shifts for entire areas",
+            "color": Fore.CYAN
+        },
+        "chronometric_particle": {
+            "desc": "A particle existing across multiple time states simultaneously",
+            "effect": "+2 time fragments when used",
+            "color": Fore.GREEN
+        }
+    }
+    
+    # Ultra-rare items (difficulty 4 or special conditions)
+    legendary_items = {
+        "infinity_shard": {
+            "desc": "A fragment of a reality where time is circular rather than linear",
+            "effect": "Resets all cooldowns once per day",
+            "color": Fore.RED
+        },
+        "void_heart": {
+            "desc": "A crystallized piece of the space between dimensions",
+            "effect": "Makes user invisible to dimensional entities for 3 turns",
+            "color": Fore.MAGENTA
+        },
+        "hyperchronal_lens": {
+            "desc": "A lens that allows viewing all possible outcomes of an action",
+            "effect": "Grants one perfect choice with full knowledge of outcomes",
+            "color": Fore.YELLOW
+        },
+        "quantum_entanglement_device": {
+            "desc": "A device that quantum-links two objects across any distance",
+            "effect": "Create an instant teleport link between two locations",
+            "color": Fore.CYAN
+        }
     }
     
     # Select appropriate loot pool based on difficulty
     if difficulty == 1:
-        loot_pool = common_items
+        base_loot_pool = common_items
+        chance_uncommon = 15 + level_quality_bonus  # Base 15% + level bonus
+        chance_rare = 3 + (level_quality_bonus // 2)      # Base 3% + half level bonus
+        chance_legendary = 1 + (level_quality_bonus // 3)  # Base 1% + third level bonus
     elif difficulty == 2:
-        loot_pool = {**common_items, **uncommon_items}  # Combine dictionaries
-    else:  # difficulty 3
-        loot_pool = {**common_items, **uncommon_items, **rare_items}
+        base_loot_pool = uncommon_items
+        chance_uncommon = 100  # Always uncommon or better
+        chance_rare = 25 + level_quality_bonus     # Base 25% + level bonus
+        chance_legendary = 5 + (level_quality_bonus // 2)  # Base 5% + half level bonus
+    elif difficulty == 3:
+        base_loot_pool = rare_items
+        chance_uncommon = 100  # Always uncommon or better
+        chance_rare = 100      # Always rare or better
+        chance_legendary = 15 + level_quality_bonus  # Base 15% + level bonus
+    else:  # difficulty 4 or higher (special cases)
+        base_loot_pool = legendary_items
+        chance_uncommon = 100
+        chance_rare = 100
+        chance_legendary = 100
+        
+    # Store the base loot pool for reference
+    loot_pool = base_loot_pool
     
-    # Always include a chance for quantum crystals (gacha currency)
-    quantum_crystals = random.randint(difficulty * 10, difficulty * 25)
+    # Apply level-specific modifiers to loot tables
+    if player_level >= 5:
+        # At level 5+, add a small chance for quest-specific items
+        loot_pool = {**base_loot_pool, "quantum_cipher": {
+            "name": "Quantum Cipher",
+            "description": "A mysterious device that can decode quantum-encrypted data",
+            "effect": "May reveal hidden information in certain areas",
+            "color": Fore.CYAN
+        }}
     
-    # Select random items
-    selected_items = random.sample(list(loot_pool.items()), min(num_items, len(loot_pool)))
+    if player_level >= 10:
+        # At level 10+, add special artifact chance
+        loot_pool = {**loot_pool, "valari_sigil": {
+            "name": "Sigil of Valari",
+            "description": "An ancient artifact bearing your family crest",
+            "effect": "Provides insight into your character's forgotten past",
+            "color": Fore.MAGENTA
+        }}
     
-    # Display loot
-    print_typed(f"\n{Font.ITEM('The chest contains:')}")
+    # Apply luck modifiers based on player attributes
+    luck_modifier = game_state.get("player_luck", 0)
+    if "lucky_charm" in game_state.get("equipped_items", []):
+        luck_modifier += 10
     
-    for item_name, item_desc in selected_items:
-        # Add item to inventory
-        game_state["inventory"][item_name] = game_state["inventory"].get(item_name, 0) + 1
-        print_typed(f"\n• {Font.ITEM(item_name.replace('_', ' ').title())}: {item_desc}")
+    chance_uncommon = min(100, chance_uncommon + luck_modifier)
+    chance_rare = min(100, chance_rare + (luck_modifier // 2))
+    chance_legendary = min(50, chance_legendary + (luck_modifier // 3))  # Cap legendary chance at 50%
     
-    # Add quantum crystals if any
-    if quantum_crystals > 0:
-        game_state["quantum_crystals"] = game_state.get("quantum_crystals", 0) + quantum_crystals
-        print_typed(f"\n• {Font.ITEM(f'{quantum_crystals} Quantum Crystals')}: Currency for the Quantum Chronosphere")
+    # Track rewards for display
+    awarded_items = []
     
-    print_typed(f"\n{Font.SUCCESS('Items added to your inventory.')}")
-    input("\nPress Enter to continue...")
+    # Award items
+    print_typed(f"\n{Font.INFO('The ' + chest_type + ' contains:')}")
+    print(Font.SEPARATOR)
+    
+    # Rolling animation for suspense
+    print_typed("Analyzing quantum signatures...", style=Font.SYSTEM)
+    for i in range(num_items):
+        time.sleep(0.5)
+        print(f"{Fore.CYAN}■", end="", flush=True)
+    print(f"{Style.RESET_ALL}")
+    
+    # Determine and distribute rewards
+    for i in range(num_items):
+        # Roll for item quality
+        roll = random.randint(1, 100)
+        
+        # Select item source based on roll
+        if roll <= chance_legendary:
+            # Legendary item (from legendary pool)
+            item_pool = legendary_items
+            item_tier = "LEGENDARY"
+            tier_color = Fore.RED
+        elif roll <= chance_rare:
+            # Rare item (from rare pool)
+            item_pool = rare_items
+            item_tier = "RARE"
+            tier_color = Fore.MAGENTA
+        elif roll <= chance_uncommon:
+            # Uncommon item (from uncommon pool)
+            item_pool = uncommon_items
+            item_tier = "UNCOMMON"
+            tier_color = Fore.BLUE
+        else:
+            # Common item (from common pool)
+            item_pool = common_items
+            item_tier = "COMMON"
+            tier_color = Fore.WHITE
+        
+        # Select a random item from the appropriate pool
+        item_name = random.choice(list(item_pool.keys()))
+        item_data = item_pool[item_name]
+        
+        # Add item to player's inventory
+        if "inventory" not in game_state:
+            game_state["inventory"] = {}
+        
+        if item_name in game_state["inventory"]:
+            game_state["inventory"][item_name] += 1
+        else:
+            game_state["inventory"][item_name] = 1
+        
+        # Add detailed item info to tracking list
+        awarded_items.append({
+            "name": item_name,
+            "tier": item_tier,
+            "data": item_data
+        })
+        
+        # Visual delay between items for dramatic effect
+        time.sleep(0.7)
+        
+        # Display item with appropriate formatting
+        print(f"\n[{tier_color}{item_tier}{Style.RESET_ALL}] {item_data['color']}{item_name.replace('_', ' ').title()}{Style.RESET_ALL}")
+        print(f"  {Font.INFO(item_data['desc'])}")
+        print(f"  {Font.SUCCESS('Effect:')} {Font.IMPORTANT(item_data['effect'])}")
+    
+    # Bonus: Special additional rewards based on difficulty
+    if difficulty >= 2:
+        # Add time fragments
+        fragments = random.randint(difficulty, difficulty * 2)
+        if "time_fragments" not in game_state:
+            game_state["time_fragments"] = 0
+        game_state["time_fragments"] += fragments
+        print(f"\n{Font.SUCCESS('Bonus:')} {Font.ITEM(str(fragments) + ' Time Fragments')}")
+    
+    if difficulty >= 3:
+        # Add credits
+        credits = random.randint(difficulty * 100, difficulty * 250)
+        if "player_credits" not in game_state:
+            game_state["player_credits"] = 0
+        game_state["player_credits"] += credits
+        print(f"{Font.SUCCESS('Bonus:')} {Font.ITEM(str(credits) + ' Credits')}")
+    
+    # Track dimensional chest discoveries for achievements
+    if "dimensional_chests_found" not in game_state:
+        game_state["dimensional_chests_found"] = 0
+    game_state["dimensional_chests_found"] += 1
+    
+    # Check for achievement unlock
+    chest_count = game_state["dimensional_chests_found"]
+    if chest_count == 1:
+        print(f"\n{Font.SUCCESS('Achievement Unlocked:')} {Font.TITLE('Dimensional Explorer')}")
+        print(f"{Font.INFO('Discovered your first dimensional chest.')}")
+    elif chest_count == 5:
+        print(f"\n{Font.SUCCESS('Achievement Unlocked:')} {Font.TITLE('Reality Collector')}")
+        print(f"{Font.INFO('Discovered 5 dimensional chests across realities.')}")
+    elif chest_count == 10:
+        print(f"\n{Font.SUCCESS('Achievement Unlocked:')} {Font.TITLE('Master of Dimensions')}")
+        print(f"{Font.INFO('Discovered 10 dimensional chests. The multiverse reveals its secrets to you.')}")
+    
+    print(Font.SEPARATOR)
+    input(f"\n{Font.MENU('Press Enter to continue...')}")
 
 
 def activate_character_ability(char_name, player, enemy, combat_state):
@@ -4473,11 +5112,19 @@ def chapter_eight_teaser():
     return
 
 def player_turn(player, enemy):
-    """Handle player's turn with sci-fi themed actions"""
+    """Handle player's turn with sci-fi themed actions and gender-specific feedback"""
     # Apply companion bonuses
     attack_bonus, defense_bonus = get_companion_bonuses()
     effective_attack = player.attack + attack_bonus
     # Defense bonus is already shown in the UI display below, no need for separate variable
+    
+    # Get protagonist gender for context-specific messages
+    protagonist_gender = "female"  # Default
+    
+    # Try to get actual protagonist information from game state
+    if 'game_state' in globals() and globals()['game_state'] is not None:
+        if 'protagonist' in globals()['game_state']:
+            protagonist_gender = globals()['game_state']['protagonist'].get('gender', protagonist_gender)
     
     # Check for human allies support in current zone
     current_zone = game_state.get("current_zone", "")
@@ -4725,77 +5372,259 @@ Commands:
         damage_mod = weapon["mod"]
         crit_chance_bonus = weapon["crit_mod"]
         
-        # Calculate damage
+        # Get player level for damage calculations
+        player_level = player.level if hasattr(player, 'level') else 1
+        if 'game_state' in globals() and globals()['game_state'] is not None:
+            player_level = globals()['game_state'].get('player_level', player_level)
+        
+        # Level-based damage scaling
+        level_damage_bonus = (player_level - 1) * 0.8  # +0.8 damage scaling per level
+        
+        # Calculate base damage with level bonus
         base_damage = random.randint(effective_attack - 3, effective_attack + 3)
-        damage = int(base_damage * damage_mod)
+        damage = int(base_damage * damage_mod * (1 + level_damage_bonus / 10))
         
-        # Check for critical hit
-        is_critical = random.random() < (player.crit_chance + crit_chance_bonus)
+        # Get critical hit chance and damage from combat state or use defaults
+        if hasattr(player, 'combat_state') and player.combat_state is not None:
+            crit_chance = player.combat_state.get("critical_chance", 5) / 100  # Convert percentage to decimal
+            crit_damage_mult = player.combat_state.get("critical_damage", 1.5)
+        else:
+            # Default values if combat state is missing
+            crit_chance = 5 + (player_level * 1.5)  # Base 5% + 1.5% per level
+            crit_chance = min(25, crit_chance) / 100  # Cap at 25% and convert to decimal
+            crit_damage_mult = 1.5 + (player_level * 0.1)  # Starts at 1.5x, +0.1 per level
+        
+        # Add weapon-specific critical bonus
+        total_crit_chance = crit_chance + crit_chance_bonus
+        
+        # Neural stimulator effect if active
+        if player.inventory.get("neural_stimulator", 0) > 0 and player.inventory.get("neural_stimulator_active", False):
+            total_crit_chance += 0.15  # +15% critical chance
+            player.inventory["neural_stimulator"] -= 1  # Consume one use
+            player.inventory["neural_stimulator_active"] = False
+            print_typed(f"{Font.INFO('Neural Stimulator enhances neural targeting!')}")
+        
+        # Check for critical hit with enhanced feedback
+        is_critical = random.random() < total_crit_chance
         if is_critical:
-            damage = int(damage * player.crit_damage)
-            print_slow(f"{Font.SUCCESS('CRITICAL HIT!')} Your {weapon_name} finds a weakness!", delay=0.03)
+            # Calculate critical damage with level scaling
+            damage = int(damage * crit_damage_mult)
+            
+            # Define gender-specific critical hit messages
+            if protagonist_gender == "female":
+                # Female protagonist critical hit messages
+                if player_level >= 5:
+                    crit_messages = [
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your intuitive targeting finds a vital weakness!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} You expertly target a critical system junction!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your precision with the {weapon_name} maximizes damage!"
+                    ]
+                else:
+                    crit_messages = [
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your {weapon_name} finds a weakness!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your attack precision increases the damage!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} You exploit a vulnerability in the enemy!"
+                    ]
+            else:
+                # Male protagonist critical hit messages
+                if player_level >= 5:
+                    crit_messages = [
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your tactical analysis reveals a critical weakness!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your calculated strike hits a vital component!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your methodical approach with the {weapon_name} maximizes damage!"
+                    ]
+                else:
+                    crit_messages = [
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your {weapon_name} strikes a weak point!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} Your combat training improves your attack!",
+                        f"{Font.SUCCESS('CRITICAL HIT!')} You target a vulnerability in the enemy!"
+                    ]
+            
+            # Display random critical hit message
+            print_slow(random.choice(crit_messages), delay=0.03)
+            
+            # Level 5+ gets bonus effects on crits
+            if player_level >= 5:
+                status_effect = None
+                status_duration = 2
+                
+                # Different status effects based on weapon type
+                if damage_type == "energy":
+                    status_effect = "energy_leak"
+                elif damage_type == "thermal":
+                    status_effect = "burning"
+                    status_duration = 3
+                elif damage_type == "phase":
+                    status_effect = "time_displaced"
+                elif damage_type == "bio":
+                    status_effect = "cellular_breakdown"
+                    status_duration = 3
+                
+                # Apply status effect if one was selected with gender-specific messages
+                if status_effect and not enemy.status_effects.get(status_effect):
+                    enemy.status_effects[status_effect] = status_duration
+                    
+                    # Gender-specific status effect messages
+                    if protagonist_gender == "female":
+                        status_messages = {
+                            "energy_leak": "Your precision creates an unstable energy cascade in the target!",
+                            "burning": "Your thermal targeting ignites vulnerable components!",
+                            "time_displaced": "Your perception of temporal waves disrupts the target's timeline!",
+                            "cellular_breakdown": "Your understanding of biomolecular structures triggers degradation!"
+                        }
+                    else:
+                        status_messages = {
+                            "energy_leak": "Your tactical strike creates a critical energy system failure!",
+                            "burning": "Your calculated attack ignites vulnerable materials!",
+                            "time_displaced": "Your manipulation of phase particles disrupts the target's timeline!",
+                            "cellular_breakdown": "Your weapons analysis identifies and targets cellular weak points!"
+                        }
+                    
+                    # Get appropriate message or use generic fallback
+                    message = status_messages.get(status_effect, f"Status effect applied: {status_effect.replace('_', ' ').title()}")
+                    print_typed(f"{Font.SUCCESS(message)}")
         
-        # Different attack messages based on weapon type
-        attack_messages = {
-            "energy": [
-                "Targeting systems locked... Firing {weapon_name}...",
-                "Energy capacitors charged... Discharging {weapon_name}...",
-                "Photon matrix aligned... Releasing energy burst..."
-            ],
-            "physical": [
-                "Kinetic accelerators online... Firing {weapon_name}...",
-                "Impact calculators engaged... Launching projectiles...",
-                "Recoil compensators active... Unleashing kinetic rounds..."
-            ],
-            "emp": [
-                "EM disruptors charged... Deploying electromagnetic pulse...",
-                "Circuit overloaders ready... Triggering EMP burst...",
-                "System scramblers online... Firing electromagnetic wave..."
-            ],
-            "thermal": [
-                "Thermal capacitors charged... Igniting plasma stream...",
-                "Heat sinks engaged... Releasing thermal energy...",
-                "Fusion core active... Unleashing controlled plasma burst..."
-            ],
-            "quantum": [
-                "Reality distortion field active... Firing quantum particles...",
-                "Dimensional anchor established... Releasing quantum wave...",
-                "Probability matrix engaged... Unleashing quantum disruption..."
-            ]
-        }
+        # Different attack messages based on weapon type and protagonist gender
+        if protagonist_gender == "female":
+            # Female protagonist attack messages - more intuitive/perception-focused
+            attack_messages = {
+                "energy": [
+                    "Your intuition guides targeting systems... Firing {weapon_name}...",
+                    "You sense optimal energy flow... Discharging {weapon_name}...",
+                    "You visualize the photon matrix... Releasing energy burst..."
+                ],
+                "physical": [
+                    "You feel the perfect balance point... Firing {weapon_name}...",
+                    "You perceive impact trajectories... Launching projectiles...",
+                    "Your reflexes harmonize with recoil... Unleashing kinetic rounds..."
+                ],
+                "emp": [
+                    "You sense electronic vulnerabilities... Deploying electromagnetic pulse...",
+                    "Your awareness maps circuit pathways... Triggering EMP burst...",
+                    "You anticipate system cascade points... Firing electromagnetic wave..."
+                ],
+                "thermal": [
+                    "You feel heat patterns forming... Firing {weapon_name}...",
+                    "Your senses track thermal gradients... Releasing superheated particles...",
+                    "You perceive heat transfer points... Launching thermal projectile..."
+                ],
+                "quantum": [
+                    "Your mind grasps quantum possibilities... Firing {weapon_name}...",
+                    "You intuitively sense reality folds... Releasing quantum wave...",
+                    "Your perception bridges probabilities... Launching quantum projectile..."
+                ],
+                "phase": [
+                    "You feel temporal rhythms aligning... Firing {weapon_name}...",
+                    "Your awareness spans dimensions... Releasing phase burst...",
+                    "You sense time-stream convergence points... Launching phase projectile..."
+                ],
+                "bio": [
+                    "You perceive cellular structures... Firing {weapon_name}...",
+                    "Your instincts map biological weaknesses... Releasing bio-agent...",
+                    "You sense genetic vulnerabilities... Launching molecular destabilizer..."
+                ]
+            }
+        else:
+            # Male protagonist attack messages - more analytical/methodical
+            attack_messages = {
+                "energy": [
+                    "You analyze targeting vectors... Firing {weapon_name}...",
+                    "You calculate optimal capacitor discharge... Releasing {weapon_name}...",
+                    "You calibrate photon matrix alignment... Launching energy burst..."
+                ],
+                "physical": [
+                    "You engage kinetic accelerators... Firing {weapon_name}...",
+                    "You compute impact trajectories... Launching projectiles...",
+                    "You activate recoil compensation systems... Unleashing kinetic rounds..."
+                ],
+                "emp": [
+                    "You precisely map circuit vulnerabilities... Deploying electromagnetic pulse...",
+                    "You systematically overload target systems... Triggering EMP burst...",
+                    "You calculate electromagnetic propagation... Firing EM wave..."
+                ],
+                "thermal": [
+                    "You maximize thermal coil efficiency... Firing {weapon_name}...",
+                    "You calculate optimal plasma containment... Releasing superheated particles...",
+                    "You regulate heat sink distribution... Launching thermal projectile..."
+                ],
+                "quantum": [
+                    "You solve quantum fluctuation equations... Firing {weapon_name}...",
+                    "You calculate reality matrix distortion... Releasing quantum wave...",
+                    "You determine probability field variables... Launching quantum projectile..."
+                ],
+                "phase": [
+                    "You synchronize phase variance patterns... Firing {weapon_name}...",
+                    "You calculate dimensional shift parameters... Releasing phase burst...",
+                    "You target temporal intersection points... Launching phase projectile..."
+                ],
+                "bio": [
+                    "You identify molecular binding points... Firing {weapon_name}...",
+                    "You target cellular degradation pathways... Releasing bio-agent...",
+                    "You calibrate DNA recombination variables... Launching molecular destabilizer..."
+                ]
+            }
         
-        # Display attack message
-        print_typed(random.choice(attack_messages.get(damage_type, attack_messages["energy"])))
+        # Display attack message - with weapon name formatting
+        selected_message = random.choice(attack_messages.get(damage_type, attack_messages["energy"]))
+        print_typed(selected_message.format(weapon_name=weapon_name))
         
         # Apply damage with specific damage type
         enemy.take_damage(damage, damage_type)
         
-        # Special effects based on damage type
+        # Special effects based on damage type with gender-specific responses
         if damage_type == "thermal" and random.random() < 0.25:  # 25% chance
             if "burning" not in enemy.status_effects:
                 enemy.status_effects["burning"] = 2  # Lasts 2 turns
                 burning_damage = max(3, int(effective_attack * 0.2))  # 20% of attack as burning damage
-                print_typed(f"{Font.WARNING(f'{enemy.name} is now BURNING!')} Will take {burning_damage} damage per turn for 2 turns.")
+                
+                if protagonist_gender == "female":
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is now BURNING!')} Your thermal precision causes {burning_damage} damage per turn for 2 turns.")
+                else:
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is now BURNING!')} Your calculated thermal output causes {burning_damage} damage per turn for 2 turns.")
         
         elif damage_type == "quantum" and random.random() < 0.20:  # 20% chance
             if "quantum_unstable" not in enemy.status_effects:
                 enemy.status_effects["quantum_unstable"] = 2  # Lasts 2 turns
-                print_typed(f"{Font.WARNING(f'{enemy.name} is now QUANTUM UNSTABLE!')} Defense reduced by 30% for 2 turns.")
+                
+                if protagonist_gender == "female":
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is now QUANTUM UNSTABLE!')} Your intuitive manipulation of quantum fields reduces their defense by 30% for 2 turns.")
+                else:
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is now QUANTUM UNSTABLE!')} Your quantum calculations reduce their defense by 30% for 2 turns.")
                 
         elif damage_type == "phase" and random.random() < 0.20:  # 20% chance
             if "temporal_distortion" not in enemy.status_effects:
                 enemy.status_effects["temporal_distortion"] = 2  # Lasts 2 turns
-                print_typed(f"{Font.WARNING(f'{enemy.name} is caught in TEMPORAL DISTORTION!')} 30% chance to skip turns for 2 rounds.")
+                
+                if protagonist_gender == "female":
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is caught in TEMPORAL DISTORTION!')} Your sensing of temporal rhythms creates a 30% chance for them to skip turns for 2 rounds.")
+                else:
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is caught in TEMPORAL DISTORTION!')} Your systematic targeting of temporal nodes creates a 30% chance for them to skip turns for 2 rounds.")
                 
         elif damage_type == "bio" and random.random() < 0.25:  # 25% chance
             if "bio_corruption" not in enemy.status_effects:
                 enemy.status_effects["bio_corruption"] = 3  # Lasts 3 turns
-                print_typed(f"{Font.WARNING(f'{enemy.name} is infected with BIO CORRUPTION!')} Will take damage and lose attack power for 3 turns.")
+                
+                if protagonist_gender == "female":
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is infected with BIO CORRUPTION!')} Your awareness of cellular vulnerabilities causes damage and weakens their attack for 3 turns.")
+                else:
+                    print_typed(f"{Font.WARNING(f'{enemy.name} is infected with BIO CORRUPTION!')} Your analysis of biological weakpoints causes damage and weakens their attack for 3 turns.")
 
     elif command == "2" or command == "/heal" or command == "/med" or command == "/medkit":
         healed = player.use_med_kit()
         if healed:
-            print_typed(f"Nanobots deployed. Cell regeneration in progress... +{healed} HP restored.")
+            if protagonist_gender == "female":
+                heal_messages = [
+                    f"You intuitively direct nanobots to damaged areas... +{healed} HP restored.",
+                    f"Your awareness of your body's needs guides cellular repair... +{healed} HP restored.",
+                    f"You sense and mend your internal damage patterns... +{healed} HP restored."
+                ]
+            else:
+                heal_messages = [
+                    f"You calculate optimal nanobot deployment paths... +{healed} HP restored.",
+                    f"You systematically repair damaged cellular structures... +{healed} HP restored.",
+                    f"You execute precise tissue regeneration protocols... +{healed} HP restored."
+                ]
+            print_typed(random.choice(heal_messages))
         else:
             print_typed("ERROR: No med-kits available in inventory.")
             return False
@@ -4803,9 +5632,29 @@ Commands:
     elif command == "3" or command == "/emp" or command == "/grenade":
         damage = player.use_emp_grenade()
         if damage:
-            print_slow("EMP grenade activated! Electromagnetic pulse expanding...")
+            # Gender-specific EMP activation messages
+            if protagonist_gender == "female":
+                print_slow("You sense the electronic pulse patterns... EMP grenade activated!")
+            else:
+                print_slow("You engage electromagnetic emitters... EMP grenade activated!")
+                
             taken = enemy.take_damage(damage, damage_type="emp")
-            print_typed(f"{enemy.name}'s circuits overloaded for {taken} damage!")
+            
+            # Gender-specific damage feedback
+            if protagonist_gender == "female":
+                damage_messages = [
+                    f"Your intuition guided the pulse to critical systems! {enemy.name}'s circuits overloaded for {taken} damage!",
+                    f"You visualized the cascade points perfectly! {enemy.name}'s systems disrupted for {taken} damage!",
+                    f"Your perception targeted vulnerable electronics! {enemy.name} takes {taken} EMP damage!"
+                ]
+            else:
+                damage_messages = [
+                    f"Your tactical deployment maximized impact! {enemy.name}'s circuits overloaded for {taken} damage!",
+                    f"Your calculated frequency matched their vulnerabilities! {enemy.name}'s systems disrupted for {taken} damage!",
+                    f"Your precise EMP coordination targeted vital systems! {enemy.name} takes {taken} EMP damage!"
+                ]
+            
+            print_typed(random.choice(damage_messages))
             game_state["player_stats"]["damage_dealt"] += taken
         else:
             print_typed("ERROR: No EMP grenades in inventory.")
@@ -4814,13 +5663,43 @@ Commands:
     elif (command == "4" or command == "/shield") and "shield_matrix" in player.inventory and player.inventory["shield_matrix"] > 0:
         shield_points = player.use_shield_matrix()
         if shield_points:
-            print_typed(f"Shield matrix online. +{shield_points} shield points active.")
+            # Gender-specific shield matrix activation messages
+            if protagonist_gender == "female":
+                shield_messages = [
+                    f"You intuitively align energy harmonics... Shield matrix resonating at +{shield_points} protection.",
+                    f"Your perception creates perfect energy balance... +{shield_points} shield points active.",
+                    f"You sense and stabilize defensive frequencies... +{shield_points} shield barrier established."
+                ]
+            else:
+                shield_messages = [
+                    f"You calibrate shield generators with precision... +{shield_points} defense matrix online.",
+                    f"Your calculated energy distribution creates optimal coverage... +{shield_points} shield points activated.",
+                    f"You execute defensive protocols systematically... +{shield_points} shield barrier established."
+                ]
+            print_typed(random.choice(shield_messages))
 
     elif (command == "5" or command == "/hack") and "Hack" in player.abilities:
         if player.use_ability("Hack", enemy):
-            print_typed("Hack successful. Enemy systems compromised.")
+            # Gender-specific successful hack messages
+            if protagonist_gender == "female":
+                hack_messages = [
+                    "You intuitively navigate security protocols... Hack successful!",
+                    "Your perception identifies system weaknesses... Enemy controls compromised!",
+                    "You sense the neural pathways of the machine... Systems bypassed!"
+                ]
+            else:
+                hack_messages = [
+                    "You execute precision code injections... Hack successful!",
+                    "Your algorithmic analysis breaches security layers... Enemy controls compromised!",
+                    "You systematically override system safeguards... Access granted!"
+                ]
+            print_typed(random.choice(hack_messages))
         else:
-            print_typed("Hack attempt failed or not available.")
+            # Gender-specific failed hack messages
+            if protagonist_gender == "female":
+                print_typed("Your intuition warns of enhanced security measures... Hack attempt failed.")
+            else:
+                print_typed("Your system analysis detects countermeasures... Hack attempt failed.")
             return False
             
     elif command == "q" or command == "/quantum" or command == "/quantum_link":
@@ -5019,6 +5898,98 @@ Commands:
         print_typed("Cannot access companion management during combat.")
         print_typed("Defeat the enemy or retreat first.")
         return False
+        
+    elif command == "a" or command == "/analyze":
+        # Get enemy data
+        enemy_data = enemies.get(enemy.name, {})
+        resistances = enemy_data.get("resistances", {})
+        abilities = enemy_data.get("abilities", [])
+        
+        # Calculate enemy health percentage
+        health_percent = enemy.health / enemy.max_health if enemy.max_health > 0 else 0
+        
+        # Gender-specific analysis messages
+        if protagonist_gender == "female":
+            print_typed(f"\n{Font.INFO('Your intuitive analysis reveals enemy information:')}")
+            print_typed(f"{Font.ENEMY(enemy.name)} - Your perception identifies key aspects of its design and behavior.")
+            
+            # Display gender-specific resistance descriptions
+            if resistances:
+                print_typed(f"\n{Font.WARNING('Your instincts detect defensive adaptations:')}")
+                for res_type, value in resistances.items():
+                    if value > 0:
+                        print_typed(f"• You sense {value}% resistance to {res_type.replace('_', ' ')} damage")
+                    elif value < 0:
+                        print_typed(f"• You perceive a {abs(value)}% vulnerability to {res_type.replace('_', ' ')} damage")
+            
+            # Display gender-specific ability insights
+            if abilities:
+                print_typed(f"\n{Font.SYSTEM('Your awareness reveals potential abilities:')}")
+                for ability in abilities:
+                    print_typed(f"• You intuitively understand its {ability} capability")
+            
+            # Health assessment with female perspective
+            if health_percent > 0.7:
+                print_typed(f"\n{Font.HEALTH('You sense its systems are largely intact.')}")
+            elif health_percent > 0.3:
+                print_typed(f"\n{Font.HEALTH('You perceive moderate damage to its primary systems.')}")
+            else:
+                print_typed(f"\n{Font.HEALTH('You feel its systems are critically compromised.')}")
+        else:
+            # Male protagonist analysis messages
+            print_typed(f"\n{Font.INFO('Your tactical analysis reveals enemy information:')}")
+            print_typed(f"{Font.ENEMY(enemy.name)} - Your systematic evaluation identifies key specifications and protocols.")
+            
+            # Display gender-specific resistance descriptions
+            if resistances:
+                print_typed(f"\n{Font.WARNING('Your analysis detects defensive capabilities:')}")
+                for res_type, value in resistances.items():
+                    if value > 0:
+                        print_typed(f"• You calculate {value}% resistance to {res_type.replace('_', ' ')} damage")
+                    elif value < 0:
+                        print_typed(f"• You identify a {abs(value)}% vulnerability to {res_type.replace('_', ' ')} damage")
+            
+            # Display gender-specific ability insights
+            if abilities:
+                print_typed(f"\n{Font.SYSTEM('Your assessment reveals potential abilities:')}")
+                for ability in abilities:
+                    print_typed(f"• You determine it possesses {ability} functionality")
+            
+            # Health assessment with male perspective
+            if health_percent > 0.7:
+                print_typed(f"\n{Font.HEALTH('Your diagnostics show minimal structural damage.')}")
+            elif health_percent > 0.3:
+                print_typed(f"\n{Font.HEALTH('Your calculations indicate significant system degradation.')}")
+            else:
+                print_typed(f"\n{Font.HEALTH('Your analysis confirms critical failure imminent.')}")
+        
+        # Show attack pattern analysis with gender-specific language
+        print_typed(f"\n{Font.WARNING('Attack pattern assessment:')}")
+        attack_value = enemy.attack
+        
+        if protagonist_gender == "female":
+            if attack_value > player.defense * 1.5:
+                print_typed("Your instincts warn you that this enemy's attacks are extremely dangerous.")
+            elif attack_value > player.defense:
+                print_typed("You sense that the enemy's offensive capability exceeds your defensive strength.")
+            else:
+                print_typed("You feel confident that your defenses can withstand this enemy's attacks.")
+        else:
+            if attack_value > player.defense * 1.5:
+                print_typed("Your calculations indicate this enemy's attack power far exceeds your defensive capabilities.")
+            elif attack_value > player.defense:
+                print_typed("Your analysis shows the enemy's offensive output is greater than your defensive parameters.")
+            else:
+                print_typed("Your assessment confirms your defensive specifications can withstand this enemy's attack vectors.")
+        
+        # Strategic advice based on gender
+        print_typed(f"\n{Font.IMPORTANT('Strategic assessment:')}")
+        if protagonist_gender == "female":
+            print_typed("Your intuition suggests adapting your approach based on these insights.")
+        else:
+            print_typed("Your tactical analysis recommends a strategic response based on these specifications.")
+        
+        return False  # Don't count analysis as a turn
 
     else:
         print_typed("ERROR: Invalid command. Type '/help' for available commands.")
@@ -5633,34 +6604,99 @@ def generate_enemy(zone_name, wave=None):
 
 
 def get_loot(player, enemy):
-    """Handle loot drops from defeated enemies with sci-fi flavor"""
+    """Handle loot drops from defeated enemies with sci-fi flavor and player level integration"""
+    # Get enemy data and default values
     enemy_data = enemies.get(enemy.name, {})
     drops = enemy_data.get("drops", {})
     exp_value = enemy_data.get("exp_value", 10)
-
-    print_typed("\nScanning defeated unit for salvageable resources...")
-    time.sleep(0.5)
-
+    
+    # Get player level for loot calculations
+    player_level = player.level if hasattr(player, 'level') else 1
+    if 'game_state' in globals() and globals()['game_state'] is not None:
+        player_level = globals()['game_state'].get('player_level', player_level)
+    
+    # Apply level-based experience scaling (higher levels earn more XP from stronger enemies)
+    enemy_tier = enemy_data.get("tier", 1)
+    level_exp_bonus = 0
+    
+    # Only apply bonus XP for higher-tier enemies
+    if enemy_tier > 1:
+        # Higher level players get bonus XP from higher tier enemies
+        level_exp_bonus = min(enemy_tier * 5, player_level * 2)
+        exp_value += level_exp_bonus
+    
+    # Loot notification with sci-fi flavor
+    print(Font.SEPARATOR)
+    print_typed("\nScanning defeated unit for salvageable resources...", style=Font.SYSTEM)
+    
+    # Visual scanning effect
+    scan_chars = ["▒", "▓", "█", "▓", "▒"]
+    for i in range(3):
+        for char in scan_chars:
+            print(f"\r{Fore.CYAN}Quantum analysis in progress {char * 10}", end="", flush=True)
+            time.sleep(0.1)
+    print(f"\r{' ' * 50}", end="", flush=True)
+    print()
+    
+    # Apply player level modifiers to drop chances
     found_items = []
-    for item_id, chance in drops.items():
-        if random.random() < chance:
+    for item_id, base_chance in drops.items():
+        # Better drop chances for higher level players (diminishing returns)
+        level_bonus = min(0.25, (player_level - 1) * 0.05)  # Max 25% bonus at level 6+
+        
+        # Adjust chance based on player level
+        adjusted_chance = min(0.95, base_chance + level_bonus)  # Cap at 95%
+        
+        # Roll for item drop
+        if random.random() < adjusted_chance:
             # Add to player inventory
             if item_id in player.inventory:
                 player.inventory[item_id] += 1
             else:
                 player.inventory[item_id] = 1
             found_items.append(item_id)
-
+    
+    # Rare chance for bonus items based on player level
+    if player_level >= 3 and random.random() < (player_level * 0.05):  # 15% chance at level 3, 25% at level 5
+        # Select a bonus item based on player level
+        bonus_items = []
+        if player_level >= 5:
+            bonus_items = ["quantum_shard", "rare_alloy", "neural_interface"]
+        else:
+            bonus_items = ["nano_cell", "tech_fragment", "energy_crystal"]
+            
+        bonus_item = random.choice(bonus_items)
+        
+        # Add bonus item to inventory and found items
+        if bonus_item in player.inventory:
+            player.inventory[bonus_item] += 1
+        else:
+            player.inventory[bonus_item] = 1
+        found_items.append(bonus_item)
+        
+    # Display found items with enhanced presentation
     if found_items:
-        print_typed("Resources salvaged:")
+        print_typed(f"{Font.SUCCESS('Resources salvaged:')}")
         for item_id in found_items:
             if item_id in items:
-                print_slow(f"- {items[item_id]['name']}: {items[item_id]['effect']}")
+                item_name = items[item_id]['name']
+                item_effect = items[item_id]['effect']
+                item_color = items[item_id].get('color', Fore.WHITE)
+                
+                # Enhanced display with item color
+                print_slow(f"- {item_color}{item_name}{Style.RESET_ALL}: {item_effect}")
+                time.sleep(0.3)  # Slight pause between items for dramatic effect
     else:
-        print_typed("No salvageable components detected.")
-
-    # Award experience
-    print_typed(f"Neural pathways adapting to combat data: +{exp_value} XP")
+        print_typed(f"{Font.INFO('No salvageable components detected.')}")
+    
+    # Award experience with level bonus information if applicable
+    print(Font.SEPARATOR)
+    exp_message = f"Neural pathways adapting to combat data: +{exp_value} XP"
+    if level_exp_bonus > 0:
+        exp_message += f" ({level_exp_bonus} level bonus)"
+    print_typed(exp_message, style=Font.SUCCESS)
+    
+    # Apply experience gain and check for level up
     leveled_up = player.gain_experience(exp_value)
     if leveled_up:
         print_typed("Neural pathways strengthened. You have leveled up!", style=Font.SUCCESS)
@@ -7751,75 +8787,309 @@ def manage_weapon_modules(player, game_state):
 def explore_underwater_research_base(player, game_state):
     """Explore the abandoned underwater research base on Thalassia 1
     
+    Enhanced version with dynamic environmental effects, danger levels,
+    and immersive storytelling elements.
+    
     Args:
         player: The player character
         game_state: The current game state
     """
     clear_screen()
-    print_slow("=" * 60)
-    print_typed(Font.HEADER("ABANDONED RESEARCH FACILITY").center(60))
-    print_slow("=" * 60)
+    
+    # Enhanced visual header with animated water effect
+    for _ in range(3):
+        clear_screen()
+        print(f"{Fore.BLUE}{'≈' * 60}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{Back.BLUE}{Font.HEADER('THALASSIA DEEP-SEA RESEARCH FACILITY').center(60)}{Style.RESET_ALL}")
+        print(f"{Fore.BLUE}{'≈' * 60}{Style.RESET_ALL}")
+        time.sleep(0.3)
+        
+        clear_screen()
+        print(f"{Fore.CYAN}{'≈' * 60}{Style.RESET_ALL}")
+        print(f"{Fore.BLUE}{Back.CYAN}{Font.HEADER('THALASSIA DEEP-SEA RESEARCH FACILITY').center(60)}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{'≈' * 60}{Style.RESET_ALL}")
+        time.sleep(0.3)
+    
+    # Facility status display with visual indicators
+    print(f"\n{Font.BOX_TOP}")
+    print(f"{Font.BOX_SIDE} {Font.TITLE('FACILITY STATUS'.center(46))} {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {Font.SYSTEM('DEPTH:')} {Font.WARNING('-2,317 METERS')}               {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {Font.SYSTEM('PRESSURE:')} {Font.WARNING('236 ATMOSPHERES')}          {Font.BOX_SIDE}")
+    print(f"{Font.BOX_SIDE} {Font.SYSTEM('TEMPERATURE:')} {Font.INFO('4.2°C')}                {Font.BOX_SIDE}")
+    print(f"{Font.BOX_BOTTOM}")
+    
+    # Check if player has oxygen supply
+    if "underwater_breathing_apparatus" not in game_state.get("equipment", []):
+        game_state.setdefault("oxygen_supply", 100)  # Initialize oxygen if not present
+    
+    # Oxygen level display if applicable
+    if "oxygen_supply" in game_state:
+        oxygen = game_state["oxygen_supply"]
+        oxygen_bar = "█" * (oxygen // 10) + "░" * (10 - (oxygen // 10))
+        oxygen_color = Fore.GREEN if oxygen > 70 else (Fore.YELLOW if oxygen > 30 else Fore.RED)
+        print(f"\n{Font.SYSTEM('OXYGEN SUPPLY:')} {oxygen_color}{oxygen}%{Style.RESET_ALL}")
+        print(f"{oxygen_color}{oxygen_bar}{Style.RESET_ALL}")
+    
+    # Dynamic danger level based on visited locations and encounters
+    danger_level = 1  # Default
+    if game_state.get("encountered_sentinels", False):
+        danger_level += 1
+    if game_state.get("salt_breach_triggered", False):
+        danger_level += 1
+    if game_state.get("neurovore_awakened", False):
+        danger_level += 2
+    
+    danger_indicator = "▲" * danger_level + "△" * (5 - danger_level)
+    danger_color = Fore.GREEN if danger_level <= 2 else (Fore.YELLOW if danger_level <= 3 else Fore.RED)
+    print(f"\n{Font.SYSTEM('THREAT ASSESSMENT:')} {danger_color}{danger_indicator}{Style.RESET_ALL}")
+    
+    # Environment ambiance effects
+    ambient_sounds = [
+        "The facility creaks under the immense water pressure...",
+        "Distant metallic groans echo through the corridors...",
+        "Water drips from the ceiling in steady, rhythmic patterns...",
+        "The ventilation system sputters and wheezes...",
+        "Something organic squelches in the distance...",
+        "Salt crystals crackle as they form along the walls...",
+        "The backup generators hum with an unsteady vibration...",
+        "Strange bioluminescent patterns pulse in the darkness..."
+    ]
     
     # Check if this is the first visit
     if not game_state.get("research_base_visited", False):
-        # First visit narrative
-        print_typed("\nYour submersible vehicle descends through the murky waters")
-        print_typed("of Thalassia 1. Visibility is limited, with only the vehicle's")
-        print_typed("lights penetrating the darkness. The water pressure outside")
-        print_typed("is immense, and occasional flashes of bioluminescence reveal")
-        print_typed("strange creatures darting away from your lights.")
+        # First visit narrative - enhanced with visual descriptions and sound effects
+        print_typed("\nYour submersible vehicle descends through the murky waters", style=Font.LORE)
+        print_typed("of Thalassia 1. Visibility drops to mere meters as crystalline", style=Font.LORE)
+        print_typed("salt formations drift past your viewport. The water pressure", style=Font.LORE)
+        print_typed("outside reaches crushing levels, and your vessel's hull", style=Font.LORE)
+        print_typed("groans under the strain.", style=Font.LORE)
+        
+        # Simulated sonar ping effect
+        for _ in range(3):
+            print("\n" + " " * random.randint(5, 40) + f"{Fore.CYAN}•{Style.RESET_ALL}")
+            time.sleep(0.3)
+            print_typed(f"{Font.SYSTEM('> ping')}", delay=0.01)
+            time.sleep(0.5)
+        
+        print_typed("\nOccasional flashes of bioluminescence reveal bizarre life forms", style=Font.LORE)
+        print_typed("darting away from your lights - translucent creatures with", style=Font.LORE)
+        print_typed("crystalline growths protruding from their bodies. Your scanner", style=Font.LORE)
+        print_typed("indicates they contain high concentrations of the planet's", style=Font.LORE)
+        print_typed("unique salt compounds, somehow integrated into their biology.", style=Font.LORE)
         
         time.sleep(1)
         
-        print_typed("\nAfter what seems like an eternity, a structure looms out of")
-        print_typed("the darkness - the abandoned human research facility. Its")
-        print_typed("exterior is encrusted with salt formations and strange organic")
-        print_typed("growths. Some sections appear damaged, with evidence of both")
-        print_typed("structural failure and something... forcing its way inside.")
+        # Dramatic reveal with slow text building
+        print("\n")
+        reveal_text = "STRUCTURE DETECTED"
+        for char in reveal_text:
+            print(f"{Fore.YELLOW}{char}{Style.RESET_ALL}", end='', flush=True)
+            time.sleep(0.2)
+        print("\n")
         
-        print_typed(f"\n{Font.SYSTEM('SCANNING FACILITY...')}")
-        print_typed(f"{Font.INFO('Main power: OFFLINE')}")
-        print_typed(f"{Font.INFO('Backup generators: MINIMAL FUNCTION (12% CAPACITY)')}")
-        print_typed(f"{Font.INFO('Hull integrity: COMPROMISED - SECTIONS E, F, H FLOODED')}")
-        print_typed(f"{Font.INFO('Life signs: MULTIPLE UNIDENTIFIED ORGANISMS DETECTED')}")
+        print_typed("\nAfter what seems like an eternity, a massive silhouette emerges", style=Font.LORE)
+        print_typed("from the darkness - the abandoned human research facility. Its", style=Font.LORE)
+        print_typed("exterior is encrusted with enormous salt formations that glitter", style=Font.LORE)
+        print_typed("in your searchlights. Some sections of the base appear damaged,", style=Font.LORE)
+        print_typed("with evidence of both structural failure and something...", style=Font.LORE)
+        print_typed(f"{Font.WARNING('forcing its way inside.')}", style=Font.LORE)
+        
+        # Detailed scan results with visual formatting
+        print_typed(f"\n{Font.GLITCH('INITIATING DEEP SCAN...')}")
+        time.sleep(1)
+        
+        # Animated scan effect
+        for i in range(10):
+            scan_line = "■" * i + "□" * (10-i)
+            print(f"\r{Font.SYSTEM('Scanning: ')} {Fore.CYAN}{scan_line} {i*10}%{Style.RESET_ALL}", end="", flush=True)
+            time.sleep(0.2)
+        print("\n")
+        
+        print(f"{Font.BOX_TOP}")
+        print(f"{Font.BOX_SIDE} {Font.TITLE('FACILITY SCAN RESULTS'.center(46))} {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {Font.INFO('Main power:')} {Font.WARNING('OFFLINE')}                         {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {Font.INFO('Backup generators:')} {Font.WARNING('MINIMAL (12% CAPACITY)')}   {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {Font.INFO('Hull integrity:')} {Font.WARNING('MULTIPLE BREACHES')}           {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {Font.INFO('Sections E, F, H:')} {Fore.RED}{Style.BRIGHT}FLOODED{Style.RESET_ALL}                    {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {Font.INFO('Life signs:')} {Fore.RED}{Style.BRIGHT}MULTIPLE UNIDENTIFIED ORGANISMS{Style.RESET_ALL}  {Font.BOX_SIDE}")
+        print(f"{Font.BOX_SIDE} {Font.INFO('Airlock status:')} {Font.SUCCESS('FUNCTIONAL')}                  {Font.BOX_SIDE}")
+        print(f"{Font.BOX_BOTTOM}")
         
         time.sleep(1)
         
-        print_typed("\nYou dock your submersible at a still-functioning airlock.")
-        print_typed("The docking mechanism engages with a metallic thunk, and the")
-        print_typed("airlock cycles, draining the water. As the inner door opens,")
-        print_typed("your suit lights illuminate a once-sterile corridor, now")
-        print_typed("covered in salt deposits and strange, organic growth.")
+        # Atmospheric docking sequence
+        print_typed("\nYou maneuver your submersible toward a still-functioning airlock.", style=Font.LORE)
+        print_typed("As you approach, emergency lights activate, bathing the docking", style=Font.LORE)
+        print_typed("area in a pulsing red glow. Salt formations crumble away as the", style=Font.LORE)
+        print_typed("ancient mechanisms awaken.", style=Font.LORE)
+        
+        time.sleep(0.5)
+        
+        # Docking sequence animation
+        print_typed(f"\n{Font.SYSTEM('INITIATING DOCKING SEQUENCE')}")
+        time.sleep(0.7)
+        print_typed(f"{Font.SYSTEM('ALIGNING SUBMERSIBLE...')}")
+        time.sleep(1)
+        print_typed(f"{Font.SUCCESS('ALIGNMENT COMPLETE')}")
+        time.sleep(0.7)
+        print_typed(f"{Font.SYSTEM('ENGAGING MAGNETIC CLAMPS...')}")
+        time.sleep(0.7)
+        print_typed(f"{Font.SUCCESS('DOCKING SUCCESSFUL')}")
+        
+        time.sleep(0.5)
+        
+        print_typed("\nThe docking mechanism engages with a metallic thunk that reverberates", style=Font.LORE)
+        print_typed("through your vessel. The airlock cycles, draining the seawater with", style=Font.LORE)
+        print_typed("a deafening rush. As pressure equalizes, the inner door slides open", style=Font.LORE)
+        print_typed("with a reluctant groan, revealing a once-sterile corridor.", style=Font.LORE)
+        
+        print_typed("\nYour suit lights illuminate walls now covered in crystalline salt", style=Font.LORE)
+        print_typed("formations and strange, pulsating organic growths. The air is", style=Font.LORE)
+        print_typed("heavy with moisture and smells of salt, rust, and something", style=Font.LORE)
+        print_typed("alien. Each breath feels thick, almost viscous in your lungs.", style=Font.LORE)
+        
+        # Give the player a sense of choice and agency
+        print_typed(f"\n{Font.WARNING('The facility beckons, its secrets waiting in the depths...')}")
+        
+        # Random ambient sound for atmosphere
+        print_typed(f"\n{Font.LORE(random.choice(ambient_sounds))}")
         
         # Mark as visited
         game_state["research_base_visited"] = True
+        
+        # Add some basic supplies on first visit
+        if "flares" not in game_state.get("inventory", {}):
+            game_state.setdefault("inventory", {})["flares"] = 3
+            print_typed(f"\n{Font.SUCCESS('Found:')} {Font.ITEM('3 Emergency Flares')} in the airlock storage locker")
     else:
-        # Return visit narrative
-        print_typed("\nYou return to the submerged research facility. The docking")
-        print_typed("procedure is familiar now, and the airlock cycles to admit you.")
-        print_typed("The eerie silence of the abandoned facility greets you once more.")
+        # Return visit narrative - enhanced with progressive changes
+        print_typed("\nYou return to the submerged research facility, your submersible", style=Font.LORE)
+        print_typed("cutting through the dark waters with practiced precision. The", style=Font.LORE)
+        print_typed("facility's silhouette is familiar now, though you notice the", style=Font.LORE)
+        print_typed("salt formations have grown larger since your last visit.", style=Font.LORE)
+        
+        # Changes based on previous actions
+        if game_state.get("power_restored", False):
+            print_typed("\nThe exterior lights you managed to restore flicker weakly,", style=Font.LORE)
+            print_typed("creating an eerie beacon in the oceanic darkness.", style=Font.LORE)
+        
+        if game_state.get("encountered_sentinels", False):
+            print_typed("\nYou notice movement outside the facility - the mechanical", style=Font.LORE)
+            print_typed("sentinels continue their endless patrol, their sensors", style=Font.LORE)
+            print_typed("scanning for intruders like yourself.", style=Font.LORE)
+        
+        if game_state.get("salt_breach_triggered", False):
+            print_typed("\nThe breach you encountered during your last visit appears to", style=Font.LORE)
+            print_typed("have expanded, salt crystals spreading along the facility's hull", style=Font.LORE)
+            print_typed("like a glittering infection.", style=Font.LORE)
+        
+        print_typed("\nThe docking procedure is familiar now. The airlock cycles with", style=Font.LORE)
+        print_typed("the same metallic groans and hisses. As you enter, the facility", style=Font.LORE)
+        print_typed("seems to recognize your return, the air heavy with expectation.", style=Font.LORE)
+        
+        # Random ambient sound for atmosphere
+        print_typed(f"\n{Font.LORE(random.choice(ambient_sounds))}")
+        
+        # Occasional supply replenishment on return visits
+        if random.randint(1, 4) == 1:
+            replenish_items = [
+                ("medkit", "Medical Kit", 1),
+                ("energy_cell", "Energy Cell", 2),
+                ("flares", "Emergency Flares", 2)
+            ]
+            item = random.choice(replenish_items)
+            game_state.setdefault("inventory", {})[item[0]] = game_state.get("inventory", {}).get(item[0], 0) + item[2]
+            print_typed(f"\n{Font.SUCCESS('Found:')} {Font.ITEM(f'{item[2]} {item[1]}')} in a previously overlooked storage cabinet")
     
-    # Base exploration loop
+    # Base exploration loop with enhanced interaction
     exploring = True
+    
+    # Use oxygen mechanics if applicable
+    if "oxygen_supply" in game_state and "underwater_breathing_apparatus" not in game_state.get("equipment", []):
+        print_typed(f"\n{Font.WARNING('CAUTION: Limited oxygen supply. Each area explored will consume oxygen.')}")
+    
     while exploring:
-        print_typed(f"\n{Font.SUBTITLE('What would you like to investigate?')}")
+        # Atmospheric interstitial - occasional random events during exploration
+        if random.randint(1, 10) == 1 and game_state.get("research_base_visited", False):
+            events = [
+                "A distant metallic bang echoes through the corridors...",
+                "The lights flicker momentarily, plunging you into darkness for a second...",
+                "Something moves in your peripheral vision, but when you turn, nothing's there...",
+                "Salt crystals grow visibly on a nearby surface, crackling as they form...",
+                "You hear what sounds like whispering coming from the ventilation system...",
+                "Water drips from the ceiling, forming a small puddle that seems to move on its own...",
+                "The facility groans and shifts, as if adjusting to the crushing pressure...",
+                "Your scanner detects a brief energy surge from somewhere deep in the facility..."
+            ]
+            
+            # Display random atmospheric event with special formatting
+            print()
+            print(f"{Fore.CYAN}╔{'═' * 58}╗{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}║{Style.RESET_ALL} {Font.LORE(random.choice(events))} {' ' * (58 - len(random.choice(events)))} {Fore.CYAN}║{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}╚{'═' * 58}╝{Style.RESET_ALL}")
+            time.sleep(1)
         
-        print_typed(f"1. {Font.COMMAND('Main Laboratory')}")
-        print_typed(f"2. {Font.COMMAND('Crew Quarters')}")
-        print_typed(f"3. {Font.COMMAND('Weapons Research Wing')}")
-        print_typed(f"4. {Font.COMMAND('Communications Center')}")
+        # Visually enhanced area selection interface
+        print(f"\n{Font.BOX_TOP}")
+        print(f"{Font.BOX_SIDE} {Font.TITLE('FACILITY NAVIGATION'.center(46))} {Font.BOX_SIDE}")
+        print(f"{Font.BOX_BOTTOM}")
         
-        # Add option for the lower level once preconditions are met
+        # Show status of each area with visual indicators
+        lab_status = Font.SUCCESS("✓ EXPLORED") if game_state.get("lab_cleared", False) else Font.WARNING("⚠ UNEXPLORED")
+        quarters_status = Font.SUCCESS("✓ EXPLORED") if game_state.get("quarters_cleared", False) else Font.WARNING("⚠ UNEXPLORED")
+        weapons_status = Font.SUCCESS("✓ EXPLORED") if game_state.get("weapons_wing_cleared", False) else Font.WARNING("⚠ UNEXPLORED")
+        comms_status = Font.SUCCESS("✓ EXPLORED") if game_state.get("comms_cleared", False) else Font.WARNING("⚠ UNEXPLORED")
+        
+        # Enhanced menu with visual area status
+        print_typed(f"\n{Font.SUBTITLE('Select area to investigate:')}")
+        
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}")
+        print(f"  {Fore.CYAN}├─{Style.RESET_ALL} 1. {Font.COMMAND('Main Laboratory')} {lab_status}")
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}   {Font.INFO('Research center with biological specimens and analysis equipment')}")
+        
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}")
+        print(f"  {Fore.CYAN}├─{Style.RESET_ALL} 2. {Font.COMMAND('Crew Quarters')} {quarters_status}")
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}   {Font.INFO('Living spaces, personal logs, and possible supplies')}")
+        
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}")
+        print(f"  {Fore.CYAN}├─{Style.RESET_ALL} 3. {Font.COMMAND('Weapons Research Wing')} {weapons_status}")
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}   {Font.INFO('Experimental technology testing area and armory')}")
+        
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}")
+        print(f"  {Fore.CYAN}├─{Style.RESET_ALL} 4. {Font.COMMAND('Communications Center')} {comms_status}")
+        print(f"  {Fore.CYAN}│{Style.RESET_ALL}   {Font.INFO('Facility communications hub with potential distress signals')}")
+        
+        # Add special options based on game state
         if (game_state.get("lab_cleared", False) and 
             game_state.get("weapons_wing_cleared", False) and
             game_state.get("found_sonic_module", False) and
             not game_state.get("neurovore_prime_defeated", False)):
-            print_typed(f"5. {Font.COMMAND('Descend to Lower Level')} {Font.WARNING('(DANGER)')}")
-            print_typed(f"6. {Font.COMMAND('Return to submersible')}")
+            
+            print(f"  {Fore.CYAN}│{Style.RESET_ALL}")
+            print(f"  {Fore.CYAN}├─{Style.RESET_ALL} 5. {Font.COMMAND('Descend to Lower Level')} {Font.WARNING('!!! HIGH RISK !!!')}")
+            print(f"  {Fore.CYAN}│{Style.RESET_ALL}   {Font.INFO('Restricted area with high energy readings')}")
+            print(f"  {Fore.CYAN}│{Style.RESET_ALL}")
+            print(f"  {Fore.CYAN}└─{Style.RESET_ALL} 6. {Font.COMMAND('Return to Submersible')} {Font.SUCCESS('SAFE EXIT')}")
         else:
-            print_typed(f"5. {Font.COMMAND('Return to submersible')}")
+            print(f"  {Fore.CYAN}│{Style.RESET_ALL}")
+            print(f"  {Fore.CYAN}└─{Style.RESET_ALL} 5. {Font.COMMAND('Return to Submersible')} {Font.SUCCESS('SAFE EXIT')}")
         
-        choice = input("\nEnter your choice: ").strip()
+        # Additional options if special equipment discovered
+        if game_state.get("found_scanner_upgrade", False):
+            print_typed(f"\n6. {Font.COMMAND('Use Enhanced Scanner')} {Font.ITEM('(Uses 1 Energy Cell)')}")
+        
+        if "flares" in game_state.get("inventory", {}) and game_state.get("inventory", {}).get("flares", 0) > 0:
+            print_typed(f"7. {Font.COMMAND('Deploy Emergency Flare')} ({game_state['inventory']['flares']} remaining)")
+            
+        # Command prompt with blinking cursor effect
+        print(f"\n{Font.SYSTEM('ENTER COMMAND')} ", end='', flush=True)
+        for _ in range(3):
+            print(f"{Fore.CYAN}_{Style.RESET_ALL}", end='', flush=True)
+            time.sleep(0.3)
+            print("\b \b", end='', flush=True)
+            time.sleep(0.3)
+        
+        choice = input().strip()
         
         if choice == "1":
             # Main Laboratory
@@ -7834,12 +9104,149 @@ def explore_underwater_research_base(player, game_state):
             # Check if the player has already found specimens
             if not game_state.get("found_lab_specimens", False):
                 print_typed("\nAs you investigate a relatively intact workstation, you")
-                print_typed("find a sealed specimen container. Inside are preserved samples")
+                print_typed("discover a sealed specimen container. Inside are preserved samples")
                 print_typed("of several Thalassian life forms, including what appears to")
                 print_typed("be a juvenile version of the bivalve creatures infesting the facility.")
                 
-                print_typed(f"\n{Font.SUCCESS('You collect the specimen container for study.')}")
-                player.inventory["thalassian_specimens"] = player.inventory.get("thalassian_specimens", 0) + 1
+                # Add DNA sequencing minigame/puzzle
+                print_typed(f"\n{Font.SYSTEM('BIOLOGICAL ANALYZER DETECTED')}")
+                print_typed("A sophisticated biological analyzer sits on the workstation, still")
+                print_typed("operational on backup power. A message flashes on its display:")
+                print_typed(f"\n{Fore.GREEN}{Back.BLACK}'INSERT SPECIMEN FOR DNA SEQUENCING'{Style.RESET_ALL}")
+                
+                print_typed("\nDo you wish to use the analyzer? (y/n)")
+                analyze_choice = input("\n> ").strip().lower()
+                
+                if analyze_choice == 'y':
+                    print_typed(f"\n{Font.SYSTEM('INITIALIZING DNA ANALYSIS...')}")
+                    
+                    # DNA Sequencing Puzzle
+                    print_typed("\nYou place the specimen into the analyzer. The machine hums")
+                    print_typed("to life, but it requires you to manually align the DNA sequences")
+                    print_typed("to complete the analysis.")
+                    
+                    print_typed(f"\n{Font.SYSTEM('DNA SEQUENCE ALIGNMENT REQUIRED')}")
+                    print_typed(f"{Font.INFO('Align the base pairs to match the reference sequence.')}")
+                    
+                    # Initialize puzzle
+                    def dna_sequencing_puzzle():
+                        # DNA puzzle setup
+                        base_pairs = ['A-T', 'G-C', 'T-A', 'C-G']
+                        reference_sequence = [random.choice(base_pairs) for _ in range(5)]
+                        player_sequence = [random.choice(base_pairs) for _ in range(5)]
+                        attempts = 0
+                        max_attempts = 5
+                        
+                        # Display puzzle instructions
+                        print(f"\n{Font.BOX_TOP}")
+                        print(f"{Font.BOX_SIDE} {Font.TITLE('ALIEN DNA SEQUENCING PUZZLE'.center(46))} {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} Match your sequence to the reference sequence by    {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} swapping base pairs. Each pair must be in the       {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} correct position to decode the alien DNA.           {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_BOTTOM}")
+                        
+                        # Main puzzle loop
+                        while attempts < max_attempts:
+                            print(f"\n{Font.SUBTITLE('ATTEMPT')} {attempts+1}/{max_attempts}")
+                            
+                            # Display reference sequence
+                            print(f"\n{Font.SYSTEM('REFERENCE SEQUENCE:')}")
+                            ref_display = " | ".join(reference_sequence)
+                            print(f"{Fore.YELLOW}{ref_display}{Style.RESET_ALL}")
+                            
+                            # Display player's current sequence
+                            print(f"\n{Font.SYSTEM('YOUR SEQUENCE:')}")
+                            for i, pair in enumerate(player_sequence):
+                                if pair == reference_sequence[i]:
+                                    # Correct position
+                                    print(f"{i+1}: {Fore.GREEN}{pair}{Style.RESET_ALL}", end="  ")
+                                else:
+                                    # Incorrect position
+                                    print(f"{i+1}: {Fore.RED}{pair}{Style.RESET_ALL}", end="  ")
+                            print("\n")
+                            
+                            # Check if sequences match
+                            if player_sequence == reference_sequence:
+                                print_typed(f"\n{Font.SUCCESS('SEQUENCE MATCHED! DNA ANALYSIS COMPLETE.')}")
+                                return True
+                            
+                            # Get player input for swapping
+                            print_typed(f"\n{Font.SYSTEM('Select a position to swap (1-5), or 0 to shuffle all:')}")
+                            try:
+                                pos = int(input("> ").strip())
+                                if pos == 0:
+                                    # Shuffle entire sequence
+                                    random.shuffle(player_sequence)
+                                elif 1 <= pos <= 5:
+                                    # Swap one position
+                                    pos -= 1  # Convert to 0-indexed
+                                    options = [bp for bp in base_pairs if bp != player_sequence[pos]]
+                                    print_typed(f"\n{Font.SYSTEM('Select new base pair for position')} {pos+1}:")
+                                    for i, option in enumerate(options):
+                                        print(f"{i+1}: {option}")
+                                    
+                                    swap_choice = int(input("> ").strip())
+                                    if 1 <= swap_choice <= len(options):
+                                        player_sequence[pos] = options[swap_choice-1]
+                                    else:
+                                        print_typed(f"\n{Font.WARNING('Invalid selection. No change made.')}")
+                                else:
+                                    print_typed(f"\n{Font.WARNING('Invalid position. Choose 1-5 or 0.')}")
+                            except ValueError:
+                                print_typed(f"\n{Font.WARNING('Please enter a number.')}")
+                            
+                            attempts += 1
+                            
+                            # Provide a hint after a few failed attempts
+                            if attempts == 3:
+                                hint_pos = next((i for i, (p, r) in enumerate(zip(player_sequence, reference_sequence)) if p != r), 0)
+                                print_typed(f"\n{Font.INFO('HINT: Position')} {hint_pos+1} {Font.INFO('needs attention.')}")
+                        
+                        # If we reach here, player has used all attempts
+                        print_typed(f"\n{Font.WARNING('Maximum attempts reached. Analysis failed.')}")
+                        print_typed("The analyzer displays the correct sequence for reference:")
+                        print(f"\n{Fore.GREEN}{' | '.join(reference_sequence)}{Style.RESET_ALL}")
+                        return False
+                    
+                    # Run the puzzle
+                    analysis_success = dna_sequencing_puzzle()
+                    
+                    if analysis_success:
+                        print_typed("\nThe biological analyzer completes its work, providing")
+                        print_typed("unprecedented insight into the Thalassian life forms.")
+                        print_typed("\nThe analysis reveals that the creatures have undergone")
+                        print_typed("accelerated evolution due to exposure to the unique salt")
+                        print_typed("compounds found only on Thalassia 1. More concerning, there")
+                        print_typed("appears to be evidence of deliberate genetic modification")
+                        print_typed("in several specimens.")
+                        
+                        print_typed(f"\n{Font.SYSTEM('DOWNLOADING RESEARCH DATA...')}")
+                        time.sleep(1)
+                        
+                        print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Enhanced Thalassian Specimens')}")
+                        print_typed(f"{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Genetic Modification Records')}")
+                        print_typed(f"{Font.SUCCESS('BONUS:')} {Font.ITEM('Research Lab Access Card')}")
+                        
+                        # Add better rewards for completing the puzzle
+                        player.inventory["enhanced_thalassian_specimens"] = player.inventory.get("enhanced_thalassian_specimens", 0) + 1
+                        player.inventory["genetic_records"] = player.inventory.get("genetic_records", 0) + 1
+                        player.inventory["lab_access_card"] = player.inventory.get("lab_access_card", 0) + 1
+                        
+                        # Give player extra knowledge for story progression
+                        game_state["knows_about_genetic_modifications"] = True
+                    else:
+                        print_typed("\nDespite the failed analysis, you still manage to collect")
+                        print_typed("the specimen container for future study.")
+                        
+                        print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Thalassian Specimens')}")
+                        player.inventory["thalassian_specimens"] = player.inventory.get("thalassian_specimens", 0) + 1
+                else:
+                    print_typed("\nYou decide not to risk using the analyzer and simply")
+                    print_typed("collect the specimen container for study.")
+                    
+                    print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Thalassian Specimens')}")
+                    player.inventory["thalassian_specimens"] = player.inventory.get("thalassian_specimens", 0) + 1
+                
                 game_state["found_lab_specimens"] = True
             
             # Encounter chance
@@ -7949,12 +9356,13 @@ def explore_underwater_research_base(player, game_state):
             print_typed("research stations contain prototype weaponry in various states")
             print_typed("of assembly.")
             
-            # Sound weapon module discovery
+            # Sound weapon module discovery with calibration puzzle
             if not game_state.get("found_sonic_module", False):
                 print_typed("\nIn a sealed weapons locker, you discover an intact prototype")
                 print_typed("weapon module. The schematics indicate it's designed to emit")
                 print_typed("focused sonic pulses that can disrupt neural networks and")
-                print_typed("communication systems.")
+                print_typed("communication systems. However, the module appears to be in")
+                print_typed("standby mode and requires proper calibration before use.")
                 
                 print_typed(f"\n{Font.WEAPON('SONIC DISRUPTOR MODULE')}")
                 print_typed("Prototype weapon designed specifically to counter the Neurovore")
@@ -7962,25 +9370,256 @@ def explore_underwater_research_base(player, game_state):
                 print_typed("overwhelm the creatures' sensitive audio receptors while")
                 print_typed("disrupting their neural control capabilities.")
                 
-                # Add to weapon modules
-                weapon_modules = game_state.get("weapon_modules", {})
-                weapon_modules["sonic_disruptor"] = {
-                    "name": "Sonic Disruptor",
-                    "description": "Emits concentrated sound waves that disrupt neural networks",
-                    "damage": 30,
-                    "damage_type": "sonic",
-                    "equipped": False,
-                    "special_effect": "Disrupts neural interfaces, 80% effective against Neurovores"
-                }
+                print_typed(f"\n{Font.SYSTEM('WEAPON REQUIRES CALIBRATION')}")
+                print_typed("The weapon's frequency modulator needs to be calibrated to")
+                print_typed("the correct settings to effectively target Neurovore neural")
+                print_typed("pathways. Improper calibration could render the weapon ineffective")
+                print_typed("or potentially dangerous to the wielder.")
                 
-                game_state["weapon_modules"] = weapon_modules
-                game_state["found_sonic_module"] = True
+                print_typed("\nAttempt to calibrate the Sonic Disruptor? (y/n)")
+                calibrate_choice = input("\n> ").strip().lower()
                 
-                print_typed(f"\n{Font.SUCCESS('Sonic Disruptor Module added to your arsenal!')}")
-                print_typed(f"{Font.INFO('Use Weapon Module Management to equip it.')}")
-                
-                # Mark area as cleared from initial encounter
-                game_state["weapons_wing_cleared"] = True
+                if calibrate_choice == 'y':
+                    # Weapon Calibration Puzzle
+                    def weapon_calibration_puzzle():
+                        """
+                        A puzzle where the player must calibrate the sonic weapon 
+                        by adjusting multiple parameters to find the optimal configuration.
+                        """
+                        clear_screen()
+                        print_typed(f"\n{Font.HEADER('SONIC DISRUPTOR CALIBRATION SYSTEM')}")
+                        
+                        print(f"\n{Font.BOX_TOP}")
+                        print(f"{Font.BOX_SIDE} {Font.TITLE('SONIC WEAPON CALIBRATION'.center(46))} {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} Calibrate weapon systems to achieve optimal output    {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} by setting all parameters to their correct values.    {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} All three parameters must match target values.        {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_BOTTOM}")
+                        
+                        # Generate target values (1-10 range for each parameter)
+                        target_frequency = random.randint(4, 8)
+                        target_amplitude = random.randint(3, 7)
+                        target_modulation = random.randint(5, 9)
+                        
+                        # Starting values
+                        current_frequency = 5
+                        current_amplitude = 5
+                        current_modulation = 5
+                        
+                        attempts = 0
+                        max_attempts = 7
+                        
+                        while attempts < max_attempts:
+                            clear_screen()
+                            print_typed(f"\n{Font.HEADER('SONIC DISRUPTOR CALIBRATION')}")
+                            
+                            # Display attempt counter
+                            print(f"\n{Font.SUBTITLE('CALIBRATION ATTEMPT')} {attempts+1}/{max_attempts}")
+                            
+                            # Calculate weapon effectiveness based on parameter proximity
+                            freq_diff = abs(current_frequency - target_frequency)
+                            amp_diff = abs(current_amplitude - target_amplitude)
+                            mod_diff = abs(current_modulation - target_modulation)
+                            
+                            total_diff = freq_diff + amp_diff + mod_diff
+                            effectiveness = max(0, 100 - (total_diff * 10))
+                            
+                            # Visual representation of current settings
+                            print(f"\n{Font.SYSTEM('CURRENT CONFIGURATION:')}")
+                            
+                            # Frequency setting with visualization
+                            freq_bar = "▁" * (current_frequency - 1) + "▓" + "▁" * (10 - current_frequency)
+                            freq_hint = "↑" if current_frequency < target_frequency else "↓" if current_frequency > target_frequency else "✓"
+                            freq_color = Fore.GREEN if freq_diff == 0 else (Fore.YELLOW if freq_diff <= 2 else Fore.RED)
+                            
+                            print(f"1. FREQUENCY:  [{freq_color}{freq_bar}{Style.RESET_ALL}] {current_frequency}/10 {freq_color}{freq_hint}{Style.RESET_ALL}")
+                            
+                            # Amplitude setting with visualization
+                            amp_bar = "▁" * (current_amplitude - 1) + "▓" + "▁" * (10 - current_amplitude)
+                            amp_hint = "↑" if current_amplitude < target_amplitude else "↓" if current_amplitude > target_amplitude else "✓"
+                            amp_color = Fore.GREEN if amp_diff == 0 else (Fore.YELLOW if amp_diff <= 2 else Fore.RED)
+                            
+                            print(f"2. AMPLITUDE:  [{amp_color}{amp_bar}{Style.RESET_ALL}] {current_amplitude}/10 {amp_color}{amp_hint}{Style.RESET_ALL}")
+                            
+                            # Modulation setting with visualization
+                            mod_bar = "▁" * (current_modulation - 1) + "▓" + "▁" * (10 - current_modulation)
+                            mod_hint = "↑" if current_modulation < target_modulation else "↓" if current_modulation > target_modulation else "✓"
+                            mod_color = Fore.GREEN if mod_diff == 0 else (Fore.YELLOW if mod_diff <= 2 else Fore.RED)
+                            
+                            print(f"3. MODULATION: [{mod_color}{mod_bar}{Style.RESET_ALL}] {current_modulation}/10 {mod_color}{mod_hint}{Style.RESET_ALL}")
+                            
+                            # Display weapon effectiveness
+                            effect_color = Fore.GREEN if effectiveness >= 80 else (Fore.YELLOW if effectiveness >= 50 else Fore.RED)
+                            effect_bar = "█" * (effectiveness // 10) + "▒" * (10 - (effectiveness // 10))
+                            
+                            print(f"\n{Font.SYSTEM('WEAPON EFFECTIVENESS:')}")
+                            print(f"{effect_color}{effect_bar} {effectiveness}%{Style.RESET_ALL}")
+                            
+                            # Status messages based on effectiveness
+                            if effectiveness >= 90:
+                                print(f"{Font.SUCCESS('OPTIMAL CALIBRATION ACHIEVED')}")
+                            elif effectiveness >= 80:
+                                print(f"{Font.SUCCESS('NEAR-OPTIMAL CALIBRATION')}")
+                            elif effectiveness >= 50:
+                                print(f"{Font.WARNING('SUB-OPTIMAL CALIBRATION')}")
+                            else:
+                                print(f"{Font.WARNING('CRITICAL CALIBRATION FAILURE')}")
+                            
+                            # Neurovore response simulation based on current settings
+                            if effectiveness >= 90:
+                                print(f"\n{Font.SYSTEM('NEUROVORE RESPONSE SIMULATION:')}")
+                                print(f"{Fore.GREEN}Complete neural disruption. Multiple specimens incapacitated.{Style.RESET_ALL}")
+                            elif effectiveness >= 70:
+                                print(f"\n{Font.SYSTEM('NEUROVORE RESPONSE SIMULATION:')}")
+                                print(f"{Fore.YELLOW}Partial neural disruption. Specimen movement impaired.{Style.RESET_ALL}")
+                            elif effectiveness >= 40:
+                                print(f"\n{Font.SYSTEM('NEUROVORE RESPONSE SIMULATION:')}")
+                                print(f"{Fore.RED}Minimal effect. Specimens show temporary disorientation only.{Style.RESET_ALL}")
+                            
+                            # Check if all parameters match
+                            if freq_diff == 0 and amp_diff == 0 and mod_diff == 0:
+                                print_typed(f"\n{Font.SUCCESS('PERFECT CALIBRATION ACHIEVED!')}")
+                                
+                                # Animation for successful calibration
+                                print_typed(f"\n{Font.SYSTEM('INITIALIZING WEAPON SYSTEMS...')}")
+                                for i in range(5):
+                                    print(f"\r{Font.SYSTEM('Charging: ')} {Fore.CYAN}{'■' * i + '□' * (5-i)} {i*20}%{Style.RESET_ALL}", end="", flush=True)
+                                    time.sleep(0.3)
+                                print("\n")
+                                
+                                return True
+                            
+                            # Get player input for parameter adjustment
+                            print_typed(f"\n{Font.SYSTEM('Select parameter to adjust (1-3):')}")
+                            try:
+                                param_choice = int(input("> ").strip())
+                                
+                                if 1 <= param_choice <= 3:
+                                    print_typed(f"\n{Font.SYSTEM('Enter new value (1-10):')}")
+                                    new_value = int(input("> ").strip())
+                                    
+                                    if 1 <= new_value <= 10:
+                                        if param_choice == 1:
+                                            current_frequency = new_value
+                                        elif param_choice == 2:
+                                            current_amplitude = new_value
+                                        else:
+                                            current_modulation = new_value
+                                    else:
+                                        print_typed(f"\n{Font.WARNING('Invalid value. Range is 1-10.')}")
+                                        time.sleep(1)
+                                else:
+                                    print_typed(f"\n{Font.WARNING('Invalid selection. Choose 1-3.')}")
+                                    time.sleep(1)
+                            except ValueError:
+                                print_typed(f"\n{Font.WARNING('Please enter a valid number.')}")
+                                time.sleep(1)
+                            
+                            attempts += 1
+                            
+                            # Give a hint after several attempts
+                            if attempts == 4:
+                                # Find the parameter furthest from target
+                                diffs = [
+                                    ("frequency", freq_diff),
+                                    ("amplitude", amp_diff),
+                                    ("modulation", mod_diff)
+                                ]
+                                
+                                max_diff_param = max(diffs, key=lambda x: x[1])
+                                
+                                if max_diff_param[1] > 0:
+                                    print_typed(f"\n{Font.INFO('HINT: The')} {max_diff_param[0]} {Font.INFO('parameter requires significant adjustment.')}")
+                                    time.sleep(2)
+                        
+                        # If we get here, calibration failed
+                        print_typed(f"\n{Font.WARNING('MAXIMUM CALIBRATION ATTEMPTS REACHED')}")
+                        print_typed(f"\n{Font.SYSTEM('OPTIMAL SETTINGS WERE:')}")
+                        print(f"FREQUENCY: {target_frequency}/10")
+                        print(f"AMPLITUDE: {target_amplitude}/10")
+                        print(f"MODULATION: {target_modulation}/10")
+                        
+                        time.sleep(1)
+                        return False
+                    
+                    # Run the calibration puzzle
+                    calibration_success = weapon_calibration_puzzle()
+                    
+                    # Add to weapon modules based on calibration result
+                    weapon_modules = game_state.get("weapon_modules", {})
+                    
+                    if calibration_success:
+                        # Optimal calibration provides enhanced weapon
+                        print_typed("\nWith precise calibration, the Sonic Disruptor hums with")
+                        print_typed("power, its internal systems perfectly aligned to target")
+                        print_typed("the unique neural patterns of Thalassian lifeforms.")
+                        
+                        weapon_modules["sonic_disruptor"] = {
+                            "name": "Optimized Sonic Disruptor",
+                            "description": "Perfectly calibrated sonic weapon that targets Neurovore neural pathways",
+                            "damage": 40,  # Enhanced damage
+                            "damage_type": "sonic",
+                            "equipped": False,
+                            "special_effect": "Optimized neural disruption, 95% effective against Neurovores"
+                        }
+                        
+                        print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Optimized Sonic Disruptor Module')}")
+                        print_typed(f"{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Sonic Calibration Schematics')}")
+                        print_typed(f"{Font.SUCCESS('BONUS:')} {Font.ITEM('Neural Disruption Field Generator')}")
+                        
+                        # Add bonus items for perfect calibration
+                        player.inventory["calibration_schematics"] = player.inventory.get("calibration_schematics", 0) + 1
+                        player.inventory["disruption_field_generator"] = player.inventory.get("disruption_field_generator", 0) + 1
+                    else:
+                        # Partially functional weapon for failed calibration
+                        print_typed("\nDespite failing to achieve optimal calibration, you manage")
+                        print_typed("to configure the Sonic Disruptor into a functional state.")
+                        print_typed("It won't be as effective against the Neurovores, but should")
+                        print_typed("still provide some advantage in combat.")
+                        
+                        weapon_modules["sonic_disruptor"] = {
+                            "name": "Sonic Disruptor",
+                            "description": "Partially calibrated sonic weapon with reduced effectiveness",
+                            "damage": 25,  # Reduced damage
+                            "damage_type": "sonic",
+                            "equipped": False,
+                            "special_effect": "Basic neural disruption, 60% effective against Neurovores"
+                        }
+                        
+                        print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Sonic Disruptor Module')}")
+                        print_typed(f"{Font.INFO('Sub-optimal calibration detected. Weapon effectiveness reduced.')}")
+                    
+                    game_state["weapon_modules"] = weapon_modules
+                    game_state["found_sonic_module"] = True
+                    
+                    print_typed(f"\n{Font.INFO('Use Weapon Module Management to equip it.')}")
+                    
+                    # Mark area as cleared
+                    game_state["weapons_wing_cleared"] = True
+                else:
+                    # Player chose not to calibrate
+                    print_typed("\nYou decide to take the weapon module as-is, planning to")
+                    print_typed("calibrate it later when you have more time and resources.")
+                    
+                    # Add basic uncalibrated weapon
+                    weapon_modules = game_state.get("weapon_modules", {})
+                    weapon_modules["sonic_disruptor"] = {
+                        "name": "Uncalibrated Sonic Disruptor",
+                        "description": "Uncalibrated sonic weapon with minimal effectiveness",
+                        "damage": 20,
+                        "damage_type": "sonic",
+                        "equipped": False,
+                        "special_effect": "Minimal neural disruption, 40% effective against Neurovores"
+                    }
+                    
+                    game_state["weapon_modules"] = weapon_modules
+                    game_state["found_sonic_module"] = True
+                    
+                    print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Uncalibrated Sonic Disruptor Module')}")
+                    print_typed(f"{Font.WARNING('Weapon requires calibration for optimal performance.')}")
+                    print_typed(f"{Font.INFO('Use Weapon Module Management to equip it.')}")
+                    
+                    game_state["weapons_wing_cleared"] = True
             
             # Dangerous encounter if not yet cleared
             elif not game_state.get("weapons_wing_cleared", False):
@@ -8057,28 +9696,288 @@ def explore_underwater_research_base(player, game_state):
                 print_typed(f"\n{Font.SUCCESS('Research data downloaded to your database.')}")
                 game_state["found_research_data"] = True
             
-            # Emergency beacon
+            # Distress Signal Detection - new puzzle addition
+            if not game_state.get("found_distress_signal", False):
+                print_typed("\nAs you navigate through the damaged communications equipment,")
+                print_typed("your scanner detects a weak signal being received on an emergency")
+                print_typed("frequency. The signal is heavily corrupted by interference and")
+                print_typed("degradation of the facility's systems.")
+                
+                # Visual effect of signal detection
+                print("\n")
+                for i in range(3):
+                    print(f"\r{Font.SYSTEM('SIGNAL DETECTED:')} {Fore.CYAN}{'▓▒░' * i}{Style.RESET_ALL}", end="", flush=True)
+                    # Audio effect replaced with visual pause
+                    time.sleep(0.5)
+                print("\n")
+                
+                print_typed(f"\n{Font.SYSTEM('SIGNAL ANALYSIS:')}")
+                print_typed(f"{Font.INFO('Origin: Unknown surface location on Thalassia 1')}")
+                print_typed(f"{Font.INFO('Type: Emergency distress beacon')}")
+                print_typed(f"{Font.INFO('Status: Degraded - 87% data corruption')}")
+                print_typed(f"{Font.INFO('Time since broadcast: Approximately 47 days')}")
+                
+                print_typed("\nAttempt to decrypt and reconstruct the distress signal? (y/n)")
+                decrypt_choice = input("\n> ").strip().lower()
+                
+                if decrypt_choice == 'y':
+                    # Signal Decryption Puzzle
+                    def signal_reconstruction_puzzle():
+                        """
+                        A puzzle where the player must reconstruct a corrupted distress signal
+                        by correctly identifying signal patterns and filtering out noise.
+                        """
+                        clear_screen()
+                        print_typed(f"\n{Font.HEADER('SIGNAL RECONSTRUCTION INTERFACE')}")
+                        
+                        print(f"\n{Font.BOX_TOP}")
+                        print(f"{Font.BOX_SIDE} {Font.TITLE('DISTRESS SIGNAL RECONSTRUCTION'.center(46))} {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} Reconstruct the corrupted signal by selecting the      {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} correct signal pattern from noise. Find the pattern    {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_SIDE} that appears most frequently in each segment.          {Font.BOX_SIDE}")
+                        print(f"{Font.BOX_BOTTOM}")
+                        
+                        # Puzzle setup - need to complete 3 segments
+                        segments_completed = 0
+                        max_segments = 3
+                        max_attempts_per_segment = 3
+                        
+                        while segments_completed < max_segments:
+                            # Generate signal patterns for this segment
+                            correct_pattern = random.choice(["▁▂▃▄▅▄▃▂▁", "▂▁▃▂▅▂▃▁▂", "▃▂▁▅▄▅▁▂▃"])
+                            noise_patterns = [
+                                "▅▂▁▃▂▄▁▅▃", 
+                                "▁▅▂▃▁▂▅▃▄", 
+                                "▄▃▁▂▅▃▂▁▄"
+                            ]
+                            
+                            # Make sure correct pattern is not in noise patterns
+                            while correct_pattern in noise_patterns:
+                                correct_pattern = random.choice(["▁▂▃▄▅▄▃▂▁", "▂▁▃▂▅▂▃▁▂", "▃▂▁▅▄▅▁▂▃"])
+                            
+                            # Display segment information
+                            print_typed(f"\n{Font.SUBTITLE(f'SIGNAL SEGMENT {segments_completed+1}/{max_segments}')}")
+                            print_typed(f"{Font.INFO('Attempts remaining:')} {max_attempts_per_segment}")
+                            
+                            # Generate signal display with correct pattern repeated but hidden among noise
+                            signal_display = []
+                            correct_positions = []
+                            
+                            # Create a signal with the correct pattern appearing multiple times
+                            for i in range(10):
+                                if random.random() < 0.4:  # 40% chance of correct pattern
+                                    signal_display.append((correct_pattern, True))
+                                    correct_positions.append(i)
+                                else:
+                                    signal_display.append((random.choice(noise_patterns), False))
+                            
+                            # Display the combined signal
+                            print_typed(f"\n{Font.SYSTEM('ANALYZING SIGNAL SEGMENT:')}")
+                            print("\n" + "-" * 80)
+                            for i, (pattern, _) in enumerate(signal_display):
+                                print(f"{i+1}: {Fore.CYAN}{pattern}{Style.RESET_ALL}")
+                            print("-" * 80)
+                            
+                            print_typed(f"\n{Font.SYSTEM('Which pattern represents the true signal? (1-10)')}")
+                            print_typed(f"{Font.INFO('The true signal appears multiple times in the segment.')}")
+                            
+                            # Player gets multiple attempts per segment
+                            segment_success = False
+                            attempts = 0
+                            
+                            while attempts < max_attempts_per_segment and not segment_success:
+                                try:
+                                    choice = int(input("\n> ").strip())
+                                    if 1 <= choice <= 10:
+                                        if choice-1 in correct_positions:
+                                            print_typed(f"\n{Font.SUCCESS('CORRECT PATTERN IDENTIFIED!')}")
+                                            
+                                            # Visual confirmation
+                                            for i, (pattern, is_correct) in enumerate(signal_display):
+                                                if i+1 == choice or is_correct:
+                                                    print(f"{i+1}: {Fore.GREEN}{pattern}{Style.RESET_ALL} ✓")
+                                                else:
+                                                    print(f"{i+1}: {Fore.RED}{pattern}{Style.RESET_ALL}")
+                                            
+                                            segment_success = True
+                                        else:
+                                            attempts += 1
+                                            if attempts < max_attempts_per_segment:
+                                                print_typed(f"\n{Font.WARNING('INCORRECT PATTERN. Attempts remaining:')} {max_attempts_per_segment - attempts}")
+                                                
+                                                # Provide hint after failed attempts
+                                                if attempts == 2:
+                                                    hint_position = random.choice(correct_positions) + 1
+                                                    print_typed(f"\n{Font.INFO('HINT: One of the true signal patterns appears at position')} {hint_position}")
+                                            else:
+                                                print_typed(f"\n{Font.WARNING('SEGMENT RECONSTRUCTION FAILED.')}")
+                                                
+                                                # Show correct patterns
+                                                print_typed(f"\n{Font.SYSTEM('TRUE SIGNAL PATTERNS:')}")
+                                                for i, (pattern, is_correct) in enumerate(signal_display):
+                                                    if is_correct:
+                                                        print(f"{i+1}: {Fore.GREEN}{pattern}{Style.RESET_ALL} ✓")
+                                    else:
+                                        print_typed(f"\n{Font.WARNING('Invalid selection. Choose 1-10.')}")
+                                except ValueError:
+                                    print_typed(f"\n{Font.WARNING('Please enter a valid number.')}")
+                            
+                            # After segment attempt is complete
+                            if segment_success:
+                                segments_completed += 1
+                                if segments_completed < max_segments:
+                                    print_typed(f"\n{Font.SUCCESS(f'SEGMENT {segments_completed}/{max_segments} RECONSTRUCTED!')}")
+                                    print_typed(f"\n{Font.SYSTEM('PROCEEDING TO NEXT SEGMENT...')}")
+                                    time.sleep(1.5)
+                                    clear_screen()
+                                    print_typed(f"\n{Font.HEADER('SIGNAL RECONSTRUCTION INTERFACE')}")
+                            else:
+                                # Failed this segment
+                                print_typed(f"\n{Font.WARNING('SEGMENT RECONSTRUCTION FAILED. ABORTING PROCESS.')}")
+                                return False
+                        
+                        # If we got here, all segments completed successfully
+                        print_typed(f"\n{Font.SUCCESS('ALL SEGMENTS RECONSTRUCTED SUCCESSFULLY!')}")
+                        print_typed(f"\n{Font.SYSTEM('PROCESSING COMPLETE SIGNAL...')}")
+                        
+                        # Animation of signal processing
+                        for i in range(10):
+                            progress = "█" * i + "▒" * (10-i)
+                            print(f"\r{Font.INFO('Processing:')} {Fore.CYAN}{progress} {i*10}%{Style.RESET_ALL}", end="", flush=True)
+                            time.sleep(0.2)
+                        print("\n")
+                        
+                        return True
+                    
+                    # Run the puzzle
+                    reconstruction_success = signal_reconstruction_puzzle()
+                    
+                    if reconstruction_success:
+                        # Display reconstructed message dramatically
+                        clear_screen()
+                        print_typed(f"\n{Font.HEADER('DISTRESS SIGNAL RECONSTRUCTED')}")
+                        time.sleep(0.7)
+                        
+                        print_typed(f"\n{Font.SYSTEM('PLAYBACK INITIATED:')}")
+                        time.sleep(1)
+                        
+                        # Play back the message with special formatting
+                        print_typed(f"\n{Fore.CYAN}This is Dr. Elena Markov, lead researcher of Thalassia Station Alpha.{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(0.5)
+                        print_typed(f"{Fore.CYAN}All survivors have been evacuated to the surface outpost following{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(0.5)
+                        print_typed(f"{Fore.CYAN}catastrophic containment failure in the underwater research facility.{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(0.5)
+                        print_typed(f"{Fore.CYAN}The creatures have followed us to the surface. Our security measures{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(0.5)
+                        print_typed(f"{Fore.CYAN}are failing. We've initiated the facility self-destruct sequence,{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(0.5)
+                        print_typed(f"{Fore.CYAN}but I fear it won't be enough to contain them...{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(0.8)
+                        print_typed(f"{Fore.CYAN}There's something here we didn't anticipate... it's intelligent...{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(0.5)
+                        print_typed(f"{Fore.CYAN}and it's controlling them all. May God help us... and forgive us.{Style.RESET_ALL}", delay=0.04)
+                        time.sleep(1)
+                        
+                        print_typed(f"\n{Font.SYSTEM('COORDINATES EMBEDDED IN SIGNAL')}")
+                        time.sleep(0.5)
+                        
+                        # Rewards for completing the puzzle
+                        print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Surface Outpost Coordinates')}")
+                        print_typed(f"{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Dr. Markov Message')}")
+                        print_typed(f"{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Facility Self-Destruct Codes')}")
+                        
+                        player.inventory["outpost_coordinates"] = player.inventory.get("outpost_coordinates", 0) + 1
+                        player.inventory["markov_message"] = player.inventory.get("markov_message", 0) + 1
+                        player.inventory["destruct_codes"] = player.inventory.get("destruct_codes", 0) + 1
+                        
+                        # Add important story flags
+                        game_state["found_distress_signal"] = True
+                        game_state["knows_surface_outpost_location"] = True
+                        game_state["knows_about_intelligent_entity"] = True
+                    else:
+                        # Partial reconstruction result
+                        print_typed("\nDespite your best efforts, you could only partially reconstruct")
+                        print_typed("the distress signal. The message remains largely fragmented,")
+                        print_typed("but you manage to extract some critical information:")
+                        
+                        print_typed(f"\n{Font.SYSTEM('...this is Dr. Elena Markov... Thalassia Station...')}")
+                        print_typed(f"{Font.SYSTEM('...evacuated to surface outpost... containment failure...')}")
+                        print_typed(f"{Font.SYSTEM('...creatures followed... security failing...')}")
+                        
+                        print_typed("\nThe coordinates are too corrupted to pinpoint the exact location")
+                        print_typed("of the surface outpost, but you can determine its approximate area.")
+                        
+                        print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Partial Outpost Coordinates')}")
+                        print_typed(f"{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Fragmented Distress Message')}")
+                        
+                        player.inventory["partial_coordinates"] = player.inventory.get("partial_coordinates", 0) + 1
+                        player.inventory["fragmented_message"] = player.inventory.get("fragmented_message", 0) + 1
+                        
+                        # Add basic story flags
+                        game_state["found_distress_signal"] = True
+                        game_state["has_approximate_outpost_location"] = True
+                else:
+                    print_typed("\nYou decide not to attempt signal reconstruction for now,")
+                    print_typed("noting its location in your database for potential future analysis.")
+                    
+                    # Player still learns something
+                    print_typed("\nBefore moving on, you notice the signal appears to originate")
+                    print_typed("from somewhere on the planet's surface - possibly a secondary")
+                    print_typed("facility or outpost.")
+                    
+                    game_state["knows_about_surface_outpost"] = True
+            
+            # Emergency beacon repair - enhanced with visual feedback
             if "damaged_beacon" in player.inventory and not game_state.get("repaired_beacon", False):
                 print_typed("\nYou remember the damaged emergency beacon you found earlier.")
                 print_typed("Using the communications equipment here, you might be able")
                 print_typed("to repair it.")
                 
                 print_typed("\nAttempt to repair the emergency beacon? (y/n)")
-                repair_choice = input().strip().lower()
+                repair_choice = input("\n> ").strip().lower()
                 
                 if repair_choice == 'y' or repair_choice == 'yes':
                     print_typed("\nYou carefully disassemble the damaged beacon and integrate")
                     print_typed("components from the communication center's equipment.")
                     
-                    # Skill check
+                    # Visual repair process
+                    print_typed(f"\n{Font.SYSTEM('BEACON REPAIR PROCESS:')}")
+                    repair_steps = [
+                        "Diagnosing circuit damage...",
+                        "Replacing broken components...",
+                        "Recalibrating transmission frequency...",
+                        "Testing power connection...",
+                        "Verifying signal output..."
+                    ]
+                    
+                    for step in repair_steps:
+                        print(f"\r{Font.INFO(step)}", end="", flush=True)
+                        time.sleep(0.8)
+                        print(f" {Fore.GREEN}✓{Style.RESET_ALL}")
+                    
+                    # Skill check with better visual feedback
                     success_chance = 0.7  # 70% base chance
                     if "energy_modulator" in player.inventory:
                         success_chance += 0.2  # +20% with energy modulator
                         print_typed("\nThe energy modulator you found proves invaluable for")
                         print_typed("calibrating the beacon's power systems.")
+                        print_typed(f"\n{Font.SUCCESS('Repair chance increased!')} ({int(success_chance*100)}%)")
+                    
+                    print_typed(f"\n{Font.SYSTEM('FINAL DIAGNOSTICS RUNNING...')}")
+                    time.sleep(1)
                     
                     if random.random() < success_chance:
-                        print_typed(f"\n{Font.SUCCESS('Repair successful! The emergency beacon is now functional.')}")
+                        print_typed(f"\n{Font.SUCCESS('REPAIR SUCCESSFUL!')}")
+                        
+                        # Animated success sequence
+                        for i in range(3):
+                            print(f"\r{Font.SYSTEM('Beacon Status: ')} {Fore.GREEN}{'■' * i}{Style.RESET_ALL}", end="", flush=True)
+                            time.sleep(0.3)
+                            print(f"\r{Font.SYSTEM('Beacon Status: ')} {Fore.GREEN}{'□' * i}{Style.RESET_ALL}", end="", flush=True)
+                            time.sleep(0.3)
+                        print(f"\r{Font.SYSTEM('Beacon Status: ')} {Fore.GREEN}OPERATIONAL{Style.RESET_ALL}")
+                        
                         player.inventory.pop("damaged_beacon", None)
                         player.inventory["emergency_beacon"] = player.inventory.get("emergency_beacon", 0) + 1
                         game_state["repaired_beacon"] = True
@@ -8087,9 +9986,27 @@ def explore_underwater_research_base(player, game_state):
                         print_typed("\nWith this beacon, you could potentially signal any nearby")
                         print_typed("human vessels or installations. This might be your ticket")
                         print_typed("off Thalassia 1 if your ship proves unrepairable.")
+                        
+                        print_typed(f"\n{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Functional Emergency Beacon')}")
+                        print_typed(f"{Font.SUCCESS('ACQUIRED:')} {Font.ITEM('Emergency Broadcast Protocols')}")
+                        
+                        # Bonus for having the energy modulator
+                        if "energy_modulator" in player.inventory:
+                            print_typed("\nThanks to the energy modulator, you were able to enhance")
+                            print_typed("the beacon's signal strength beyond its original specifications.")
+                            print_typed(f"\n{Font.SUCCESS('BONUS:')} {Font.ITEM('Enhanced Signal Range')}")
+                            game_state["enhanced_beacon"] = True
                     else:
-                        print_typed(f"\n{Font.WARNING('Repair attempt failed. The beacon is too damaged.')}")
-                        print_typed("\nYou might need additional components or technical data.")
+                        print_typed(f"\n{Font.WARNING('REPAIR ATTEMPT FAILED')}")
+                        
+                        # Visual failure sequence
+                        print(f"\r{Font.SYSTEM('Beacon Status: ')} {Fore.RED}ERROR{Style.RESET_ALL}")
+                        time.sleep(0.5)
+                        print(f"\r{Font.SYSTEM('Diagnostics: ')} {Fore.RED}Critical component failure{Style.RESET_ALL}")
+                        
+                        print_typed("\nThe beacon's primary transmission circuit is beyond repair.")
+                        print_typed("You might need additional components or technical data to")
+                        print_typed("successfully restore functionality.")
             
             # Wait for user to continue
             input("\nPress Enter to return to the main area...")
@@ -9263,11 +11180,36 @@ def start_chapter_two_preview():
 
 
 def combat(player, enemy):
-    """Conduct a battle between player and enemy with sci-fi flavor"""
-    # Display initial stats
+    """Conduct a battle between player and enemy with sci-fi flavor, integrating player level"""
+    # Get player level for combat calculations
+    player_level = player.level if hasattr(player, 'level') else 1
+    if 'game_state' in globals() and globals()['game_state'] is not None:
+        player_level = globals()['game_state'].get('player_level', player_level)
+    
+    # Apply level-based combat bonuses
+    level_attack_bonus = (player_level - 1) * 1.5  # +1.5 attack per level
+    level_defense_bonus = (player_level - 1) * 0.8  # +0.8 defense per level
+    
+    # Apply temporary combat bonuses for this battle only
+    original_attack = player.attack
+    original_defense = player.defense
+    
+    player.attack += level_attack_bonus
+    player.defense += level_defense_bonus
+    
+    # Display initial stats with level information
+    print(Font.BOX_TOP)
+    print(f"{Font.BOX_SIDE} {Font.IMPORTANT(f'LEVEL {player_level} COMBAT INITIATED').center(48)} {Font.BOX_SIDE}")
+    print(Font.BOX_BOTTOM)
     display_stats(player, enemy)
     
-    # Combat loop
+    # If player has level-specific abilities, highlight them
+    if player_level >= 3:
+        print_typed(f"{Font.INFO('Level 3+ Neural Link active: Tactical analysis available')}")
+    if player_level >= 5:
+        print_typed(f"{Font.INFO('Level 5+ Combat Algorithms active: Enhanced damage calculation')}")
+    
+    # Combat loop with enhanced state tracking
     round_number = 1
     combat_state = {
         "round": 1,
@@ -9277,7 +11219,10 @@ def combat(player, enemy):
         "last_enemy_damage": 0,  # Track for time rewind ability
         "enemy_next_attack": None,  # Track for glimpse ability
         "extra_action": False,  # Track for time acceleration ability
-        "time_stopped": False   # Track for time stop ability
+        "time_stopped": False,   # Track for time stop ability
+        "player_level": player_level,  # Track player level for in-combat bonuses
+        "critical_chance": min(5 + (player_level * 1.5), 25),  # Level-based crit chance (max 25%)
+        "critical_damage": 1.5 + (player_level * 0.1)  # Level-based crit damage multiplier
     }
     
     while player.is_alive() and enemy.is_alive():
@@ -9325,8 +11270,21 @@ def combat(player, enemy):
         combat_state["round"] = round_number
     
     # Combat outcome
+    # Reset player's temporary combat stats before exiting combat
+    player.attack = original_attack
+    player.defense = original_defense
+    
     if not enemy.is_alive():
         print_typed(f"\n{Font.SUCCESS('Enemy defeated!')}")
+        
+        # Apply level-specific victory bonuses
+        if player_level >= 3:
+            # Level 3+ players get a small health recovery after combat
+            health_recovery = int(player.max_health * 0.1)  # 10% health recovery
+            player.health = min(player.max_health, player.health + health_recovery)
+            print_typed(f"{Font.SUCCESS(f'Neural Link regenerates {health_recovery} health!')}")
+        
+        # Get loot with enhanced rewards based on player level
         get_loot(player, enemy)
         update_quest_progress(player, enemy)
         return True
