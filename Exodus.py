@@ -188,7 +188,7 @@ class Font:
 
 # Save game functionality
 def save_game(slot_number=1):
-    """Save current game state to a file with enhanced data storage"""
+    """Save current game state to a file with comprehensive data storage"""
     
     # Ensure essential game state elements exist
     if "protagonist" not in game_state:
@@ -196,14 +196,24 @@ def save_game(slot_number=1):
             "name": "Dr. Xeno Valari",  # Default protagonist
             "gender": "female",
             "specialty": "quantum physics",
-            "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21."
+            "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21.",
+            "age": 29,
+            "origin": "New Tokyo Arcology",
+            "personal_log_entries": []
         }
     
     if "companions" not in game_state:
         game_state["companions"] = []
     
+    # Ensure quest data is initialized
+    if "available_quests" not in game_state:
+        game_state["available_quests"] = {}
+    
+    if "completed_quests" not in game_state:
+        game_state["completed_quests"] = []
+    
+    # Initialize exploration tracking if player has reached Chapter 4
     if "h79760_exploration" not in game_state and game_state.get("chapter_progress", 0) >= 4:
-        # Initialize exploration tracking if player has reached that chapter
         game_state["h79760_exploration"] = {
             "alpha_star": False,
             "beta_star": False,
@@ -215,15 +225,71 @@ def save_game(slot_number=1):
             "locations_visited": 0
         }
     
-    # Create enhanced save data
+    # Ensure cosmic collision quest data is stored
+    if "cosmic_collision" not in game_state:
+        game_state["cosmic_collision"] = {
+            "started": False,
+            "completed": False,
+            "current_step": 0,
+            "systems_stabilized": 0,
+            "planets_explored": [],
+            "has_divergence_cannon": False
+        }
+    
+    # Initialize visited locations tracking
+    if "visited_locations" not in game_state:
+        game_state["visited_locations"] = {}
+    
+    # Initialize inventory system
+    if "inventory" not in game_state:
+        game_state["inventory"] = {
+            "weapons": [],
+            "armor": [],
+            "consumables": [],
+            "key_items": [],
+            "artifacts": []
+        }
+    
+    # Initialize player skills and abilities
+    if "skills" not in game_state:
+        game_state["skills"] = {
+            "hacking": 1,
+            "engineering": 1,
+            "quantum_theory": 1,
+            "xenobiology": 1,
+            "persuasion": 1,
+            "survival": 1
+        }
+    
+    # Ensure game settings are saved
+    if "settings" not in game_state:
+        game_state["settings"] = {
+            "text_speed": "normal",
+            "color_scheme": "default",
+            "difficulty": "normal",
+            "tutorial_enabled": True,
+            "auto_save": True
+        }
+    
+    # Create comprehensive save data
     save_data = {
         "game_state": game_state,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "character_info": {
             "name": game_state.get("protagonist", {}).get("name", "Unknown"),
+            "gender": game_state.get("protagonist", {}).get("gender", "female"),
             "level": game_state.get("player_level", 1),
+            "experience": game_state.get("player_experience", 0),
             "chapter": game_state.get("current_chapter", "Chapter 1: Earth Reclamation"),
-            "version": "2.0"  # Game version for compatibility checks
+            "location": game_state.get("current_location", "Cryogenic Facility"),
+            "playtime": game_state.get("playtime", 0),
+            "version": VERSION  # Use actual game version for compatibility checks
+        },
+        "technical_info": {
+            "save_version": "3.0",
+            "game_build": BUILD_NUMBER,
+            "save_count": game_state.get("save_count", 0) + 1,
+            "checksum": hash(str(game_state))  # Simple integrity check
         }
     }
 
@@ -244,7 +310,7 @@ def save_game(slot_number=1):
         return False
 
 def load_game(slot_number=1):
-    """Load game state from a save file with version compatibility check"""
+    """Load game state from a save file with enhanced version compatibility and data validation"""
     save_file = f"saves/save_slot_{slot_number}.dat"
 
     if not os.path.exists(save_file):
@@ -257,41 +323,176 @@ def load_game(slot_number=1):
 
         # Check for version compatibility
         save_version = save_data.get("character_info", {}).get("version", "1.0")
+        technical_info = save_data.get("technical_info", {})
+        save_format_version = technical_info.get("save_version", "1.0")
         
-        if save_version < "2.0":
-            print(Font.WARNING("\nThis is an older save file. Updating to new format..."))
+        # Handle version update
+        needs_upgrade = save_version < VERSION or save_format_version < "3.0"
+        if needs_upgrade:
+            print(Font.WARNING(f"\nThis is an older save file (version {save_version}). Updating to new format..."))
+            
             # Add any missing data structures the new version needs
             if "protagonist" not in save_data["game_state"]:
                 save_data["game_state"]["protagonist"] = {
                     "name": "Dr. Xeno Valari",  # Default to original protagonist
                     "gender": "female",
                     "specialty": "quantum physics",
-                    "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21."
+                    "background": "You were a prodigy in quantum computing, joining the Century Sleepers program at 21.",
+                    "age": 29,
+                    "origin": "New Tokyo Arcology",
+                    "personal_log_entries": []
                 }
+            elif "age" not in save_data["game_state"]["protagonist"]:
+                # Update existing protagonist with new fields
+                save_data["game_state"]["protagonist"].update({
+                    "age": 29,
+                    "origin": "New Tokyo Arcology",
+                    "personal_log_entries": []
+                })
             
+            # Initialize additional data structures if missing
             if "companions" not in save_data["game_state"]:
                 save_data["game_state"]["companions"] = []
+                
+            # Initialize quest data
+            if "available_quests" not in save_data["game_state"]:
+                save_data["game_state"]["available_quests"] = {}
+            
+            if "completed_quests" not in save_data["game_state"]:
+                save_data["game_state"]["completed_quests"] = []
+            
+            # Initialize Cosmic Collision quest data
+            if "cosmic_collision" not in save_data["game_state"]:
+                save_data["game_state"]["cosmic_collision"] = {
+                    "started": False,
+                    "completed": False,
+                    "current_step": 0,
+                    "systems_stabilized": 0,
+                    "planets_explored": [],
+                    "has_divergence_cannon": False
+                }
+                
+            # Initialize visited locations tracking
+            if "visited_locations" not in save_data["game_state"]:
+                save_data["game_state"]["visited_locations"] = {}
+                
+            # Initialize inventory system
+            if "inventory" not in save_data["game_state"]:
+                save_data["game_state"]["inventory"] = {
+                    "weapons": [],
+                    "armor": [],
+                    "consumables": [],
+                    "key_items": [],
+                    "artifacts": []
+                }
+                
+            # Initialize skills and abilities
+            if "skills" not in save_data["game_state"]:
+                save_data["game_state"]["skills"] = {
+                    "hacking": 1,
+                    "engineering": 1,
+                    "quantum_theory": 1,
+                    "xenobiology": 1,
+                    "persuasion": 1,
+                    "survival": 1
+                }
+                
+            # Initialize game settings
+            if "settings" not in save_data["game_state"]:
+                save_data["game_state"]["settings"] = {
+                    "text_speed": "normal",
+                    "color_scheme": "default",
+                    "difficulty": "normal",
+                    "tutorial_enabled": True,
+                    "auto_save": True
+                }
+                
+            print(Font.SUCCESS("Save data successfully upgraded to latest format!"))
 
         # Update the global game state
-        for key, value in save_data["game_state"].items():
-            game_state[key] = value
+        global game_state
+        game_state = save_data["game_state"]
+        
+        # Track loading in game state
+        game_state["last_loaded"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        game_state["load_count"] = game_state.get("load_count", 0) + 1
 
+        # Display enhanced save info
         print(Font.SUCCESS(f"\nGame loaded successfully from slot {slot_number}!"))
         print(Font.INFO(f"Save timestamp: {save_data['timestamp']}"))
         
         # Display character info
         protagonist = game_state.get("protagonist", {})
-        print(Font.INFO(f"Character: {protagonist.get('name', 'Unknown')} | Specialty: {protagonist.get('specialty', 'Unknown')}"))
+        gender = protagonist.get("gender", "female")
+        name = protagonist.get("name", "Unknown")
+        specialty = protagonist.get("specialty", "Unknown")
         
-        # Display companions if any
-        companions = game_state.get("companions", [])
-        if companions:
-            companions_list = ", ".join([c.get("name", "Unknown") for c in companions])
-            print(Font.INFO(f"Companions: {companions_list}"))
+        print(Font.INFO(f"Character: {name} ({gender}) | Specialty: {specialty}"))
         
+        # Display progress info
+        level = game_state.get("player_level", 1)
+        exp = game_state.get("player_experience", 0)
+        chapter = game_state.get("current_chapter", "Chapter 1")
+        location = game_state.get("current_location", "Unknown")
+        
+        print(Font.INFO(f"Level: {level} | XP: {exp} | Chapter: {chapter}"))
+        print(Font.INFO(f"Current location: {location}"))
+        
+        # Display quest information if available
+        active_quests = len([q for q in game_state.get("available_quests", {}).values() 
+                           if q.get("in_progress", False) and not q.get("completed", False)])
+        completed_quests = len(game_state.get("completed_quests", []))
+        
+        if active_quests > 0 or completed_quests > 0:
+            print(Font.INFO(f"Active Quests: {active_quests} | Completed Quests: {completed_quests}"))
+        
+        # Display Cosmic Collision quest status if started
+        cosmic_data = game_state.get("cosmic_collision", {})
+        if cosmic_data.get("started", False):
+            if cosmic_data.get("completed", False):
+                print(Font.SUCCESS("Cosmic Collision Quest: COMPLETED"))
+            else:
+                step = cosmic_data.get("current_step", 0)
+                print(Font.INFO(f"Cosmic Collision Quest: Active (Step {step}/5)"))
+        
+        # Auto-save with the updated format if needed
+        if needs_upgrade:
+            # Wait a moment before saving to ensure player sees the upgrade message
+            time.sleep(1)
+            save_game(slot_number)
+            print(Font.INFO("Auto-saved game with updated format."))
+            
         return True
+        
     except Exception as e:
         print(Font.WARNING(f"\nError loading game: {e}"))
+        
+        # Create a backup of corrupted save if it exists
+        if os.path.exists(save_file):
+            try:
+                backup_file = f"saves/backup_slot_{slot_number}_{int(time.time())}.dat"
+                import shutil
+                shutil.copy2(save_file, backup_file)
+                print(Font.INFO(f"Created backup of potentially corrupted save: {backup_file}"))
+            except:
+                pass
+        
+        # Initialize minimal game state to prevent crashes
+        global game_state
+        if 'game_state' not in globals() or not isinstance(game_state, dict):
+            game_state = {
+                "player_health": 100,
+                "player_max_health": 100,
+                "player_level": 1,
+                "recovery_mode": True,
+                "protagonist": {
+                    "name": "Dr. Xeno Valari",
+                    "gender": "female"
+                }
+            }
+            print(Font.WARNING("Initialized recovery game state to prevent crashes."))
+            print(Font.INFO("Please start a new game or try loading a different save."))
+            
         return False
 
 def manage_save_slots():
