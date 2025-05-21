@@ -1579,6 +1579,225 @@ PETS = {
 # Global Leaderboard
 LEADERBOARD = {}
 
+# NPC Definitions
+NPCS = {
+    "Ringmaster Rubio 🎪": {
+        "description": "A flamboyant man with a bright red coat and top hat. His mustache is perfectly waxed and curled at the ends.",
+        "dialogue": [
+            "Welcome to the Greatest Carnival on Earth!",
+            "Step right up and prepare to be amazed!",
+            "Every attraction is more spectacular than the last!",
+            "My carnival is a place of wonder and excitement!"
+        ],
+        "location": "Main Entrance",
+        "missions": ["welcome_tour", "special_announcement"],
+        "quests": ["ringmaster_challenge"],
+        "trades": [
+            {"give": "Golden Ticket", "receive": "VIP Backstage Pass"},
+            {"give": "Carnival Program", "receive": 50, "tickets": True}
+        ],
+        "special_bonus": {"type": "ticket_multiplier", "value": 1.5}
+    },
+    "Professor Puzzleworth 🧙‍♂️": {
+        "description": "An elderly man with wild white hair and spectacles. He's wearing a tweed jacket covered in mysterious symbols.",
+        "dialogue": [
+            "Ah, a new mind to challenge! How delightful!",
+            "The carnival may seem like frivolity, but there are deep mathematical principles at work here!",
+            "Did you know that probability is the key to understanding many games?",
+            "I've been studying games of chance for over 40 years. The patterns are fascinating!"
+        ],
+        "location": "Game Alley",
+        "missions": ["puzzle_challenge"],
+        "quests": ["mathematical_mystery"],
+        "trades": [
+            {"give": "Math Textbook", "receive": "Probability Calculator"},
+            {"give": "Lucky Coin", "receive": "Secret Game Strategy"}
+        ],
+        "special_bonus": {"type": "puzzle_hint", "value": "Always available"}
+    },
+    "Lucky Louie 🍀": {
+        "description": "A cheery man dressed entirely in green with a four-leaf clover pinned to his lapel. He seems to radiate good fortune.",
+        "dialogue": [
+            "Feeling lucky today, friend?",
+            "Fortune favors the bold! Take a chance!",
+            "I've won the grand prize three times... just lucky, I guess!",
+            "There's no skill quite like good luck!"
+        ],
+        "location": "Gambling Corner",
+        "missions": ["lucky_streak"],
+        "quests": ["fortune_finder"],
+        "trades": [
+            {"give": "Rabbit's Foot", "receive": "Lucky Charm Bracelet"},
+            {"give": "Unlucky Penny", "receive": "Golden Horseshoe"}
+        ],
+        "special_bonus": {"type": "gambling_luck", "value": 1.2}
+    },
+    "Countess VIP 👑": {
+        "description": "An elegant woman with perfectly styled hair and designer clothes. She wears white gloves and carries a small dog in her purse.",
+        "dialogue": [
+            "Darling, you simply must try the VIP experience!",
+            "I've been to carnivals all over the world, but this one has a certain... je ne sais quoi.",
+            "The common attractions are fine, I suppose, but the exclusive areas are divine!",
+            "My personal assistant booked all my experiences in advance. I couldn't possibly wait in lines."
+        ],
+        "location": "VIP Lounge",
+        "missions": ["vip_experience"],
+        "quests": ["luxury_collection"],
+        "trades": [
+            {"give": "Designer Sunglasses", "receive": "VIP Lounge Access Card"},
+            {"give": "Champagne Bottle", "receive": "Elite Member Pin"}
+        ],
+        "special_bonus": {"type": "vip_discount", "value": 0.25}
+    },
+    "Captain Coaster 🎢": {
+        "description": "A robust man with a captain's hat and a roller coaster cart printed on his shirt. He has a loud, booming voice that carries across the park.",
+        "dialogue": [
+            "Safety first, but fun is a close second!",
+            "I've been operating thrill rides for twenty years without a single incident!",
+            "You haven't experienced the carnival until you've ridden the Super Loop six times in a row!",
+            "Hold onto your hats, folks! It's gonna be a wild ride!"
+        ],
+        "location": "Thrill Rides",
+        "missions": ["coaster_inspection"],
+        "quests": ["thrill_seeker"],
+        "trades": [
+            {"give": "Safety Inspection Checklist", "receive": "Front-Row Pass"},
+            {"give": "Motion Sickness Bag", "receive": "Custom Ride Photo"}
+        ],
+        "special_bonus": {"type": "ride_discount", "value": 0.3}
+    },
+    "Madame Phantom 👻": {
+        "description": "A mysterious woman in flowing dark clothes with a crystal ball pendant. Her eyes seem to see beyond this world.",
+        "dialogue": [
+            "I sense a strong aura around you...",
+            "The spirits are especially active in the haunted house tonight.",
+            "Your future is clouded, but I see tickets... many tickets in your path.",
+            "Beware the thirteenth hour at the carnival, when the veil between worlds thins..."
+        ],
+        "location": "Spook Alley",
+        "missions": ["ghost_hunt"],
+        "quests": ["paranormal_investigation"],
+        "trades": [
+            {"give": "Spectral Camera", "receive": "Ghost Detector"},
+            {"give": "Haunted Doll", "receive": "Spirit Communication Board"}
+        ],
+        "special_bonus": {"type": "haunt_resistance", "value": "Immune"}
+    },
+    "Dr. Virtual 🥽": {
+        "description": "A futuristic-looking person with neon-colored hair and clothes covered in LED lights. They're wearing VR goggles pushed up on their forehead.",
+        "dialogue": [
+            "Reality is so last season! Have you tried our VR experiences?",
+            "I've programmed over fifty virtual worlds for this carnival!",
+            "In the metaverse, anything is possible! Even winning at carnival games!",
+            "Digital tickets are the future, but analog fun is still pretty cool."
+        ],
+        "location": "Technology Zone",
+        "missions": ["vr_adventure"],
+        "quests": ["digital_frontier"],
+        "trades": [
+            {"give": "Old Smartphone", "receive": "VR Demo Disc"},
+            {"give": "Tangled Headphones", "receive": "Digital Carnival Pass"}
+        ],
+        "special_bonus": {"type": "tech_experience", "value": "Enhanced"}
+    }
+}
+
+# Location-based NPC organization
+NPC_LOCATIONS = {
+    "Main Entrance": ["Ringmaster Rubio 🎪"],
+    "Game Alley": ["Professor Puzzleworth 🧙‍♂️"],
+    "Gambling Corner": ["Lucky Louie 🍀"],
+    "VIP Lounge": ["Countess VIP 👑"],
+    "Thrill Rides": ["Captain Coaster 🎢"],
+    "Spook Alley": ["Madame Phantom 👻"],
+    "Technology Zone": ["Dr. Virtual 🥽"]
+}
+
+# Quest definitions
+QUESTS = {
+    "ringmaster_challenge": {
+        "name": "The Ringmaster's Challenge",
+        "description": "Prove your carnival mastery to Ringmaster Rubio by experiencing every type of attraction.",
+        "reward": 100
+    },
+    "mathematical_mystery": {
+        "name": "Mathematical Mystery",
+        "description": "Help Professor Puzzleworth solve a complex mathematical puzzle affecting the game probabilities.",
+        "reward": 75
+    },
+    "fortune_finder": {
+        "name": "Fortune Finder",
+        "description": "Test your luck in a series of increasingly risky games for Lucky Louie.",
+        "reward": 90
+    },
+    "luxury_collection": {
+        "name": "Luxury Collection",
+        "description": "Collect premium items from around the carnival for Countess VIP's collection.",
+        "reward": 120
+    },
+    "thrill_seeker": {
+        "name": "Thrill Seeker",
+        "description": "Ride every thrill ride in the park without getting sick to impress Captain Coaster.",
+        "reward": 85
+    },
+    "paranormal_investigation": {
+        "name": "Paranormal Investigation",
+        "description": "Help Madame Phantom investigate strange occurrences in the Spook Alley.",
+        "reward": 95
+    },
+    "digital_frontier": {
+        "name": "Digital Frontier",
+        "description": "Test Dr. Virtual's newest VR experiences and provide feedback.",
+        "reward": 80
+    }
+}
+
+# Mission definitions
+MISSIONS = {
+    "welcome_tour": {
+        "name": "Welcome Tour",
+        "description": "Take a tour of the carnival with Ringmaster Rubio.",
+        "target": 5,
+        "reward": 30
+    },
+    "puzzle_challenge": {
+        "name": "Puzzle Challenge",
+        "description": "Solve a series of puzzles for Professor Puzzleworth.",
+        "target": 3,
+        "reward": 25
+    },
+    "lucky_streak": {
+        "name": "Lucky Streak",
+        "description": "Win 5 games in a row without losing.",
+        "target": 5,
+        "reward": 40
+    },
+    "vip_experience": {
+        "name": "VIP Experience",
+        "description": "Experience all the VIP attractions in the carnival.",
+        "target": 4,
+        "reward": 50
+    },
+    "coaster_inspection": {
+        "name": "Coaster Inspection",
+        "description": "Help Captain Coaster inspect the roller coasters for safety.",
+        "target": 3,
+        "reward": 35
+    },
+    "ghost_hunt": {
+        "name": "Ghost Hunt",
+        "description": "Find evidence of ghosts in the Haunted Mansion.",
+        "target": 6,
+        "reward": 45
+    },
+    "vr_adventure": {
+        "name": "VR Adventure",
+        "description": "Complete Dr. Virtual's newest VR adventure game.",
+        "target": 1,
+        "reward": 30
+    }
+}
+
 # Daily Challenges
 DAILY_CHALLENGES = {
     "Monday": {"task": "Win 5 minigames", "reward": 30, "bonus_reward": {"type": "tickets", "amount": 10}},
@@ -2005,78 +2224,175 @@ def interact_with_npc(npc_name):
     """Detailed interaction with a specific NPC including dialogue, missions, and trading"""
     npc_data = NPCS[npc_name]
     
+    # Track NPC interactions for relationship building
+    if "npc_relationships" not in player:
+        player["npc_relationships"] = {}
+    
+    if npc_name not in player["npc_relationships"]:
+        player["npc_relationships"][npc_name] = {
+            "level": 1,  # 1-5 relationship level
+            "interactions": 0,
+            "gifts_given": 0,
+            "quests_completed": 0,
+            "last_special_event": None
+        }
+    
+    # Increment interaction counter
+    player["npc_relationships"][npc_name]["interactions"] += 1
+    
+    # Check if special event should trigger
+    should_trigger_event = check_for_special_event(npc_name)
+    
     while True:
         clear()
-        # Display NPC header with colorful styling
+        relationship_level = player["npc_relationships"][npc_name]["level"]
+        relationship_colors = {
+            1: Fore.WHITE,   # Stranger
+            2: Fore.CYAN,    # Acquaintance 
+            3: Fore.GREEN,   # Friend
+            4: Fore.YELLOW,  # Good Friend
+            5: Fore.MAGENTA  # Best Friend
+        }
+        rel_color = relationship_colors.get(relationship_level, Fore.WHITE)
+        
+        # Display NPC header with colorful styling based on relationship
         print(Fore.CYAN + "╔" + "═" * (len(npc_name) + 10) + "╗")
         print(Fore.CYAN + "║" + Fore.YELLOW + f"   {npc_name}   " + Fore.CYAN + "║")
         print(Fore.CYAN + "╚" + "═" * (len(npc_name) + 10) + "╝\n")
+        
+        # Show relationship level
+        relationship_titles = {
+            1: "Stranger",
+            2: "Acquaintance",
+            3: "Friend", 
+            4: "Good Friend",
+            5: "Best Friend"
+        }
+        print(f"{rel_color}Relationship: {relationship_titles.get(relationship_level)} {Fore.RESET}({'★' * relationship_level + '☆' * (5-relationship_level)})")
         
         # Show NPC description
         print(Fore.MAGENTA + "APPEARANCE:")
         print(Fore.WHITE + npc_data["description"])
         
-        # Random dialogue from the NPC
-        print(Fore.MAGENTA + "\nDIALOGUE:")
-        dialogue = random.choice(npc_data["dialogue"])
-        print(f"{Fore.YELLOW}{npc_name}: {Fore.WHITE}\"{dialogue}\"")
+        # Special event dialogue if triggered
+        if should_trigger_event:
+            special_event_dialogue(npc_name)
+            should_trigger_event = False
+            # Update last special event time
+            player["npc_relationships"][npc_name]["last_special_event"] = time.time()
+        else:
+            # Regular dialogue from the NPC with relationship-specific options
+            print(Fore.MAGENTA + "\nDIALOGUE:")
+            dialogue = get_relationship_dialogue(npc_name, relationship_level)
+            print(f"{Fore.YELLOW}{npc_name}: {Fore.WHITE}\"{dialogue}\"")
         
-        # Display missions
+        # Display missions with better organization
         if "missions" in npc_data and npc_data["missions"]:
             print(Fore.MAGENTA + "\nMISSIONS:")
+            
+            # Group missions by status for better organization
+            completed_missions = []
+            active_missions = []
+            available_missions = []
+            
             for mission_id in npc_data["missions"]:
                 if mission_id in MISSIONS:
                     mission = MISSIONS[mission_id]
                     
-                    # Check mission status
+                    # Sort by status
                     if mission_id in player["completed_missions"]:
-                        print(f"{Fore.GREEN}✅ {mission['name']} (Completed)")
+                        completed_missions.append((mission_id, mission))
                     elif mission_id in player["missions"]:
-                        progress = player["missions"][mission_id]
-                        print(f"{Fore.YELLOW}👉 {mission['name']} ({progress}/{mission['target']})")
-                        print(f"   {Fore.WHITE}{mission.get('description', 'No description available.')}")
+                        active_missions.append((mission_id, mission))
                     else:
-                        print(f"{Fore.RED}❌ {mission['name']} (Not Started)")
-                        print(f"   {Fore.WHITE}{mission.get('description', 'No description available.')}")
-                        
-                        # Option to start mission
-                        print(f"   {Fore.CYAN}[Press 'S' when selecting options to start this mission]")
+                        available_missions.append((mission_id, mission))
+            
+            # Display available missions first (most actionable)
+            for mission_id, mission in available_missions:
+                print(f"{Fore.RED}❌ {mission['name']} (Available)")
+                print(f"   {Fore.WHITE}{mission.get('description', 'No description available.')}")
+                print(f"   {Fore.CYAN}[Press 'S' when selecting options to start this mission]")
+            
+            # Display active missions next
+            for mission_id, mission in active_missions:
+                progress = player["missions"][mission_id]
+                print(f"{Fore.YELLOW}👉 {mission['name']} ({progress}/{mission['target']})")
+                print(f"   {Fore.WHITE}{mission.get('description', 'No description available.')}")
+            
+            # Display completed missions last
+            if completed_missions:
+                print(f"\n{Fore.GREEN}Completed Missions:")
+                for mission_id, mission in completed_missions:
+                    print(f"{Fore.GREEN}✅ {mission['name']}")
         
         # Display quests if NPC has them
         if "quests" in npc_data and npc_data["quests"]:
             print(Fore.MAGENTA + "\nQUESTS:")
+            
+            # Group quests by status for better organization
+            completed_quests = []
+            active_quests = []
+            available_quests = []
+            
             for quest_id in npc_data["quests"]:
                 if quest_id in QUESTS:
                     quest = QUESTS[quest_id]
                     
-                    # Check quest status
+                    # Sort by status
                     if quest_id in player.get("completed_quests", []):
-                        print(f"{Fore.GREEN}✅ {quest['name']} (Completed)")
+                        completed_quests.append((quest_id, quest))
                     elif quest_id in player.get("active_quests", []):
-                        print(f"{Fore.YELLOW}👉 {quest['name']} (In Progress)")
-                        print(f"   {Fore.WHITE}{quest['description']}")
+                        active_quests.append((quest_id, quest))
                     else:
-                        print(f"{Fore.RED}❌ {quest['name']} (Available)")
-                        print(f"   {Fore.WHITE}{quest['description']}")
-                        
-                        # Option to start quest
-                        print(f"   {Fore.CYAN}[Press 'Q' when selecting options to start this quest]")
+                        available_quests.append((quest_id, quest))
+            
+            # Display available quests first (most actionable)
+            for quest_id, quest in available_quests:
+                print(f"{Fore.RED}❌ {quest['name']} (Available)")
+                print(f"   {Fore.WHITE}{quest['description']}")
+                print(f"   {Fore.CYAN}[Press 'Q' when selecting options to start this quest]")
+            
+            # Display active quests next
+            for quest_id, quest in active_quests:
+                print(f"{Fore.YELLOW}👉 {quest['name']} (In Progress)")
+                print(f"   {Fore.WHITE}{quest['description']}")
+            
+            # Display completed quests last
+            if completed_quests:
+                print(f"\n{Fore.GREEN}Completed Quests:")
+                for quest_id, quest in completed_quests:
+                    print(f"{Fore.GREEN}✅ {quest['name']}")
         
-        # Display trades if NPC has them
+        # Display trades with enhanced details
         if "trades" in npc_data and npc_data["trades"]:
             print(Fore.MAGENTA + "\nTRADES:")
             for i, trade in enumerate(npc_data["trades"], 1):
+                # Check if player has the required item
+                has_item = trade['give'] in player["inventory"]
+                item_status = f"{Fore.GREEN}[In Inventory]" if has_item else f"{Fore.RED}[Not Available]"
+                
                 if trade.get("tickets", False):
-                    print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']} tickets")
+                    print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']} tickets {item_status}")
                 else:
-                    print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']}")
+                    print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']} {item_status}")
         
-        # Display special bonus if NPC has one
+        # Display special bonus with more details
         if "special_bonus" in npc_data:
             bonus = npc_data["special_bonus"]
             bonus_type = bonus["type"].replace("_", " ").title()
             print(Fore.MAGENTA + "\nSPECIAL BONUS:")
-            print(f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}x{bonus['value']}" if isinstance(bonus['value'], (int, float)) else f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}{bonus['value']}")
+            
+            # Show different text based on relationship level
+            if relationship_level >= 3:  # Friend level or higher
+                if isinstance(bonus['value'], (int, float)):
+                    print(f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}x{bonus['value']} {Fore.GREEN}(Active - Friend Bonus!)")
+                else:
+                    print(f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}{bonus['value']} {Fore.GREEN}(Active - Friend Bonus!)")
+            else:
+                if isinstance(bonus['value'], (int, float)):
+                    print(f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}x{bonus['value']} {Fore.YELLOW}(Increase friendship to maximize!)")
+                else:
+                    print(f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}{bonus['value']} {Fore.YELLOW}(Increase friendship to maximize!)")
         
         # Interaction options
         print(Fore.MAGENTA + "\nINTERACTION OPTIONS:")
@@ -2099,8 +2415,15 @@ def interact_with_npc(npc_name):
         if "trades" in npc_data and npc_data["trades"]:
             options.append(("T", "Trade with " + npc_name.split()[0]))
         
+        # Add gift giving option (enhances relationship)
+        options.append(("G", "Give a gift"))
+        
         # Always show chat option
         options.append(("C", "Chat more with " + npc_name.split()[0]))
+        
+        # Add special option based on relationship level
+        if relationship_level >= 3:
+            options.append(("P", f"Personal request (Friend's Privilege - Level {relationship_level})"))
         
         # Always show exit option
         options.append(("X", "Say goodbye"))
@@ -2113,13 +2436,21 @@ def interact_with_npc(npc_name):
         action = input(f"\n{Fore.YELLOW}What would you like to do? {Fore.WHITE}").upper()
         
         if action == "X":
-            # Say goodbye
-            print(f"\n{Fore.YELLOW}You say goodbye to {npc_name}.")
+            # Say goodbye with relationship-appropriate message
+            farewell_messages = [
+                f"You wave to {npc_name} as you leave.",  # Stranger
+                f"You say goodbye to {npc_name}.",  # Acquaintance
+                f"{npc_name} smiles and says they hope to see you again soon!",  # Friend
+                f"{npc_name} gives you a friendly pat on the back as you go.",  # Good Friend
+                f"{npc_name} gives you a warm hug before you part ways!"  # Best Friend
+            ]
+            print(f"\n{Fore.YELLOW}{farewell_messages[min(relationship_level-1, len(farewell_messages)-1)]}")
             time.sleep(1.5)
             return
             
         elif action == "C":
-            # Chat more (just refresh the screen for new dialogue)
+            # Chat more - actually increases relationship slightly
+            relationship_progress(npc_name, "chat", 1)
             continue
             
         elif action == "S":
@@ -2133,25 +2464,628 @@ def interact_with_npc(npc_name):
             # Start quest
             for quest_id in npc_data.get("quests", []):
                 if quest_id in QUESTS and quest_id not in player.get("completed_quests", []) and quest_id not in player.get("active_quests", []):
-                    start_quest(quest_id)
+                    start_quest(quest_id, npc_name)
                     break
             
         elif action == "T":
-            # Trade with NPC
+            # Trade with NPC - also slightly increases relationship
             trade_with_npc(npc_name)
+            relationship_progress(npc_name, "trade", 2)
+            
+        elif action == "G":
+            # Give a gift to improve relationship
+            give_gift_to_npc(npc_name)
+            
+        elif action == "P" and relationship_level >= 3:
+            # Special personal request option - only for friends
+            handle_personal_request(npc_name, relationship_level)
             
         else:
             try:
                 # Check if player selected a trade by number
                 trade_idx = int(action) - 1
                 if "trades" in npc_data and 0 <= trade_idx < len(npc_data["trades"]):
-                    process_trade(npc_name, npc_data["trades"][trade_idx])
+                    success = process_trade(npc_name, npc_data["trades"][trade_idx])
+                    if success:
+                        relationship_progress(npc_name, "successful_trade", 3)
                 else:
                     print(Fore.RED + "Invalid option!")
                     time.sleep(1)
             except ValueError:
                 print(Fore.RED + "Invalid option!")
                 time.sleep(1)
+
+def give_gift_to_npc(npc_name):
+    """Give a gift to an NPC to improve relationship"""
+    clear()
+    print(Fore.CYAN + f"=== GIVE A GIFT TO {npc_name.upper()} ===")
+    
+    # Get a list of giftable items in inventory
+    # Excluding equipped items, active pets, etc.
+    giftable_items = [item for item in player["inventory"] 
+                     if item not in player["equipped_items"] 
+                     and "Pass" not in item 
+                     and item != player["active_pet"]]
+    
+    if not giftable_items:
+        print(Fore.RED + "You don't have any items to give as gifts!")
+        time.sleep(1.5)
+        return
+        
+    # Display inventory
+    print(Fore.MAGENTA + "\nYOUR INVENTORY:")
+    for i, item in enumerate(giftable_items, 1):
+        print(f"{i}. {item}")
+    
+    print("\n0. Cancel")
+    
+    choice = input("\nSelect an item to give (0 to cancel): ")
+    if choice == "0":
+        return
+        
+    try:
+        gift_idx = int(choice) - 1
+        if 0 <= gift_idx < len(giftable_items):
+            gift = giftable_items[gift_idx]
+            
+            # Remove item from inventory
+            player["inventory"].remove(gift)
+            
+            # Calculate how much the NPC likes this gift
+            gift_value = calculate_gift_value(npc_name, gift)
+            
+            # Display NPC reaction based on gift value
+            if gift_value > 20:  # Loves it
+                print(f"\n{Fore.GREEN}{npc_name} is thrilled with your gift!")
+                print(f"{Fore.YELLOW}{npc_name}: \"This is absolutely perfect! How did you know I wanted this?\"")
+                relationship_progress(npc_name, "perfect_gift", gift_value)
+            elif gift_value > 10:  # Likes it
+                print(f"\n{Fore.GREEN}{npc_name} really likes your gift!")
+                print(f"{Fore.YELLOW}{npc_name}: \"Thank you, this is really nice!\"")
+                relationship_progress(npc_name, "good_gift", gift_value)
+            elif gift_value > 5:  # It's okay
+                print(f"\n{Fore.YELLOW}{npc_name} accepts your gift with a smile.")
+                print(f"{Fore.YELLOW}{npc_name}: \"Thanks, I appreciate the thought.\"")
+                relationship_progress(npc_name, "decent_gift", gift_value)
+            else:  # Not really their thing
+                print(f"\n{Fore.YELLOW}{npc_name} seems a bit unsure about your gift.")
+                print(f"{Fore.YELLOW}{npc_name}: \"Oh, um, thanks I guess.\"")
+                relationship_progress(npc_name, "poor_gift", gift_value)
+                
+            # Track gift giving for achievements
+            player["npc_relationships"][npc_name]["gifts_given"] += 1
+            
+            # Check for gift achievements
+            total_gifts = sum(rel["gifts_given"] for rel in player["npc_relationships"].values())
+            if total_gifts >= 10 and "Generous Soul" not in player.get("achievements", []):
+                award_achievement("Generous Soul")
+                player["tickets"] += 20
+                print(Fore.GREEN + "\nAchievement unlocked: Generous Soul! +20 tickets!")
+                
+            # Bonus tickets for high relationship levels giving gifts
+            relationship_level = player["npc_relationships"][npc_name]["level"]
+            if relationship_level >= 4 and gift_value > 15:
+                bonus_tickets = relationship_level * 2
+                player["tickets"] += bonus_tickets
+                print(Fore.GREEN + f"\nFriendship bonus! +{bonus_tickets} tickets!")
+                
+            input("\nPress Enter to continue...")
+            
+        else:
+            raise ValueError
+    except ValueError:
+        print(Fore.RED + "Invalid choice!")
+        time.sleep(1)
+
+def calculate_gift_value(npc_name, gift):
+    """Calculate how much an NPC values a particular gift"""
+    npc_data = NPCS[npc_name]
+    base_value = 5  # Default base value
+    
+    # Different NPCs have different preferences
+    if "Chef" in npc_name and ("Recipe" in gift or "Food" in gift or "Cake" in gift):
+        base_value = 25  # Chef loves food items!
+    elif "Ringmaster" in npc_name and ("Badge" in gift or "Ticket" in gift):
+        base_value = 20  # Ringmaster loves carnival items
+    elif "Virtual" in npc_name and ("Digital" in gift or "Tech" in gift):
+        base_value = 25  # VR tech loves technology items
+    elif "Phantom" in npc_name and ("Ghost" in gift or "Spooky" in gift or "Ectoplasm" in gift):
+        base_value = 22  # Ghost hunter loves spooky items
+    elif "Coaster" in npc_name and ("Ride" in gift or "Photo" in gift):
+        base_value = 18  # Ride operator loves ride memorabilia
+    elif "Champion" in npc_name and ("Trophy" in gift or "Medal" in gift):
+        base_value = 24  # Champion loves trophies and medals
+    elif "Melody" in npc_name and ("Music" in gift or "Note" in gift or "Sheet" in gift):
+        base_value = 23  # Music lover loves music items
+    elif "Carnival" in npc_name and ("Costume" in gift or "Fashion" in gift):
+        base_value = 22  # Fashion designer loves stylish items
+    elif "Loyalty" in npc_name and ("Loyalty" in gift or "Season" in gift or "Pass" in gift):
+        base_value = 20  # Loyalty manager loves loyal customer items
+    
+    # Random variation
+    variation = random.randint(-3, 3)
+    
+    return max(1, base_value + variation)  # Minimum value of 1
+
+def check_relationship_achievements():
+    """Check for achievements based on NPC relationships"""
+    if "npc_relationships" not in player:
+        return
+        
+    # Total number of NPCs with relationships
+    total_relationships = len(player["npc_relationships"])
+    
+    # Count NPCs at each relationship level
+    level_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for npc, data in player["npc_relationships"].items():
+        level = data.get("level", 1)
+        level_counts[level] += 1
+    
+    # People Person - Have relationships with at least 5 NPCs
+    if total_relationships >= 5 and "People Person" not in player.get("achievements", []):
+        award_achievement("People Person")
+        player["tickets"] += 25
+        print(f"{Fore.GREEN}Achievement unlocked: People Person! +25 tickets!")
+    
+    # Social Butterfly - Have relationships with at least 10 NPCs
+    if total_relationships >= 10 and "Social Butterfly" not in player.get("achievements", []):
+        award_achievement("Social Butterfly")
+        player["tickets"] += 50
+        print(f"{Fore.GREEN}Achievement unlocked: Social Butterfly! +50 tickets!")
+    
+    # Acquaintance Network - Have at least 5 NPCs at level 2 or higher
+    if sum(level_counts[i] for i in range(2, 6)) >= 5 and "Acquaintance Network" not in player.get("achievements", []):
+        award_achievement("Acquaintance Network")
+        player["tickets"] += 30
+        print(f"{Fore.GREEN}Achievement unlocked: Acquaintance Network! +30 tickets!")
+    
+    # Friendship Circle - Have at least 3 NPCs at level 3 or higher
+    if sum(level_counts[i] for i in range(3, 6)) >= 3 and "Friendship Circle" not in player.get("achievements", []):
+        award_achievement("Friendship Circle")
+        player["tickets"] += 40
+        player["inventory"].append("Friendship Bracelet 💖")
+        print(f"{Fore.GREEN}Achievement unlocked: Friendship Circle! +40 tickets!")
+        print(f"{Fore.GREEN}You received: Friendship Bracelet 💖!")
+    
+    # Inner Circle - Have at least 3 NPCs at level 4 or higher
+    if sum(level_counts[i] for i in range(4, 6)) >= 3 and "Inner Circle" not in player.get("achievements", []):
+        award_achievement("Inner Circle")
+        player["tickets"] += 75
+        player["inventory"].append("Inner Circle VIP Pass 💎")
+        print(f"{Fore.GREEN}Achievement unlocked: Inner Circle! +75 tickets!")
+        print(f"{Fore.GREEN}You received: Inner Circle VIP Pass 💎!")
+    
+    # Best Friends Forever - Have at least 1 NPC at level 5
+    if level_counts[5] >= 1 and "Best Friend Forever" not in player.get("achievements", []):
+        award_achievement("Best Friend Forever")
+        player["tickets"] += 50
+        print(f"{Fore.GREEN}Achievement unlocked: Best Friend Forever! +50 tickets!")
+    
+    # Soul Mate - Have at least 3 NPCs at level 5
+    if level_counts[5] >= 3 and "Soul Mate" not in player.get("achievements", []):
+        award_achievement("Soul Mate")
+        player["tickets"] += 100
+        player["inventory"].append("Soul Mate Medallion ✨")
+        print(f"{Fore.GREEN}Achievement unlocked: Soul Mate! +100 tickets!")
+        print(f"{Fore.GREEN}You received: Soul Mate Medallion ✨!")
+    
+    # Gift Giver - Track total gifts given
+    total_gifts = sum(data.get("gifts_given", 0) for _, data in player["npc_relationships"].items())
+    
+    if total_gifts >= 5 and "Gift Giver" not in player.get("achievements", []):
+        award_achievement("Gift Giver")
+        player["tickets"] += 20
+        print(f"{Fore.GREEN}Achievement unlocked: Gift Giver! +20 tickets!")
+    
+    if total_gifts >= 15 and "Generous Soul" not in player.get("achievements", []):
+        award_achievement("Generous Soul")
+        player["tickets"] += 45
+        print(f"{Fore.GREEN}Achievement unlocked: Generous Soul! +45 tickets!")
+    
+    if total_gifts >= 30 and "Philanthropy Award" not in player.get("achievements", []):
+        award_achievement("Philanthropy Award")
+        player["tickets"] += 100
+        player["inventory"].append("Golden Heart Trophy 🏆")
+        print(f"{Fore.GREEN}Achievement unlocked: Philanthropy Award! +100 tickets!")
+        print(f"{Fore.GREEN}You received: Golden Heart Trophy 🏆!")
+    
+    # Add loyalty points based on relationship depth
+    friendship_loyalty = level_counts[3] * 2 + level_counts[4] * 3 + level_counts[5] * 5
+    if friendship_loyalty > 0:
+        add_loyalty_points(min(friendship_loyalty, 10))  # Cap at 10 points per check
+
+def relationship_progress(npc_name, action_type, points):
+    """Update relationship progress with an NPC"""
+    if "npc_relationships" not in player:
+        player["npc_relationships"] = {}
+    
+    if npc_name not in player["npc_relationships"]:
+        player["npc_relationships"][npc_name] = {
+            "level": 1,
+            "interactions": 0,
+            "gifts_given": 0,
+            "quests_completed": 0,
+            "points": 0,
+            "last_special_event": None
+        }
+    
+    # Add points based on action type
+    player["npc_relationships"][npc_name]["points"] = player["npc_relationships"][npc_name].get("points", 0) + points
+    
+    # Track interactions
+    if action_type == "gift":
+        player["npc_relationships"][npc_name]["gifts_given"] += 1
+    
+    # Check if we should level up the relationship
+    current_level = player["npc_relationships"][npc_name]["level"]
+    points_needed = {
+        1: 30,   # Points needed to reach level 2
+        2: 60,   # Points needed to reach level 3
+        3: 100,  # Points needed to reach level 4
+        4: 150   # Points needed to reach level 5
+    }
+    
+    if current_level < 5 and player["npc_relationships"][npc_name]["points"] >= points_needed.get(current_level, 9999):
+        # Level up!
+        player["npc_relationships"][npc_name]["level"] += 1
+        new_level = player["npc_relationships"][npc_name]["level"]
+        
+        # Announce the relationship improvement
+        relationship_titles = {
+            2: "Acquaintance",
+            3: "Friend", 
+            4: "Good Friend",
+            5: "Best Friend"
+        }
+        
+        print(f"\n{Fore.GREEN}✨ Your relationship with {npc_name} has improved! ✨")
+        print(f"{Fore.YELLOW}You are now {relationship_titles.get(new_level, 'closer')}s!")
+        
+        # Rewards for relationship levels
+        if new_level == 3:  # Friend
+            player["tickets"] += 25
+            print(f"{Fore.GREEN}Friend Bonus: +25 tickets!")
+        elif new_level == 4:  # Good Friend
+            player["tickets"] += 50
+            print(f"{Fore.GREEN}Good Friend Bonus: +50 tickets!")
+            
+            # Add a special item gift from the NPC
+            gift_items = {
+                "Ringmaster Rubio 🎪": "Ringmaster's Honorary Badge 🏅",
+                "Professor Puzzleworth 🧙‍♂️": "Mathematical Solution Book 📘",
+                "Lucky Louie 🍀": "Four-Leaf Clover Charm 🍀",
+                "Countess VIP 👑": "VIP Friendship Bracelet 💎",
+                "Captain Coaster 🎢": "Miniature Roller Coaster Model 🎢",
+                "Madame Phantom 👻": "Phantom Pendant 👻",
+                "Dr. Virtual 🥽": "Custom VR Memory Card 💾",
+                "Grand Champion 🏆": "Champion's Victory Pin 🎖️",
+                "Couturier Carnival 👕": "Custom Designer Scarf 🧣",
+                "Lady Loyalty 🌟": "Loyalty Crown Pin 👑",
+                "Sage Questgiver 📜": "Ancient Story Scroll 📜",
+                "Season Director 🎫": "All-Access Season Pass 🎫",
+                "Chef Bonbon 🍰": "Secret Recipe Card 🍳",
+                "Maestro Melody 🎵": "Golden Music Note Pin 🎵"
+            }
+            
+            if npc_name in gift_items:
+                gift = gift_items[npc_name]
+                player["inventory"].append(gift)
+                print(f"{Fore.YELLOW}{npc_name} gives you a special gift: {gift}!")
+                
+        elif new_level == 5:  # Best Friend
+            player["tickets"] += 100
+            print(f"{Fore.GREEN}Best Friend Bonus: +100 tickets!")
+        
+        # Check for relationship achievements after level change
+        check_relationship_achievements()
+        
+        time.sleep(2)
+
+def check_for_special_event(npc_name):
+    """Determine if a special event should trigger for this NPC interaction"""
+    if "npc_relationships" not in player:
+        return False
+        
+    if npc_name not in player["npc_relationships"]:
+        return False
+    
+    # Check when the last special event occurred
+    last_event = player["npc_relationships"][npc_name].get("last_special_event")
+    if last_event is None:
+        # First interaction has higher chance of special event
+        return random.random() < 0.4
+    
+    # Calculate time since last event
+    time_since_event = time.time() - last_event
+    
+    # Higher relationship level = more frequent special events
+    relationship_level = player["npc_relationships"][npc_name]["level"]
+    event_chance = 0.05 + (relationship_level * 0.05)  # 10% at level 1, up to 30% at level 5
+    
+    # More likely the longer it's been
+    if time_since_event > 300:  # More than 5 minutes
+        event_chance += 0.15
+    
+    return random.random() < event_chance
+
+def special_event_dialogue(npc_name):
+    """Generate and display a special event with an NPC"""
+    npc_data = NPCS[npc_name]
+    relationship_level = player["npc_relationships"][npc_name]["level"]
+    
+    print(Fore.MAGENTA + "\n✨ SPECIAL EVENT ✨")
+    
+    # Generate a random special event appropriate to the NPC and relationship level
+    events = [
+        {
+            "title": "Personal Story",
+            "description": f"{npc_name} shares a personal story with you about their past.",
+            "dialogue": [
+                f"You know, I wasn't always {npc_name.split()[0]}. Before the carnival, I was...",
+                "I remember when this carnival was just three tents and a popcorn stand...",
+                "My family has been in this business for generations. My grandfather used to say...",
+                "The most amazing thing I ever saw at this carnival was when..."
+            ],
+            "min_level": 1
+        },
+        {
+            "title": "Special Discount",
+            "description": f"{npc_name} offers you a special discount on their services.",
+            "dialogue": [
+                "Hey, just for you - I'll give you a special price today!",
+                "You've been such a good customer, let me offer you a discount.",
+                "Between you and me, I can give you a special rate. Don't tell anyone else!",
+                "I normally don't do this, but for you I'll make an exception on the price."
+            ],
+            "min_level": 2,
+            "reward": {"tickets": random.randint(5, 15)}
+        },
+        {
+            "title": "Surprise Gift",
+            "description": f"{npc_name} gives you an unexpected gift!",
+            "dialogue": [
+                "I saw this and thought of you. Please, take it!",
+                "I've been holding onto this for someone special. I think you'll appreciate it.",
+                "This is just a small token of my appreciation for your friendship.",
+                "I made this myself. I hope you like it!"
+            ],
+            "min_level": 3,
+            "reward": {"item": True}
+        },
+        {
+            "title": "Secret Spot",
+            "description": f"{npc_name} shows you a secret location in the carnival.",
+            "dialogue": [
+                "Let me show you something almost nobody knows about...",
+                "Come with me, there's a hidden spot I think you'll love!",
+                "As my friend, I think you deserve to know about this secret place...",
+                "I trust you enough to show you something special. Follow me..."
+            ],
+            "min_level": 3,
+            "reward": {"tickets": random.randint(10, 30)}
+        },
+        {
+            "title": "Exclusive Invitation",
+            "description": f"{npc_name} invites you to a special event!",
+            "dialogue": [
+                "We're having a special gathering tonight. I'd love for you to come!",
+                "There's an exclusive event for carnival staff, but I can get you in!",
+                "I'm organizing something special next week. You're invited, of course!",
+                "How would you like to attend a VIP-only event as my guest?"
+            ],
+            "min_level": 4,
+            "reward": {"tickets": random.randint(20, 50), "loyalty": 10}
+        }
+    ]
+    
+    # Filter events by relationship level
+    appropriate_events = [event for event in events if event["min_level"] <= relationship_level]
+    
+    if not appropriate_events:
+        # Fallback if no appropriate events (shouldn't happen)
+        return
+    
+    # Select a random event
+    event = random.choice(appropriate_events)
+    
+    # Display the event
+    print(f"{Fore.YELLOW}{event['title']}")
+    print(f"{Fore.WHITE}{event['description']}")
+    print(f"\n{Fore.YELLOW}{npc_name}: {Fore.WHITE}\"{random.choice(event['dialogue'])}\"")
+    
+    # Process any rewards
+    if "reward" in event:
+        if "tickets" in event["reward"]:
+            tickets = event["reward"]["tickets"]
+            player["tickets"] += tickets
+            print(f"\n{Fore.GREEN}You received {tickets} tickets!")
+            
+        if "loyalty" in event["reward"]:
+            loyalty = event["reward"]["loyalty"]
+            add_loyalty_points(loyalty)
+            print(f"{Fore.MAGENTA}+{loyalty} Loyalty Points!")
+            
+        if event["reward"].get("item", False):
+            # Generate a special gift based on the NPC
+            location = npc_data.get("location", "Carnival")
+            npc_type = npc_name.split()[0]
+            
+            special_gifts = {
+                "Ringmaster": ["Circus History Book 📚", "Ringmaster's Whistle 🔔", "Premium Ticket Roll 🎟️"],
+                "Professor": ["Math Puzzle Cube 🧩", "Golden Compass 🧭", "Knowledge Crystal 💎"],
+                "Lucky": ["Fortune Cookie 🥠", "Four-Leaf Clover 🍀", "Lucky Dice 🎲"],
+                "Countess": ["VIP Lounge Pass 📋", "Jeweled Brooch 💍", "Golden Opera Glasses 👓"],
+                "Captain": ["Miniature Coaster 🎢", "Safety Guide Book 📔", "Theme Park Map 🗺️"],
+                "Madame": ["Ghost Detection Kit 👻", "Spooky Story Book 📕", "Crystal Ball Keychain 🔮"],
+                "Dr": ["VR Demo Disc 💿", "Holographic Sticker 🌈", "Futuristic Keychain 🔑"],
+                "Grand": ["Bronze Medal 🥉", "Sports Water Bottle 🍶", "Champion's Wristband ⌚"],
+                "Couturier": ["Fashion Sketch Pad 📝", "Fabric Sample Book 📘", "Designer Pin 📌"],
+                "Lady": ["Loyalty Card Holder 💳", "Star-Shaped Notepad ⭐", "Golden Point Counter 🔢"],
+                "Sage": ["Mini Quest Scroll 📜", "Adventure Compass 🧭", "Tale-Telling Dice 🎲"],
+                "Season": ["Seasonal Photo Frame 🖼️", "Calendar Keychain 📅", "Weather Predictor 🌦️"],
+                "Chef": ["Recipe Card 📇", "Gourmet Spice Sample 🧂", "Miniature Whisk 🍳"],
+                "Maestro": ["Musical Note Pin 🎵", "Miniature Instrument 🎸", "Concert Ticket Holder 🎫"]
+            }
+            
+            # Find the matching prefix
+            matching_gifts = []
+            for prefix, gifts in special_gifts.items():
+                if npc_type.startswith(prefix):
+                    matching_gifts = gifts
+                    break
+            
+            if not matching_gifts:
+                # Fallback generic gifts
+                matching_gifts = ["Carnival Souvenir 🎡", "Friendship Bracelet 💝", "Commemorative Token 🪙"]
+            
+            # Give the gift
+            gift = random.choice(matching_gifts)
+            player["inventory"].append(gift)
+            print(f"\n{Fore.GREEN}{npc_name} gives you: {gift}!")
+    
+    # Relationship boost from special event
+    relationship_progress(npc_name, "special_event", random.randint(5, 10))
+    
+    input("\nPress Enter to continue...")
+
+def get_relationship_dialogue(npc_name, level):
+    """Get appropriate dialogue based on relationship level"""
+    npc_data = NPCS[npc_name]
+    
+    # If NPC has specific relationship dialogues, use those
+    if "relationship_dialogue" in npc_data:
+        rel_dialogues = npc_data["relationship_dialogue"]
+        if level in rel_dialogues:
+            return random.choice(rel_dialogues[level])
+    
+    # Otherwise use the standard dialogue
+    return random.choice(npc_data["dialogue"])
+
+def handle_personal_request(npc_name, relationship_level):
+    """Handle special requests that NPCs make to good friends"""
+    clear()
+    print(Fore.CYAN + f"=== {npc_name}'S PERSONAL REQUEST ===")
+    
+    # Different requests based on the NPC
+    requests = {
+        "Ringmaster Rubio 🎪": {
+            "title": "Special Announcement",
+            "description": "Could you help me announce the next big show? I need someone with energy!",
+            "reward": {"tickets": 30, "item": "Ringmaster's Assistant Badge 📢"}
+        },
+        "Professor Puzzleworth 🧙‍♂️": {
+            "title": "Puzzle Testing",
+            "description": "I've designed a new puzzle game, but need someone to test it. Interested?",
+            "reward": {"tickets": 25, "item": "Puzzle Master Certificate 🧩"}
+        },
+        "Lucky Louie 🍀": {
+            "title": "Luck Experiment",
+            "description": "I'm conducting an experiment on luck! Just need you to flip this coin 100 times and record the results.",
+            "reward": {"tickets": 20, "item": "Lucky Charm Bracelet 🍀"}
+        },
+        "Countess VIP 👑": {
+            "title": "Mystery Guest",
+            "description": "I need someone to entertain a VIP guest who's arriving incognito. Can you show them around discreetly?",
+            "reward": {"tickets": 50, "item": "VIP Handler Badge 👑"}
+        },
+        "Captain Coaster 🎢": {
+            "title": "Safety Inspection",
+            "description": "Want to help me conduct the morning safety check on the roller coaster? You'll get the first ride!",
+            "reward": {"tickets": 35, "item": "Safety Inspector Pin 🔍"}
+        },
+        "Madame Phantom 👻": {
+            "title": "Ghost Hunt",
+            "description": "There's been a new spectral disturbance. Care to join me for an after-hours ghost hunt?",
+            "reward": {"tickets": 40, "item": "Ghost Hunter Certificate 👻"}
+        },
+        "Dr. Virtual 🥽": {
+            "title": "Beta Test",
+            "description": "I've developed a new VR experience and need a trusted tester. Interested in a sneak preview?",
+            "reward": {"tickets": 30, "item": "Beta Tester Badge 🥽"}
+        },
+        "Grand Champion 🏆": {
+            "title": "Training Session",
+            "description": "I could use a training partner for my next championship. Want to help me practice?",
+            "reward": {"tickets": 45, "item": "Training Partner Medal 🏅"}
+        }
+    }
+    
+    # Default request if the NPC doesn't have a specific one
+    default_request = {
+        "title": "Special Favor",
+        "description": "I could use some help with a small task. Would you mind helping me out?",
+        "reward": {"tickets": 20}
+    }
+    
+    # Get the request for this NPC
+    request = requests.get(npc_name, default_request)
+    
+    print(f"{Fore.YELLOW}{request['title']}")
+    print(f"{Fore.WHITE}{request['description']}")
+    
+    # Display reward
+    print(f"\n{Fore.GREEN}Reward:")
+    if "tickets" in request["reward"]:
+        print(f"{Fore.WHITE}- {request['reward']['tickets']} tickets")
+    if "item" in request["reward"]:
+        print(f"{Fore.WHITE}- {request['reward']['item']}")
+    
+    # Player decision
+    print(f"\n{Fore.YELLOW}Will you help {npc_name.split()[0]}?")
+    print("1. Yes, I'll help!")
+    print("2. Sorry, maybe later")
+    
+    choice = input("\nYour choice (1-2): ")
+    
+    if choice == "1":
+        # Accept the request
+        print(f"\n{Fore.GREEN}You agree to help {npc_name}.")
+        print(f"{Fore.YELLOW}{npc_name}: \"Thank you so much! This means a lot to me.\"")
+        
+        # Simulate the activity
+        print(f"\n{Fore.CYAN}Time passes as you help with the request...")
+        time.sleep(2)
+        
+        # Random events during the activity
+        events = [
+            "You encounter an unexpected challenge but manage to overcome it.",
+            f"You and {npc_name.split()[0]} work together seamlessly, making quick progress.",
+            "The task turns out to be more complex than expected, but you persevere.",
+            "Your creative approach impresses everyone involved."
+        ]
+        print(f"\n{Fore.WHITE}{random.choice(events)}")
+        time.sleep(1.5)
+        
+        # Success!
+        print(f"\n{Fore.GREEN}Success! You've completed {npc_name}'s request!")
+        
+        # Award rewards
+        if "tickets" in request["reward"]:
+            tickets = request["reward"]["tickets"]
+            player["tickets"] += tickets
+            print(f"{Fore.GREEN}You received {tickets} tickets!")
+            
+        if "item" in request["reward"]:
+            item = request["reward"]["item"]
+            player["inventory"].append(item)
+            print(f"{Fore.GREEN}You received: {item}!")
+        
+        # Significant relationship boost
+        relationship_progress(npc_name, "personal_request", 15)
+        
+        # Loyalty points
+        add_loyalty_points(5)
+        print(f"{Fore.MAGENTA}+5 Loyalty Points for helping a carnival character!")
+        
+    else:
+        # Decline the request
+        print(f"\n{Fore.YELLOW}You politely decline, explaining that you're busy.")
+        print(f"{Fore.YELLOW}{npc_name}: \"I understand. Maybe another time!\"")
+        
+        # Small relationship penalty
+        relationship_progress(npc_name, "declined_request", -3)
+    
+    input("\nPress Enter to continue...")
 
 def start_mission(mission_id):
     """Start a new mission"""
@@ -2164,21 +3098,71 @@ def start_mission(mission_id):
     
     input("\nPress Enter to continue...")
 
-def start_quest(quest_id):
-    """Start a new quest"""
+def start_quest(quest_id, npc_name=None):
+    """Start a new quest with enhanced NPC relationship integration
+    
+    Args:
+        quest_id: The ID of the quest to start
+        npc_name: Optional name of the NPC giving the quest
+    """
     quest = QUESTS[quest_id]
     
     # Initialize active_quests if it doesn't exist
     if "active_quests" not in player:
         player["active_quests"] = []
     
-    player["active_quests"].append(quest_id)
-    
-    print(Fore.GREEN + f"\nYou've started the quest: {quest['name']}")
-    print(Fore.WHITE + quest["description"])
-    print(Fore.YELLOW + f"Reward: {quest['reward']} tickets upon completion")
-    
-    input("\nPress Enter to continue...")
+    # Don't add if already active
+    if quest_id not in player["active_quests"]:
+        player["active_quests"].append(quest_id)
+        
+        # Initialize quest progress if needed
+        if "quest_progress" not in player:
+            player["quest_progress"] = {}
+            
+        player["quest_progress"][quest_id] = {
+            "started_time": time.time(),
+            "steps_completed": 0,
+            "given_by": npc_name
+        }
+        
+        # Display quest acceptance with nice formatting
+        clear()
+        print(Fore.CYAN + "╔" + "═" * (len(quest['name']) + 10) + "╗")
+        print(Fore.CYAN + "║" + Fore.YELLOW + f"   {quest['name']}   " + Fore.CYAN + "║")
+        print(Fore.CYAN + "╚" + "═" * (len(quest['name']) + 10) + "╝\n")
+        
+        print(f"{Fore.GREEN}New quest started!")
+        print(f"{Fore.WHITE}{quest['description']}")
+        
+        # If we know who gave the quest, show that
+        if npc_name:
+            print(f"\n{Fore.YELLOW}{npc_name}: {Fore.WHITE}\"I'm counting on you for this. Good luck!\"")
+            
+            # Increase relationship slightly for accepting the quest
+            if "npc_relationships" in player and npc_name in player["npc_relationships"]:
+                relationship_progress(npc_name, "quest_accepted", 2)
+        
+        # Show rewards
+        print(f"\n{Fore.MAGENTA}Rewards:")
+        print(Fore.YELLOW + f"• {quest['reward']} tickets upon completion")
+        
+        # If there are additional rewards
+        if "bonus_reward" in quest:
+            if "type" in quest["bonus_reward"] and "amount" in quest["bonus_reward"]:
+                reward_type = quest["bonus_reward"]["type"].replace("_", " ").title()
+                reward_amount = quest["bonus_reward"]["amount"]
+                print(f"{Fore.YELLOW}• {reward_amount} {reward_type}")
+                
+        # Add to tracked missions for daily challenges
+        update_mission_progress("quests", 1)
+        
+        # Add loyalty points for accepting a quest
+        add_loyalty_points(1)
+        
+        input(f"\n{Fore.CYAN}Press Enter to continue...")
+    else:
+        print(f"{Fore.YELLOW}You're already working on this quest.")
+        time.sleep(1.5)
 
 def trade_with_npc(npc_name):
     """Trade interface with an NPC"""
@@ -4507,6 +5491,43 @@ def get_current_season():
     else:
         return "normal"
 
+def check_special_holiday():
+    """Check if today is a special holiday and return its name if it is"""
+    from datetime import datetime
+    
+    today = datetime.now()
+    month = today.month
+    day = today.day
+    
+    # Create a simple lookup tuple for the current date
+    current_date = (month, day)
+    
+    # Define holidays
+    if current_date == (1, 1):
+        return "New Year's Day"
+    elif current_date == (2, 14):
+        return "Valentine's Day"
+    elif current_date == (3, 17):
+        return "St. Patrick's Day"
+    elif current_date == (7, 4):
+        return "Independence Day"
+    elif current_date == (10, 31):
+        return "Halloween"
+    elif current_date == (11, 28):
+        return "Thanksgiving"  # Approximate for 2024
+    elif current_date == (12, 25):
+        return "Christmas"
+    
+    # Check for Easter (approximate - first Sunday of April for simplicity)
+    # In reality Easter date calculation is complex
+    if month == 4 and day <= 7:
+        # Check if it's a Sunday
+        if today.weekday() == 6:  # 6 = Sunday
+            return "Easter"
+    
+    # No holiday found
+    return None
+    
 def food_stand():
     """Visit a food stand to buy refreshments that restore hunger and energy"""
     clear()
@@ -8949,5 +9970,6 @@ def view_card_collection():
     print(f"\nTotal Cards: {len(player['card_collection'])}")
     input("\nPress Enter to continue...")
     
+# Main execution - launcher already checked at the beginning of the file
 if __name__ == "__main__":
     start_game()
