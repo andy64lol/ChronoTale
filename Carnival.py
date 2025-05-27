@@ -2579,7 +2579,6 @@ def give_gift_to_npc(npc_name):
 
 def calculate_gift_value(npc_name, gift):
     """Calculate how much an NPC values a particular gift"""
-    npc_data = NPCS[npc_name]
     base_value = 5  # Default base value
     
     # Different NPCs have different preferences
@@ -2810,7 +2809,6 @@ def check_for_special_event(npc_name):
 
 def special_event_dialogue(npc_name):
     """Generate and display a special event with an NPC"""
-    npc_data = NPCS[npc_name]
     relationship_level = player["npc_relationships"][npc_name]["level"]
     
     print(Fore.MAGENTA + "\n✨ SPECIAL EVENT ✨")
@@ -2907,7 +2905,6 @@ def special_event_dialogue(npc_name):
             
         if event["reward"].get("item", False):
             # Generate a special gift based on the NPC
-            location = npc_data.get("location", "Carnival")
             npc_type = npc_name.split()[0]
             
             special_gifts = {
