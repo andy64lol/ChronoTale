@@ -324,6 +324,90 @@ class Room:
 
         return descriptions
 
+    def get_interactive_elements(self):
+        """Get interactive elements that the player can engage with"""
+        elements = []
+        
+        # Memory fragments create interactive opportunities
+        for fragment in self.memory_fragments:
+            if not fragment.triggered:
+                elements.append(f"{Fore.YELLOW}🧠 A memory fragment glows softly in the corner{Style.RESET_ALL}")
+        
+        # Dimensional rifts offer travel options
+        for rift in self.dimensional_rifts:
+            if rift.uses_remaining > 0:
+                elements.append(f"{Fore.MAGENTA}🌀 A dimensional rift shimmers in the air{Style.RESET_ALL}")
+        
+        # Echo events create atmospheric interactions
+        for event in self.echo_events:
+            if event.active_turns < event.duration:
+                elements.append(f"{Fore.CYAN}👻 An echo resonates through the space{Style.RESET_ALL}")
+        
+        # Phantom interactions with entities
+        for interaction in self.phantom_interactions:
+            if not interaction.completed:
+                elements.append(f"{Fore.LIGHTRED_EX}👤 You sense a presence nearby that might respond to interaction{Style.RESET_ALL}")
+        
+        return elements
+
+    def trigger_memory_fragment(self, player):
+        """Trigger a memory fragment and affect the player"""
+        if self.memory_fragments:
+            fragment = self.memory_fragments[0]
+            fragment.triggered = True
+            
+            print(f"\n{Fore.YELLOW}🧠 Memory Fragment Activated:{Style.RESET_ALL}")
+            print(f"{fragment.content}")
+            
+            # Apply emotional effects
+            if fragment.emotional_weight >= 8:
+                player.sanity -= random.randint(5, 15)
+                print(f"{Fore.RED}The intensity of this memory weighs heavily on your mind...{Style.RESET_ALL}")
+            elif fragment.emotional_weight >= 6:
+                player.sanity -= random.randint(2, 8)
+                print(f"{Fore.YELLOW}This memory stirs something deep within you...{Style.RESET_ALL}")
+            else:
+                player.sanity += random.randint(1, 5)
+                print(f"{Fore.GREEN}This gentle memory provides some comfort...{Style.RESET_ALL}")
+            
+            # Clarity affects reality perception
+            if fragment.clarity < 0.5:
+                player.reality -= random.randint(3, 10)
+                print(f"{Fore.MAGENTA}The unclear nature of this memory distorts your perception...{Style.RESET_ALL}")
+            
+            self.memory_fragments.remove(fragment)
+            return True
+        return False
+
+    def use_dimensional_rift(self, player):
+        """Use a dimensional rift for travel"""
+        if self.dimensional_rifts:
+            rift = self.dimensional_rifts[0]
+            rift.uses_remaining -= 1
+            
+            print(f"\n{Fore.MAGENTA}🌀 Dimensional Rift Activated:{Style.RESET_ALL}")
+            print("You step through the rift and find yourself in...")
+            print(f"{rift.destination_type}")
+            
+            # Apply stability effects
+            if rift.stability < 0.3:
+                player.reality -= random.randint(10, 20)
+                player.sanity -= random.randint(5, 15)
+                print(f"{Fore.RED}The unstable rift tears at your very being!{Style.RESET_ALL}")
+            elif rift.stability < 0.6:
+                player.reality -= random.randint(5, 10)
+                print(f"{Fore.YELLOW}The rift's instability makes you feel disoriented...{Style.RESET_ALL}")
+            else:
+                player.memory += random.randint(5, 15)
+                print(f"{Fore.GREEN}The stable rift grants you new insights...{Style.RESET_ALL}")
+            
+            if rift.uses_remaining <= 0:
+                self.dimensional_rifts.remove(rift)
+                print(f"{Fore.LIGHTBLACK_EX}The rift collapses behind you...{Style.RESET_ALL}")
+            
+            return True
+        return False
+
     def generate_description(self):
         # Theme-based descriptions
         theme_descriptions = {
@@ -947,6 +1031,56 @@ class Room:
                 ("A dealer's visor left behind.", "When you put it on, you can see everyone's cards..."),
                 ("A craps table with dice frozen mid-roll.", "They show numbers that match important dates in your life..."),
                 ("A surveillance monitor.", "It shows you entering the casino, but you don't remember arriving..."),
+                None
+            ],
+            'theater': [
+                ("A vintage playbill on the floor.", "It advertises a show starring you in the lead role..."),
+                ("A spotlight that follows you.", "Its beam never leaves you no matter where you move..."),
+                ("An empty director's chair.", "Your name is embroidered on the back in golden thread..."),
+                ("A makeup mirror with lights.", "It reflects someone else wearing your face..."),
+                ("Sheet music scattered about.", "The notes spell out your life story when read together..."),
+                ("A phantom's mask on a stand.", "When you touch it, you hear your own voice singing..."),
+                ("A program from tonight's show.", "The cast list includes everyone you've ever loved..."),
+                None
+            ],
+            'library': [
+                ("A bookmark in an open book.", "It marks a page describing your exact current situation..."),
+                ("A library card on the desk.", "It expires on the day you're supposed to die..."),
+                ("Reading glasses left behind.", "When you wear them, you can read books in languages you don't know..."),
+                ("A stamp pad for returns.", "The ink changes color based on your deepest regrets..."),
+                ("A card catalog drawer.", "It contains only cards with your name and different life paths..."),
+                ("An overdue notice.", "It's for a book about your life that you never checked out..."),
+                ("A librarian's nameplate.", "It keeps changing to names of people who've influenced you..."),
+                None
+            ],
+            'cathedral': [
+                ("A prayer book left open.", "The prayer written there is exactly what you need to hear..."),
+                ("A donation candle.", "It lights itself whenever you think of someone you've lost..."),
+                ("A confessional schedule.", "Your name is listed for an appointment you never made..."),
+                ("Holy water in a font.", "Your reflection in it shows you as a child..."),
+                ("A hymnal with torn pages.", "The remaining songs are all from important moments in your life..."),
+                ("A collection plate.", "It contains coins from every year you've been alive..."),
+                ("A stained glass shard.", "It depicts a scene from your future..."),
+                None
+            ],
+            'laboratory': [
+                ("A test tube with your blood.", "The label says it was drawn tomorrow..."),
+                ("A research journal.", "The latest entry describes experiments being done on you..."),
+                ("Safety goggles on a hook.", "When you wear them, you can see the molecular structure of emotions..."),
+                ("A petri dish growing something.", "The culture forms patterns that match your fingerprints..."),
+                ("A clipboard with data.", "The statistics are all about your life choices and their outcomes..."),
+                ("A microscope focused on a slide.", "It shows memories instead of cells when you look through it..."),
+                ("A chemical formula on the board.", "It's the exact combination that would erase your existence..."),
+                None
+            ],
+            'museum': [
+                ("A museum guide pamphlet.", "It offers tours through different periods of your life..."),
+                ("An exhibit placard.", "It describes you as if you were already a historical figure..."),
+                ("A donation box.", "The suggested amount is exactly what you have in your pocket..."),
+                ("A velvet rope barrier.", "It cordons off a display case containing your childhood toys..."),
+                ("A museum visitor badge.", "It has your photo but lists you as 'Deceased Patron'..."),
+                ("An audio guide headset.", "It plays recordings of conversations you had in private..."),
+                ("A guest book to sign.", "Your signature is already there, dated years in the future..."),
                 None
             ]
         }
