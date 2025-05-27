@@ -9966,7 +9966,256 @@ def view_card_collection():
     
     print(f"\nTotal Cards: {len(player['card_collection'])}")
     input("\nPress Enter to continue...")
+
+# Advanced Weather System for Seasonal Events
+def weather_effects():
+    """Dynamic weather system that affects carnival experiences"""
+    weather_conditions = {
+        "sunny": {
+            "description": "Brilliant sunshine illuminates the carnival with golden light",
+            "effects": {"mood_boost": 15, "energy_cost_reduction": 0.8, "ticket_bonus": 1.2},
+            "special_events": ["Solar Festival", "Light Show Enhancement"]
+        },
+        "rainy": {
+            "description": "Gentle rain creates a mystical atmosphere with rainbow reflections",
+            "effects": {"introspection_boost": 20, "indoor_games_discount": 0.7},
+            "special_events": ["Rain Dance Performance", "Puddle Jumping Contest"]
+        },
+        "stormy": {
+            "description": "Dramatic storm clouds create an electrifying carnival atmosphere",
+            "effects": {"thrill_multiplier": 1.5, "safety_warnings": True},
+            "special_events": ["Lightning Light Show", "Storm Shelter Stories"]
+        },
+        "foggy": {
+            "description": "Mysterious fog rolls through, creating an ethereal carnival experience",
+            "effects": {"mystery_bonus": 25, "navigation_difficulty": 1.3},
+            "special_events": ["Fog Maze Challenge", "Ghost Story Hour"]
+        },
+        "snowy": {
+            "description": "Magical snowfall transforms the carnival into a winter wonderland",
+            "effects": {"winter_theme_unlock": True, "hot_drinks_popular": True},
+            "special_events": ["Snowman Building", "Winter Carnival Games"]
+        }
+    }
     
+    current_weather = random.choice(list(weather_conditions.keys()))
+    weather_data = weather_conditions[current_weather]
+    
+    print(f"\n{Fore.CYAN}🌤️  Current Weather: {current_weather.title()}{Style.RESET_ALL}")
+    print(f"{weather_data['description']}")
+    
+    # Apply weather effects
+    if "mood_boost" in weather_data["effects"]:
+        print(f"{Fore.GREEN}Your mood is lifted by the beautiful weather!")
+    
+    return current_weather, weather_data
+
+# Expanded NPC Relationship System
+def advanced_npc_system():
+    """Enhanced NPC interaction system with deep relationships"""
+    
+    # Extended NPC personalities
+    npc_personalities = {
+        "optimistic": {
+            "traits": ["cheerful", "encouraging", "hopeful"],
+            "dialogue_style": "upbeat and positive",
+            "gifts_loved": ["flowers", "music", "art"],
+            "relationship_bonus": 1.2
+        },
+        "mysterious": {
+            "traits": ["enigmatic", "secretive", "wise"],
+            "dialogue_style": "cryptic and thoughtful",
+            "gifts_loved": ["books", "crystals", "ancient items"],
+            "relationship_bonus": 1.5
+        },
+        "playful": {
+            "traits": ["fun-loving", "energetic", "mischievous"],
+            "dialogue_style": "jokes and games",
+            "gifts_loved": ["toys", "games", "colorful items"],
+            "relationship_bonus": 1.1
+        },
+        "scholarly": {
+            "traits": ["intellectual", "curious", "analytical"],
+            "dialogue_style": "informative and detailed",
+            "gifts_loved": ["books", "tools", "research"],
+            "relationship_bonus": 1.3
+        }
+    }
+    
+    return npc_personalities
+
+# Multi-layered Achievement System
+def complex_achievement_system():
+    """Comprehensive achievement tracking with multiple categories"""
+    
+    achievement_categories = {
+        "Explorer": {
+            "Carnival Wanderer": "Visit 50 different attractions",
+            "Ride Master": "Experience every ride at least once",
+            "Game Champion": "Win 100 carnival games",
+            "Food Connoisseur": "Try every food item available",
+            "Secret Finder": "Discover 10 hidden areas"
+        },
+        "Social Butterfly": {
+            "Friend to All": "Reach max relationship with 5 NPCs",
+            "Gift Giver": "Give 50 gifts to NPCs",
+            "Story Collector": "Hear 25 NPC backstories",
+            "Mediator": "Resolve 10 NPC conflicts",
+            "Party Planner": "Organize 5 carnival events"
+        },
+        "Master Collector": {
+            "Ticket Tycoon": "Earn 10,000 tickets total",
+            "Costume Collector": "Own 20 different costumes",
+            "Trophy Hunter": "Win 15 tournament trophies",
+            "Card Master": "Collect 100 unique cards",
+            "Memory Keeper": "Document 50 carnival moments"
+        },
+        "Thrill Seeker": {
+            "Adrenaline Junkie": "Ride roller coasters 100 times",
+            "Fearless": "Complete all extreme challenges",
+            "Speed Demon": "Win 20 racing competitions",
+            "High Scorer": "Achieve top score on 10 games",
+            "Risk Taker": "Successfully complete 25 daring stunts"
+        },
+        "Time Master": {
+            "Veteran Visitor": "Attend carnival for 30 days",
+            "Night Owl": "Experience 10 midnight events",
+            "Early Bird": "Attend 15 sunrise activities",
+            "Seasonal Expert": "Experience all four seasonal themes",
+            "Anniversary Celebrant": "Attend special anniversary events"
+        }
+    }
+    
+    return achievement_categories
+
+# Advanced Mini-Game Collection
+def premium_minigames():
+    """Collection of sophisticated mini-games for enhanced gameplay"""
+    
+    def rhythm_carnival():
+        """Musical rhythm game with carnival themes"""
+        print(f"\n{Fore.MAGENTA}🎵 RHYTHM CARNIVAL 🎵{Style.RESET_ALL}")
+        print("Match the beat of the carnival music!")
+        
+        beats = ["🥁", "🎺", "🎪", "🎠", "🎡"]
+        sequence = [random.choice(beats) for _ in range(8)]
+        
+        print("Watch the sequence:")
+        for beat in sequence:
+            print(beat, end=" ", flush=True)
+            time.sleep(0.8)
+        
+        print("\n\nNow repeat it back!")
+        player_input = input("Enter the sequence (separate with spaces): ").split()
+        
+        score = sum(1 for i, beat in enumerate(player_input) if i < len(sequence) and beat == sequence[i])
+        
+        if score == len(sequence):
+            print(f"{Fore.GREEN}Perfect rhythm! You've won the grand prize!")
+            return 150
+        elif score >= len(sequence) * 0.7:
+            print(f"{Fore.YELLOW}Great rhythm! You scored {score}/{len(sequence)}")
+            return 75
+        else:
+            print(f"{Fore.RED}Keep practicing! You scored {score}/{len(sequence)}")
+            return 25
+    
+    def carnival_trivia():
+        """Advanced trivia game about carnival history and fun facts"""
+        questions = [
+            {
+                "question": "What year was the first modern Ferris wheel built?",
+                "options": ["A) 1891", "B) 1893", "C) 1895", "D) 1897"],
+                "answer": "B",
+                "explanation": "The first Ferris wheel was built by George Ferris for the 1893 World's Fair in Chicago!"
+            },
+            {
+                "question": "Which carnival game was originally called 'African Dodger'?",
+                "options": ["A) Ring Toss", "B) Dunk Tank", "C) Bottle Toss", "D) Duck Pond"],
+                "answer": "B",
+                "explanation": "The dunk tank evolved from this controversial early carnival game."
+            },
+            {
+                "question": "What does 'carny' slang 'mark' refer to?",
+                "options": ["A) A target", "B) A customer", "C) A prize", "D) A game"],
+                "answer": "B",
+                "explanation": "In carnival terminology, a 'mark' is a potential customer or target for games."
+            }
+        ]
+        
+        print(f"\n{Fore.CYAN}🧠 CARNIVAL TRIVIA CHALLENGE 🧠{Style.RESET_ALL}")
+        score = 0
+        
+        for i, q in enumerate(questions, 1):
+            print(f"\nQuestion {i}: {q['question']}")
+            for option in q['options']:
+                print(option)
+            
+            answer = input("Your answer: ").upper().strip()
+            
+            if answer == q['answer']:
+                print(f"{Fore.GREEN}Correct! {q['explanation']}")
+                score += 1
+            else:
+                print(f"{Fore.RED}Wrong! The correct answer was {q['answer']}. {q['explanation']}")
+        
+        print(f"\nFinal Score: {score}/{len(questions)}")
+        return score * 50
+    
+    return {"rhythm_carnival": rhythm_carnival, "carnival_trivia": carnival_trivia}
+
+# Immersive Storytelling System
+def interactive_story_mode():
+    """Branching narrative system for carnival adventures"""
+    
+    story_chapters = {
+        "mystery_of_the_missing_mascot": {
+            "title": "The Mystery of the Missing Mascot",
+            "description": "The carnival's beloved mascot has vanished! Help solve this perplexing mystery.",
+            "chapters": [
+                {
+                    "text": "You notice the mascot costume is missing from the employee area. What do you do?",
+                    "choices": {
+                        "A": "Question the carnival workers",
+                        "B": "Search for clues around the carnival",
+                        "C": "Check the security cameras"
+                    },
+                    "outcomes": {
+                        "A": "Workers mention seeing suspicious activity near the funhouse",
+                        "B": "You find torn fabric and muddy footprints leading to the game area",
+                        "C": "Camera footage shows a figure in dark clothes near the costume storage"
+                    }
+                }
+            ]
+        }
+    }
+    
+    return story_chapters
+
+# Enhanced Economic System
+def carnival_economy():
+    """Complex economic simulation for the carnival experience"""
+    
+    economic_factors = {
+        "inflation": {
+            "ticket_prices": 1.0,
+            "food_costs": 1.0,
+            "prize_values": 1.0
+        },
+        "seasonal_demand": {
+            "summer": {"multiplier": 1.3, "popular_items": ["ice_cream", "water_rides"]},
+            "winter": {"multiplier": 0.8, "popular_items": ["hot_cocoa", "indoor_games"]},
+            "spring": {"multiplier": 1.1, "popular_items": ["flower_crowns", "spring_games"]},
+            "autumn": {"multiplier": 1.0, "popular_items": ["pumpkin_treats", "harvest_games"]}
+        },
+        "supply_chain": {
+            "shortages": ["cotton_candy_supplies", "prize_inventory"],
+            "surplus": ["ticket_stock", "food_ingredients"]
+        }
+    }
+    
+    return economic_factors
+
 # Main execution - launcher already checked at the beginning of the file
 if __name__ == "__main__":
     start_game()
