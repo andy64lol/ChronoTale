@@ -8,13 +8,18 @@ from colorama import init, Fore, Back, Style
 init(autoreset=True)
 
 # Game settings
-X_MIN, X_MAX = -50, 50
-Y_MIN, Y_MAX = -50, 50
-Z_MIN, Z_MAX = -5, 5
+X_MIN, X_MAX = -100, 100
+Y_MIN, Y_MAX = -100, 100
+Z_MIN, Z_MAX = -10, 10
 SAVE_DIR = 'saves'
 MAX_SLOTS = 5
 SANITY_MAX = 100
+REALITY_MAX = 100
+MEMORY_MAX = 100
 MIN_HEAVEN_DOOR_DISTANCE = 10
+ENTITY_SPAWN_CHANCE = 0.15
+ANOMALY_CHANCE = 0.25
+TEMPORAL_DISTORTION_CHANCE = 0.10
 
 # Ensure save directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -31,54 +36,202 @@ directions = {
 
 doors = ['door1', 'door2', 'door3', 'door4']
 
+# Entity classes for encounters
+class Entity:
+    def __init__(self, name, description, behavior, threat_level=1):
+        self.name = name
+        self.description = description
+        self.behavior = behavior
+        self.threat_level = threat_level
+        self.active = True
+
+class Anomaly:
+    def __init__(self, name, description, effect):
+        self.name = name
+        self.description = description
+        self.effect = effect
+
+# Define liminal entities
+ENTITIES = {
+    'the_follower': Entity(
+        "The Follower",
+        "A shadowy figure that appears in your peripheral vision, always maintaining the same distance.",
+        "follows_player",
+        threat_level=2
+    ),
+    'memory_echo': Entity(
+        "Memory Echo",
+        "A translucent figure performing actions from your past, unaware of your presence.",
+        "replays_memories",
+        threat_level=1
+    ),
+    'void_walker': Entity(
+        "Void Walker",
+        "A humanoid silhouette that phases through walls, leaving reality distortions in its wake.",
+        "reality_distortion",
+        threat_level=3
+    ),
+    'the_observer': Entity(
+        "The Observer",
+        "An presence that watches from impossible angles, its gaze felt but never seen.",
+        "constant_surveillance",
+        threat_level=2
+    ),
+    'time_wraith': Entity(
+        "Time Wraith",
+        "A being that exists between moments, causing temporal anomalies wherever it goes.",
+        "temporal_manipulation",
+        threat_level=4
+    ),
+    'mirror_self': Entity(
+        "Mirror Self",
+        "An exact copy of yourself that appears in reflective surfaces, acting independently.",
+        "mimics_player",
+        threat_level=3
+    ),
+    'the_janitor': Entity(
+        "The Janitor",
+        "An elderly figure eternally cleaning spaces that never get dirty, humming forgotten melodies.",
+        "environmental_maintenance",
+        threat_level=1
+    ),
+    'static_person': Entity(
+        "Static Person",
+        "A human-shaped mass of television static that occasionally takes familiar forms.",
+        "shape_shifting",
+        threat_level=2
+    )
+}
+
+# Define anomalies
+ANOMALIES = {
+    'temporal_loop': Anomaly(
+        "Temporal Loop",
+        "Time begins to repeat in 3-minute cycles, with subtle changes each iteration.",
+        "time_loop"
+    ),
+    'gravity_shift': Anomaly(
+        "Gravity Anomaly",
+        "Gravity becomes inconsistent, with objects and furniture floating or stuck to walls.",
+        "physics_distortion"
+    ),
+    'memory_bleed': Anomaly(
+        "Memory Bleed",
+        "Memories from different times and places begin manifesting as physical objects.",
+        "memory_manifestation"
+    ),
+    'reality_tear': Anomaly(
+        "Reality Tear",
+        "A visible crack in space reveals glimpses of other dimensions or timelines.",
+        "dimensional_breach"
+    ),
+    'echo_chamber': Anomaly(
+        "Echo Chamber",
+        "Sounds from the past and future overlap with the present, creating an auditory chaos.",
+        "temporal_audio"
+    ),
+    'shadow_displacement': Anomaly(
+        "Shadow Displacement",
+        "Shadows move independently of their sources, sometimes revealing hidden truths.",
+        "shadow_manipulation"
+    )
+}
+
 class Room:
     def __init__(self, theme=None, level=1):
-        self.theme = theme if theme else random.choice(['hospital', 'school', 'home', 'limbo', 'mall'])
+        self.theme = theme if theme else random.choice(['hospital', 'school', 'home', 'limbo', 'mall', 'office', 'hotel', 'airport', 'parking_garage', 'subway', 'swimming_pool', 'warehouse', 'casino'])
         self.level = level
+        self.entities = []
+        self.anomalies = []
+        self.atmosphere_intensity = random.uniform(0.3, 1.0)
+        self.temporal_stability = random.uniform(0.5, 1.0)
+        self.reality_coherence = random.uniform(0.4, 1.0)
+        self.visited_count = 0
+        self.spawn_entities()
+        self.generate_anomalies()
         self.generate_description()
+
+    def spawn_entities(self):
+        if random.random() < ENTITY_SPAWN_CHANCE * (1 + self.level * 0.1):
+            entity_key = random.choice(list(ENTITIES.keys()))
+            self.entities.append(ENTITIES[entity_key])
+
+    def generate_anomalies(self):
+        if random.random() < ANOMALY_CHANCE * (1 + self.level * 0.05):
+            anomaly_key = random.choice(list(ANOMALIES.keys()))
+            self.anomalies.append(ANOMALIES[anomaly_key])
+
+    def get_atmosphere_description(self):
+        descriptions = []
+        if self.atmosphere_intensity > 0.8:
+            descriptions.append(f"{Fore.RED}{Style.BRIGHT}The air feels thick and oppressive, making breathing difficult.{Style.RESET_ALL}")
+        elif self.atmosphere_intensity > 0.6:
+            descriptions.append(f"{Fore.YELLOW}An unsettling tension permeates the space.{Style.RESET_ALL}")
+        elif self.atmosphere_intensity > 0.4:
+            descriptions.append(f"{Fore.CYAN}The atmosphere feels slightly off, like something is watching.{Style.RESET_ALL}")
+
+        if self.temporal_stability < 0.3:
+            descriptions.append(f"{Fore.MAGENTA}{Style.BRIGHT}Time seems to stutter and skip around you.{Style.RESET_ALL}")
+        elif self.temporal_stability < 0.6:
+            descriptions.append(f"{Fore.LIGHTMAGENTA_EX}The flow of time feels inconsistent here.{Style.RESET_ALL}")
+
+        if self.reality_coherence < 0.4:
+            descriptions.append(f"{Back.RED}{Fore.WHITE}Reality flickers like a damaged screen.{Style.RESET_ALL}")
+        elif self.reality_coherence < 0.7:
+            descriptions.append(f"{Fore.LIGHTBLACK_EX}The edges of your vision seem to blur and shift.{Style.RESET_ALL}")
+
+        return descriptions
 
     def generate_description(self):
         # Theme-based descriptions
         theme_descriptions = {
             'hospital': [
-                (Fore.CYAN + "A sterile hospital room with medical equipment frozen in time." + Style.RESET_ALL, ['door1', 'door2']),
-                (Fore.RED + "A blood-stained operating theater with flickering lights." + Style.RESET_ALL, ['door1', 'door2']),
-                (Fore.LIGHTGREEN_EX + "A doctor's office with patient files scattered about." + Style.RESET_ALL, ['door1', 'door3']),
-                (Fore.WHITE + "A hospital corridor stretches out before you, chairs lining the walls." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
-                (Fore.LIGHTBLACK_EX + "A hospital reception area, the receptionist missing from her desk." + Style.RESET_ALL, ['door1', 'door4']),
-                (Fore.LIGHTRED_EX + "A trauma room with red-stained sheets and haunting monitors." + Style.RESET_ALL, ['door2', 'door3']),
-                (Fore.YELLOW + "A pediatric ward with empty cribs and disconnected life support." + Style.RESET_ALL, ['door1', 'door2']),
-                (Fore.BLUE + "An MRI room, the machine humming with no one inside it." + Style.RESET_ALL, ['door1', 'door3'])
+                (Fore.CYAN + "A sterile hospital room where IV drips count down to unknown procedures, medical charts flutter without wind." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A blood-stained operating theater where surgical lights swing hypnotically, casting dancing shadows on abandoned instruments." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.LIGHTGREEN_EX + "A doctor's office where patient files rewrite themselves, diagnoses changing to match your deepest fears." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.WHITE + "An endless hospital corridor where wheelchair tracks lead in circles, the sound of distant breathing echoes from closed rooms." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.LIGHTBLACK_EX + "A reception area where appointment books schedule meetings with the deceased, phones ring with no callers." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.LIGHTRED_EX + "A trauma bay where heart monitors flatline rhythmically, creating a haunting electronic symphony of death." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.YELLOW + "A pediatric ward where toy blocks spell out final words, teddy bears stare with knowing glass eyes." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.BLUE + "An MRI chamber that scans for souls instead of bones, revealing the fractures in your spirit." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.MAGENTA + "A morgue where toe tags write themselves, listing deaths that haven't happened yet." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.LIGHTCYAN_EX + "A psychiatric ward where padded walls absorb screams from other timelines, medication cups refill with liquid memories." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
             ],
             'school': [
-                (Fore.LIGHTYELLOW_EX + "A school classroom where the blackboard writes by itself." + Style.RESET_ALL, ['door1', 'door4']),
-                (Fore.GREEN + "A gymnasium with basketballs that bounce on their own." + Style.RESET_ALL, ['door1', 'door3']),
-                (Fore.BLUE + "A science lab with experiments that continue without supervision." + Style.RESET_ALL, ['door2', 'door3']),
-                (Fore.CYAN + "A school cafeteria with food that moves on its plates." + Style.RESET_ALL, ['door1', 'door2']),
-                (Fore.RED + "A detention room where desk graffiti shifts and changes." + Style.RESET_ALL, ['door1']),
-                (Fore.MAGENTA + "A music room where instruments play themselves softly." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
-                (Fore.WHITE + "A locker room with lockers that open and close on their own." + Style.RESET_ALL, ['door1', 'door4']),
-                (Fore.LIGHTBLACK_EX + "The principal's office with commendations for students who never existed." + Style.RESET_ALL, ['door2'])
+                (Fore.LIGHTYELLOW_EX + "A classroom where chalk writes equations that solve themselves, desks arranged for students who graduated decades ago but never left." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.GREEN + "A gymnasium where sneakers squeak on phantom feet, scoreboards count games that span lifetimes, basketballs dribble in perfect rhythm with your heartbeat." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A science lab where beakers bubble with liquid nostalgia, periodic tables rearrange to spell forgotten names, microscopes reveal memories instead of cells." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.CYAN + "A cafeteria where lunch trays slide across tables by themselves, milk cartons display missing children from tomorrow's newspapers." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A detention hall where the clock moves backwards, student desks are carved with confessions that change when you look away." + Style.RESET_ALL, ['door1']),
+                (Fore.MAGENTA + "A music room where phantom orchestras perform graduation songs for classes that never were, sheet music writes itself in real-time." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.WHITE + "A locker hallway where combination locks spin to birth dates of the unborn, yearbook photos age in real-time within their frames." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.LIGHTBLACK_EX + "A principal's office where disciplinary files document future infractions, the intercom announces names of students who haven't enrolled yet." + Style.RESET_ALL, ['door2']),
+                (Fore.LIGHTGREEN_EX + "A library where books rewrite their endings based on who's reading, the card catalog sorts itself by emotional weight rather than alphabet." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.LIGHTRED_EX + "An abandoned prom hall where decorations sway to music only the dead can hear, corsages wilt and bloom in endless cycles." + Style.RESET_ALL, ['door2', 'door3'])
             ],
             'home': [
-                (Fore.MAGENTA + "A child's bedroom where toys move when you're not looking." + Style.RESET_ALL, ['door1']),
-                (Fore.LIGHTBLACK_EX + "A dusty attic filled with forgotten relics." + Style.RESET_ALL, ['door1', 'door4']),
-                (Fore.YELLOW + "A living room with a TV showing only static." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
-                (Fore.BLUE + "A bathroom with a mirror that reflects a different person." + Style.RESET_ALL, ['door1']),
-                (Fore.CYAN + "A kitchen where the refrigerator hums an eerie melody." + Style.RESET_ALL, ['door1', 'door2']),
-                (Fore.GREEN + "A dining room with place settings for people who aren't there." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
-                (Fore.RED + "A basement with strange markings on the concrete walls." + Style.RESET_ALL, ['door1', 'door2']),
-                (Fore.WHITE + "A study filled with books written in incomprehensible languages." + Style.RESET_ALL, ['door2', 'door3'])
+                (Fore.MAGENTA + "A child's bedroom where stuffed animals whisper bedtime stories from lives unlived, music boxes play lullabies that predict nightmares." + Style.RESET_ALL, ['door1']),
+                (Fore.LIGHTBLACK_EX + "An attic where photo albums chronicle a family that grows older in reverse, Christmas decorations hang themselves with seasonal precision." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.YELLOW + "A living room where the TV broadcasts home movies of your future, remote controls channel-surf through parallel lives." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.BLUE + "A bathroom where the mirror shows you aging in fast-forward, toothbrushes arrange themselves by the dates of their owners' deaths." + Style.RESET_ALL, ['door1']),
+                (Fore.CYAN + "A kitchen where the refrigerator preserves memories instead of food, recipe cards write themselves with ingredients from your past." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.GREEN + "A dining room set for a last supper that never ends, chairs pull themselves out when phantom guests arrive for dinner." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.RED + "A basement where the walls bleed condensation shaped like unspoken confessions, storage boxes organize themselves by emotional trauma." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.WHITE + "A study where books rewrite themselves as you read, the words shifting to reveal the reader's deepest regrets." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.LIGHTMAGENTA_EX + "A nursery that prepares itself for children who will never be born, cribs rock empty in rhythm with unborn heartbeats." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.LIGHTRED_EX + "A master bedroom where the bed makes itself with sheets from different timelines, alarm clocks count down to moments of impact." + Style.RESET_ALL, ['door2', 'door3'])
             ],
             'limbo': [
-                (Fore.WHITE + "A mirrored room that reflects impossible angles." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
-                (Fore.LIGHTBLUE_EX + "A frozen cavern shimmering with ice crystals." + Style.RESET_ALL, ['door1', 'door3']),
-                (Fore.LIGHTMAGENTA_EX + "A wall of photos and memories that feel like your own." + Style.RESET_ALL, ['door2']),
-                (Fore.LIGHTBLACK_EX + "An endless void with floating debris of forgotten memories." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
-                (Fore.CYAN + "A room where gravity doesn't work consistently." + Style.RESET_ALL, ['door1', 'door4']),
-                (Fore.GREEN + "A forest clearing inside an enclosed room, complete with a sky." + Style.RESET_ALL, ['door2', 'door3']),
-                (Fore.YELLOW + "A room where time moves visibly backwards." + Style.RESET_ALL, ['door1', 'door3']),
-                (Fore.RED + "A chamber where your thoughts materialize as whispers in the air." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
+                (Fore.WHITE + "A mirrored labyrinth where each reflection shows a different choice you could have made, fractal infinities of unlived lives stretching beyond comprehension." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.LIGHTBLUE_EX + "A crystalline cavern where each ice formation preserves a moment of pure emotion, the temperature drops as regret accumulates." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.LIGHTMAGENTA_EX + "A gallery of photographs that shift between your memories and someone else's, the frames breathing like living tissue." + Style.RESET_ALL, ['door2']),
+                (Fore.LIGHTBLACK_EX + "An infinite void where fragments of consciousness float like islands, each piece containing the last thoughts of the forgotten." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
+                (Fore.CYAN + "A gravity-defying chamber where tears fall upward and laughter sinks like stones, the laws of physics bending to emotional weight." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.GREEN + "An impossible forest that grows indoors, each tree bearing fruit that tastes like childhood summers you never experienced." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.YELLOW + "A temporal anomaly room where seconds rewind like film strips, showing the same moment of impact played backwards endlessly." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.RED + "A consciousness chamber where thoughts become visible as smoke, unspoken words hanging in the air like accusations." + Style.RESET_ALL, ['door1', 'door2', 'door4']),
+                (Fore.LIGHTCYAN_EX + "A library of unwritten books where empty pages fill themselves with stories of lives that could have been." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
+                (Fore.MAGENTA + "A waiting room for the afterlife where appointment numbers are called in languages that predate human speech." + Style.RESET_ALL, ['door2', 'door3'])
             ],
             'mall': [
                 (Fore.BLUE + "An endless corridor with doors that seem to breathe." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
@@ -108,6 +261,86 @@ class Room:
                 (Fore.LIGHTRED_EX + "A Ferris wheel that creaks ominously with doors in the middle of the sky leading to nowhere." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
                 (Fore.CYAN + "A clown's tent filled with laughter that echoes eerily." + Style.RESET_ALL, ['door1', 'door3']),
                 (Fore.MAGENTA + "A food stand with food made up of human parts that seems to move on its own..." + Style.RESET_ALL, ['door2', 'door4'])
+            ],
+            'office': [
+                (Fore.LIGHTBLACK_EX + "An endless maze of beige cubicles under harsh fluorescent lighting." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.BLUE + "A conference room with chairs arranged for a meeting that never happened." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.WHITE + "A break room where the coffee pot eternally brews but never fills." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.CYAN + "An executive office overlooking a city that doesn't exist." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A copy room where machines run continuously without anyone operating them." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.GREEN + "A server room humming with the sound of computers processing unknown data." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.LIGHTCYAN_EX + "An open office space where keyboards type by themselves." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.MAGENTA + "A reception area where phones ring endlessly but no one answers." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'hotel': [
+                (Fore.RED + "A hotel corridor that stretches infinitely in both directions with identical doors." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
+                (Fore.YELLOW + "A lavish lobby with a chandelier that casts no shadows." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.BLUE + "An elevator that plays music for floors that don't exist." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.GREEN + "A hotel room where the bed is always unmade despite housekeeping." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.MAGENTA + "A swimming pool area where the water ripples without wind." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.CYAN + "A ballroom set for a party that ended decades ago." + Style.RESET_ALL, ['door1', 'door2', 'door4']),
+                (Fore.WHITE + "A hotel bar where glasses refill themselves with unknown liquids." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.LIGHTRED_EX + "A honeymoon suite with rose petals that never wither." + Style.RESET_ALL, ['door2', 'door4'])
+            ],
+            'airport': [
+                (Fore.BLUE + "An airport terminal with departure boards showing flights to nowhere." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.WHITE + "A waiting area where announcements echo for gates that don't exist." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.YELLOW + "A baggage claim carousel that runs empty in perpetual motion." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.GREEN + "A security checkpoint where metal detectors beep for invisible objects." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.CYAN + "A duty-free shop where products float slightly above their shelves." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.MAGENTA + "A jet bridge extending into empty space with no plane attached." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.LIGHTBLACK_EX + "An air traffic control tower overlooking runways that fade into mist." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.RED + "A passenger lounge with seats that face windows showing only void." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
+            ],
+            'parking_garage': [
+                (Fore.LIGHTBLACK_EX + "A concrete parking garage where your footsteps echo endlessly." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A parking level with cars that have no owners and never move." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.GREEN + "A spiral ramp that seems to ascend forever without reaching the top." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.BLUE + "A basement parking level where the ceiling drips with unknown substances." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.RED + "An attendant booth with ticket machines that dispense blank stubs." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.CYAN + "A parking space marked 'Reserved' that seems to call to you." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.WHITE + "A level where all the cars are the same make and model." + Style.RESET_ALL, ['door2', 'door3', 'door4']),
+                (Fore.MAGENTA + "An emergency stairwell with numbers that change when you're not looking." + Style.RESET_ALL, ['door1', 'door2'])
+            ],
+            'subway': [
+                (Fore.LIGHTBLACK_EX + "A subway platform where trains arrive but never stop." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A tunnel system with tracks that lead in impossible directions." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.BLUE + "A subway car with seats that face each other in infinite reflections." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.GREEN + "A station where the departure board shows times from decades ago." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.RED + "A maintenance tunnel filled with the sound of approaching trains that never come." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.CYAN + "A turnstile area where tokens fall but never hit the ground." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.WHITE + "An underground concourse with shops that sell items from your childhood." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.MAGENTA + "A control room with monitors showing empty trains on endless loops." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
+            ],
+            'swimming_pool': [
+                (Fore.CYAN + "An indoor pool complex where the water is perfectly still despite the filtration." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.BLUE + "A pool deck with lounge chairs arranged for sunbathers who never came." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.WHITE + "A chlorinated changing room where lockers open and close rhythmically." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.YELLOW + "A diving area where the board creaks under invisible weight." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.GREEN + "A lap pool with lane ropes that move like they're underwater." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.LIGHTBLUE_EX + "A pool maintenance room where pumps work to clean non-existent debris." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.MAGENTA + "A hot tub that bubbles without heat, creating impossible steam patterns." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.LIGHTCYAN_EX + "A pool office with safety rules posted for activities that never happen." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
+            ],
+            'warehouse': [
+                (Fore.LIGHTBLACK_EX + "A massive warehouse with shelves that extend beyond sight." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.YELLOW + "A loading dock where trucks are always backing up but never arrive." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.GREEN + "A storage area with boxes labeled in languages that don't exist." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.BLUE + "A forklift bay where machinery operates without operators." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A quality control station where conveyor belts carry invisible products." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.CYAN + "A climate-controlled section humming with precise temperature regulation." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.WHITE + "A shipping area with labels addressed to places that were never built." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.MAGENTA + "An inventory room where barcode scanners beep continuously." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
+            ],
+            'casino': [
+                (Fore.RED + "A casino floor where slot machines play themselves with no one watching." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.GREEN + "A poker room with chips that stack themselves on empty tables." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.YELLOW + "A roulette area where the wheel spins eternally but the ball never lands." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.BLUE + "A high-roller section with velvet ropes protecting nothing." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.MAGENTA + "A sports betting area with screens showing games that never happened." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.CYAN + "A cashier's cage where money counts itself behind bulletproof glass." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.WHITE + "A casino restaurant where meals are served to invisible patrons." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.LIGHTRED_EX + "A surveillance room monitoring empty gaming floors through countless cameras." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
             ]
         }
 
@@ -172,6 +405,70 @@ class Room:
                 "Blocked stairs with 'Only authorised personel' tape that lead nowhere but a wall.",
                 "A staircase in the middle of the seats of the circus that doesn't make sense...",
                 "A mirror maze with refelections of people you knew,but their faces seem very distorted..."
+            ],
+            'office': [
+                "There's a corporate staircase leading to upper management floors.",
+                "A service stairwell descends to the basement archives.",
+                "Both main and emergency staircases are accessible.",
+                "No exit signs visible in this corporate maze.",
+                "A modern glass staircase spirals to the executive level.",
+                "Blocked stairs with 'Authorized Personnel Only' signs."
+            ],
+            'hotel': [
+                "There's an elegant staircase leading to luxury suites.",
+                "A narrow service stairwell descends to the basement levels.",
+                "Both guest and staff staircases are visible.",
+                "No clear exit routes from this floor.",
+                "A grand marble staircase winds to the penthouse.",
+                "Fire escape stairs that seem to lead nowhere."
+            ],
+            'airport': [
+                "There's a staircase leading to the upper departure level.",
+                "A maintenance stairwell descends to baggage handling.",
+                "Both passenger and service staircases are accessible.",
+                "No emergency exit signs visible anywhere.",
+                "An escalator that moves upward indefinitely.",
+                "Blocked stairs with 'Airport Personnel Only' barriers."
+            ],
+            'parking_garage': [
+                "There's a concrete stairwell leading to upper parking levels.",
+                "A dark staircase descends deeper underground.",
+                "Both main and emergency stairwells are visible.",
+                "No exit signs can be found in this concrete maze.",
+                "A spiral ramp that doubles as stairs to nowhere.",
+                "Blocked stairs with warning tape and strange symbols."
+            ],
+            'subway': [
+                "There's a subway staircase leading to street level.",
+                "A maintenance stairwell descends to the tunnel systems.",
+                "Both public and service staircases are accessible.",
+                "No exit signs visible in this underground maze.",
+                "A spiral staircase that echoes with phantom footsteps.",
+                "Blocked stairs marked 'Danger: Track Work' but no workers."
+            ],
+            'swimming_pool': [
+                "There's a staircase leading to the observation deck.",
+                "A service stairwell descends to the pump room.",
+                "Both main and emergency staircases are visible.",
+                "No pool exit signs can be found anywhere.",
+                "A diving platform staircase that extends impossibly high.",
+                "Blocked stairs with 'Pool Maintenance' signs but no workers."
+            ],
+            'warehouse': [
+                "There's an industrial staircase leading to the office level.",
+                "A loading dock stairwell descends to the basement.",
+                "Both main and service staircases are accessible.",
+                "No exit signs visible in this industrial complex.",
+                "A metal spiral staircase winds around support beams.",
+                "Blocked stairs with 'Inventory Access Only' barriers."
+            ],
+            'casino': [
+                "There's a carpeted staircase leading to VIP floors.",
+                "A service stairwell descends to the vault level.",
+                "Both guest and staff staircases are visible.",
+                "No exit signs visible through the flashing lights.",
+                "An ornate staircase winds to private gaming rooms.",
+                "Blocked stairs with 'High Roller Access Only' velvet ropes."
             ]
         }
 
@@ -240,6 +537,70 @@ class Room:
                 "Platforms of the park that seem to be floating forming a path",
                 "Distorted bathroom hallway that seems to have infinite stalls",
                 "A food court with a familiar yet decilious smell of fast food brands that never existed"
+            ],
+            'office': [
+                "Corporate hallways extend in perfectly straight lines.",
+                "Only the elevator bank and conference room wing are accessible.",
+                "Left leads to cubicles, right to executive offices.",
+                "A single corridor stretches toward the break room.",
+                "A narrow pathway winds through endless workstations.",
+                "A wide hallway lined with identical office doors."
+            ],
+            'hotel': [
+                "Hotel corridors stretch infinitely in both directions.",
+                "Only the elevator area and guest wing are accessible.",
+                "Left leads to the pool area, right to the restaurant.",
+                "A single hallway continues toward the lobby.",
+                "A narrow service corridor twists behind the scenes.",
+                "A wide carpeted hallway with identical room doors."
+            ],
+            'airport': [
+                "Terminal concourses extend endlessly in all directions.",
+                "Only the main terminal and gate areas are accessible.",
+                "Left leads to departures, right to arrivals.",
+                "A single moving walkway continues forward.",
+                "A narrow corridor winds past empty gate areas.",
+                "A wide terminal hallway stretches toward security."
+            ],
+            'parking_garage': [
+                "Concrete ramps spiral in impossible directions.",
+                "Only the main level and basement are accessible.",
+                "Left leads to compact cars, right to reserved spaces.",
+                "A single driving lane continues through empty spaces.",
+                "A narrow pathway weaves between parked vehicles.",
+                "A wide driving lane stretches toward the exit."
+            ],
+            'subway': [
+                "Underground tunnels branch in all directions.",
+                "Only the platform and main tunnel are accessible.",
+                "Left leads to uptown trains, right to downtown.",
+                "A single tunnel continues into darkness.",
+                "A narrow maintenance tunnel twists alongside tracks.",
+                "A wide platform stretches along abandoned tracks."
+            ],
+            'swimming_pool': [
+                "Pool decks extend around the water in all directions.",
+                "Only the main pool and changing area are accessible.",
+                "Left leads to the diving area, right to the lap pool.",
+                "A single walkway continues around the pool edge.",
+                "A narrow pathway winds past empty lounge chairs.",
+                "A wide deck area stretches toward the pool entrance."
+            ],
+            'warehouse': [
+                "Industrial aisles extend between towering shelves.",
+                "Only the main floor and loading dock are accessible.",
+                "Left leads to storage, right to shipping areas.",
+                "A single aisle continues deep into the warehouse.",
+                "A narrow pathway weaves between inventory stacks.",
+                "A wide corridor stretches toward the office area."
+            ],
+            'casino': [
+                "Gaming floors extend in all directions under neon lights.",
+                "Only the main floor and high-roller area are accessible.",
+                "Left leads to slot machines, right to table games.",
+                "A single pathway continues toward the cashier.",
+                "A narrow corridor winds past empty gaming tables.",
+                "A wide promenade stretches toward the restaurant."
             ]
         }
 
@@ -320,6 +681,86 @@ class Room:
                 ("A carousel with horses that seem to move on their own.", "They look like people you know..."),
                 ("A Ferris wheel that creaks ominously.", "The view from the top shows a different world..."),
                 ("A toy clown with a distorted face", "It seems to be watching you..."),
+            ],
+            'office': [
+                ("A computer monitor still glowing.", "The screen shows your browsing history from tomorrow..."),
+                ("A coffee mug with steam still rising.", "The coffee never gets cold no matter how long you wait..."),
+                ("A desk nameplate with your name.", "But you've never worked here before..."),
+                ("A filing cabinet drawer slightly open.", "Inside are documents about your life you never filed..."),
+                ("A photocopier running by itself.", "It's copying photos of you sleeping..."),
+                ("A motivational poster on the wall.", "The text changes to personal messages as you read..."),
+                ("A telephone that rings incessantly.", "When answered, you hear your own voice from years ago..."),
+                None
+            ],
+            'hotel': [
+                ("A guest registry book open on the desk.", "Your signature appears repeatedly throughout history..."),
+                ("A key card lying on the dresser.", "It opens rooms that don't exist on the floor plan..."),
+                ("A room service tray outside a door.", "The food is still warm despite being there for hours..."),
+                ("A 'Do Not Disturb' sign that moves.", "It hangs itself on doors you haven't approached..."),
+                ("A hotel phone that dials by itself.", "It calls rooms occupied by different versions of you..."),
+                ("A Bible in the nightstand drawer.", "All the text has been replaced with your memories..."),
+                ("A bathroom mirror that fogs up alone.", "Words appear in the condensation: 'Welcome back'..."),
+                None
+            ],
+            'airport': [
+                ("A boarding pass on an empty seat.", "It has your name but a destination you've never heard of..."),
+                ("A luggage tag from an unclaimed bag.", "The address is your childhood home from decades ago..."),
+                ("A flight information screen.", "Departure times count down but never reach zero..."),
+                ("An abandoned coffee cup still warm.", "The lipstick stain matches yours perfectly..."),
+                ("A passport left at security.", "The photo looks like you but the details are all wrong..."),
+                ("An intercom that crackles to life.", "It announces your arrival at gates that don't exist..."),
+                ("A departure gate sign.", "The destination changes to places from your dreams..."),
+                None
+            ],
+            'parking_garage': [
+                ("A parking ticket under a windshield.", "It's addressed to you but dated years in the future..."),
+                ("Car keys dangling from an ignition.", "They fit a car you used to own but sold long ago..."),
+                ("A security camera that follows you.", "Its red light blinks in sync with your heartbeat..."),
+                ("An oil stain on the concrete.", "It's shaped exactly like your shadow..."),
+                ("A parking space painted with your name.", "But you've never reserved a spot here..."),
+                ("A car alarm that won't stop.", "It's coming from a car that looks exactly like yours..."),
+                ("An elevator call button.", "It glows but the elevator never comes..."),
+                None
+            ],
+            'subway': [
+                ("A MetroCard left on a turnstile.", "It has unlimited rides but your name printed on it..."),
+                ("A newspaper blowing in the wind.", "The headlines are all about events in your life..."),
+                ("A bench with a warm spot.", "It feels like someone just stood up when you approach..."),
+                ("Graffiti on the tunnel wall.", "It spells out your childhood nickname..."),
+                ("A dropped wallet on the platform.", "It contains your ID but with a different address..."),
+                ("Track maintenance equipment.", "It's working on rails that lead to your hometown..."),
+                ("A train map on the wall.", "New stops appear showing places from your past..."),
+                None
+            ],
+            'swimming_pool': [
+                ("A pool float drifting alone.", "It's the exact one you had as a child..."),
+                ("Goggles left on the pool deck.", "When you look through them, you see underwater cities..."),
+                ("A lifeguard chair facing the wrong way.", "The whistle still echoes though no one is there..."),
+                ("Pool chemicals perfectly balanced.", "The water changes color to match your mood..."),
+                ("A diving board that creaks.", "It bends under invisible weight as you watch..."),
+                ("Lane ropes that move on their own.", "They form patterns that spell out your name..."),
+                ("A pool maintenance log.", "Your name appears as the last person to swim here..."),
+                None
+            ],
+            'warehouse': [
+                ("A shipping label on a box.", "It's addressed to you at an address you've never lived at..."),
+                ("A forklift with keys in the ignition.", "It starts when you approach, then turns off..."),
+                ("An inventory clipboard.", "It lists items from your childhood room..."),
+                ("A packing slip blowing in the breeze.", "It details an order you never placed..."),
+                ("A loading dock schedule.", "Your name appears as driver for tomorrow's delivery..."),
+                ("A safety poster on the wall.", "The safety tips are actually life advice meant for you..."),
+                ("A time clock punched with your name.", "But you've never worked here..."),
+                None
+            ],
+            'casino': [
+                ("A poker chip on the floor.", "It has your initials and a date from your birth..."),
+                ("A slot machine paying out constantly.", "The coins that fall have your face on them..."),
+                ("A players club card.", "It has your photo but shows millions in winnings..."),
+                ("A cocktail glass with lipstick stain.", "The color matches lipstick you wore yesterday..."),
+                ("A dealer's visor left behind.", "When you put it on, you can see everyone's cards..."),
+                ("A craps table with dice frozen mid-roll.", "They show numbers that match important dates in your life..."),
+                ("A surveillance monitor.", "It shows you entering the casino, but you don't remember arriving..."),
+                None
             ]
         }
 
@@ -383,9 +824,113 @@ class Player:
         self.y = y
         self.z = z
         self.inventory = inventory if inventory is not None else []
-        self.sanity = int(sanity)  # Force sanity to be an integer
+        self.sanity = int(sanity)
+        self.reality_coherence = REALITY_MAX
+        self.memory_stability = MEMORY_MAX
+        self.temporal_awareness = 100
         self.has_light = False
         self.level = level
+        self.entity_encounters = 0
+        self.anomaly_exposures = 0
+        self.deepest_level = 0
+        self.psychological_state = "stable"
+        self.last_entity_encounter = None
+        self.active_effects = []
+
+    def update_psychological_state(self):
+        """Update psychological state based on various metrics"""
+        if self.sanity < 20:
+            self.psychological_state = "critical_breakdown"
+        elif self.sanity < 40:
+            self.psychological_state = "severe_distress"
+        elif self.sanity < 60:
+            self.psychological_state = "unstable"
+        elif self.sanity < 80:
+            self.psychological_state = "deteriorating"
+        else:
+            self.psychological_state = "stable"
+
+        # Reality coherence affects perception
+        if self.reality_coherence < 30:
+            self.psychological_state += "_reality_fragmenting"
+        elif self.reality_coherence < 60:
+            self.psychological_state += "_reality_unstable"
+
+    def apply_entity_effects(self, entity):
+        """Apply effects from entity encounters"""
+        if entity.behavior == "follows_player":
+            self.sanity -= random.randint(2, 5)
+            self.reality_coherence -= random.randint(1, 3)
+        elif entity.behavior == "reality_distortion":
+            self.reality_coherence -= random.randint(5, 10)
+            self.temporal_awareness -= random.randint(3, 7)
+        elif entity.behavior == "temporal_manipulation":
+            self.temporal_awareness -= random.randint(8, 15)
+            self.memory_stability -= random.randint(5, 10)
+        elif entity.behavior == "constant_surveillance":
+            self.sanity -= random.randint(3, 8)
+
+        self.entity_encounters += 1
+        self.last_entity_encounter = entity.name
+        self.update_psychological_state()
+
+    def apply_anomaly_effects(self, anomaly):
+        """Apply effects from anomaly exposure"""
+        if anomaly.effect == "time_loop":
+            self.temporal_awareness -= random.randint(10, 20)
+            self.memory_stability -= random.randint(5, 15)
+        elif anomaly.effect == "physics_distortion":
+            self.reality_coherence -= random.randint(8, 15)
+            self.sanity -= random.randint(3, 8)
+        elif anomaly.effect == "memory_manifestation":
+            self.memory_stability -= random.randint(10, 25)
+            self.sanity -= random.randint(5, 12)
+        elif anomaly.effect == "dimensional_breach":
+            self.reality_coherence -= random.randint(15, 30)
+            self.sanity -= random.randint(8, 15)
+
+        self.anomaly_exposures += 1
+        self.update_psychological_state()
+
+    def get_status_display(self):
+        """Get colored status display"""
+        status_parts = []
+
+        # Sanity with color coding
+        if self.sanity >= 80:
+            sanity_color = Fore.GREEN
+        elif self.sanity >= 60:
+            sanity_color = Fore.YELLOW
+        elif self.sanity >= 40:
+            sanity_color = Fore.LIGHTRED_EX
+        else:
+            sanity_color = Fore.RED + Style.BRIGHT
+
+        status_parts.append(f"{sanity_color}Sanity: {self.sanity}/100{Style.RESET_ALL}")
+
+        # Reality Coherence
+        if self.reality_coherence >= 80:
+            reality_color = Fore.CYAN
+        elif self.reality_coherence >= 60:
+            reality_color = Fore.YELLOW
+        elif self.reality_coherence >= 40:
+            reality_color = Fore.LIGHTRED_EX
+        else:
+            reality_color = Fore.MAGENTA + Style.BRIGHT
+
+        status_parts.append(f"{reality_color}Reality: {self.reality_coherence}/100{Style.RESET_ALL}")
+
+        # Memory Stability
+        if self.memory_stability >= 80:
+            memory_color = Fore.LIGHTBLUE_EX
+        elif self.memory_stability >= 60:
+            memory_color = Fore.YELLOW
+        else:
+            memory_color = Fore.LIGHTRED_EX
+
+        status_parts.append(f"{memory_color}Memory: {self.memory_stability}/100{Style.RESET_ALL}")
+
+        return " | ".join(status_parts)
 
 class Game:
     def __init__(self):
@@ -1565,7 +2110,7 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    
+
     if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
         main()
     else:
