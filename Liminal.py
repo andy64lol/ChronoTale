@@ -20,6 +20,10 @@ MIN_HEAVEN_DOOR_DISTANCE = 10
 ENTITY_SPAWN_CHANCE = 0.15
 ANOMALY_CHANCE = 0.25
 TEMPORAL_DISTORTION_CHANCE = 0.10
+MEMORY_FRAGMENT_CHANCE = 0.20
+DIMENSIONAL_RIFT_CHANCE = 0.08
+ECHO_EVENT_CHANCE = 0.15
+PHANTOM_INTERACTION_CHANCE = 0.12
 
 # Ensure save directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -50,6 +54,33 @@ class Anomaly:
         self.name = name
         self.description = description
         self.effect = effect
+
+class MemoryFragment:
+    def __init__(self, content, emotional_weight, clarity=1.0):
+        self.content = content
+        self.emotional_weight = emotional_weight  # 1-10 scale
+        self.clarity = clarity  # 0.0-1.0, how clear the memory is
+        self.triggered = False
+        
+class DimensionalRift:
+    def __init__(self, destination_type, stability=0.5):
+        self.destination_type = destination_type
+        self.stability = stability
+        self.uses_remaining = random.randint(1, 3)
+        
+class EchoEvent:
+    def __init__(self, event_type, intensity, duration=1):
+        self.event_type = event_type
+        self.intensity = intensity  # 1-5 scale
+        self.duration = duration
+        self.active_turns = 0
+        
+class PhantomInteraction:
+    def __init__(self, interaction_type, entity_name, success_chance=0.7):
+        self.interaction_type = interaction_type
+        self.entity_name = entity_name
+        self.success_chance = success_chance
+        self.completed = False
 
 # Define liminal entities
 ENTITIES = {
@@ -100,8 +131,83 @@ ENTITIES = {
         "A human-shaped mass of television static that occasionally takes familiar forms.",
         "shape_shifting",
         threat_level=2
+    ),
+    'fragment_collector': Entity(
+        "Fragment Collector",
+        "A being made of scattered memories that seeks to gather lost fragments of consciousness.",
+        "memory_absorption",
+        threat_level=2
+    ),
+    'dimensional_guardian': Entity(
+        "Dimensional Guardian",
+        "An ethereal entity that protects rifts between worlds, challenging those who seek passage.",
+        "rift_protection",
+        threat_level=3
+    ),
+    'echo_phantom': Entity(
+        "Echo Phantom",
+        "A remnant of past events that replays traumatic moments in endless loops.",
+        "event_repetition",
+        threat_level=2
+    ),
+    'memory_thief': Entity(
+        "Memory Thief",
+        "A shadowy figure that steals precious memories and leaves gaps in consciousness.",
+        "memory_theft",
+        threat_level=4
+    ),
+    'temporal_anchor': Entity(
+        "Temporal Anchor",
+        "A being that exists outside time, offering glimpses of past and future to lost souls.",
+        "time_revelation",
+        threat_level=1
     )
 }
+
+# Memory Fragments that can be discovered
+MEMORY_FRAGMENTS = [
+    MemoryFragment("A childhood birthday party where everyone sang your name", 8, 0.9),
+    MemoryFragment("The last conversation with someone you'll never see again", 10, 0.7),
+    MemoryFragment("Walking home in the rain without an umbrella, feeling completely free", 6, 0.8),
+    MemoryFragment("The smell of your grandmother's kitchen during holidays", 7, 1.0),
+    MemoryFragment("A moment of pure terror in a place that should have been safe", 9, 0.6),
+    MemoryFragment("Laughing until your stomach hurt with friends you've lost touch with", 8, 0.9),
+    MemoryFragment("The exact moment you realized childhood was ending", 9, 0.5),
+    MemoryFragment("A song that played during your first kiss", 7, 0.8),
+    MemoryFragment("Standing in an empty house for the last time", 10, 0.9),
+    MemoryFragment("The weight of a secret you've never told anyone", 8, 1.0),
+    MemoryFragment("Running through sprinklers on a summer afternoon", 5, 0.9),
+    MemoryFragment("The sound of footsteps following you in the dark", 9, 0.7),
+    MemoryFragment("A dream so vivid you thought it was real for years", 6, 0.4),
+    MemoryFragment("The moment you first understood what loneliness meant", 9, 0.8),
+    MemoryFragment("Building sandcastles that the tide would inevitably wash away", 4, 0.9)
+]
+
+# Dimensional Rifts and their destinations
+DIMENSIONAL_RIFTS = {
+    'memory_vault': DimensionalRift("A space where lost memories float like golden orbs", 0.8),
+    'shadow_realm': DimensionalRift("A dark mirror of reality where fears take physical form", 0.3),
+    'temporal_nexus': DimensionalRift("A junction point where all timelines converge", 0.5),
+    'emotional_landscape': DimensionalRift("A world shaped by pure emotion and feeling", 0.6),
+    'forgotten_archive': DimensionalRift("A library containing every thought never spoken", 0.7),
+    'parallel_self': DimensionalRift("A place where you can meet versions of yourself from other choices", 0.4),
+    'childhood_echo': DimensionalRift("A recreation of your childhood home, but wrong in subtle ways", 0.6),
+    'final_moment': DimensionalRift("The last second before everything changed forever", 0.2)
+}
+
+# Echo Events that can occur
+ECHO_EVENTS = [
+    EchoEvent("phantom_phone_call", 3, 2),
+    EchoEvent("distant_laughter", 2, 1),
+    EchoEvent("footsteps_overhead", 4, 3),
+    EchoEvent("music_box_melody", 3, 2),
+    EchoEvent("crying_child", 5, 1),
+    EchoEvent("door_slamming", 4, 1),
+    EchoEvent("whispered_name", 5, 2),
+    EchoEvent("breaking_glass", 4, 1),
+    EchoEvent("familiar_voice", 3, 3),
+    EchoEvent("typing_sounds", 2, 2)
+]
 
 # Define anomalies
 ANOMALIES = {
@@ -139,16 +245,26 @@ ANOMALIES = {
 
 class Room:
     def __init__(self, theme=None, level=1):
-        self.theme = theme if theme else random.choice(['hospital', 'school', 'home', 'limbo', 'mall', 'office', 'hotel', 'airport', 'parking_garage', 'subway', 'swimming_pool', 'warehouse', 'casino'])
+        self.theme = theme if theme else random.choice(['hospital', 'school', 'home', 'limbo', 'mall', 'office', 'hotel', 'airport', 'parking_garage', 'subway', 'swimming_pool', 'warehouse', 'casino', 'theater', 'library', 'cathedral', 'laboratory', 'museum'])
         self.level = level
         self.entities = []
         self.anomalies = []
+        self.memory_fragments = []
+        self.dimensional_rifts = []
+        self.echo_events = []
+        self.phantom_interactions = []
         self.atmosphere_intensity = random.uniform(0.3, 1.0)
         self.temporal_stability = random.uniform(0.5, 1.0)
         self.reality_coherence = random.uniform(0.4, 1.0)
         self.visited_count = 0
+        self.hidden_secrets = random.randint(0, 3)
+        self.emotional_resonance = random.uniform(0.2, 1.0)
         self.spawn_entities()
         self.generate_anomalies()
+        self.generate_memory_fragments()
+        self.generate_dimensional_rifts()
+        self.generate_echo_events()
+        self.generate_phantom_interactions()
         self.generate_description()
 
     def spawn_entities(self):
@@ -160,6 +276,32 @@ class Room:
         if random.random() < ANOMALY_CHANCE * (1 + self.level * 0.05):
             anomaly_key = random.choice(list(ANOMALIES.keys()))
             self.anomalies.append(ANOMALIES[anomaly_key])
+
+    def generate_memory_fragments(self):
+        if random.random() < MEMORY_FRAGMENT_CHANCE:
+            fragment = random.choice(MEMORY_FRAGMENTS)
+            if not fragment.triggered:
+                self.memory_fragments.append(fragment)
+
+    def generate_dimensional_rifts(self):
+        if random.random() < DIMENSIONAL_RIFT_CHANCE:
+            rift_key = random.choice(list(DIMENSIONAL_RIFTS.keys()))
+            rift = DIMENSIONAL_RIFTS[rift_key]
+            if rift.uses_remaining > 0:
+                self.dimensional_rifts.append(rift)
+
+    def generate_echo_events(self):
+        if random.random() < ECHO_EVENT_CHANCE:
+            event = random.choice(ECHO_EVENTS)
+            self.echo_events.append(event)
+
+    def generate_phantom_interactions(self):
+        if random.random() < PHANTOM_INTERACTION_CHANCE and self.entities:
+            entity = random.choice(self.entities)
+            interaction_types = ["communicate", "observe", "challenge", "bargain", "flee"]
+            interaction_type = random.choice(interaction_types)
+            phantom = PhantomInteraction(interaction_type, entity.name)
+            self.phantom_interactions.append(phantom)
 
     def get_atmosphere_description(self):
         descriptions = []
@@ -341,6 +483,51 @@ class Room:
                 (Fore.CYAN + "A cashier's cage where money counts itself behind bulletproof glass." + Style.RESET_ALL, ['door2', 'door4']),
                 (Fore.WHITE + "A casino restaurant where meals are served to invisible patrons." + Style.RESET_ALL, ['door1', 'door3']),
                 (Fore.LIGHTRED_EX + "A surveillance room monitoring empty gaming floors through countless cameras." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
+            ],
+            'theater': [
+                (Fore.RED + "A grand theater stage where phantom actors perform eternally for empty seats, their voices echoing through time." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.MAGENTA + "An ornate opera house where the orchestra pit plays melodies that never end, instruments moving by themselves." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A dressing room with mirrors reflecting performers who aren't there, makeup applying itself to invisible faces." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.BLUE + "A theater balcony overlooking an audience of shadows, their silent applause creating an eerie rhythm." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.GREEN + "A backstage area where props move themselves into position for a show that never begins." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.CYAN + "A projection booth casting scenes from plays that were never written onto an empty screen." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.WHITE + "A rehearsal studio where scripts rewrite themselves as you read them, changing the story with each glance." + Style.RESET_ALL, ['door1', 'door3', 'door4'])
+            ],
+            'library': [
+                (Fore.LIGHTBLACK_EX + "An infinite library where books float between shelves, organizing themselves by emotions rather than alphabet." + Style.RESET_ALL, ['door1', 'door2', 'door3', 'door4']),
+                (Fore.BLUE + "A reading room where open books display blank pages that fill with text when you're not looking directly at them." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.GREEN + "A rare books section where ancient tomes whisper their secrets in languages that predate human speech." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A card catalog system where drawers contain index cards for books that don't exist yet." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.MAGENTA + "A children's section where picture books animate themselves, their characters stepping out of pages." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.CYAN + "A reference desk where the librarian is always away, but questions answer themselves on slips of paper." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.RED + "A forbidden section where books scream when opened, their knowledge too dangerous for mortal minds." + Style.RESET_ALL, ['door2', 'door3'])
+            ],
+            'cathedral': [
+                (Fore.WHITE + "A vast cathedral nave where stained glass windows depict your life's pivotal moments in brilliant color." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A cathedral altar where candles light themselves and prayers echo from voices you can't see." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A confession booth where sins are absolved before they're even spoken, the priest's voice coming from empty air." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.RED + "A cathedral crypt where tomb inscriptions change to show the names of people you know." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.MAGENTA + "A bell tower where phantom bells ring the hours for times that don't exist on any clock." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.GREEN + "A cathedral garden where stone angels weep tears that evaporate before touching the ground." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.LIGHTCYAN_EX + "A choir loft where invisible voices sing hymns in harmonies that make your soul ache with longing." + Style.RESET_ALL, ['door1', 'door3', 'door4'])
+            ],
+            'laboratory': [
+                (Fore.LIGHTGREEN_EX + "A sterile laboratory where beakers bubble with liquids that defy the laws of chemistry, creating impossible reactions." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.CYAN + "A research facility where microscopes reveal universes within droplets of water, each containing civilizations." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.WHITE + "An experimental chamber where test subjects' memories are stored in glass containers, glowing with ethereal light." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.YELLOW + "A laboratory where equations write themselves on whiteboards, solving the mysteries of existence." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.RED + "A containment facility where failed experiments pace in their cells, reaching through bars that shouldn't exist." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.MAGENTA + "A clean room where the air itself seems alive, responding to your thoughts and fears." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.BLUE + "An observation deck overlooking experiments that test the boundaries between life and death." + Style.RESET_ALL, ['door1', 'door3', 'door4'])
+            ],
+            'museum': [
+                (Fore.LIGHTBLACK_EX + "A natural history museum where dinosaur skeletons reassemble themselves when no one is watching." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "An art gallery where paintings change their subjects based on who's viewing them, showing personal truths." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A museum of lost things where every item you've ever misplaced is displayed with a placard explaining why you lost it." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.RED + "A war memorial section where the names on monuments rewrite themselves with casualties from conflicts yet to come." + Style.RESET_ALL, ['door1', 'door4']),
+                (Fore.GREEN + "A cultural artifacts wing where ancient objects pulse with the memories of their original owners." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
+                (Fore.MAGENTA + "A planetarium where the star show displays constellations from the night sky of your birth, then shows how they'll look when you die." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.CYAN + "A museum gift shop where souvenirs are memories you can purchase, each one changing your past slightly." + Style.RESET_ALL, ['door1', 'door3', 'door4'])
             ]
         }
 
