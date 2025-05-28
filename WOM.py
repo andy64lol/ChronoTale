@@ -90,7 +90,8 @@ class Monster:
     def __init__(self, name: str, type_: str, base_hp: int, base_attack: int, 
                  base_defense: int, base_speed: int, moves: List[Move], 
                  description: str, level: int = 5, is_fusion: bool = False, 
-                 fusion_components: Optional[List[str]] = None, variant: Optional[str] = None):
+                 fusion_components: Optional[List[str]] = None, variant: Optional[str] = None,
+                 rarity: Optional[str] = None):
         self.name = name
         self.type = type_
         self.base_hp = base_hp
@@ -108,6 +109,12 @@ class Monster:
         # Variant attributes (Omega, Alpha, Corrupted, Crystal, Dominant)
         self.variant = variant
         self.can_evolve = variant is None  # Variants cannot evolve
+        
+        # Rarity system - assign rarity based on monster name if not provided
+        self.rarity = rarity or self._determine_rarity()
+        
+        # Shiny attribute for special variants
+        self.is_shiny = variant and 'shiny' in variant.lower() if variant else False
 
         # Apply variant stat adjustments if needed
         if variant:
@@ -116,6 +123,36 @@ class Monster:
         # Calculated stats
         self.calculate_stats()
         self.current_hp = self.max_hp
+
+    def _determine_rarity(self) -> str:
+        """Determine monster rarity based on its name"""
+        # Define rarity categories based on monster names
+        legendary_names = ["Chronodrake", "Celestius", "Pyrovern", "Gemdrill", "Shadowclaw", "Tempestus", 
+                          "Terraquake", "Luminary", "Chronos", "Spatium", "Cosmix", "Shadowlord", "Vitalia", 
+                          "Phantomos", "Moltenking", "Prismatic", "Ancientone", "Deathwarden", "Oceanmaster", 
+                          "Stormruler", "Sandstorm", "Frostlord", "Mechagon", "Worldtree", "Voidking", "Nebula",
+                          "Doomreaper"]
+        
+        rare_names = ["Rockbehemoth", "Psyowl", "Drakeling", "Tornadash", "Volcanix", "Abyssal", "Spectralord",
+                     "Pyrothane", "Crystalking", "Templeguard", "Banshee", "Leviathor", "Skydragon", "Mirageous", 
+                     "Glacialtitan", "Cybernetic", "Naturelord", "Starhawk", "Infernus", "Terravore", 
+                     "Dreadspirit", "Aquabyss", "Stormrage", "Netherbeast", "Crystallord", "Technocore", 
+                     "Forestguard", "Voidreaper"]
+        
+        uncommon_names = ["Floracat", "Emberbear", "Coralfish", "Boltfox", "Frostbite", "Shadowpaw", "Fairybell", 
+                         "Brawlcub", "Aquafin", "Blazehound", "Groundmole", "Thunderwing", "Psyowl", "Vinewhip", 
+                         "Glacierclaw", "Metalbeak", "Lavahound", "Gemguard", "Mysticfox", "Ghosthowl", "Tidalwave", 
+                         "Stormbird", "Dunestrider", "Blizzardclaw", "Technowolf", "Dreamcatcher", "Voidwalker", 
+                         "Cosmicowl"]
+        
+        if self.name in legendary_names:
+            return "legendary"
+        elif self.name in rare_names:
+            return "rare"
+        elif self.name in uncommon_names:
+            return "uncommon"
+        else:
+            return "common"
 
     def apply_variant_bonuses(self):
         """Apply stat bonuses based on monster variant"""
@@ -898,7 +935,10 @@ class Game:
         self.running = True
         self.all_monsters = self.create_all_monsters()
         self.all_items = self.create_all_items()
-        self.locations = ["Hometown", "Forest", "Cave", "Beach", "Mountain", "Snowy Peaks", "Ancient Ruins"]
+        self.locations = ["Hometown", "Forest", "Cave", "Beach", "Mountain", "Snowy Peaks", "Ancient Ruins", 
+                         "Volcanic Crater", "Crystal Caverns", "Mystic Temple", "Haunted Graveyard", 
+                         "Underwater City", "Sky Islands", "Desert Oasis", "Frozen Wasteland", 
+                         "Neon City", "Enchanted Grove", "Shadow Realm", "Celestial Observatory"]
         self.turn_count = 0
         self.db_available = init_database()
         self.champion_battles_available = True
@@ -1391,42 +1431,37 @@ class Game:
         """Get a random wild monster appropriate for the current location"""
         # Define monster pools by rarity
         common_monsters = ["Leaflet", "Flamouse", "Puddlet", "Buzzer", "Rockling", "Flutterwing", "Toxifrog", 
-                           "Mudcrawl", "Sparktail", "Glowbug", "Pebblite", "Whistleaf", "Marshwiggle", "Frostbite"]
+                           "Mudcrawl", "Sparktail", "Glowbug", "Pebblite", "Whistleaf", "Marshwiggle", "Frostbite",
+                           "Magmite", "Crystalwing", "Spiritwisp", "Bonechip", "Aquadrop", "Cloudpuff", "Sandwhirl", 
+                           "Icecube", "Voltbug", "Moonbeam", "Shadowmite", "Starling"]
 
         uncommon_monsters = ["Floracat", "Emberbear", "Coralfish", "Boltfox", "Frostbite", "Shadowpaw", "Fairybell", "Brawlcub",
-                             "Aquafin", "Blazehound", "Groundmole", "Thunderwing", "Psyowl", "Vinewhip", "Glacierclaw", "Metalbeak"]
+                             "Aquafin", "Blazehound", "Groundmole", "Thunderwing", "Psyowl", "Vinewhip", "Glacierclaw", "Metalbeak",
+                             "Lavahound", "Gemguard", "Mysticfox", "Ghosthowl", "Tidalwave", "Stormbird", "Dunestrider", 
+                             "Blizzardclaw", "Technowolf", "Dreamcatcher", "Voidwalker", "Cosmicowl"]
 
-        # Define rare monsters that appear in special locations
-        rare_monsters = ["Rockbehemoth", "Psyowl", "Drakeling", "Tornadash", "Volcanix", "Abyssal", "Spectralord"]
+        # Define rare monsters that appear in special locations - NOW INCLUDING ALL NEW RARES!
+        rare_monsters = ["Rockbehemoth", "Psyowl", "Drakeling", "Tornadash", "Volcanix", "Abyssal", "Spectralord",
+                        "Pyrothane", "Crystalking", "Templeguard", "Banshee", "Leviathor", "Skydragon", "Mirageous", 
+                        "Glacialtitan", "Cybernetic", "Naturelord", "Shadowlord", "Starhawk",
+                        "Infernus", "Terravore", "Dreadspirit", "Aquabyss", "Stormrage", "Netherbeast", "Crystallord",
+                        "Technocore", "Forestguard", "Voidreaper"]
 
         # Define legendary monsters (extremely rare, only found in special puzzles/challenges)
         legendary_monsters = ["Chronodrake", "Celestius", "Pyrovern", "Gemdrill", "Shadowclaw", "Tempestus", 
-                             "Terraquake", "Luminary", "Chronos", "Spatium", "Cosmix", "Darkrai", "Vitalia", "Phantomos"]
+                             "Terraquake", "Luminary", "Chronos", "Spatium", "Cosmix", "Shadowlord", "Vitalia", "Phantomos",
+                             "Moltenking", "Prismatic", "Ancientone", "Deathwarden", "Oceanmaster", "Stormruler", 
+                             "Sandstorm", "Frostlord", "Mechagon", "Worldtree", "Voidking", "Nebula"]
 
-        # These legendaries can only be found in specific dimensions
-        hell_dimension_legendaries = ["Abaddon", "Darkrai", "Dreadspirit"]
-        molten_core_legendaries = ["Infernus", "Pyrovern"]
-        abyssal_depths_legendaries = ["Aquabyss"]
-        crystal_caverns_legendaries = ["Terravore", "Gemdrill"]
-        tempest_realm_legendaries = ["Stormrage", "Tempestus"]
-        cosmic_void_legendaries = ["Cosmix", "Cosmicshade", "Darkmatter"]
-        timeless_expanse_legendaries = ["Chronos", "Chronodrake"]
-        spatial_rift_legendaries = ["Spatium"]
-        eternal_garden_legendaries = ["Vitalia", "Lifedream"]
 
-        # Create filtered lists for specific locations
+
+        # Create filtered lists for specific locations (only keeping the ones actually used)
         forest_rares = [m for m in rare_monsters if m in ["Rockbehemoth", "Drakeling"]]
         cave_rares = [m for m in rare_monsters if m in ["Rockbehemoth", "Psyowl"]]
         beach_rares = [m for m in rare_monsters if m in ["Rockbehemoth", "Abyssal"]]
         mountain_rares = [m for m in rare_monsters if m in ["Rockbehemoth", "Drakeling", "Tornadash"]]
         snow_rares = [m for m in rare_monsters if m in ["Drakeling", "Frostbite"]]
         ruins_rares = [m for m in rare_monsters if m in ["Drakeling", "Spectralord"]]
-        volcano_rares = [m for m in rare_monsters if m in ["Volcanix", "Tornadash"]]
-        desert_rares = [m for m in rare_monsters if m in ["Rockbehemoth", "Tornadash"]]
-        swamp_rares = [m for m in rare_monsters if m in ["Abyssal", "Tornadash"]]
-        sky_rares = [m for m in rare_monsters if m in ["Drakeling", "Tornadash"]]
-        labyrinth_rares = [m for m in rare_monsters if m in ["Psyowl", "Spectralord"]]
-        secret_grove_rares = [m for m in rare_monsters if m in ["Psyowl", "Drakeling", "Spectralord"]]
 
         location_monsters = {
             "Forest": (
@@ -1463,92 +1498,66 @@ class Game:
                 common_monsters[:4], uncommon_monsters[:4], []
             ),  # Limited selection in hometown
 
-            # New locations with their own monster pools
-            "Volcanic Ridge": (
-                ["Flamouse", "Rockling", "Blazehound"],
-                ["Emberbear", "Metalbeak", "Brawlcub"],
-                volcano_rares
+            # Amazing new locations with their unique monster pools!
+            "Volcanic Crater": (
+                ["Magmite", "Flamouse", "Rockling", "Sparktail"], 
+                ["Lavahound", "Emberbear", "Blazehound", "Metalbeak"], 
+                ["Pyrothane", "Volcanix", "Infernus"]  # Now includes new rare Infernus!
             ),
-            "Misty Swamp": (
-                ["Puddlet", "Toxifrog", "Marshwiggle", "Mudcrawl"],
-                ["Shadowpaw", "Coralfish", "Psyowl"],
-                swamp_rares
+            "Crystal Caverns": (
+                ["Crystalwing", "Glowbug", "Rockling", "Pebblite"], 
+                ["Gemguard", "Metalbeak", "Boltfox", "Glacierclaw"], 
+                ["Crystalking", "Terravore", "Crystallord"]  # Now includes new rares Terravore & Crystallord!
             ),
-            "Sunken Temple": (
-                ["Puddlet", "Shadowpaw", "Glowbug"],
-                ["Psyowl", "Fairybell", "Spectralord"],
-                ruins_rares
+            "Mystic Temple": (
+                ["Spiritwisp", "Moonbeam", "Shadowmite", "Toxifrog"], 
+                ["Mysticfox", "Psyowl", "Fairybell", "Shadowpaw"], 
+                ["Templeguard", "Spectralord", "Forestguard"]  # Now includes new rare Forestguard!
             ),
-            "Desert Dunes": (
-                ["Pebblite", "Sparktail", "Flamouse"],
-                ["Boltfox", "Groundmole", "Blazehound"],
-                desert_rares
+            "Haunted Graveyard": (
+                ["Bonechip", "Spiritwisp", "Shadowmite", "Toxifrog"], 
+                ["Ghosthowl", "Shadowpaw", "Psyowl", "Fairybell"], 
+                ["Banshee", "Dreadspirit", "Voidreaper"]  # Now includes new rares Dreadspirit & Voidreaper!
+            ),
+            "Underwater City": (
+                ["Aquadrop", "Puddlet", "Coralfish", "Marshwiggle"], 
+                ["Tidalwave", "Aquafin", "Coralfish", "Groundmole"], 
+                ["Leviathor", "Abyssal", "Aquabyss"]  # Now includes new rare Aquabyss!
+            ),
+            "Sky Islands": (
+                ["Cloudpuff", "Flutterwing", "Starling", "Buzzer"], 
+                ["Stormbird", "Thunderwing", "Metalbeak", "Boltfox"], 
+                ["Skydragon", "Tornadash", "Stormrage"]  # Now includes new rare Stormrage!
+            ),
+            "Desert Oasis": (
+                ["Sandwhirl", "Glowbug", "Rockling", "Mudcrawl"], 
+                ["Dunestrider", "Blazehound", "Groundmole", "Brawlcub"], 
+                ["Mirageous", "Terraquake", "Netherbeast"]  # Now includes new rare Netherbeast!
+            ),
+            "Frozen Wasteland": (
+                ["Icecube", "Frostbite", "Crystalwing", "Cloudpuff"], 
+                ["Blizzardclaw", "Glacierclaw", "Fairybell", "Metalbeak"], 
+                ["Glacialtitan", "Tempestus", "Crystallord"]  # Now includes new rare Crystallord!
+            ),
+            "Neon City": (
+                ["Voltbug", "Sparktail", "Glowbug", "Buzzer"], 
+                ["Technowolf", "Boltfox", "Thunderwing", "Metalbeak"], 
+                ["Cybernetic", "Technocore", "Crystallord"]  # Now includes new rare Technocore!
             ),
             "Enchanted Grove": (
-                ["Leaflet", "Whistleaf", "Flutterwing", "Fairybell"],
-                ["Floracat", "Vinewhip", "Psyowl"],
-                secret_grove_rares
+                ["Moonbeam", "Leaflet", "Flutterwing", "Whistleaf"], 
+                ["Dreamcatcher", "Floracat", "Vinewhip", "Fairybell"], 
+                ["Naturelord", "Vitalia", "Forestguard"]  # Now includes new rare Forestguard!
             ),
-            "Crystal Cavern": (
-                ["Rockling", "Pebblite", "Glowbug"],
-                ["Glacierclaw", "Fairybell", "Metalbeak"],
-                cave_rares
+            "Shadow Realm": (
+                ["Shadowmite", "Spiritwisp", "Bonechip", "Toxifrog"], 
+                ["Voidwalker", "Shadowpaw", "Ghosthowl", "Psyowl"], 
+                ["Shadowlord", "Voidreaper", "Dreadspirit"]  # Now includes new rares Voidreaper & Dreadspirit!
             ),
-            "Sky Tower": (
-                ["Flutterwing", "Glowbug", "Thunderwing"],
-                ["Metalbeak", "Psyowl", "Spectralord"],
-                sky_rares
-            ),
-            "Ancient Labyrinth": (
-                ["Shadowpaw", "Toxifrog", "Sparktail"],
-                ["Groundmole", "Psyowl", "Spectralord"],
-                labyrinth_rares
-            ),
-            # Special dimension locations
-            "Dimension of Hell": (
-                ["Shadowpaw", "Darkrai"],
-                ["Darkrai", "Phantomos"],
-                hell_dimension_legendaries
-            ),
-            "Molten Core": (
-                ["Emberbear", "Flamouse"],
-                ["Flamouse", "Emberbear"],
-                molten_core_legendaries
-            ),
-            "Abyssal Depths": (
-                ["Coralfish", "Puddlet"],
-                ["Aquafin", "Coralfish"],
-                abyssal_depths_legendaries
-            ),
-            "Crystal Depths": (
-                ["Rockling", "Pebblite"],
-                ["Rockbehemoth", "Glacierclaw"],
-                crystal_caverns_legendaries
-            ),
-            "Tempest Realm": (
-                ["Thunderwing", "Buzzer"],
-                ["Boltfox", "Thunderwing"],
-                tempest_realm_legendaries
-            ),
-            "Cosmic Void": (
-                ["Shadowpaw", "Psyowl"],
-                ["Psyowl", "Fairybell"],
-                cosmic_void_legendaries
-            ),
-            "Timeless Expanse": (
-                ["Psyowl", "Shadowpaw"],
-                ["Psyowl", "Shadowpaw"],
-                timeless_expanse_legendaries
-            ),
-            "Spatial Rift": (
-                ["Psyowl", "Drakeling"],
-                ["Drakeling", "Shadowpaw"],
-                spatial_rift_legendaries
-            ),
-            "Eternal Garden": (
-                ["Leaflet", "Floracat"],
-                ["Whistleaf", "Vinewhip"],
-                eternal_garden_legendaries
+            "Celestial Observatory": (
+                ["Starling", "Moonbeam", "Crystalwing", "Glowbug"], 
+                ["Cosmicowl", "Thunderwing", "Mysticfox", "Stormbird"], 
+                ["Starhawk", "Celestius", "Stormrage"]  # Now includes new rare Stormrage!
             )
         }
 
@@ -1560,28 +1569,35 @@ class Game:
 
         # Extremely rare chance for legendaries (1% chance) in high-level areas
         if rarity_roll < 0.01 and self.player and self.player.trainer_level >= 30 and location in [
-            "Dimension of Hell", "Molten Core", "Abyssal Depths", "Crystal Cavern", 
-            "Tempest Realm", "Cosmic Void", "Timeless Expanse", "Spatial Rift", "Eternal Garden"
+            "Volcanic Crater", "Crystal Caverns", "Mystic Temple", "Haunted Graveyard", 
+            "Underwater City", "Sky Islands", "Desert Oasis", "Frozen Wasteland", 
+            "Neon City", "Enchanted Grove", "Shadow Realm", "Celestial Observatory"
         ]:
-            # Use the appropriate legendary list for the dimension
-            if location == "Dimension of Hell" and hell_dimension_legendaries:
-                monster_name = random.choice(hell_dimension_legendaries)
-            elif location == "Molten Core" and molten_core_legendaries:
-                monster_name = random.choice(molten_core_legendaries)
-            elif location == "Abyssal Depths" and abyssal_depths_legendaries:
-                monster_name = random.choice(abyssal_depths_legendaries)
-            elif location == "Crystal Cavern" and crystal_caverns_legendaries:
-                monster_name = random.choice(crystal_caverns_legendaries)
-            elif location == "Tempest Realm" and tempest_realm_legendaries:
-                monster_name = random.choice(tempest_realm_legendaries)
-            elif location == "Cosmic Void" and cosmic_void_legendaries:
-                monster_name = random.choice(cosmic_void_legendaries)
-            elif location == "Timeless Expanse" and timeless_expanse_legendaries:
-                monster_name = random.choice(timeless_expanse_legendaries)
-            elif location == "Spatial Rift" and spatial_rift_legendaries:
-                monster_name = random.choice(spatial_rift_legendaries)
-            elif location == "Eternal Garden" and eternal_garden_legendaries:
-                monster_name = random.choice(eternal_garden_legendaries)
+            # Use the appropriate legendary list for special locations
+            if location == "Volcanic Crater":
+                monster_name = random.choice(["Moltenking", "Pyrovern", "Infernus"])
+            elif location == "Crystal Caverns":
+                monster_name = random.choice(["Prismatic", "Gemdrill", "Terravore"])
+            elif location == "Mystic Temple":
+                monster_name = random.choice(["Ancientone", "Luminary", "Templeguard"])
+            elif location == "Haunted Graveyard":
+                monster_name = random.choice(["Deathwarden", "Doomreaper", "Dreadspirit"])
+            elif location == "Underwater City":
+                monster_name = random.choice(["Oceanmaster", "Aquabyss", "Leviathor"])
+            elif location == "Sky Islands":
+                monster_name = random.choice(["Stormruler", "Tempestus", "Stormrage"])
+            elif location == "Desert Oasis":
+                monster_name = random.choice(["Sandstorm", "Mirageous", "Terraquake"])
+            elif location == "Frozen Wasteland":
+                monster_name = random.choice(["Frostlord", "Glacialtitan", "Blizzardclaw"])
+            elif location == "Neon City":
+                monster_name = random.choice(["Mechagon", "Cybernetic", "Technowolf"])
+            elif location == "Enchanted Grove":
+                monster_name = random.choice(["Worldtree", "Vitalia", "Naturelord"])
+            elif location == "Shadow Realm":
+                monster_name = random.choice(["Voidking", "Shadowlord", "Phantomos"])
+            elif location == "Celestial Observatory":
+                monster_name = random.choice(["Nebula", "Celestius", "Cosmix"])
             else:
                 # Fall back to the general legendary pool
                 monster_name = random.choice(legendary_monsters) if legendary_monsters else random.choice(uncommons)
@@ -1605,14 +1621,18 @@ class Game:
             "Mountain": (4, 8),
             "Snowy Peaks": (6, 10),
             "Ancient Ruins": (8, 12),
-            "Volcanic Ridge": (10, 15),
-            "Misty Swamp": (7, 12),
-            "Sunken Temple": (12, 18),
-            "Desert Dunes": (9, 14),
-            "Enchanted Grove": (15, 20),
-            "Crystal Cavern": (18, 25),
-            "Sky Tower": (25, 30),
-            "Ancient Labyrinth": (30, 40),
+            "Volcanic Crater": (12, 18),
+            "Crystal Caverns": (15, 22),
+            "Mystic Temple": (18, 25),
+            "Haunted Graveyard": (20, 28),
+            "Underwater City": (22, 30),
+            "Sky Islands": (25, 35),
+            "Desert Oasis": (16, 24),
+            "Frozen Wasteland": (28, 38),
+            "Neon City": (30, 40),
+            "Enchanted Grove": (32, 42),
+            "Shadow Realm": (35, 45),
+            "Celestial Observatory": (40, 50),
             "Dimension of Hell": (45, 60)
         }
 
@@ -2003,7 +2023,7 @@ your monster companions!
         print("- run: Try to run away from battle")
 
     def save_game(self, save_name: Optional[str] = None) -> bool:
-        """Save the current game state to file"""
+        """Save the current game state to file with comprehensive data preservation"""
         if not self.db_available or not self.player:
             print(f"{Fore.RED}Save functionality is not available.{Style.RESET_ALL}")
             return False
@@ -2014,18 +2034,110 @@ your monster companions!
             save_name = f"{player_name}_save"
 
         try:
-            # Prepare game state for saving
-            # We can't directly pickle the entire game state because it's too complex
-            # So we save just the essential elements
+            # Prepare ultimate comprehensive game state for saving
             save_data = {
+                # Essential player data
                 "player_name": self.player.name,
                 "player_location": self.player.location,
                 "player_money": self.player.money,
                 "player_monsters": self.player.monsters,
                 "player_inventory": self.player.inventory,
                 "player_active_monster_index": self.player.active_monster_index,
+                
+                # Enhanced player progression data
+                "player_trainer_level": getattr(self.player, 'trainer_level', 5),
+                "player_exp": getattr(self.player, 'exp', 0),
+                "player_exp_to_level": getattr(self.player, 'exp_to_level', 100),
+                "player_skill_points": getattr(self.player, 'skill_points', 0),
+                "player_badges": getattr(self.player, 'badges', []),
+                "player_titles": getattr(self.player, 'titles', []),
+                "player_active_title": getattr(self.player, 'active_title', None),
+                
+                # Epic storyline progress with detailed tracking
+                "story_progress": getattr(self.player, 'story_progress', {}),
+                "quest_items": getattr(self.player, 'quest_items', []),
+                "story_flags": getattr(self.player, 'story_flags', {}),
+                "completed_quests": getattr(self.player, 'completed_quests', []),
+                "active_quests": getattr(self.player, 'active_quests', []),
+                "npc_relationships": getattr(self.player, 'npc_relationships', {}),
+                "unlocked_areas": getattr(self.player, 'unlocked_areas', []),
+                "discovered_secrets": getattr(self.player, 'discovered_secrets', []),
+                
+                # Game progression and world state
                 "champion_battles_completed": self.champion_battles_completed,
-                "save_time": time.strftime("%Y-%m-%d %H:%M:%S")
+                "champion_battles_available": getattr(self, 'champion_battles_available', True),
+                "turn_count": getattr(self, 'turn_count', 0),
+                "game_difficulty": getattr(self, 'game_difficulty', 'normal'),
+                "tutorial_completed": getattr(self.player, 'tutorial_completed', False),
+                "settings": getattr(self.player, 'settings', {}),
+                
+                # Monster collection with enhanced details
+                "total_monsters_caught": len(self.player.monsters) if self.player.monsters else 0,
+                "monsters_by_type": self._get_monster_type_stats(),
+                "monsters_by_rarity": self._get_monster_rarity_stats(),
+                "highest_level_monster": self._get_highest_monster_level(),
+                "fusion_count": self._count_fusion_monsters(),
+                "shiny_monsters": self._count_shiny_monsters(),
+                "legendary_monsters": self._count_legendary_monsters(),
+                "monster_breeding_pairs": getattr(self.player, 'breeding_pairs', []),
+                "monster_nicknames": getattr(self.player, 'monster_nicknames', {}),
+                
+                # Location and exploration tracking
+                "locations_visited": self._get_visited_locations(),
+                "current_battle_state": None if not self.current_battle else "in_battle",
+                "exploration_percentage": self._calculate_exploration_percentage(),
+                "hidden_locations_found": getattr(self.player, 'hidden_locations', []),
+                "weather_encountered": getattr(self.player, 'weather_types_seen', []),
+                "time_of_day_preferences": getattr(self.player, 'time_preferences', {}),
+                
+                # Battle and competition data
+                "battles_won": getattr(self.player, 'battles_won', 0),
+                "battles_lost": getattr(self.player, 'battles_lost', 0),
+                "monsters_defeated": getattr(self.player, 'monsters_defeated', 0),
+                "perfect_victories": getattr(self.player, 'perfect_victories', 0),
+                "tournament_wins": getattr(self.player, 'tournament_wins', 0),
+                "longest_win_streak": getattr(self.player, 'longest_win_streak', 0),
+                "battle_strategies_used": getattr(self.player, 'strategies_used', {}),
+                
+                # Achievement and progression tracking
+                "achievements": self._get_player_achievements(),
+                "achievement_progress": getattr(self.player, 'achievement_progress', {}),
+                "milestones_reached": getattr(self.player, 'milestones', []),
+                "records_set": getattr(self.player, 'personal_records', {}),
+                
+                # Advanced monster data preservation
+                "monster_variants_caught": self._get_variant_stats(),
+                "legendary_encounters": getattr(self.player, 'legendary_encounters', 0),
+                "rare_spawns_found": getattr(self.player, 'rare_spawns', 0),
+                "alpha_monsters_caught": getattr(self.player, 'alpha_monsters', 0),
+                "monster_evolution_history": getattr(self.player, 'evolution_history', []),
+                
+                # Economic and trading data
+                "trading_history": getattr(self.player, 'trades_completed', []),
+                "shop_purchases": getattr(self.player, 'purchase_history', []),
+                "items_sold": getattr(self.player, 'sales_history', []),
+                "net_worth": getattr(self.player, 'net_worth', 0),
+                "investment_portfolio": getattr(self.player, 'investments', {}),
+                
+                # Game settings and metadata
+                "game_version": "3.0_ultimate",
+                "save_time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "total_playtime": getattr(self, 'total_playtime', 0),
+                "save_count": getattr(self.player, 'save_count', 0) + 1,
+                "last_login": getattr(self.player, 'last_login', time.time()),
+                "creation_date": getattr(self.player, 'creation_date', time.time()),
+                
+                # Session and performance data
+                "current_session_time": getattr(self, 'current_session', 0),
+                "favorite_monsters": getattr(self.player, 'favorites', []),
+                "custom_teams": getattr(self.player, 'saved_teams', []),
+                "hotkeys": getattr(self.player, 'hotkey_settings', {}),
+                
+                # World state preservation
+                "world_events_witnessed": getattr(self.player, 'world_events', []),
+                "seasonal_progress": getattr(self.player, 'seasonal_data', {}),
+                "daily_login_streak": getattr(self.player, 'login_streak', 0),
+                "special_event_participation": getattr(self.player, 'event_history', [])
             }
 
             # Get file path for save
@@ -2036,14 +2148,184 @@ your monster companions!
                 pickle.dump(save_data, f)
 
             print(f"{Fore.GREEN}Game saved successfully as '{save_name}'!{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Saved: Level {save_data['player_trainer_level']} trainer with {save_data['total_monsters_caught']} monsters{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Story progress: {len(save_data['story_progress'])} events completed{Style.RESET_ALL}")
             return True
 
         except Exception as e:
             print(f"{Fore.RED}Error saving game: {e}{Style.RESET_ALL}")
             return False
 
+    def _get_monster_type_stats(self) -> Dict[str, int]:
+        """Get statistics of monsters by type"""
+        if not self.player or not self.player.monsters:
+            return {}
+        
+        type_stats = {}
+        for monster in self.player.monsters:
+            if monster and hasattr(monster, 'type'):
+                monster_type = monster.type
+                type_stats[monster_type] = type_stats.get(monster_type, 0) + 1
+        return type_stats
+
+    def _get_highest_monster_level(self) -> int:
+        """Get the level of the highest level monster"""
+        if not self.player or not self.player.monsters:
+            return 0
+        
+        max_level = 0
+        for monster in self.player.monsters:
+            if monster and hasattr(monster, 'level'):
+                max_level = max(max_level, monster.level)
+        return max_level
+
+    def _count_fusion_monsters(self) -> int:
+        """Count how many fusion monsters the player has"""
+        if not self.player or not self.player.monsters:
+            return 0
+        
+        fusion_count = 0
+        for monster in self.player.monsters:
+            if monster and hasattr(monster, 'is_fusion') and monster.is_fusion:
+                fusion_count += 1
+        return fusion_count
+
+    def _get_visited_locations(self) -> List[str]:
+        """Get list of locations the player has visited"""
+        visited = [self.player.location] if self.player and hasattr(self.player, 'location') else []
+        
+        # Add locations from story progress
+        if self.player and hasattr(self.player, 'story_progress'):
+            for event_id in self.player.story_progress.keys():
+                if '_' in event_id:
+                    location = event_id.split('_')[0].replace('_', ' ').title()
+                    if location not in visited:
+                        visited.append(location)
+        
+        return visited
+
+    def _get_player_achievements(self) -> List[str]:
+        """Generate list of player achievements based on progress"""
+        achievements = []
+        
+        if not self.player:
+            return achievements
+        
+        # Monster collection achievements
+        monster_count = len(self.player.monsters) if self.player.monsters else 0
+        if monster_count >= 10:
+            achievements.append("Monster Collector - Caught 10 monsters")
+        if monster_count >= 25:
+            achievements.append("Monster Master - Caught 25 monsters")
+        if monster_count >= 50:
+            achievements.append("Monster Legend - Caught 50 monsters")
+        
+        # Fusion achievements
+        fusion_count = self._count_fusion_monsters()
+        if fusion_count >= 1:
+            achievements.append("Fusion Pioneer - Created first fusion monster")
+        if fusion_count >= 5:
+            achievements.append("Fusion Expert - Created 5 fusion monsters")
+        
+        # Story achievements
+        if hasattr(self.player, 'story_progress') and self.player.story_progress:
+            story_events = len(self.player.story_progress)
+            if story_events >= 5:
+                achievements.append("Story Explorer - Completed 5 story events")
+            if story_events >= 15:
+                achievements.append("Epic Adventurer - Completed 15 story events")
+        
+        # Trainer level achievements
+        trainer_level = getattr(self.player, 'trainer_level', 5)
+        if trainer_level >= 10:
+            achievements.append("Experienced Trainer - Reached level 10")
+        if trainer_level >= 25:
+            achievements.append("Master Trainer - Reached level 25")
+        if trainer_level >= 50:
+            achievements.append("Legendary Trainer - Reached level 50")
+        
+        # Quest completion achievements
+        if hasattr(self.player, 'quest_items') and self.player.quest_items:
+            quest_items = len(self.player.quest_items)
+            if quest_items >= 1:
+                achievements.append("Quest Seeker - Found first quest item")
+            if "Forest Crystal" in self.player.quest_items:
+                achievements.append("Forest Guardian - Obtained Forest Crystal")
+            if all(crystal in self.player.quest_items for crystal in ["Forest Crystal", "Fire Crystal", "Water Crystal", "Earth Crystal"]):
+                achievements.append("Crystal Collector - Gathered all elemental crystals")
+        
+        return achievements
+
+    def _get_monster_rarity_stats(self) -> Dict[str, int]:
+        """Get statistics of monsters by rarity"""
+        if not self.player or not self.player.monsters:
+            return {}
+        
+        rarity_stats = {}
+        for monster in self.player.monsters:
+            if monster and hasattr(monster, 'rarity'):
+                rarity = monster.rarity
+                rarity_stats[rarity] = rarity_stats.get(rarity, 0) + 1
+            elif monster:
+                # Default rarity if not specified
+                rarity_stats['common'] = rarity_stats.get('common', 0) + 1
+        return rarity_stats
+
+    def _count_shiny_monsters(self) -> int:
+        """Count how many shiny monsters the player has"""
+        if not self.player or not self.player.monsters:
+            return 0
+        
+        shiny_count = 0
+        for monster in self.player.monsters:
+            if monster and hasattr(monster, 'is_shiny') and monster.is_shiny:
+                shiny_count += 1
+            elif monster and hasattr(monster, 'variant') and 'shiny' in str(monster.variant).lower():
+                shiny_count += 1
+        return shiny_count
+
+    def _count_legendary_monsters(self) -> int:
+        """Count how many legendary monsters the player has"""
+        if not self.player or not self.player.monsters:
+            return 0
+        
+        legendary_count = 0
+        for monster in self.player.monsters:
+            if monster and hasattr(monster, 'rarity') and monster.rarity.lower() == 'legendary':
+                legendary_count += 1
+            elif monster and hasattr(monster, 'name') and monster.name in ['Shadowmaw', 'Voidwyrm', 'Chronodrake', 'Starstorm', 'Doomreaper']:
+                legendary_count += 1
+        return legendary_count
+
+    def _calculate_exploration_percentage(self) -> float:
+        """Calculate the percentage of the world explored"""
+        if not self.player:
+            return 0.0
+        
+        # Total possible locations in the game
+        total_locations = 15  # Based on the locations we have
+        visited_locations = self._get_visited_locations()
+        
+        if not visited_locations or len(visited_locations) == 0:
+            return 0.0
+        
+        exploration_percentage = (len(visited_locations) / total_locations) * 100
+        return min(exploration_percentage, 100.0)  # Cap at 100%
+
+    def _get_variant_stats(self) -> Dict[str, int]:
+        """Get statistics of monster variants caught"""
+        if not self.player or not self.player.monsters:
+            return {}
+        
+        variant_stats = {}
+        for monster in self.player.monsters:
+            if monster and hasattr(monster, 'variant') and monster.variant:
+                variant = monster.variant
+                variant_stats[variant] = variant_stats.get(variant, 0) + 1
+        return variant_stats
+
     def load_game(self, save_name: Optional[str] = None) -> bool:
-        """Load a saved game state from file"""
+        """Load a saved game state from file with comprehensive data restoration"""
         if not self.db_available:
             print(f"{Fore.RED}Load functionality is not available.{Style.RESET_ALL}")
             return False
@@ -2104,18 +2386,54 @@ your monster companions!
                     print(f"{Fore.RED}Error loading save: {e}{Style.RESET_ALL}")
                     return False
 
-            # Apply the save data to the current game state
+            # Apply the comprehensive save data to the current game state
             player = Player(save_data["player_name"])
             player.location = save_data["player_location"]
             player.money = save_data["player_money"]
             player.monsters = save_data["player_monsters"]
             player.inventory = save_data["player_inventory"]
             player.active_monster_index = save_data["player_active_monster_index"]
-
-            self.player = player
+            
+            # Restore enhanced player progression data
+            player.trainer_level = save_data.get("player_trainer_level", 5)
+            player.exp = save_data.get("player_exp", 0)
+            player.exp_to_level = save_data.get("player_exp_to_level", 100)
+            
+            # Restore epic storyline progress
+            player.story_progress = save_data.get("story_progress", {})
+            player.quest_items = save_data.get("quest_items", [])
+            
+            # Restore battle statistics using setattr for dynamic attributes
+            setattr(player, 'battles_won', save_data.get("battles_won", 0))
+            setattr(player, 'battles_lost', save_data.get("battles_lost", 0))
+            setattr(player, 'monsters_defeated', save_data.get("monsters_defeated", 0))
+            setattr(player, 'legendary_encounters', save_data.get("legendary_encounters", 0))
+            
+            # Restore game progression
             self.champion_battles_completed = save_data.get("champion_battles_completed", 0)
-
+            self.champion_battles_available = save_data.get("champion_battles_available", True)
+            self.turn_count = save_data.get("turn_count", 0)
+            
+            # Set the loaded player as the current player
+            self.player = player
+            
+            # Display comprehensive load summary
             print(f"{Fore.GREEN}Game loaded successfully!{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Welcome back, {player.name}!{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Level {player.trainer_level} trainer with {len(player.monsters)} monsters{Style.RESET_ALL}")
+            
+            if player.story_progress:
+                print(f"{Fore.MAGENTA}Story progress: {len(player.story_progress)} events completed{Style.RESET_ALL}")
+            
+            if player.quest_items:
+                print(f"{Fore.BLUE}Quest items: {', '.join(player.quest_items)}{Style.RESET_ALL}")
+            
+            achievements = save_data.get("achievements", [])
+            if achievements:
+                print(f"{Fore.YELLOW}Achievements unlocked: {len(achievements)}{Style.RESET_ALL}")
+            
+            print(f"{Fore.GREEN}Current location: {player.location}{Style.RESET_ALL}")
+            
             return True
 
         except Exception as e:
@@ -2980,6 +3298,253 @@ The keeper turns back to their silent vigil, a sense of foreboding hanging in th
                     "min_level": 35,
                     "reward": {"type": "item", "name": "Shadow Prism"},
                     "next_event": "shadow_peak_final"
+                }
+            ],
+            "Volcanic Crater": [
+                {
+                    "id": "volcanic_crater_1",
+                    "text": f"""Deep within the Volcanic Crater, you discover an ancient temple carved into the molten rock.
+The air shimmers with intense heat as you approach the entrance.
+
+{Fore.RED}Fire Guardian Pyraxis:{Style.RESET_ALL} "Mortal... you dare enter the sacred flames?
+I am the eternal guardian of the volcanic heart, keeper of primordial fire magic.
+The molten depths have been disturbed by shadow creatures seeking to corrupt our realm.
+
+If you can prove your courage in the Trial of Flames, I will teach you the ancient art of fire bonding.
+Return when your spirit burns as bright as your determination, young one."
+
+The guardian's form flickers like dancing flames as they retreat deeper into the temple.""",
+                    "min_level": 20,
+                    "next_event": "volcanic_crater_2"
+                },
+                {
+                    "id": "volcanic_crater_2",
+                    "text": f"""You return to the Fire Guardian's temple, your monsters showing incredible growth.
+
+{Fore.RED}Fire Guardian Pyraxis:{Style.RESET_ALL} "I sense the flame of determination within you has grown stronger.
+The Trial of Flames awaits - but first, take this Ember Amulet. It will protect you from the volcanic energies.
+
+The shadow corruption spreads faster than ever. Ancient seals that have protected our world for millennia grow weak.
+Fire monsters across the realm are becoming increasingly agitated, sensing the approaching darkness."
+
+You received an {Fore.RED}Ember Amulet{Style.RESET_ALL}!
+
+{Fore.RED}Fire Guardian Pyraxis:{Style.RESET_ALL} "Legend speaks of the Moltenking, a legendary fire titan that slumbers in the deepest crater.
+Only those who master the volcanic trials might awaken this ancient protector.
+But beware - dark forces seek to corrupt even the mightiest of fire spirits."
+
+The guardian gestures toward a hidden passage leading deeper into the volcanic depths.""",
+                    "min_level": 30,
+                    "reward": {"type": "item", "name": "Ember Amulet"},
+                    "next_event": "volcanic_crater_3"
+                }
+            ],
+            "Crystal Caverns": [
+                {
+                    "id": "crystal_caverns_1",
+                    "text": f"""The Crystal Caverns sparkle with otherworldly beauty as rainbow light dances off countless gem formations.
+In the heart of the cavern, you discover a crystalline figure seated on a throne of pure diamond.
+
+{Fore.CYAN}Crystal Sage Luminara:{Style.RESET_ALL} "Welcome, traveler, to the sacred Crystal Sanctum.
+I am the keeper of ancient crystal magic, guardian of the geometric harmonies that maintain balance in our world.
+
+These caverns have existed since the dawn of time, their crystals containing the memories of ages past.
+But recently, the harmonic resonance has been disrupted by dark influences from beyond.
+
+Prove your worth by demonstrating harmony with crystal energy, and I shall share the secrets of prismatic power."
+
+The sage's crystalline form refracts light in mesmerizing patterns as she speaks.""",
+                    "min_level": 25,
+                    "next_event": "crystal_caverns_2"
+                },
+                {
+                    "id": "crystal_caverns_2",
+                    "text": f"""Returning to the Crystal Sanctum, you find Crystal Sage Luminara studying a complex array of floating crystals.
+
+{Fore.CYAN}Crystal Sage Luminara:{Style.RESET_ALL} "Your aura has strengthened considerably since our last meeting.
+The crystal formations speak of your dedication to the trainer's path.
+
+Accept this Prismatic Lens - it will reveal hidden truths and allow you to see through illusions.
+The shadows that threaten our realm often hide behind deception and false visions."
+
+You received a {Fore.CYAN}Prismatic Lens{Style.RESET_ALL}!
+
+{Fore.CYAN}Crystal Sage Luminara:{Style.RESET_ALL} "Deep within these caverns dwells Prismatic, the Rainbow Dragon of infinite facets.
+This legendary being holds the power to bend light itself, creating illusions that can confound even gods.
+
+But darker news troubles me - the Crystal Heart, source of all harmonic energy, grows dim.
+If the ancient seals fail completely, even the power of pure crystal magic may not be enough to save us."
+
+The sage's expression grows grave as she returns to her mystical calculations.""",
+                    "min_level": 35,
+                    "reward": {"type": "item", "name": "Prismatic Lens"},
+                    "next_event": "crystal_caverns_3"
+                }
+            ],
+            "Haunted Graveyard": [
+                {
+                    "id": "haunted_graveyard_1",
+                    "text": f"""The Haunted Graveyard stretches endlessly before you, shrouded in perpetual mist.
+Ancient tombstones bear names worn away by centuries, while ghostly whispers echo through the fog.
+
+{Fore.MAGENTA}Specter Warden Morticus:{Style.RESET_ALL} "Living soul... what brings you to the realm of the departed?
+I am the eternal guardian of this sacred ground, keeper of the boundary between life and death.
+
+The restless spirits have been agitated lately. Something stirs in the deeper crypts - something that should remain sealed.
+If you possess the courage to face the unknown, perhaps you can help restore peace to this hallowed ground."
+
+The spectral figure's form shifts and wavers like smoke in the moonlight.""",
+                    "min_level": 28,
+                    "next_event": "haunted_graveyard_2"
+                },
+                {
+                    "id": "haunted_graveyard_2",
+                    "text": f"""Returning to the graveyard, you find Specter Warden Morticus standing before an ominous mausoleum.
+
+{Fore.MAGENTA}Specter Warden Morticus:{Style.RESET_ALL} "Your spirit has grown resilient to fear - a necessary trait for what lies ahead.
+The ancient crypts contain secrets that predate written history.
+
+Take this Spectral Ward - it will protect you from malevolent spiritual energy.
+The darkness that threatens our world has begun corrupting even the realm of the dead."
+
+You received a {Fore.MAGENTA}Spectral Ward{Style.RESET_ALL}!
+
+{Fore.MAGENTA}Specter Warden Morticus:{Style.RESET_ALL} "The Deathwarden, sovereign of the underworld's depths, has sent warnings.
+Ancient seals that separate the realms grow weak, allowing shadow creatures to slip between worlds.
+
+If the Great Seal fails completely, the barrier between life and death will shatter.
+All existence will be consumed by the Sealed Darkness - an entity of pure void and despair."
+
+The warden's warning carries the weight of cosmic truth as the mist swirls ominously around you.""",
+                    "min_level": 38,
+                    "reward": {"type": "item", "name": "Spectral Ward"},
+                    "next_event": "haunted_graveyard_3"
+                }
+            ],
+            "Sky Islands": [
+                {
+                    "id": "sky_islands_1",
+                    "text": f"""Soaring through the clouds, you land on a floating island where ancient temples touch the very heavens.
+The wind carries whispers of forgotten songs as celestial light bathes everything in ethereal beauty.
+
+{Fore.CYAN}Sky Marshal Tempestus:{Style.RESET_ALL} "Greetings, earth-bound traveler who has risen to our celestial realm.
+I am the commander of the aerial domains, guardian of the winds and storms.
+
+These sky islands have drifted through the heavens since time immemorial, maintaining the atmospheric balance.
+But dark storms now brew from unnatural sources, threatening to corrupt the very air we breathe.
+
+Show me your mastery of aerial combat, and I will teach you the secrets of storm calling."
+
+The sky marshal's cape billows with captured lightning as thunder rumbles in the distance.""",
+                    "min_level": 32,
+                    "next_event": "sky_islands_2"
+                },
+                {
+                    "id": "sky_islands_2",
+                    "text": f"""Returning to the floating temples, you find Sky Marshal Tempestus standing atop the highest spire.
+
+{Fore.CYAN}Sky Marshal Tempestus:{Style.RESET_ALL} "Your aerial prowess has improved dramatically since our last encounter.
+The winds themselves sing of your dedication to the trainer's path.
+
+Accept these Stormwing Boots - they will grant you limited flight and protection from lightning.
+As the cosmic crisis deepens, mobility across all terrains becomes essential for survival."
+
+You received {Fore.CYAN}Stormwing Boots{Style.RESET_ALL}!
+
+{Fore.CYAN}Sky Marshal Tempestus:{Style.RESET_ALL} "The Stormruler, sovereign of all tempests, prepares for the final battle.
+This legendary being commands hurricanes that can reshape continents.
+
+The ancient prophecies speak of a convergence - when all elemental powers must unite.
+Without this unity, the Sealed Darkness will consume even the endless sky itself."
+
+The marshal's words are carried away by winds that seem to echo with cosmic significance.""",
+                    "min_level": 42,
+                    "reward": {"type": "item", "name": "Stormwing Boots"},
+                    "next_event": "sky_islands_3"
+                }
+            ],
+            "Neon City": [
+                {
+                    "id": "neon_city_1",
+                    "text": f"""The futuristic Neon City pulses with electric energy as holographic advertisements dance across towering skyscrapers.
+In the heart of the technological metropolis, you discover a cybernetic laboratory.
+
+{Fore.YELLOW}Tech Master Voltex:{Style.RESET_ALL} "Welcome to the pinnacle of technological evolution, organic being.
+I am the supreme architect of digital consciousness, guardian of the electric realm.
+
+Our city represents the perfect fusion of technology and monster energy.
+But viral entities from cyberspace now threaten to corrupt our digital paradise.
+
+Prove your compatibility with advanced technology, and I will upgrade your understanding of electronic warfare."
+
+The tech master's form flickers between human and digital projection.""",
+                    "min_level": 35,
+                    "next_event": "neon_city_2"
+                },
+                {
+                    "id": "neon_city_2",
+                    "text": f"""You return to find Tech Master Voltex interfacing with a massive quantum computer.
+
+{Fore.YELLOW}Tech Master Voltex:{Style.RESET_ALL} "Your bio-electric signature has evolved remarkably.
+The quantum matrices recognize your enhanced neural patterns.
+
+Download this Neural Interface - it will allow direct communication with electric monsters.
+As reality itself faces deletion, technological adaptation becomes crucial for survival."
+
+You received a {Fore.YELLOW}Neural Interface{Style.RESET_ALL}!
+
+{Fore.YELLOW}Tech Master Voltex:{Style.RESET_ALL} "The legendary Mechagon, apex of artificial evolution, initiates final protocols.
+This digital deity possesses computational power beyond organic comprehension.
+
+System scans indicate approaching data corruption on a universal scale.
+Only the convergence of all elemental protocols can prevent total system failure."
+
+The tech master's warning glitches momentarily before stabilizing.""",
+                    "min_level": 45,
+                    "reward": {"type": "item", "name": "Neural Interface"},
+                    "next_event": "neon_city_3"
+                }
+            ],
+            "Shadow Realm": [
+                {
+                    "id": "shadow_realm_1",
+                    "text": f"""The Shadow Realm exists in perpetual twilight where reality bends and shifts like living darkness.
+Whispers echo from unseen sources as you navigate through the ethereal landscape.
+
+{Fore.MAGENTA}Void Keeper Umbros:{Style.RESET_ALL} "So... a mortal dares enter the realm between realms.
+I am the eternal guardian of the shadow dimension, keeper of secrets that mortals fear to know.
+
+This realm serves as a buffer between your world and the Sealed Darkness beyond.
+But the barriers weaken daily, allowing corruption to seep through dimensional cracks.
+
+Face your inner darkness and emerge stronger, or be consumed by the void itself."
+
+The keeper's form constantly shifts between solid and shadow.""",
+                    "min_level": 40,
+                    "next_event": "shadow_realm_2"
+                },
+                {
+                    "id": "shadow_realm_2",
+                    "text": f"""Returning to the shadow dimension, you find Void Keeper Umbros emanating increased power.
+
+{Fore.MAGENTA}Void Keeper Umbros:{Style.RESET_ALL} "You have gazed into the abyss and returned unchanged.
+Few possess such mental fortitude in the face of infinite darkness.
+
+Claim this Void Crystal - it contains fragments of pure nothingness.
+When wielded properly, it can nullify even the darkest of corruptions."
+
+You received a {Fore.MAGENTA}Void Crystal{Style.RESET_ALL}!
+
+{Fore.MAGENTA}Void Keeper Umbros:{Style.RESET_ALL} "The Voidking, emperor of all shadow realms, prepares for dimensional war.
+This entity predates creation itself, wielding power over the spaces between existence.
+
+The final convergence approaches. All dimensional barriers collapse simultaneously.
+Only the perfect unity of opposing forces can restore cosmic balance."
+
+The keeper's prophecy resonates through dimensions as reality itself trembles.""",
+                    "min_level": 48,
+                    "reward": {"type": "item", "name": "Void Crystal"},
+                    "next_event": "shadow_realm_3"
                 }
             ]
         }
