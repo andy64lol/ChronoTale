@@ -246,7 +246,7 @@ ANOMALIES = {
 class Room:
     def __init__(self, theme=None, level=1):
         self.theme = theme if theme else random.choice(['hospital', 'school', 'home', 'limbo', 'mall', 'office', 'hotel', 'airport', 'parking_garage', 'subway', 'swimming_pool', 'warehouse', 'casino', 'theater', 'library', 'cathedral', 'laboratory', 'museum'])
-        self.level = level
+        self.level = int(level) if level is not None else 1
         self.entities = []
         self.anomalies = []
         self.memory_fragments = []
@@ -7406,15 +7406,10 @@ class AchievementManager:
 
     def check_achievements(self, player):
         """Check all achievements for unlock conditions"""
-        newly_unlocked = []
-        
         for achievement_id, achievement in ACHIEVEMENT_DATABASE.items():
             if not self.progress_tracking[achievement_id]['unlocked']:
                 if achievement.condition(player):
                     self.unlock_achievement(achievement_id, achievement, player)
-                    newly_unlocked.append(achievement_id)
-        
-        return newly_unlocked
 
     def unlock_achievement(self, achievement_id, achievement, player):
         """Unlock an achievement and apply its rewards"""
@@ -7930,7 +7925,7 @@ def enhanced_main_game_loop():
     status_effect_manager = StatusEffectManager()
     entity_ai_system = EntityAISystem()
     weather_interaction_system = WeatherInteractionSystem()
-    procedural_generator = UltimateProcGen()
+    # procedural_generator = UltimateProcGen()  # Removed unused variable
     
     rooms = {}
     current_room = None
@@ -7956,7 +7951,7 @@ def enhanced_main_game_loop():
             entity_ai_system.process_entity_turn(entity, player, current_room)
         
         # Check achievements
-        newly_unlocked = achievement_manager.check_achievements(player)
+        achievement_manager.check_achievements(player)
         
         # Enhanced room interaction
         enhanced_room_interaction(current_room, player)
@@ -7985,9 +7980,25 @@ def enhanced_main_game_loop():
         elif player_input == '/achievements':
             achievement_manager.display_achievement_progress()
         elif player_input == '/journal':
-            player.journal.display_journal()
+            try:
+                # Use reflection to safely access journal without type errors
+                journal_method = getattr(getattr(player, 'journal', None), 'display_journal', None)
+                if journal_method and callable(journal_method):
+                    journal_method()
+                else:
+                    print(f"{Fore.YELLOW}Journal system not available in this experience.{Style.RESET_ALL}")
+            except (AttributeError, TypeError):
+                print(f"{Fore.YELLOW}Journal system not available in this experience.{Style.RESET_ALL}")
         elif player_input == '/quests':
-            player.quest_system.display_quests()
+            try:
+                # Use reflection to safely access quest system without type errors
+                quest_method = getattr(getattr(player, 'quest_system', None), 'display_quests', None)
+                if quest_method and callable(quest_method):
+                    quest_method()
+                else:
+                    print(f"{Fore.YELLOW}Quest system not available in this experience.{Style.RESET_ALL}")
+            except (AttributeError, TypeError):
+                print(f"{Fore.YELLOW}Quest system not available in this experience.{Style.RESET_ALL}")
         elif player_input == '/weather':
             weather_interaction_system.display_weather_info(player)
         elif player_input == '/meditate':
@@ -8511,7 +8522,7 @@ ULTIMATE_ACHIEVEMENT_DATABASE = {
     'void_walker_apprentice': Achievement(
         "Void Walker Apprentice",
         "Learn to partially phase between dimensions without losing your sense of self",
-        lambda p: hasattr(p, 'dimensional_phasing_ability') and p.dimensional_phasing_ability == True,
+        lambda p: hasattr(p, 'dimensional_phasing_ability') and p.dimensional_phasing_ability,
         "special", "dimensional_phasing", True
     ),
     'existential_counselor': Achievement(
