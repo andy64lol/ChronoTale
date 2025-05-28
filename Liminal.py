@@ -4713,53 +4713,130 @@ class AdvancedSaveSystem:
         self.save_statistics = {}
 
     def save_game_advanced(self, player, slot, save_name=""):
-        """Advanced save system with metadata and statistics"""
+        """Ultimate save system with comprehensive data preservation and integrity validation"""
+        # Generate comprehensive save data
         save_data = {
             'player': self.serialize_player(player),
             'metadata': {
-                'save_name': save_name or f"Save {slot}",
+                'save_name': save_name or f"Ultimate Save {slot}",
                 'timestamp': time.time(),
-                'game_version': "2.0",
-                'play_time': getattr(player, 'play_time', 0),
+                'game_version': "3.0_ultimate",
+                'save_format_version': "3.0",
+                'play_time': getattr(player, 'total_playtime', 0),
                 'difficulty_level': getattr(player, 'difficulty_level', 'normal'),
                 'achievements_unlocked': len(getattr(player, 'achievements', [])),
-                'locations_visited': len(player.journal.locations_visited) if hasattr(player, 'journal') else 0,
-                'entities_encountered': len(player.entity_relationships) if hasattr(player, 'entity_relationships') else 0
+                'locations_visited': len(player.journal.locations_visited) if hasattr(player, 'journal') and player.journal else 0,
+                'entities_encountered': len(player.entity_relationships) if hasattr(player, 'entity_relationships') else 0,
+                'total_moves': getattr(player, 'moves_made', 0),
+                'character_level': getattr(player, 'level', 1),
+                'save_integrity_hash': None  # Will be calculated after serialization
             },
             'statistics': self.generate_save_statistics(player),
-            'screenshot_data': self.generate_screenshot_data(player)
+            'screenshot_data': self.generate_screenshot_data(player),
+            'world_state': self.capture_world_state(player),
+            'game_systems': self.capture_game_systems_state(player)
         }
         
-        # Create backup of existing save
+        # Calculate integrity hash for save validation
+        save_data['metadata']['save_integrity_hash'] = hash(str(save_data['player']))
+        
+        # Create multiple backup layers for critical data preservation
         if os.path.exists(f"{SAVE_DIR}/save_{slot}.pkl"):
-            self.create_backup(slot)
+            self.create_backup_chain(slot)
         
         try:
+            # Primary save
             with open(f"{SAVE_DIR}/save_{slot}.pkl", 'wb') as f:
                 pickle.dump(save_data, f)
             
+            # Create immediate backup
+            with open(f"{SAVE_DIR}/save_{slot}_immediate.pkl", 'wb') as f:
+                pickle.dump(save_data, f)
+            
+            # Update metadata registry
             self.save_metadata[slot] = save_data['metadata']
-            return True
+            
+            # Validate save integrity immediately after writing
+            if self.validate_save_integrity(slot):
+                print(f"{Fore.GREEN}✓ Save completed successfully with full data integrity!{Style.RESET_ALL}")
+                print(f"{Fore.CYAN}✓ {len(save_data['player'])} player attributes preserved{Style.RESET_ALL}")
+                print(f"{Fore.YELLOW}✓ World state and game systems captured{Style.RESET_ALL}")
+                return True
+            else:
+                print(f"{Fore.RED}⚠ Save integrity check failed - attempting recovery{Style.RESET_ALL}")
+                return False
+                
         except Exception as e:
-            print(f"Error saving game: {e}")
+            print(f"{Fore.RED}Error saving game: {e}{Style.RESET_ALL}")
             return False
 
     def serialize_player(self, player):
-        """Convert player object to serializable dictionary"""
+        """Convert player object to serializable dictionary with comprehensive data preservation"""
         return {
+            # Core player attributes
+            'name': getattr(player, 'name', 'Unknown Explorer'),
             'x': player.x,
             'y': player.y,
             'z': player.z,
             'sanity': player.sanity,
             'reality': player.reality,
             'memory': player.memory,
+            'level': getattr(player, 'level', 1),
+            'experience': getattr(player, 'experience', 0),
             'moves_made': getattr(player, 'moves_made', 0),
+            
+            # Player progression and statistics
+            'total_playtime': getattr(player, 'total_playtime', 0),
+            'highest_sanity': getattr(player, 'highest_sanity', player.sanity),
+            'lowest_sanity': getattr(player, 'lowest_sanity', player.sanity),
+            'highest_reality': getattr(player, 'highest_reality', player.reality),
+            'lowest_reality': getattr(player, 'lowest_reality', player.reality),
+            'highest_memory': getattr(player, 'highest_memory', player.memory),
+            'lowest_memory': getattr(player, 'lowest_memory', player.memory),
+            
+            # Exploration and interaction tracking
+            'dimensional_experience': getattr(player, 'dimensional_experience', 0),
+            'meditation_points': getattr(player, 'meditation_points', 0),
+            'weather_events_survived': getattr(player, 'weather_events_survived', 0),
+            'exploration_time': getattr(player, 'exploration_time', 0),
+            'entities_encountered': getattr(player, 'entities_encountered', 0),
+            'anomalies_discovered': getattr(player, 'anomalies_discovered', 0),
+            'temporal_distortions_navigated': getattr(player, 'temporal_distortions_navigated', 0),
+            
+            # Game mechanics and systems
+            'difficulty_level': getattr(player, 'difficulty_level', 'normal'),
+            'tutorial_completed': getattr(player, 'tutorial_completed', False),
+            'achievements': getattr(player, 'achievements', []),
+            'unlocked_features': getattr(player, 'unlocked_features', []),
+            'game_settings': getattr(player, 'game_settings', {}),
+            
+            # Complex object serialization
             'artifacts': [self.serialize_artifact(artifact) for artifact in getattr(player, 'artifacts', [])],
             'journal': self.serialize_journal(getattr(player, 'journal', None)),
             'quest_system': self.serialize_quest_system(getattr(player, 'quest_system', None)),
             'entity_relationships': {name: self.serialize_relationship(rel) for name, rel in getattr(player, 'entity_relationships', {}).items()},
             'status_effects': getattr(player, 'status_effects', []),
-            'inventory': self.serialize_inventory(getattr(player, 'inventory', None))
+            'inventory': self.serialize_inventory(getattr(player, 'inventory', None)),
+            
+            # Advanced game state preservation
+            'memory_fragments': getattr(player, 'memory_fragments', []),
+            'dimensional_keys': getattr(player, 'dimensional_keys', []),
+            'reality_anchors': getattr(player, 'reality_anchors', []),
+            'phantom_interactions': getattr(player, 'phantom_interactions', []),
+            'echo_experiences': getattr(player, 'echo_experiences', []),
+            'temporal_markers': getattr(player, 'temporal_markers', []),
+            
+            # Room and world state preservation
+            'discovered_rooms': getattr(player, 'discovered_rooms', {}),
+            'room_modifications': getattr(player, 'room_modifications', {}),
+            'persistent_changes': getattr(player, 'persistent_changes', {}),
+            'world_state_flags': getattr(player, 'world_state_flags', {}),
+            
+            # Save metadata for integrity
+            'save_version': '3.0_ultimate',
+            'save_timestamp': time.time(),
+            'character_creation_date': getattr(player, 'character_creation_date', time.time()),
+            'last_save_location': f"({player.x}, {player.y}, {player.z})"
         }
 
     def serialize_artifact(self, artifact):
@@ -4890,12 +4967,12 @@ class AdvancedSaveSystem:
         return None
 
     def deserialize_save_data(self, save_data):
-        """Convert save data back to game objects"""
+        """Convert save data back to game objects with comprehensive data restoration"""
         player_data = save_data['player']
         
         # Create a new player object with saved data using the actual Player class
         player = Player(
-            name=player_data.get('name', 'Unknown'),
+            name=player_data.get('name', 'Unknown Explorer'),
             x=player_data['x'],
             y=player_data['y'],
             z=player_data['z'],
@@ -4903,10 +4980,36 @@ class AdvancedSaveSystem:
             level=player_data.get('level', 1)
         )
         
-        # Update additional attributes
+        # Restore core attributes
         player.reality = player_data['reality']
         player.memory = player_data['memory']
+        player.experience = player_data.get('experience', 0)
         player.moves_made = player_data.get('moves_made', 0)
+        
+        # Restore player progression and statistics
+        player.total_playtime = player_data.get('total_playtime', 0)
+        player.highest_sanity = player_data.get('highest_sanity', player.sanity)
+        player.lowest_sanity = player_data.get('lowest_sanity', player.sanity)
+        player.highest_reality = player_data.get('highest_reality', player.reality)
+        player.lowest_reality = player_data.get('lowest_reality', player.reality)
+        player.highest_memory = player_data.get('highest_memory', player.memory)
+        player.lowest_memory = player_data.get('lowest_memory', player.memory)
+        
+        # Restore exploration and interaction tracking
+        player.dimensional_experience = player_data.get('dimensional_experience', 0)
+        player.meditation_points = player_data.get('meditation_points', 0)
+        player.weather_events_survived = player_data.get('weather_events_survived', 0)
+        player.exploration_time = player_data.get('exploration_time', 0)
+        player.entities_encountered = player_data.get('entities_encountered', 0)
+        player.anomalies_discovered = player_data.get('anomalies_discovered', 0)
+        player.temporal_distortions_navigated = player_data.get('temporal_distortions_navigated', 0)
+        
+        # Restore game mechanics and systems
+        player.difficulty_level = player_data.get('difficulty_level', 'normal')
+        player.tutorial_completed = player_data.get('tutorial_completed', False)
+        player.achievements = player_data.get('achievements', [])
+        player.unlocked_features = player_data.get('unlocked_features', [])
+        player.game_settings = player_data.get('game_settings', {})
         
         # Restore complex objects
         player.artifacts = [self.deserialize_artifact(artifact_data) for artifact_data in player_data.get('artifacts', [])]
@@ -4915,6 +5018,23 @@ class AdvancedSaveSystem:
         player.entity_relationships = {name: self.deserialize_relationship(rel_data) for name, rel_data in player_data.get('entity_relationships', {}).items()}
         player.status_effects = player_data.get('status_effects', [])
         player.inventory = self.deserialize_inventory(player_data.get('inventory'))
+        
+        # Restore advanced game state elements
+        player.memory_fragments = player_data.get('memory_fragments', [])
+        player.dimensional_keys = player_data.get('dimensional_keys', [])
+        player.reality_anchors = player_data.get('reality_anchors', [])
+        player.phantom_interactions = player_data.get('phantom_interactions', [])
+        player.echo_experiences = player_data.get('echo_experiences', [])
+        player.temporal_markers = player_data.get('temporal_markers', [])
+        
+        # Restore room and world state
+        player.discovered_rooms = player_data.get('discovered_rooms', {})
+        player.room_modifications = player_data.get('room_modifications', {})
+        player.persistent_changes = player_data.get('persistent_changes', {})
+        player.world_state_flags = player_data.get('world_state_flags', {})
+        
+        # Restore save metadata
+        player.character_creation_date = player_data.get('character_creation_date', time.time())
         
         return player
 
@@ -8561,19 +8681,10 @@ ULTIMATE_ACHIEVEMENT_DATABASE = {
 def ultimate_liminal_experience():
     """The ultimate liminal space experience with all systems integrated"""
     print(f"\n{Fore.CYAN}{'='*80}")
-    print(f"{Style.BRIGHT}LIMINAL SPACE - ULTIMATE COMPREHENSIVE EDITION{Style.RESET_ALL}")
+    print(f"{Style.BRIGHT}LIMINAL{Style.RESET_ALL}")
     print(f"{Fore.CYAN}{'='*80}{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}Welcome to the most comprehensive liminal space experience ever created.{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}This edition features:")
-    print(f"• {Fore.GREEN}200+ unique entities with advanced AI behaviors{Style.RESET_ALL}")
-    print(f"• {Fore.BLUE}50+ room themes with thousands of variations{Style.RESET_ALL}")
-    print(f"• {Fore.MAGENTA}Advanced weather systems with complex interactions{Style.RESET_ALL}")
-    print(f"• {Fore.CYAN}Comprehensive quest and achievement systems{Style.RESET_ALL}")
-    print(f"• {Fore.YELLOW}Deep philosophical dialogue trees{Style.RESET_ALL}")
-    print(f"• {Fore.RED}Complex status effects and progression systems{Style.RESET_ALL}")
-    print(f"• {Fore.WHITE}Procedural narrative generation{Style.RESET_ALL}")
-    print(f"• {Fore.LIGHTBLUE_EX}And much, much more...{Style.RESET_ALL}")
-    print(f"\n{Fore.GREEN}Type /begin to start your ultimate liminal journey!{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Welcome to Liminal.{Style.RESET_ALL}")
+    print(f"\n{Fore.GREEN}Type /begin to start.{Style.RESET_ALL}")
 
 if __name__ == "__main__":
 
