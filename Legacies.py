@@ -24249,18 +24249,11 @@ def main_game():
     # Direct terminal output for guaranteed color display
     sys.stdout.write("\033[0m")  # Reset all colors first
     sys.stdout.flush()
-
-    # Initialize world expansion features and new systems
-    print_colored("World expansion activated: Sealtea continent and The Dead Sea world border added!", GREEN)
-    print_colored("Pet system enhanced: Use /pets to manage both regular and legendary pets", CYAN)
-    print_colored("Sailing system loaded: Use /sail, /ships, or /maps to access", CYAN)
-
-    # Display welcome header with explicit color codes
     sys.stdout.write(f"{BOLD}{CYAN}{'='*60}\n")
     sys.stdout.write(f"{BOLD}{CYAN}{' '*14}Welcome to Legacies of our Legends RPG!{' '*14}\n")
     sys.stdout.write(f"{BOLD}{CYAN}{'='*60}\n")
     sys.stdout.write(f"{GREEN}{'-'*68}\n")
-    sys.stdout.write(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.\n")
+    sys.stdout.write(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character or /load to load game.\n")
     sys.stdout.write(f"{GREEN}{'-'*68}\n")
     sys.stdout.write(ENDC)  # Reset colors at the end
     sys.stdout.flush()
