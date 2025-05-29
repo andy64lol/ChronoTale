@@ -685,9 +685,8 @@ class Animations:
 
     @staticmethod
     def zombie_animation():
-        """Display a simple ASCII zombie animation."""
-        frames = [
-            r"""
+        """Display a simple ASCII zombie."""
+        zombie_art = r"""
       .-.
      (o.o)
       |=|
@@ -702,29 +701,8 @@ class Animations:
      || ||
      || ||
     ==' '==
-            """,
-            r"""
-      .-.
-     (-.-)
-      |=|
-     __|__
-   //.=|=.\\
-  // .=|=. \\
-  \\ .=|=. //
-   \\(_=_)//
-    (:| |:)
-     || ||
-     () ()
-     || ||
-     || ||
-    ==' '==
-            """,
-        ]
-        for _ in range(3):
-            for frame in frames:
-                os.system("cls" if os.name == "nt" else "clear")
-                print(Colors.GREEN + frame + Colors.ENDC)
-                time.sleep(0.3)
+            """
+        print(Colors.GREEN + zombie_art + Colors.ENDC)
 
 
 # Game constants
@@ -4887,11 +4865,11 @@ class GameState:
         title += "\n" + Colors.colorize("=" * 70, Colors.RED)
         print(title + "\n")
 
-        # Type out introduction for effect
-        intro_text = "Welcome to the post-apocalyptic world overrun by zombies. "
-        intro_text += "Your goal is to survive as long as possible, complete missions, "
+        # Display introduction text properly
+        intro_text = "Welcome to the post-apocalyptic world overrun by zombies.\n"
+        intro_text += "Your goal is to survive as long as possible, complete missions,\n"
         intro_text += "and perhaps find a way to escape this nightmare."
-        Animations.type_text(Colors.colorize(intro_text, Colors.YELLOW))
+        print(Colors.colorize(intro_text, Colors.YELLOW))
 
         print(
             Colors.colorize(
@@ -4913,6 +4891,12 @@ class GameState:
         
         # Display save slots
         self._display_save_slots()
+        
+        # Handle save/load choices
+        self._handle_save_load_menu()
+        
+        # Start the main game loop
+        self.main_game_loop()
     
     def _display_save_slots(self):
         """Display available save slots with detailed information."""
@@ -4937,6 +4921,209 @@ class GameState:
         else:
             print(Colors.colorize("\nNo saved games found.", Colors.YELLOW))
             print(Colors.colorize("Start a new game to create a save.", Colors.CYAN))
+    
+    def _handle_save_load_menu(self):
+        """Handle save/load menu interactions."""
+        save_slots = self.get_save_slots()
+        
+        if save_slots:
+            print("\n" + Colors.colorize("Options:", Colors.BOLD + Colors.CYAN))
+            print(Colors.colorize("1. Load existing save", Colors.CYAN))
+            print(Colors.colorize("2. Start new game", Colors.CYAN))
+            print(Colors.colorize("3. Quit", Colors.RED))
+            
+            while True:
+                try:
+                    choice = input(Colors.colorize("\nSelect option (1-3): ", Colors.YELLOW))
+                    
+                    if choice == "1":
+                        self._load_save_menu()
+                        break
+                    elif choice == "2":
+                        self._create_new_character()
+                        break
+                    elif choice == "3":
+                        print(Colors.colorize("Thanks for playing!", Colors.GREEN))
+                        sys.exit(0)
+                    else:
+                        print(Colors.colorize("Invalid choice. Please enter 1, 2, or 3.", Colors.RED))
+                except (ValueError, KeyboardInterrupt):
+                    print(Colors.colorize("\nExiting game.", Colors.YELLOW))
+                    sys.exit(0)
+        else:
+            # No saves exist, create new character
+            print(Colors.colorize("\nStarting new game...", Colors.GREEN))
+            self._create_new_character()
+    
+    def _load_save_menu(self):
+        """Handle loading existing saves."""
+        save_slots = self.get_save_slots()
+        
+        print("\n" + Colors.colorize("Select save slot to load:", Colors.BOLD + Colors.CYAN))
+        for i, save in enumerate(save_slots, 1):
+            print(Colors.colorize(f"{i}. {save['name']} - Day {save['day']}", Colors.CYAN))
+        
+        while True:
+            try:
+                choice = input(Colors.colorize(f"\nSelect slot (1-{len(save_slots)}): ", Colors.YELLOW))
+                slot_num = int(choice) - 1
+                
+                if 0 <= slot_num < len(save_slots):
+                    selected_save = save_slots[slot_num]
+                    self.load_game(selected_save['slot'])
+                    print(Colors.colorize(f"Loaded save: {selected_save['name']}", Colors.GREEN))
+                    break
+                else:
+                    print(Colors.colorize("Invalid slot number.", Colors.RED))
+            except (ValueError, KeyboardInterrupt):
+                print(Colors.colorize("Invalid input.", Colors.RED))
+    
+    def _create_new_character(self):
+        """Create a new character."""
+        print("\n" + Colors.colorize("CHARACTER CREATION", Colors.BOLD + Colors.YELLOW))
+        print(Colors.colorize("=" * 50, Colors.YELLOW))
+        
+        # Get character name
+        while True:
+            name = input(Colors.colorize("\nEnter your character name: ", Colors.CYAN)).strip()
+            if name:
+                self.player["name"] = name
+                break
+            else:
+                print(Colors.colorize("Please enter a valid name.", Colors.RED))
+        
+        # Initialize new character stats
+        self.player.update({
+            "health": MAX_HEALTH,
+            "stamina": MAX_STAMINA,
+            "hunger": MAX_HUNGER,
+            "thirst": MAX_THIRST,
+            "day": 1,
+            "hour": 6,
+            "location": "abandoned_house",
+            "inventory": {},
+            "weapons": [],
+            "armor": [],
+            "skills": {"combat": 1, "scavenging": 1, "crafting": 1},
+            "experience": 0,
+            "level": 1
+        })
+        
+        print(Colors.colorize(f"\nWelcome to the apocalypse, {name}!", Colors.GREEN))
+        print(Colors.colorize("Your survival journey begins now...", Colors.YELLOW))
+        input(Colors.colorize("\nPress Enter to continue...", Colors.CYAN))
+    
+    def main_game_loop(self):
+        """Main game loop for command processing."""
+        print("\n" + Colors.colorize("=" * 70, Colors.BOLD + Colors.GREEN))
+        print(Colors.colorize("GAME STARTED - Type /help for available commands", Colors.BOLD + Colors.GREEN))
+        print(Colors.colorize("=" * 70, Colors.BOLD + Colors.GREEN))
+        
+        while True:
+            try:
+                # Display current status
+                self._display_status_bar()
+                
+                # Get user command
+                command = input(Colors.colorize("\n> ", Colors.YELLOW)).strip().lower()
+                
+                if not command:
+                    continue
+                
+                # Process commands
+                if command.startswith('/'):
+                    self._process_command(command[1:])
+                else:
+                    print(Colors.colorize("Commands must start with '/'. Type /help for assistance.", Colors.RED))
+                    
+            except KeyboardInterrupt:
+                print(Colors.colorize("\n\nGame interrupted. Type /quit to exit properly.", Colors.YELLOW))
+            except Exception as e:
+                print(Colors.colorize(f"An error occurred: {e}", Colors.RED))
+    
+    def _display_status_bar(self):
+        """Display current player status."""
+        health_color = Colors.health_color(self.player["health"], MAX_HEALTH)
+        stamina_color = Colors.health_color(self.player["stamina"], MAX_STAMINA)
+        
+        status = f"\n[Day {self.player['day']} - {self.player['hour']:02d}:00] "
+        status += f"Health: {Colors.colorize(str(self.player['health']), health_color)} "
+        status += f"Stamina: {Colors.colorize(str(self.player['stamina']), stamina_color)} "
+        status += f"Location: {Colors.colorize(self.player['location'].replace('_', ' ').title(), Colors.CYAN)}"
+        
+        print(status)
+    
+    def _process_command(self, command):
+        """Process game commands."""
+        if command == "help":
+            self._show_help()
+        elif command == "status":
+            self._show_detailed_status()
+        elif command == "inventory":
+            self._show_inventory()
+        elif command == "look":
+            self._look_around()
+        elif command == "save":
+            self._save_game_menu()
+        elif command == "quit":
+            self._quit_game()
+        else:
+            print(Colors.colorize(f"Unknown command: {command}. Type /help for available commands.", Colors.RED))
+    
+    def _show_help(self):
+        """Display available commands."""
+        help_text = """
+Available Commands:
+/help     - Show this help message
+/status   - Show detailed character status
+/inventory - Show your inventory
+/look     - Look around your current location
+/save     - Save your game
+/quit     - Exit the game
+        """
+        print(Colors.colorize(help_text, Colors.CYAN))
+    
+    def _show_detailed_status(self):
+        """Show detailed character status."""
+        print(Colors.colorize("\n=== CHARACTER STATUS ===", Colors.BOLD + Colors.YELLOW))
+        print(f"Name: {Colors.colorize(self.player['name'], Colors.GREEN)}")
+        print(f"Level: {Colors.colorize(str(self.player['level']), Colors.CYAN)}")
+        print(f"Health: {Colors.colorize(f"{self.player['health']}/{MAX_HEALTH}", Colors.health_color(self.player['health'], MAX_HEALTH))}")
+        print(f"Stamina: {Colors.colorize(f"{self.player['stamina']}/{MAX_STAMINA}", Colors.health_color(self.player['stamina'], MAX_STAMINA))}")
+        print(f"Day: {Colors.colorize(str(self.player['day']), Colors.YELLOW)}")
+        print(f"Time: {Colors.colorize(f"{self.player['hour']:02d}:00", Colors.YELLOW)}")
+        print(f"Location: {Colors.colorize(self.player['location'].replace('_', ' ').title(), Colors.CYAN)}")
+    
+    def _show_inventory(self):
+        """Show player inventory."""
+        print(Colors.colorize("\n=== INVENTORY ===", Colors.BOLD + Colors.YELLOW))
+        if self.player["inventory"]:
+            for item, quantity in self.player["inventory"].items():
+                print(f"{Colors.colorize(item.replace('_', ' ').title(), Colors.GREEN)}: {quantity}")
+        else:
+            print(Colors.colorize("Your inventory is empty.", Colors.RED))
+    
+    def _look_around(self):
+        """Look around current location."""
+        location = self.player["location"]
+        print(Colors.colorize(f"\n=== {location.replace('_', ' ').title()} ===", Colors.BOLD + Colors.CYAN))
+        print(Colors.colorize("You look around the area...", Colors.YELLOW))
+        print(Colors.colorize("This is a basic implementation. More location details coming soon!", Colors.CYAN))
+    
+    def _save_game_menu(self):
+        """Handle saving the game."""
+        try:
+            slot = 1  # Default to slot 1 for now
+            self.save_game(slot)
+            print(Colors.colorize(f"Game saved to slot {slot}!", Colors.GREEN))
+        except Exception as e:
+            print(Colors.colorize(f"Failed to save game: {e}", Colors.RED))
+    
+    def _quit_game(self):
+        """Quit the game."""
+        print(Colors.colorize("Thanks for playing Zombie Survival RPG!", Colors.GREEN))
+        print(Colors.colorize("Stay alive out there...", Colors.YELLOW))
+        sys.exit(0)
     
     def _display_single_save_slot(self, save):
         """Display information for a single save slot.
