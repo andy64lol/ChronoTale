@@ -4961,7 +4961,9 @@ class GameState:
         
         print("\n" + Colors.colorize("Select save slot to load:", Colors.BOLD + Colors.CYAN))
         for i, save in enumerate(save_slots, 1):
-            print(Colors.colorize(f"{i}. {save['name']} - Day {save['day']}", Colors.CYAN))
+            day = save.get('day', save.get('game_state', {}).get('day', 1))
+            name = save.get('name', save.get('game_state', {}).get('name', 'Unknown'))
+            print(Colors.colorize(f"{i}. {name} - Day {day}", Colors.CYAN))
         
         while True:
             try:
@@ -5055,31 +5057,56 @@ class GameState:
     
     def _process_command(self, command):
         """Process game commands."""
-        if command == "help":
+        parts = command.split()
+        cmd = parts[0]
+        args = parts[1:] if len(parts) > 1 else []
+        
+        if cmd == "help":
             self._show_help()
-        elif command == "status":
+        elif cmd == "status":
             self._show_detailed_status()
-        elif command == "inventory":
+        elif cmd == "inventory":
             self._show_inventory()
-        elif command == "look":
+        elif cmd == "look":
             self._look_around()
-        elif command == "save":
+        elif cmd == "go":
+            if args:
+                self._go_to_location(args[0])
+            else:
+                print(Colors.colorize("Usage: /go <location>. Use /look to see available exits.", Colors.YELLOW))
+        elif cmd == "explore":
+            if args:
+                self._explore_feature(args[0])
+            else:
+                print(Colors.colorize("Usage: /explore <feature>. Use /look to see available features.", Colors.YELLOW))
+        elif cmd == "rest":
+            self._rest()
+        elif cmd == "save":
             self._save_game_menu()
-        elif command == "quit":
+        elif cmd == "quit":
             self._quit_game()
         else:
-            print(Colors.colorize(f"Unknown command: {command}. Type /help for available commands.", Colors.RED))
+            print(Colors.colorize(f"Unknown command: {cmd}. Type /help for available commands.", Colors.RED))
     
     def _show_help(self):
         """Display available commands."""
         help_text = """
 Available Commands:
-/help     - Show this help message
-/status   - Show detailed character status
-/inventory - Show your inventory
-/look     - Look around your current location
-/save     - Save your game
-/quit     - Exit the game
+/help             - Show this help message
+/status           - Show detailed character status
+/inventory        - Show your inventory
+/look             - Look around and search your current location
+/go <location>    - Move to a different location
+/explore <feature> - Explore special features in your area
+/rest             - Rest to recover stamina and health
+/save             - Save your game
+/quit             - Exit the game
+
+Tips:
+- Use /look to discover items and see exits
+- Moving and exploring consumes stamina
+- Rest when your stamina gets low
+- Some areas are more dangerous at night
         """
         print(Colors.colorize(help_text, Colors.CYAN))
     
@@ -5104,11 +5131,407 @@ Available Commands:
             print(Colors.colorize("Your inventory is empty.", Colors.RED))
     
     def _look_around(self):
-        """Look around current location."""
-        location = self.player["location"]
-        print(Colors.colorize(f"\n=== {location.replace('_', ' ').title()} ===", Colors.BOLD + Colors.CYAN))
-        print(Colors.colorize("You look around the area...", Colors.YELLOW))
-        print(Colors.colorize("This is a basic implementation. More location details coming soon!", Colors.CYAN))
+        """Look around current location with detailed exploration."""
+        location_id = self.player.get("location", "abandoned_house")
+        
+        # Get location data
+        location = self._get_location_data(location_id)
+        
+        # Clear screen for immersive experience
+        self.clear_screen()
+        
+        # Display location header
+        location_name = location.get("name", location_id.replace("_", " ").title())
+        print(Colors.colorize(f"\n{'='*60}", Colors.BOLD + Colors.CYAN))
+        print(Colors.colorize(f"  {location_name.upper()}", Colors.BOLD + Colors.CYAN))
+        print(Colors.colorize(f"{'='*60}", Colors.BOLD + Colors.CYAN))
+        
+        # Display detailed description
+        description = location.get("description", "A desolate area with signs of past civilization.")
+        print(Colors.colorize(f"\n{description}", Colors.YELLOW))
+        
+        # Show current time and weather effects
+        time_of_day = self._get_time_of_day()
+        print(Colors.colorize(f"\nTime: {self.player['hour']:02d}:00 ({time_of_day})", Colors.CYAN))
+        
+        # Display danger level
+        danger_level = location.get("danger_level", 1)
+        danger_color = Colors.RED if danger_level >= 3 else Colors.YELLOW if danger_level >= 2 else Colors.GREEN
+        print(Colors.colorize(f"Danger Level: {'🧟' * danger_level} ({danger_level}/5)", danger_color))
+        
+        # Check for items in the area
+        self._check_area_items(location)
+        
+        # Show available actions
+        self._show_location_actions(location)
+        
+        # Show exits
+        self._show_location_exits(location)
+        
+        # Check for random encounters
+        self._check_random_encounter(location)
+        
+        # Time passes when looking around
+        self.player["stamina"] = max(0, self.player["stamina"] - 1)
+        
+    def _get_location_data(self, location_id):
+        """Get comprehensive location data."""
+        locations = {
+            "abandoned_house": {
+                "name": "Abandoned House",
+                "description": "A two-story house with boarded windows and a creaking front door. The yard is overgrown with weeds, and you can hear the wind whistling through broken windows. Dark stains on the porch suggest this place has seen violence.",
+                "danger_level": 2,
+                "items": ["bandage", "canned_food", "flashlight", "knife"],
+                "item_spawn_chance": 0.3,
+                "exits": ["street", "backyard"],
+                "special_features": ["basement", "attic"],
+                "zombies_chance": 0.2
+            },
+            "street": {
+                "name": "Residential Street",
+                "description": "A once-quiet suburban street now filled with abandoned cars and debris. Broken street lamps cast eerie shadows, and you can see movement behind some of the house windows. The asphalt is cracked with weeds growing through.",
+                "danger_level": 3,
+                "items": ["car_battery", "gasoline", "tire_iron", "road_flare"],
+                "item_spawn_chance": 0.25,
+                "exits": ["abandoned_house", "shopping_center", "park"],
+                "special_features": ["car_wreckage", "storm_drain"],
+                "zombies_chance": 0.4
+            },
+            "shopping_center": {
+                "name": "Abandoned Shopping Center",
+                "description": "A large mall with most stores looted and destroyed. Broken glass covers the floor, and mannequins lie scattered about. The fountain in the center is filled with murky water. Some stores might still have supplies.",
+                "danger_level": 4,
+                "items": ["med_kit", "backpack", "crowbar", "energy_drink"],
+                "item_spawn_chance": 0.4,
+                "exits": ["street", "parking_lot", "maintenance_tunnels"],
+                "special_features": ["pharmacy", "electronics_store", "food_court"],
+                "zombies_chance": 0.5
+            },
+            "park": {
+                "name": "City Park",
+                "description": "A large park with tall trees and overgrown paths. The playground equipment is rusted and broken. There's a small pond that reflects the grey sky. You can hear birds chirping, a rare sound of life in this dead world.",
+                "danger_level": 1,
+                "items": ["berries", "clean_water", "rope", "stick"],
+                "item_spawn_chance": 0.2,
+                "exits": ["street", "forest", "bridge"],
+                "special_features": ["pond", "playground", "picnic_area"],
+                "zombies_chance": 0.1
+            },
+            "forest": {
+                "name": "Dense Forest",
+                "description": "Thick woods with towering trees that block most sunlight. The forest floor is covered with fallen leaves and branches. You hear rustling sounds from deeper in the woods - hopefully just animals.",
+                "danger_level": 2,
+                "items": ["berries", "mushrooms", "wood", "rabbit_trap"],
+                "item_spawn_chance": 0.3,
+                "exits": ["park", "cabin", "river"],
+                "special_features": ["hunting_spot", "herb_patch", "animal_tracks"],
+                "zombies_chance": 0.15
+            }
+        }
+        return locations.get(location_id, locations["abandoned_house"])
+    
+    def _check_area_items(self, location):
+        """Check for items that can be found in the current area."""
+        print(Colors.colorize("\n--- SEARCH RESULTS ---", Colors.BOLD + Colors.YELLOW))
+        
+        # Check if player has already searched this area recently
+        last_search_key = f"last_search_{self.player['location']}"
+        current_time = self.player["day"] * 24 + self.player["hour"]
+        last_search = self.player.get(last_search_key, 0)
+        
+        if current_time - last_search < 6:  # Can only search every 6 hours
+            print(Colors.colorize("You've already searched this area recently. Try again later.", Colors.RED))
+            return
+            
+        # Check for items based on spawn chance
+        available_items = []
+        for item in location.get("items", []):
+            if random.random() < location.get("item_spawn_chance", 0.2):
+                available_items.append(item)
+        
+        if available_items:
+            print(Colors.colorize("You notice some items scattered around:", Colors.GREEN))
+            for i, item in enumerate(available_items, 1):
+                item_name = item.replace("_", " ").title()
+                print(Colors.colorize(f"  {i}. {item_name}", Colors.CYAN))
+            
+            # Allow player to collect items
+            choice = input(Colors.colorize("\nCollect item (number) or press Enter to skip: ", Colors.YELLOW))
+            if choice.isdigit() and 1 <= int(choice) <= len(available_items):
+                selected_item = available_items[int(choice) - 1]
+                if self._add_to_inventory(selected_item):
+                    print(Colors.colorize(f"You collected: {selected_item.replace('_', ' ').title()}", Colors.GREEN))
+                    self.player[last_search_key] = current_time
+                else:
+                    print(Colors.colorize("Your inventory is full!", Colors.RED))
+        else:
+            print(Colors.colorize("You don't find anything useful here.", Colors.YELLOW))
+    
+    def _show_location_actions(self, location):
+        """Show special actions available at this location."""
+        features = location.get("special_features", [])
+        if not features:
+            return
+            
+        print(Colors.colorize("\n--- SPECIAL LOCATIONS ---", Colors.BOLD + Colors.MAGENTA))
+        for feature in features:
+            feature_name = feature.replace("_", " ").title()
+            print(Colors.colorize(f"  • {feature_name} (use /explore {feature})", Colors.MAGENTA))
+    
+    def _show_location_exits(self, location):
+        """Show available exits from current location."""
+        exits = location.get("exits", [])
+        if not exits:
+            return
+            
+        print(Colors.colorize("\n--- EXITS ---", Colors.BOLD + Colors.BLUE))
+        for exit_location in exits:
+            exit_name = exit_location.replace("_", " ").title()
+            print(Colors.colorize(f"  → {exit_name} (use /go {exit_location})", Colors.BLUE))
+    
+    def _check_random_encounter(self, location):
+        """Check for random encounters while looking around."""
+        encounter_chance = location.get("zombies_chance", 0.2)
+        
+        # Modify chance based on time of day
+        if self._get_time_of_day() == "Night":
+            encounter_chance *= 1.5
+        elif self._get_time_of_day() == "Dawn/Dusk":
+            encounter_chance *= 1.2
+            
+        if random.random() < encounter_chance:
+            print(Colors.colorize("\n⚠️  WARNING: You hear shuffling sounds nearby...", Colors.BOLD + Colors.RED))
+            print(Colors.colorize("Something dangerous might be approaching!", Colors.RED))
+    
+    def _get_time_of_day(self):
+        """Get current time of day description."""
+        hour = self.player["hour"]
+        if 6 <= hour < 18:
+            return "Day"
+        elif hour == 5 or hour == 19:
+            return "Dawn/Dusk"
+        else:
+            return "Night"
+    
+    def _add_to_inventory(self, item):
+        """Add item to inventory if there's space."""
+        current_items = sum(self.player["inventory"].values())
+        if current_items >= 10:  # Max inventory slots
+            return False
+        
+        if item in self.player["inventory"]:
+            self.player["inventory"][item] += 1
+        else:
+            self.player["inventory"][item] = 1
+        return True
+    
+    def _go_to_location(self, destination):
+        """Move to a different location."""
+        current_location = self._get_location_data(self.player["location"])
+        available_exits = current_location.get("exits", [])
+        
+        if destination not in available_exits:
+            print(Colors.colorize(f"You can't go to '{destination}' from here.", Colors.RED))
+            print(Colors.colorize("Use /look to see available exits.", Colors.YELLOW))
+            return
+        
+        # Check if player has enough stamina
+        if self.player["stamina"] < 5:
+            print(Colors.colorize("You're too tired to travel. Rest first.", Colors.RED))
+            return
+        
+        # Moving consumes stamina and time
+        self.player["stamina"] -= 5
+        self.player["hour"] += 1
+        if self.player["hour"] >= 24:
+            self.player["hour"] = 0
+            self.player["day"] += 1
+        
+        # Update location
+        old_location = self.player["location"]
+        self.player["location"] = destination
+        
+        print(Colors.colorize(f"\nYou travel from {old_location.replace('_', ' ').title()} to {destination.replace('_', ' ').title()}.", Colors.GREEN))
+        
+        # Show new location automatically
+        self._look_around()
+    
+    def _explore_feature(self, feature):
+        """Explore a special feature in the current location."""
+        location = self._get_location_data(self.player["location"])
+        available_features = location.get("special_features", [])
+        
+        if feature not in available_features:
+            print(Colors.colorize(f"There is no '{feature}' to explore here.", Colors.RED))
+            print(Colors.colorize("Use /look to see available features.", Colors.YELLOW))
+            return
+        
+        # Check stamina requirement
+        if self.player["stamina"] < 3:
+            print(Colors.colorize("You're too tired to explore. Rest first.", Colors.RED))
+            return
+        
+        # Exploring consumes stamina
+        self.player["stamina"] -= 3
+        
+        print(Colors.colorize(f"\nExploring: {feature.replace('_', ' ').title()}", Colors.BOLD + Colors.CYAN))
+        
+        # Different outcomes based on feature type
+        if feature == "basement":
+            self._explore_basement()
+        elif feature == "attic":
+            self._explore_attic()
+        elif feature == "pharmacy":
+            self._explore_pharmacy()
+        elif feature == "car_wreckage":
+            self._explore_car_wreckage()
+        elif feature == "pond":
+            self._explore_pond()
+        elif feature == "hunting_spot":
+            self._explore_hunting_spot()
+        else:
+            # Generic exploration
+            self._generic_exploration(feature)
+    
+    def _explore_basement(self):
+        """Explore a basement."""
+        print(Colors.colorize("You descend into the dark basement. The air is musty and cold.", Colors.YELLOW))
+        
+        if random.random() < 0.3:
+            print(Colors.colorize("You hear scratching sounds from the corner!", Colors.RED))
+            print(Colors.colorize("A zombie rat scurries away into the shadows.", Colors.YELLOW))
+        
+        # Chance to find valuable items
+        if random.random() < 0.4:
+            items = ["flashlight", "batteries", "tools", "canned_food"]
+            found_item = random.choice(items)
+            if self._add_to_inventory(found_item):
+                print(Colors.colorize(f"You found: {found_item.replace('_', ' ').title()}", Colors.GREEN))
+            else:
+                print(Colors.colorize("You found something useful but your inventory is full!", Colors.RED))
+    
+    def _explore_attic(self):
+        """Explore an attic."""
+        print(Colors.colorize("You climb up to the dusty attic. Cobwebs hang from the rafters.", Colors.YELLOW))
+        
+        if random.random() < 0.5:
+            items = ["rope", "old_clothes", "photo", "box_of_matches"]
+            found_item = random.choice(items)
+            if self._add_to_inventory(found_item):
+                print(Colors.colorize(f"You found: {found_item.replace('_', ' ').title()}", Colors.GREEN))
+            else:
+                print(Colors.colorize("You found something but your inventory is full!", Colors.RED))
+        else:
+            print(Colors.colorize("The attic is empty except for dust and memories.", Colors.YELLOW))
+    
+    def _explore_pharmacy(self):
+        """Explore a pharmacy."""
+        print(Colors.colorize("You search through the ransacked pharmacy shelves.", Colors.YELLOW))
+        
+        if random.random() < 0.6:
+            items = ["bandage", "medicine", "antiseptic", "pain_killers"]
+            found_item = random.choice(items)
+            if self._add_to_inventory(found_item):
+                print(Colors.colorize(f"You found some medical supplies: {found_item.replace('_', ' ').title()}", Colors.GREEN))
+            else:
+                print(Colors.colorize("You found medical supplies but your inventory is full!", Colors.RED))
+        else:
+            print(Colors.colorize("The pharmacy has been completely looted.", Colors.RED))
+    
+    def _explore_car_wreckage(self):
+        """Explore car wreckage."""
+        print(Colors.colorize("You search through the twisted metal of crashed vehicles.", Colors.YELLOW))
+        
+        if random.random() < 0.4:
+            items = ["car_battery", "gasoline", "tools", "radio"]
+            found_item = random.choice(items)
+            if self._add_to_inventory(found_item):
+                print(Colors.colorize(f"You salvaged: {found_item.replace('_', ' ').title()}", Colors.GREEN))
+            else:
+                print(Colors.colorize("You found something useful but your inventory is full!", Colors.RED))
+        else:
+            print(Colors.colorize("The wreckage has already been picked clean.", Colors.YELLOW))
+    
+    def _explore_pond(self):
+        """Explore a pond."""
+        print(Colors.colorize("You approach the calm pond water.", Colors.YELLOW))
+        
+        if random.random() < 0.7:
+            print(Colors.colorize("The water looks clean enough to drink.", Colors.GREEN))
+            if self._add_to_inventory("clean_water"):
+                print(Colors.colorize("You filled a container with clean water.", Colors.GREEN))
+                self.player["thirst"] = min(MAX_THIRST, self.player["thirst"] + 10)
+            else:
+                print(Colors.colorize("Your inventory is full, but you drink some water directly.", Colors.YELLOW))
+                self.player["thirst"] = min(MAX_THIRST, self.player["thirst"] + 5)
+        else:
+            print(Colors.colorize("The water looks contaminated. Better not risk it.", Colors.RED))
+    
+    def _explore_hunting_spot(self):
+        """Explore a hunting spot."""
+        print(Colors.colorize("You search for signs of wildlife in this area.", Colors.YELLOW))
+        
+        if random.random() < 0.3:
+            print(Colors.colorize("You spot fresh animal tracks!", Colors.GREEN))
+            if self._add_to_inventory("fresh_meat"):
+                print(Colors.colorize("You successfully hunted a small animal.", Colors.GREEN))
+            else:
+                print(Colors.colorize("You caught something but have no space to carry it!", Colors.RED))
+        else:
+            print(Colors.colorize("No animals in sight. They must be hiding.", Colors.YELLOW))
+    
+    def _generic_exploration(self, feature):
+        """Generic exploration for unspecified features."""
+        feature_name = feature.replace("_", " ").title()
+        print(Colors.colorize(f"You carefully examine the {feature_name}.", Colors.YELLOW))
+        
+        if random.random() < 0.3:
+            print(Colors.colorize("You found something interesting!", Colors.GREEN))
+            items = ["scrap_metal", "cloth", "small_tool", "useful_junk"]
+            found_item = random.choice(items)
+            if self._add_to_inventory(found_item):
+                print(Colors.colorize(f"You collected: {found_item.replace('_', ' ').title()}", Colors.GREEN))
+            else:
+                print(Colors.colorize("Your inventory is full!", Colors.RED))
+        else:
+            print(Colors.colorize("Nothing useful here.", Colors.YELLOW))
+    
+    def _rest(self):
+        """Rest to recover stamina and health."""
+        print(Colors.colorize("\nYou find a safe spot to rest...", Colors.CYAN))
+        
+        # Resting takes time
+        rest_hours = 2
+        self.player["hour"] += rest_hours
+        if self.player["hour"] >= 24:
+            self.player["hour"] -= 24
+            self.player["day"] += 1
+        
+        # Recovery amounts
+        stamina_recovery = 20
+        health_recovery = 5
+        
+        # Apply recovery
+        old_stamina = self.player["stamina"]
+        old_health = self.player["health"]
+        
+        self.player["stamina"] = min(MAX_STAMINA, self.player["stamina"] + stamina_recovery)
+        self.player["health"] = min(MAX_HEALTH, self.player["health"] + health_recovery)
+        
+        # Show results
+        stamina_gained = self.player["stamina"] - old_stamina
+        health_gained = self.player["health"] - old_health
+        
+        print(Colors.colorize(f"After {rest_hours} hours of rest:", Colors.GREEN))
+        if stamina_gained > 0:
+            print(Colors.colorize(f"Stamina recovered: +{stamina_gained}", Colors.GREEN))
+        if health_gained > 0:
+            print(Colors.colorize(f"Health recovered: +{health_gained}", Colors.GREEN))
+        
+        # Small chance of being disturbed while resting
+        if random.random() < 0.1:
+            print(Colors.colorize("Your rest was disturbed by strange noises nearby...", Colors.YELLOW))
+            self.player["stamina"] -= 5  # Lose some stamina from poor sleep
     
     def _save_game_menu(self):
         """Handle saving the game."""
