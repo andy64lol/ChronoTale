@@ -1505,6 +1505,35 @@ def print_glitch(text, style=Font.GLITCH):
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+def initialize_game_state():
+    """Initialize the game state with all required keys"""
+    global game_state
+    
+    # Initialize basic inventory structure that Character class expects
+    if "inventory" not in game_state:
+        game_state["inventory"] = {"med_kit": 2, "emp_grenade": 1, "nanites": 0, "energy_cell": 0}
+    
+    # Initialize implants that Character class expects
+    if "implants" not in game_state:
+        game_state["implants"] = []
+    
+    # Initialize other basic game state elements
+    game_state.setdefault("current_zone", "Cryostasis Facility")
+    game_state.setdefault("current_stage", 1)
+    game_state.setdefault("zones_unlocked", ["Cryostasis Facility"])
+    game_state.setdefault("quest_progress", {"System Reboot": 0})
+    game_state.setdefault("companions", [])
+    game_state.setdefault("discovered_logs", [])
+    game_state.setdefault("player_stats", {
+        "enemies_defeated": 0,
+        "damage_dealt": 0,
+        "damage_taken": 0,
+        "items_found": 0,
+        "fled_battles": 0,
+        "companions_built": 0,
+        "stages_completed": 0
+    })
+
 # Global game state
 game_state = {
     "current_zone": "Cryostasis Facility",
@@ -15183,10 +15212,8 @@ def main_menu():
 
             print_typed("\nFuture Updates Preview:", style=Font.SUBTITLE)
             print_typed("\n- Chapter 8: Viral Directive Expansion")
-            print_typed("- Multiplayer Co-op Missions")
             print_typed("- New Companion Characters")
-            print_typed("- Enhanced Combat System")
-            print_typed("- Dynamic Story Choices")
+            print_typed("- Enhance Combat System")
 
             input(f"\n{Font.MENU('Press Enter to return...')}")
             return main_menu()
@@ -15260,6 +15287,9 @@ def main():
     # Initialize global game state
     global game_state
     game_state = {}
+    
+    # Initialize game state with required keys before creating player
+    initialize_game_state()
 
     # Initialize player
     player = Character("Dr. Xeno Valari", 100, 15, 5, is_player=True)
