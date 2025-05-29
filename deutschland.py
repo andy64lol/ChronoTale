@@ -9552,11 +9552,11 @@ def show_country_selection():
         ("belgium", "Belgium - Democratic"),
         ("netherlands", "Netherlands - Democratic"),
         ("spain", "Spain - Civil War"),
-        ("china", "China - At War"),
+        ("nationalist_china", "Nationalist China - At War"),
         ("turkey", "Turkey - Democratic"),
         ("sweden", "Sweden - Democratic"),
-        ("greece", "Greece - Monarchist"),
-        ("romania", "Romania - Unstable")
+        ("communist_china", "Communist China - Revolutionary"),
+        ("norway", "Norway - Democratic")
     ]
 
     for i, (key, name) in enumerate(minor_powers, len(major_powers) + 1):
@@ -9745,6 +9745,126 @@ def show_new_game_intro(nation_key):
             "Will you secure the resources Japan needs through conquest?",
             "",
             "The destiny of the Japanese Empire - and all of Asia - is in your hands."
+        ],
+        "poland": [
+            "January 1936. Poland stands proud but vulnerable between two giants.",
+            "Twenty years of independence have been hard-won after centuries of partition.",
+            "Yet Germany seeks to reclaim the Polish Corridor, while Soviet communism looms to the east.",
+            "The Polish people remember their long struggle for freedom and will not yield easily.",
+            "",
+            "Will you strengthen ties with France and Britain against German aggression?",
+            "Will you modernize your military to face the coming storm?",
+            "Will you maintain Polish independence against all odds?",
+            "",
+            "The fate of Polish freedom - and perhaps all of Eastern Europe - is in your hands."
+        ],
+        "yugoslavia": [
+            "January 1936. The Kingdom of Yugoslavia struggles to unite its diverse peoples.",
+            "Serbs, Croats, Slovenes, and others share one nation but retain old rivalries.",
+            "King Alexander's assassination two years ago revealed the fragility of Yugoslav unity.",
+            "As fascism rises in neighboring Germany and Italy, internal divisions threaten the state.",
+            "",
+            "Will you forge a truly unified Yugoslav identity from disparate peoples?",
+            "Will you align with the Western democracies or seek accommodation with the Axis?",
+            "Will you modernize the army to defend against foreign invasion?",
+            "",
+            "The survival of Yugoslavia - and the dream of South Slav unity - is in your hands."
+        ],
+        "belgium": [
+            "January 1936. Belgium clings to neutrality as Europe divides into hostile camps.",
+            "The memories of German occupation during the Great War remain painfully fresh.",
+            "Yet King Leopold III believes neutrality offers the best hope for survival.",
+            "Belgium's strategic position makes it a crossroads that great powers covet.",
+            "",
+            "Will you maintain strict neutrality to avoid becoming a battlefield again?",
+            "Will you secretly prepare defenses against inevitable invasion?",
+            "Will you seek guarantees from France and Britain for your independence?",
+            "",
+            "The future of Belgian neutrality - and the safety of your people - is in your hands."
+        ],
+        "netherlands": [
+            "January 1936. The Netherlands balances tradition with the demands of a changing world.",
+            "Queen Wilhelmina rules over both the European homeland and vast East Indies colonies.",
+            "Neutrality served Holland well in the Great War, but new threats are emerging.",
+            "The Dutch must protect both their profitable trade routes and colonial empire.",
+            "",
+            "Will you modernize the military to defend your colonial possessions?",
+            "Will you maintain profitable neutrality in European conflicts?",
+            "Will you prepare the homeland for potential German invasion?",
+            "",
+            "The fate of the Dutch Empire - spanning from Amsterdam to Jakarta - is in your hands."
+        ],
+        "spain": [
+            "January 1936. Spain tears itself apart in bloody civil war.",
+            "Republicans fight Nationalists as the country becomes a proxy battleground.",
+            "Foreign volunteers and weapons pour in from across Europe's ideological divide.",
+            "The outcome will determine Spain's future and influence the coming world war.",
+            "",
+            "Will you crush your enemies and establish a new order in Spain?",
+            "Will you modernize Spanish society while maintaining traditional values?",
+            "Will you align with fascist powers or democratic allies after victory?",
+            "",
+            "The destiny of Spain - torn between tradition and revolution - is in your hands."
+        ],
+        "nationalist_china": [
+            "January 1936. The Republic of China fights for its very survival.",
+            "Japanese armies occupy Manchuria while Communist rebels control rural strongholds.",
+            "Generalissimo Chiang Kai-shek struggles to unite China against foreign invaders.",
+            "Ancient China's proud civilization faces its darkest hour in centuries.",
+            "",
+            "Will you modernize China's vast but poorly equipped armies?",
+            "Will you forge a united front with the Communists against Japanese aggression?",
+            "Will you reclaim China's rightful place as master of East Asia?",
+            "",
+            "The rebirth of the Chinese nation - and the fate of hundreds of millions - is in your hands."
+        ],
+        "turkey": [
+            "January 1936. The Republic of Turkey rises from the ashes of the Ottoman Empire.",
+            "Mustafa Kemal Atatürk has transformed Turkey into a modern, secular state.",
+            "Yet the nation remains surrounded by traditional enemies and uncertain allies.",
+            "Turkey must choose its path carefully as Europe slides toward another great war.",
+            "",
+            "Will you continue Atatürk's reforms to fully modernize Turkish society?",
+            "Will you reclaim lost Ottoman territories in the Balkans and Middle East?",
+            "Will you maintain neutrality or join the coming European conflict?",
+            "",
+            "The future of the Turkish Republic - heir to centuries of imperial glory - is in your hands."
+        ],
+        "sweden": [
+            "January 1936. Sweden maintains its traditional neutrality as Europe militarizes.",
+            "King Gustav V presides over a prosperous social democracy envied by many.",
+            "Yet Sweden's strategic position controls access to the Baltic Sea.",
+            "As great powers clash, maintaining neutrality becomes increasingly difficult.",
+            "",
+            "Will you strengthen Sweden's defenses while preserving neutrality?",
+            "Will you expand Swedish influence throughout Scandinavia?",
+            "Will you maintain your unique social democratic model as an example to the world?",
+            "",
+            "The preservation of Swedish neutrality - and the Nordic way of life - is in your hands."
+        ],
+        "communist_china": [
+            "January 1936. The Chinese Communist Party struggles for survival in rural strongholds.",
+            "After the Long March, Mao Zedong has established a new base in remote Yan'an.",
+            "The Communists fight both the Japanese invaders and Nationalist forces.",
+            "Revolutionary fervor burns bright despite overwhelming odds against survival.",
+            "",
+            "Will you unite all Chinese patriots against Japanese imperialism?",
+            "Will you spread the Communist revolution throughout rural China?",
+            "Will you build a new China based on peasant revolution and socialist ideals?",
+            "",
+            "The triumph of Chinese Communism - and the liberation of the oppressed masses - is in your hands."
+        ],
+        "norway": [
+            "January 1936. Norway enjoys peaceful prosperity under King Haakon VII.",
+            "The nation's strategic coastline controls vital shipping routes to the Atlantic.",
+            "Rich iron ore deposits fuel European industry, making Norway economically valuable.",
+            "Yet Norway's long coast makes defense against naval invasion nearly impossible.",
+            "",
+            "Will you strengthen ties with Britain to guarantee Norwegian independence?",
+            "Will you modernize the small but determined Norwegian military?",
+            "Will you maintain strict neutrality despite growing pressure from great powers?",
+            "",
+            "The fate of Norwegian freedom - and control of the North Atlantic - is in your hands."
         ]
     }
 
