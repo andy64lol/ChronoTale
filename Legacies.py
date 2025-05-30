@@ -14196,7 +14196,7 @@ def handle_command(cmd: str) -> None:
 # Define functions
 def start_guide() -> None:
     print_header("Starter Guide")
-    print("Welcome to TextRP CLI! Type /help for help!")
+    print("Welcome to Legacies of our Legends! Type /help for help!")
 
 def area_guides() -> None:
     print_header("Area Guides")
