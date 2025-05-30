@@ -245,7 +245,7 @@ ANOMALIES = {
 
 class Room:
     def __init__(self, theme=None, level=1):
-        self.theme = theme if theme else random.choice(['hospital', 'school', 'home', 'limbo', 'mall', 'office', 'hotel', 'airport', 'parking_garage', 'subway', 'swimming_pool', 'warehouse', 'casino', 'theater', 'library', 'cathedral', 'laboratory', 'museum'])
+        self.theme = theme if theme else random.choice(['hospital', 'school', 'home', 'limbo', 'mall', 'office', 'hotel', 'airport', 'parking_garage', 'subway', 'swimming_pool', 'warehouse', 'casino', 'theater', 'library', 'cathedral', 'laboratory', 'museum', 'arcade', 'gas_station', 'laundromat', 'diner', 'gym', 'shopping_center', 'train_station', 'abandoned_amusement_park', 'nursing_home', 'daycare', 'internet_cafe', 'bowling_alley', 'motel', 'auto_shop', 'cemetery', 'greenhouse', 'radio_station', 'dental_office', 'waiting_room', 'elevator_shaft', 'stairwell'])
         self.level = level
         self.entities = []
         self.anomalies = []
@@ -612,6 +612,132 @@ class Room:
                 (Fore.GREEN + "A cultural artifacts wing where ancient objects pulse with the memories of their original owners." + Style.RESET_ALL, ['door1', 'door2', 'door3']),
                 (Fore.MAGENTA + "A planetarium where the star show displays constellations from the night sky of your birth, then shows how they'll look when you die." + Style.RESET_ALL, ['door2', 'door3']),
                 (Fore.CYAN + "A museum gift shop where souvenirs are memories you can purchase, each one changing your past slightly." + Style.RESET_ALL, ['door1', 'door3', 'door4'])
+            ],
+            'arcade': [
+                (Fore.LIGHTMAGENTA_EX + "A retro arcade where games play themselves, high score lists updating with names of people who haven't been born yet." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.CYAN + "A dark arcade corner where broken machines flicker with static images of your childhood memories." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A prize counter where tickets accumulate infinitely but the prizes behind glass never change." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.RED + "A fighting game section where phantom players battle in matches that echo with frustrated screams." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'gas_station': [
+                (Fore.WHITE + "A fluorescent-lit gas station where pumps run continuously but no cars ever arrive to fuel up." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A convenience store where lottery tickets print winning numbers from drawings that never happened." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A station restroom where the mirror shows you at different ages each time you look." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.GREEN + "An automotive bay where tools organize themselves for repairs on invisible vehicles." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'laundromat': [
+                (Fore.CYAN + "A laundromat where washing machines run empty cycles, filling the air with the scent of detergent and regret." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.WHITE + "A row of dryers tumbling clothes that belong to people you used to know." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A folding station where garments fold themselves into perfect squares, regardless of their original shape." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.LIGHTBLACK_EX + "A change machine that dispenses quarters for memories instead of dollar bills." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'diner': [
+                (Fore.RED + "A 24-hour diner where the coffee pot never empties and the pie case displays flavors that taste like nostalgia." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A booth section where the vinyl seats remember every conversation of heartbreak and hope ever spoken there." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.CYAN + "A diner kitchen where orders cook themselves for customers who left decades ago but whose presence still lingers." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.GREEN + "A jukebox that plays songs you've never heard but somehow know all the words to." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'gym': [
+                (Fore.BLUE + "A fitness center where treadmills run at different speeds of time, some moving backwards through your life." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A weight room where barbells lift themselves, the sound of phantom breathing echoing between sets." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.WHITE + "A locker room where the mirrors reflect the body you always wished you had." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.GREEN + "A yoga studio where mats unroll themselves and hold poses from classes that ended years ago." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'shopping_center': [
+                (Fore.LIGHTBLUE_EX + "A shopping center directory that lists stores for things you didn't know you needed until you lost them." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.MAGENTA + "A central court where the fountain flows upward, defying gravity while children's laughter echoes from empty spaces." + Style.RESET_ALL, ['door1', 'door3', 'door4']),
+                (Fore.YELLOW + "A department store where mannequins wear the exact outfit you wore on your most embarrassing day." + Style.RESET_ALL, ['door2', 'door3']),
+                (Fore.CYAN + "A bookstore where every novel tells a slightly different version of your life story." + Style.RESET_ALL, ['door1', 'door2', 'door4'])
+            ],
+            'train_station': [
+                (Fore.LIGHTBLACK_EX + "A grand train station where departure boards show destinations to moments in your past you wish you could revisit." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.BLUE + "A platform where phantom trains arrive precisely on schedule but their doors open to reveal empty cars stretching into infinity." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.GREEN + "A station waiting room where every seat faces a different direction, as if travelers were fleeing from the same memory." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.RED + "A ticket booth where the clerk hands you boarding passes to journeys you never planned to take." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'abandoned_amusement_park': [
+                (Fore.YELLOW + "A rusted carousel where painted horses gallop in place, their eyes following you with painted tears." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A funhouse where distorted mirrors show not your reflection, but the person you were before everything changed." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A roller coaster frozen mid-loop, its cars filled with the shadows of riders who never got off." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.GREEN + "A game booth where stuffed animals win themselves, accumulating prizes for players who never existed." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'nursing_home': [
+                (Fore.LIGHTCYAN_EX + "A nursing home corridor where wheelchairs roll themselves to rooms of residents who forgot they died." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A common room where invisible residents play cards with hands that remember every game but forget every face." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.WHITE + "A dining hall where meals are served to empty chairs, the conversations of the lonely echoing from decades past." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.BLUE + "A memory care unit where photo albums flip through themselves, showing lives that might have been." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'daycare': [
+                (Fore.LIGHTMAGENTA_EX + "A daycare center where toys arrange themselves in perfect circles, waiting for children who grew up too fast." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A nap room where tiny cots are made with blankets that still hold the warmth of innocent dreams." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.CYAN + "A playground where swings move with the weight of invisible children, their laughter lingering in the air." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.GREEN + "An art room where finger paintings create themselves, each one showing the monster under a different child's bed." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'internet_cafe': [
+                (Fore.BLUE + "An internet cafe where computers type messages to email addresses that don't exist yet." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.GREEN + "A gaming section where multiplayer matches continue with opponents who logged off years ago." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.WHITE + "A printing station where documents print themselves, each page revealing secrets you thought you'd hidden." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.CYAN + "A coffee bar where Wi-Fi passwords are written in languages that exist only in dreams." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'bowling_alley': [
+                (Fore.RED + "A bowling alley where pins reset themselves after strikes that were never bowled by invisible players." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A shoe rental counter where bowling shoes are arranged by size but labeled with the dates of the worst days of your life." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A snack bar where nachos stay warm forever, waiting for birthday parties that were cancelled at the last minute." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.CYAN + "A lane where gutter balls roll backwards, carrying the disappointment of every missed opportunity." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'motel': [
+                (Fore.LIGHTBLACK_EX + "A roadside motel where room keys open doors to nights you wish you could forget." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A motel office where the guest registry lists check-in dates from your future and checkout dates from your past." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A motel room where the TV plays static that occasionally forms the faces of people you've lost touch with." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.BLUE + "A parking lot where cars from different decades sit side by side, their engines cooling from trips never taken." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'auto_shop': [
+                (Fore.LIGHTBLACK_EX + "An auto repair shop where cars fix themselves, their engines purring with the satisfaction of problems solved." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A hydraulic lift area where invisible mechanics work on vehicles that exist only in the blueprints of unfulfilled dreams." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A parts department where every component is labeled with the exact moment it will fail in a car you'll never own." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.BLUE + "A waiting area with magazines that update themselves with articles about roads you'll never travel." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'cemetery': [
+                (Fore.LIGHTBLACK_EX + "A cemetery where headstones bear the names of people you'll meet in the future, with death dates that haven't occurred yet." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.WHITE + "A mausoleum where fresh flowers appear daily on graves of people who were never born." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A cemetery office where burial records document the deaths of all your alternate selves from parallel timelines." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.GREEN + "A memorial garden where each plant grows in the shape of a word, spelling out secrets the dead wished they'd shared." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'greenhouse': [
+                (Fore.GREEN + "A greenhouse where plants grow backwards into seeds, their leaves whispering the names of people who cared for them." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A tropical section where humidity carries the scent of every garden you've ever walked through." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.CYAN + "A potting shed where soil forms itself into the shapes of hands, reaching for sunlight that streams through dusty windows." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.LIGHTGREEN_EX + "A nursery area where seedlings spell out messages in their arrangement, warnings from the Earth itself." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'radio_station': [
+                (Fore.RED + "A radio booth where microphones broadcast to frequencies that exist between the stations, carrying messages to the lost." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.YELLOW + "A music library where records play songs that were hummed but never recorded, melodies from memories half-forgotten." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A transmission tower area where radio waves carry the last words people meant to say but never did." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.CYAN + "A sound booth where silence has weight and volume, pressing against your ears with the density of unspoken truths." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'dental_office': [
+                (Fore.WHITE + "A dental office where X-rays reveal not teeth, but the words you bit back instead of speaking." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.LIGHTBLUE_EX + "A waiting room where magazine subscriptions date back to years when you still believed in forever." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.CYAN + "An examination room where dental chairs recline to angles that show you the ceiling of every doctor's office you've feared." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.YELLOW + "A sterilization area where instruments clean themselves of procedures that haven't been performed yet." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'waiting_room': [
+                (Fore.LIGHTBLACK_EX + "A waiting room where appointment times are called for meetings with people you used to be." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.BLUE + "A reception area where forms ask questions about decisions you haven't made yet." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.YELLOW + "A magazine rack where every publication is about the life you thought you'd be living by now." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.CYAN + "A water cooler area where conversations play on repeat, the same small talk echoing from different decades." + Style.RESET_ALL, ['door1', 'door4'])
+            ],
+            'elevator_shaft': [
+                (Fore.LIGHTBLACK_EX + "An elevator shaft where the car moves between floors that don't exist, each button pressed by invisible passengers." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.RED + "A service area where cables and pulleys operate an elevator that carries the weight of every decision you'll regret." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "An elevator interior where the mirror shows you at the age you'll be when you finally understand what went wrong." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.YELLOW + "A machine room where elevator mechanisms count floors in the building of your life you'll never construct." + Style.RESET_ALL, ['door1', 'door2', 'door3'])
+            ],
+            'stairwell': [
+                (Fore.LIGHTBLACK_EX + "A stairwell where steps lead both up and down simultaneously, each direction taking you further from where you started." + Style.RESET_ALL, ['door1', 'door2']),
+                (Fore.WHITE + "An emergency staircase where exit signs point to doors that open onto your most avoided conversations." + Style.RESET_ALL, ['door1', 'door3']),
+                (Fore.BLUE + "A spiral staircase where the handrail remembers every grip of panic from people who climbed before you." + Style.RESET_ALL, ['door2', 'door4']),
+                (Fore.CYAN + "A stairwell landing where echoes of footsteps reveal the rhythm of every escape you've ever attempted." + Style.RESET_ALL, ['door1', 'door4'])
             ]
         }
 
@@ -740,6 +866,174 @@ class Room:
                 "No exit signs visible through the flashing lights.",
                 "An ornate staircase winds to private gaming rooms.",
                 "Blocked stairs with 'High Roller Access Only' velvet ropes."
+            ],
+            'arcade': [
+                "There's a metal staircase leading to the upper gaming level.",
+                "A maintenance stairwell descends to the machine room.",
+                "Both player and staff staircases are visible.",
+                "No exit signs visible through the neon lights.",
+                "A spiral staircase leads to the prize redemption area.",
+                "Blocked stairs with 'Employees Only' tape."
+            ],
+            'gas_station': [
+                "There's a concrete staircase leading to the office above.",
+                "A service stairwell descends to the storage tanks.",
+                "Both customer and employee staircases are visible.",
+                "No exit signs visible through the fluorescent glare.",
+                "A narrow staircase leads to the cashier booth.",
+                "Blocked stairs with 'Authorized Personnel Only' signs."
+            ],
+            'laundromat': [
+                "There's a rickety staircase leading to the apartment above.",
+                "A basement stairwell leads to the water heater room.",
+                "Both front and back staircases are visible.",
+                "No exit signs visible through the steam.",
+                "A folding staircase leads to storage overhead.",
+                "Blocked stairs with 'Private Residence' barriers."
+            ],
+            'diner': [
+                "There's a narrow staircase leading to the manager's office.",
+                "A service stairwell descends to the dishwashing area.",
+                "Both customer and staff staircases are visible.",
+                "No exit signs visible through the grease-stained windows.",
+                "A spiral staircase leads to additional seating.",
+                "Blocked stairs with 'Staff Only' rope barriers."
+            ],
+            'gym': [
+                "There's a mirrored staircase leading to the cardio level.",
+                "A service stairwell descends to the locker rooms.",
+                "Both member and trainer staircases are visible.",
+                "No exit signs visible through the motivational posters.",
+                "A wide staircase leads to the group fitness rooms.",
+                "Blocked stairs with 'VIP Member Access Only' chains."
+            ],
+            'shopping_center': [
+                "There's an escalator leading to the food court level.",
+                "A service stairwell descends to the loading dock.",
+                "Both customer and maintenance staircases are visible.",
+                "No exit signs visible through the holiday decorations.",
+                "A grand staircase leads to the anchor stores.",
+                "Blocked stairs with 'Under Construction' barriers."
+            ],
+            'train_station': [
+                "There's a platform staircase leading to the upper concourse.",
+                "A tunnel stairwell descends to the subway level.",
+                "Both passenger and service staircases are visible.",
+                "No exit signs visible through the departure boards.",
+                "A curved staircase leads to the observation deck.",
+                "Blocked stairs with 'Track Maintenance Only' gates."
+            ],
+            'abandoned_amusement_park': [
+                "There's a rusted staircase leading to the ride controls.",
+                "A broken stairwell descends to the underground tunnels.",
+                "Both guest and operator staircases are visible but unsafe.",
+                "No exit signs remain on the weathered posts.",
+                "A twisted staircase leads to the funhouse entrance.",
+                "Blocked stairs with 'DANGER - DO NOT ENTER' tape."
+            ],
+            'nursing_home': [
+                "There's a wheelchair-accessible ramp leading upward.",
+                "A service stairwell descends to the activity room.",
+                "Both resident and staff staircases are visible.",
+                "No exit signs visible through the memory care ward.",
+                "A gentle staircase leads to the garden terrace.",
+                "Blocked stairs with 'Residents Only' barriers."
+            ],
+            'daycare': [
+                "There's a colorful staircase leading to the playroom.",
+                "A narrow stairwell descends to the storage area.",
+                "Both child-safe and adult staircases are visible.",
+                "No exit signs visible through the finger paintings.",
+                "A miniature staircase leads to the reading nook.",
+                "Blocked stairs with 'Staff Supervision Required' gates."
+            ],
+            'internet_cafe': [
+                "There's a cable-lined staircase leading to the server room.",
+                "A back stairwell descends to the equipment storage.",
+                "Both customer and technician staircases are visible.",
+                "No exit signs visible through the screen glare.",
+                "A narrow staircase leads to the printing station.",
+                "Blocked stairs with 'Network Admin Only' locks."
+            ],
+            'bowling_alley': [
+                "There's a carpeted staircase leading to the pro shop.",
+                "A service stairwell descends to the pin-setting machinery.",
+                "Both bowler and maintenance staircases are visible.",
+                "No exit signs visible through the lane lighting.",
+                "A wide staircase leads to the party rooms.",
+                "Blocked stairs with 'League Play Only' restrictions."
+            ],
+            'motel': [
+                "There's an external staircase leading to the second floor.",
+                "A back stairwell descends to the laundry room.",
+                "Both guest and housekeeping staircases are visible.",
+                "No exit signs visible through the vacancy sign glare.",
+                "A concrete staircase leads to the ice machine.",
+                "Blocked stairs with 'Maintenance in Progress' barriers."
+            ],
+            'auto_shop': [
+                "There's a metal staircase leading to the parts loft.",
+                "A garage stairwell descends to the oil change pit.",
+                "Both customer and mechanic staircases are visible.",
+                "No exit signs visible through the exhaust fumes.",
+                "A hydraulic lift serves as makeshift stairs.",
+                "Blocked stairs with 'Authorized Technicians Only' chains."
+            ],
+            'cemetery': [
+                "There's a stone staircase leading to the mausoleum.",
+                "A marble stairwell descends to the crypt level.",
+                "Both visitor and groundskeeper staircases are visible.",
+                "No exit signs needed in this eternal resting place.",
+                "A weathered staircase leads to the memorial garden.",
+                "Blocked stairs with 'Private Family Plot' restrictions."
+            ],
+            'greenhouse': [
+                "There's a humid staircase leading to the upper growing beds.",
+                "A utility stairwell descends to the root cellar.",
+                "Both gardener and visitor staircases are visible.",
+                "No exit signs visible through the condensation.",
+                "A spiral staircase leads to the tropical section.",
+                "Blocked stairs with 'Climate Control Area' barriers."
+            ],
+            'radio_station': [
+                "There's a soundproof staircase leading to the broadcast booth.",
+                "A technical stairwell descends to the transmitter room.",
+                "Both on-air and engineering staircases are visible.",
+                "No exit signs visible through the 'ON AIR' lights.",
+                "A narrow staircase leads to the antenna access.",
+                "Blocked stairs with 'FCC Restricted Area' warnings."
+            ],
+            'dental_office': [
+                "There's a sterile staircase leading to the consultation rooms.",
+                "A service stairwell descends to the sterilization area.",
+                "Both patient and staff staircases are visible.",
+                "No exit signs visible through the appointment reminders.",
+                "A narrow staircase leads to the X-ray room.",
+                "Blocked stairs with 'Medical Personnel Only' restrictions."
+            ],
+            'waiting_room': [
+                "There's a carpeted staircase leading to additional seating.",
+                "A back stairwell descends to the records storage.",
+                "Both patient and administrative staircases are visible.",
+                "No exit signs visible through the informational posters.",
+                "A wide staircase leads to the specialty offices.",
+                "Blocked stairs with 'Appointment Required' barriers."
+            ],
+            'elevator_shaft': [
+                "There's a maintenance ladder leading to the motor room.",
+                "An emergency stairwell parallels the elevator shaft.",
+                "Both service and escape staircases are visible.",
+                "No exit signs visible in the mechanical space.",
+                "A spiral staircase winds around the elevator cables.",
+                "Blocked stairs with 'High Voltage - Authorized Access' warnings."
+            ],
+            'stairwell': [
+                "There are stairs leading up to an unknown floor.",
+                "A stairwell descends into complete darkness.",
+                "Both up and down staircases continue indefinitely.",
+                "No exit signs mark any of the landings.",
+                "A spiral staircase curves beyond sight.",
+                "Blocked stairs with barriers that shift when you look away."
             ]
         }
 
@@ -872,6 +1166,174 @@ class Room:
                 "A single pathway continues toward the cashier.",
                 "A narrow corridor winds past empty gaming tables.",
                 "A wide promenade stretches toward the restaurant."
+            ],
+            'arcade': [
+                "Neon-lit gaming aisles extend in all directions.",
+                "Only the main floor and prize counter are accessible.",
+                "Left leads to classic games, right to modern machines.",
+                "A single pathway continues between the game cabinets.",
+                "A narrow aisle weaves past broken machines.",
+                "A wide corridor stretches toward the entrance."
+            ],
+            'gas_station': [
+                "Concrete pathways lead around fuel pumps.",
+                "Only the station and convenience store are accessible.",
+                "Left leads to the air pump, right to the car wash.",
+                "A single driveway continues past empty pumps.",
+                "A narrow walkway winds around service bays.",
+                "A wide lot stretches toward the highway."
+            ],
+            'laundromat': [
+                "Humid walkways wind between washing machines.",
+                "Only the main area and change station are accessible.",
+                "Left leads to washers, right to dryers.",
+                "A single aisle continues between folding tables.",
+                "A narrow path weaves past broken machines.",
+                "A wide space stretches toward the attendant desk."
+            ],
+            'diner': [
+                "Checkered floor pathways lead between booths.",
+                "Only the dining area and counter are accessible.",
+                "Left leads to the kitchen, right to the restrooms.",
+                "A single aisle continues past empty tables.",
+                "A narrow walkway winds between counter stools.",
+                "A wide dining area stretches toward the jukebox."
+            ],
+            'gym': [
+                "Mirrored walkways reflect infinite exercise equipment.",
+                "Only the main floor and locker area are accessible.",
+                "Left leads to cardio, right to weight machines.",
+                "A single pathway continues between workout stations.",
+                "A narrow aisle weaves past empty equipment.",
+                "A wide open space stretches toward the mirrors."
+            ],
+            'shopping_center': [
+                "Polished walkways connect storefronts in all directions.",
+                "Only the main concourse and food court are accessible.",
+                "Left leads to department stores, right to specialty shops.",
+                "A single corridor continues past empty storefronts.",
+                "A narrow pathway winds around kiosks.",
+                "A wide promenade stretches toward the anchor stores."
+            ],
+            'train_station': [
+                "Platform walkways extend along abandoned tracks.",
+                "Only the main concourse and waiting area are accessible.",
+                "Left leads to arriving trains, right to departing.",
+                "A single platform continues into tunnel darkness.",
+                "A narrow walkway winds past empty benches.",
+                "A wide concourse stretches toward the ticket booth."
+            ],
+            'abandoned_amusement_park': [
+                "Cracked pathways wind between broken rides.",
+                "Only the midway and entrance are accessible.",
+                "Left leads to the funhouse, right to the carousel.",
+                "A single path continues past rusted attractions.",
+                "A narrow walkway weaves through fallen debris.",
+                "A wide midway stretches toward the ticket booth."
+            ],
+            'nursing_home': [
+                "Carpeted hallways connect resident rooms.",
+                "Only the main wing and common area are accessible.",
+                "Left leads to patient rooms, right to activities.",
+                "A single corridor continues past empty wheelchairs.",
+                "A narrow pathway winds around medical equipment.",
+                "A wide hallway stretches toward the nurses' station."
+            ],
+            'daycare': [
+                "Colorful pathways wind between play areas.",
+                "Only the main room and playground are accessible.",
+                "Left leads to nap rooms, right to art stations.",
+                "A single walkway continues past empty cribs.",
+                "A narrow path weaves through scattered toys.",
+                "A wide play area stretches toward the reading corner."
+            ],
+            'internet_cafe': [
+                "Cable-lined pathways connect computer stations.",
+                "Only the main floor and printing area are accessible.",
+                "Left leads to gaming PCs, right to work stations.",
+                "A single aisle continues between empty desks.",
+                "A narrow walkway winds past server racks.",
+                "A wide space stretches toward the coffee bar."
+            ],
+            'bowling_alley': [
+                "Polished walkways run parallel to empty lanes.",
+                "Only the main alley and pro shop are accessible.",
+                "Left leads to league lanes, right to open bowling.",
+                "A single approach continues past silent pin machines.",
+                "A narrow walkway winds around ball returns.",
+                "A wide concourse stretches toward the snack bar."
+            ],
+            'motel': [
+                "Concrete walkways connect room doors.",
+                "Only the ground floor and office are accessible.",
+                "Left leads to odd rooms, right to even numbers.",
+                "A single sidewalk continues past vacancy signs.",
+                "A narrow path weaves around parked cars.",
+                "A wide lot stretches toward the highway."
+            ],
+            'auto_shop': [
+                "Grease-stained pathways wind between service bays.",
+                "Only the main garage and waiting area are accessible.",
+                "Left leads to diagnostics, right to oil changes.",
+                "A single aisle continues past empty lifts.",
+                "A narrow walkway winds around tool carts.",
+                "A wide garage stretches toward the parts counter."
+            ],
+            'cemetery': [
+                "Gravel pathways wind between weathered headstones.",
+                "Only the main grounds and mausoleum are accessible.",
+                "Left leads to older graves, right to recent burials.",
+                "A single path continues through eternal silence.",
+                "A narrow walkway winds past memorial benches.",
+                "A wide avenue stretches toward the chapel."
+            ],
+            'greenhouse': [
+                "Humid pathways wind between growing beds.",
+                "Only the main house and potting area are accessible.",
+                "Left leads to tropicals, right to vegetables.",
+                "A single walkway continues through condensation.",
+                "A narrow path weaves past irrigation systems.",
+                "A wide growing area stretches toward the skylights."
+            ],
+            'radio_station': [
+                "Soundproof corridors connect broadcast booths.",
+                "Only the main studio and control room are accessible.",
+                "Left leads to on-air booths, right to production.",
+                "A single hallway continues past empty studios.",
+                "A narrow walkway winds around equipment racks.",
+                "A wide space stretches toward the transmission room."
+            ],
+            'dental_office': [
+                "Sterile hallways connect examination rooms.",
+                "Only the main practice and waiting area are accessible.",
+                "Left leads to cleanings, right to procedures.",
+                "A single corridor continues past empty chairs.",
+                "A narrow walkway winds around dental equipment.",
+                "A wide reception area stretches toward the entrance."
+            ],
+            'waiting_room': [
+                "Carpeted pathways wind between empty chairs.",
+                "Only the main area and reception are accessible.",
+                "Left leads to magazines, right to the desk.",
+                "A single walkway continues past appointment boards.",
+                "A narrow path weaves around coffee tables.",
+                "A wide seating area stretches toward the windows."
+            ],
+            'elevator_shaft': [
+                "Metal walkways connect service platforms.",
+                "Only the main shaft and machinery are accessible.",
+                "Left leads to cables, right to counterweights.",
+                "A single platform continues into mechanical darkness.",
+                "A narrow catwalk winds around elevator equipment.",
+                "A wide maintenance area stretches toward the motors."
+            ],
+            'stairwell': [
+                "Concrete steps spiral in impossible directions.",
+                "Only upward and downward paths are accessible.",
+                "Left leads to even floors, right to odd numbers.",
+                "A single staircase continues beyond sight.",
+                "A narrow emergency path winds around handrails.",
+                "A wide landing stretches toward unmarked doors."
             ]
         }
 
@@ -1081,6 +1543,195 @@ class Room:
                 ("A museum visitor badge.", "It has your photo but lists you as 'Deceased Patron'..."),
                 ("An audio guide headset.", "It plays recordings of conversations you had in private..."),
                 ("A guest book to sign.", "Your signature is already there, dated years in the future..."),
+                None
+            ],
+            'arcade': [
+                ("A high score board.", "Your initials top every game, but you don't remember playing..."),
+                ("A token cup left on a machine.", "It contains exactly the amount you lost as a child..."),
+                ("A prize ticket on the floor.", "It's worth just enough for the toy you always wanted..."),
+                ("A game cabinet that plays itself.", "The character moves like it's mimicking your habits..."),
+                ("A broken joystick.", "It still responds to movements you're only thinking about..."),
+                ("A 'Out of Order' sign.", "It's on the machine you were best at in childhood..."),
+                None
+            ],
+            'gas_station': [
+                ("A lottery ticket on the counter.", "The numbers match your birthday and anniversary..."),
+                ("A receipt blowing in the wind.", "It's for gas you bought on a trip you never took..."),
+                ("A squeegee by the pumps.", "The water bucket reflects faces of people you miss..."),
+                ("A 'Pay Inside' sign.", "But the cashier looks exactly like you, twenty years older..."),
+                ("A gas pump nozzle.", "It drips a single drop that lands on your shadow..."),
+                ("A road map in the window.", "All the routes lead to your childhood address..."),
+                None
+            ],
+            'laundromat': [
+                ("A lost sock on a folding table.", "It matches one you've been missing for years..."),
+                ("A detergent bottle half-empty.", "The scent triggers memories you thought were dreams..."),
+                ("A washing machine that won't stop.", "The clothes inside look like ones you wore yesterday..."),
+                ("A quarter on the floor.", "It's dated from the year you were born..."),
+                ("A lint trap full of hair.", "The color matches yours from when you were younger..."),
+                ("A sign about lost items.", "It lists things you've lost throughout your life..."),
+                None
+            ],
+            'diner': [
+                ("A menu sticky with syrup.", "Your usual order is circled in red ink..."),
+                ("A coffee mug with lipstick stains.", "The shade matches one you used to wear..."),
+                ("A jukebox playing old songs.", "Every track is from your most emotional moments..."),
+                ("A receipt under a plate.", "It's signed with a tip amount that's your lucky number..."),
+                ("A napkin with writing on it.", "The handwriting looks like yours but says things you never wrote..."),
+                ("A booth with carved initials.", "They spell out names of people you loved and lost..."),
+                None
+            ],
+            'gym': [
+                ("A water bottle left on equipment.", "It has your name written in permanent marker..."),
+                ("A towel draped on a bench.", "It smells like the cologne you wore in high school..."),
+                ("A workout log on clipboard.", "It tracks exercises you planned but never did..."),
+                ("A membership card on the floor.", "It belongs to you but expires on your birthday..."),
+                ("A motivational poster.", "The person in the image has your face but a different body..."),
+                ("A weight plate.", "The number matches your age when everything went wrong..."),
+                None
+            ],
+            'shopping_center': [
+                ("A shopping list someone dropped.", "It contains items you need but never wrote down..."),
+                ("A gift card in a fountain.", "It's for the store where you bought your last present..."),
+                ("A mall directory.", "Your workplace is listed even though it's not a store..."),
+                ("A lost child poster.", "The photo shows you as a kid with 'Still Missing' stamped on it..."),
+                ("A security camera.", "It follows your movement but shows footage from years ago..."),
+                ("A price tag on the ground.", "It's for an item worth exactly what you have left..."),
+                None
+            ],
+            'train_station': [
+                ("A ticket on an empty bench.", "It's for a destination that matches your dream vacation..."),
+                ("A suitcase left unattended.", "The luggage tag has your address from childhood..."),
+                ("A schedule board.", "All departure times match significant moments in your life..."),
+                ("A newspaper on a seat.", "The date is your birthday but the year is wrong..."),
+                ("A lost phone charging.", "The wallpaper is a photo you don't remember taking..."),
+                ("A platform number sign.", "It keeps changing to dates that mean something to you..."),
+                None
+            ],
+            'abandoned_amusement_park': [
+                ("A stuffed animal prize.", "It's the same one you won and lost decades ago..."),
+                ("A ride ticket in the dirt.", "It's good for one ride on the day you lost your innocence..."),
+                ("A cotton candy cone.", "The sugar crystals taste like your grandmother's perfume..."),
+                ("A broken ride safety bar.", "It's sized perfectly for you as a child..."),
+                ("A funhouse mirror.", "It shows you the way you looked before everything changed..."),
+                ("A game booth bell.", "It rings every time you think about what you've lost..."),
+                None
+            ],
+            'nursing_home': [
+                ("A photo album open on a table.", "All the faces look familiar but you can't place them..."),
+                ("A medication organizer.", "It's labeled with your name but contains memories instead of pills..."),
+                ("A wheelchair with a cushion.", "The fabric pattern matches your childhood bedroom..."),
+                ("A visitor sign-in sheet.", "Your signature appears multiple times in different handwriting..."),
+                ("A bingo card half-filled.", "The numbers match important dates in your life..."),
+                ("A call button by an empty bed.", "It glows red every time you think about mortality..."),
+                None
+            ],
+            'daycare': [
+                ("A crayon drawing on the wall.", "It shows your family but includes people who died before you were born..."),
+                ("A juice box with a straw.", "The flavor is one they stopped making when you outgrew childhood..."),
+                ("A toy block on the floor.", "It has your initials carved into it with a fingernail..."),
+                ("A nap mat rolled up.", "It has your name tag from when you were four years old..."),
+                ("A picture book open to a page.", "The story describes your life but with a different ending..."),
+                ("A growth chart on the wall.", "Your height is marked but it goes up to your current age..."),
+                None
+            ],
+            'internet_cafe': [
+                ("A computer screen left logged in.", "The email inbox contains messages you never sent..."),
+                ("A gaming headset on a desk.", "You can hear conversations from online friends you've lost touch with..."),
+                ("A printed document.", "It's a resume with your skills but for jobs that don't exist..."),
+                ("A USB drive plugged in.", "It contains photos of places you've dreamed of visiting..."),
+                ("A keyboard with worn keys.", "The faded letters spell out your deepest regrets..."),
+                ("A mouse pad.", "The image is of your hometown but from an angle you've never seen..."),
+                None
+            ],
+            'bowling_alley': [
+                ("A bowling ball in the return.", "It's exactly the weight you used as a teenager..."),
+                ("A scorecard on the table.", "It shows strikes from a game you don't remember playing..."),
+                ("A pair of rental shoes.", "They're your size and have your initials written inside..."),
+                ("A lane wax applicator.", "It spreads in patterns that look like your palm lines..."),
+                ("A pin that won't fall.", "It has your face painted on it in tiny detail..."),
+                ("A birthday party sign.", "It announces a celebration for an age you'll never reach..."),
+                None
+            ],
+            'motel': [
+                ("A room key on the nightstand.", "It opens the door to the room where you were conceived..."),
+                ("A Bible with bookmarks.", "Every marked passage describes moments from your future..."),
+                ("A TV remote control.", "It only receives channels broadcasting your private moments..."),
+                ("A cigarette burn in the carpet.", "It's shaped like the scar you got as a child..."),
+                ("A 'Do Not Disturb' sign.", "It hangs itself whenever you start to feel peaceful..."),
+                ("A mint on the pillow.", "It tastes like the medicine you took when you were sick..."),
+                None
+            ],
+            'auto_shop': [
+                ("A mechanic's tool on the ground.", "It's bent into the shape of your first initial..."),
+                ("An oil stain on the concrete.", "It forms a map leading to every place you've felt lost..."),
+                ("A car manual open on a bench.", "It has repair instructions for problems in your life..."),
+                ("A tire pressure gauge.", "It always reads the exact atmospheric pressure from your birth..."),
+                ("A shop rag covered in grease.", "The stains look like handprints from people you miss..."),
+                ("A work order clipboard.", "It lists maintenance for a car you'll own someday..."),
+                None
+            ],
+            'cemetery': [
+                ("A fresh flower on a grave.", "The headstone has your name but with wrong death date..."),
+                ("A groundskeeper's shovel.", "It's covered in soil that smells like your childhood garden..."),
+                ("A memorial bench.", "The plaque dedication mentions kindnesses you haven't done yet..."),
+                ("A stone angel statue.", "Its face changes to look like people you've lost..."),
+                ("A funeral program.", "It's for your service but lists accomplishments you haven't achieved..."),
+                ("A cemetery map.", "It shows a plot reserved for you in the family section..."),
+                None
+            ],
+            'greenhouse': [
+                ("A seed packet on the potting bench.", "It's for flowers that bloom on your birthday..."),
+                ("A watering can half-full.", "The water reflects your face but younger..."),
+                ("A plant label stuck in soil.", "It identifies a species that only grows in your dreams..."),
+                ("A gardening glove left behind.", "It fits your hand perfectly and smells like your mother..."),
+                ("A greenhouse thermometer.", "It always shows the temperature from your fever as a child..."),
+                ("A pruning shear.", "It cuts away dead growth that looks like your bad memories..."),
+                None
+            ],
+            'radio_station': [
+                ("A microphone left on.", "It picks up whispers of things you never said aloud..."),
+                ("A playlist on the desk.", "Every song title relates to chapters of your life..."),
+                ("A pair of headphones.", "They play static that sounds like conversations from your past..."),
+                ("A radio dial.", "It only tunes to frequencies broadcasting your private thoughts..."),
+                ("A 'ON AIR' sign.", "It lights up every time you think about speaking the truth..."),
+                ("A request slip.", "Someone has requested a song for you from a secret admirer..."),
+                None
+            ],
+            'dental_office': [
+                ("An X-ray on the light board.", "It shows your teeth but with words hidden in the roots..."),
+                ("A dental mold on the counter.", "The bite impression matches your stress patterns..."),
+                ("A appointment card.", "It's scheduled for a procedure on the day you'll need courage..."),
+                ("A fluoride rinse cup.", "It contains liquid that tastes like your childhood fears..."),
+                ("A dental tool tray.", "The instruments are arranged to spell out your initials..."),
+                ("A patient chart.", "It documents cavities in places where you swallow your words..."),
+                None
+            ],
+            'waiting_room': [
+                ("A magazine on the table.", "It features an article about your life written by someone you trust..."),
+                ("A clipboard with forms.", "The questions ask about symptoms of loneliness you didn't realize you had..."),
+                ("A water cooler cup.", "It's filled with liquid that tastes like tears of relief..."),
+                ("A wall clock.", "It counts down to the moment you'll finally get the answers you need..."),
+                ("A tissue box.", "It's positioned exactly where you'll need it most..."),
+                ("A appointment reminder card.", "It's for a meeting with yourself from ten years ago..."),
+                None
+            ],
+            'elevator_shaft': [
+                ("An emergency phone.", "It dials the number you had as a child when you called for help..."),
+                ("A maintenance log.", "It records repairs to problems you didn't know you had..."),
+                ("A floor button panel.", "It has an extra button for a floor that exists in your nightmares..."),
+                ("A safety inspection certificate.", "It's signed by someone with your father's handwriting..."),
+                ("An elevator cable.", "It's frayed in exactly the same pattern as your last nerve..."),
+                ("A emergency brake lever.", "It's positioned where you always wanted an escape from life..."),
+                None
+            ],
+            'stairwell': [
+                ("A handrail worn smooth.", "It's polished by hands the same size as yours..."),
+                ("A step that creaks.", "It makes the same sound as your childhood home..."),
+                ("An exit sign.", "It points toward the path you should have taken years ago..."),
+                ("A emergency lighting unit.", "It only illuminates when you're making the wrong choice..."),
+                ("A stairwell echo.", "It repeats words you wished you'd said differently..."),
+                ("A landing window.", "It shows a view of the life you could have lived..."),
                 None
             ]
         }
@@ -1490,6 +2141,174 @@ class Game:
                     {'name': 'The Mickey Mouse', 'speed': 0.4, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
                     {'name': 'The Donald Duck', 'speed': 0.5, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
                     {'name': 'The Goofy', 'speed': 0.6, 'friendly': False, 'theme': 'Abandoned_amusement_park'},
+                ],
+                'arcade': [
+                    {'name': 'Pixelated Ghost', 'speed': 0.3, 'friendly': False, 'theme': 'arcade'},
+                    {'name': 'Game Master', 'speed': 0.5, 'friendly': False, 'theme': 'arcade'},
+                    {'name': 'Token Collector', 'speed': 0.4, 'friendly': True, 'theme': 'arcade'},
+                    {'name': 'Broken Cabinet Spirit', 'speed': 0.2, 'friendly': False, 'theme': 'arcade'},
+                    {'name': 'High Score Phantom', 'speed': 0.6, 'friendly': False, 'theme': 'arcade'},
+                    {'name': 'Prize Attendant', 'speed': 0.3, 'friendly': True, 'theme': 'arcade'}
+                ],
+                'gas_station': [
+                    {'name': 'Night Shift Clerk', 'speed': 0.3, 'friendly': False, 'theme': 'gas_station'},
+                    {'name': 'Pump Phantom', 'speed': 0.4, 'friendly': False, 'theme': 'gas_station'},
+                    {'name': 'Fluorescent Shadow', 'speed': 0.5, 'friendly': False, 'theme': 'gas_station'},
+                    {'name': 'Lottery Addict', 'speed': 0.2, 'friendly': True, 'theme': 'gas_station'},
+                    {'name': 'Highway Drifter', 'speed': 0.7, 'friendly': False, 'theme': 'gas_station'},
+                    {'name': 'Security Camera Eye', 'speed': 0.1, 'friendly': False, 'theme': 'gas_station'}
+                ],
+                'laundromat': [
+                    {'name': 'Washing Machine Spirit', 'speed': 0.2, 'friendly': False, 'theme': 'laundromat'},
+                    {'name': 'Detergent Phantom', 'speed': 0.3, 'friendly': False, 'theme': 'laundromat'},
+                    {'name': 'Lost Sock Collector', 'speed': 0.4, 'friendly': True, 'theme': 'laundromat'},
+                    {'name': 'Steam Wraith', 'speed': 0.5, 'friendly': False, 'theme': 'laundromat'},
+                    {'name': 'Quarter Changer', 'speed': 0.3, 'friendly': True, 'theme': 'laundromat'},
+                    {'name': 'Tumble Dryer Echo', 'speed': 0.2, 'friendly': False, 'theme': 'laundromat'}
+                ],
+                'diner': [
+                    {'name': 'Midnight Waitress', 'speed': 0.4, 'friendly': False, 'theme': 'diner'},
+                    {'name': 'Coffee Phantom', 'speed': 0.3, 'friendly': True, 'theme': 'diner'},
+                    {'name': 'Grease Trap Monster', 'speed': 0.5, 'friendly': False, 'theme': 'diner'},
+                    {'name': 'Jukebox Spirit', 'speed': 0.2, 'friendly': True, 'theme': 'diner'},
+                    {'name': 'Pie Case Guardian', 'speed': 0.3, 'friendly': False, 'theme': 'diner'},
+                    {'name': 'Booth Lurker', 'speed': 0.4, 'friendly': False, 'theme': 'diner'}
+                ],
+                'gym': [
+                    {'name': 'Muscle Memory', 'speed': 0.6, 'friendly': False, 'theme': 'gym'},
+                    {'name': 'Treadmill Runner', 'speed': 0.8, 'friendly': False, 'theme': 'gym'},
+                    {'name': 'Weight Room Ghost', 'speed': 0.4, 'friendly': False, 'theme': 'gym'},
+                    {'name': 'Personal Trainer', 'speed': 0.5, 'friendly': True, 'theme': 'gym'},
+                    {'name': 'Mirror Reflection', 'speed': 0.3, 'friendly': False, 'theme': 'gym'},
+                    {'name': 'Locker Room Echo', 'speed': 0.2, 'friendly': False, 'theme': 'gym'}
+                ],
+                'shopping_center': [
+                    {'name': 'Mall Walker', 'speed': 0.3, 'friendly': True, 'theme': 'shopping_center'},
+                    {'name': 'Security Guard', 'speed': 0.4, 'friendly': False, 'theme': 'shopping_center'},
+                    {'name': 'Food Court Phantom', 'speed': 0.3, 'friendly': False, 'theme': 'shopping_center'},
+                    {'name': 'Store Mannequin', 'speed': 0.2, 'friendly': False, 'theme': 'shopping_center'},
+                    {'name': 'Fountain Wisher', 'speed': 0.2, 'friendly': True, 'theme': 'shopping_center'},
+                    {'name': 'Directory Guide', 'speed': 0.1, 'friendly': True, 'theme': 'shopping_center'}
+                ],
+                'train_station': [
+                    {'name': 'Phantom Conductor', 'speed': 0.4, 'friendly': False, 'theme': 'train_station'},
+                    {'name': 'Lost Commuter', 'speed': 0.3, 'friendly': True, 'theme': 'train_station'},
+                    {'name': 'Track Walker', 'speed': 0.5, 'friendly': False, 'theme': 'train_station'},
+                    {'name': 'Ticket Collector', 'speed': 0.3, 'friendly': False, 'theme': 'train_station'},
+                    {'name': 'Platform Ghost', 'speed': 0.2, 'friendly': False, 'theme': 'train_station'},
+                    {'name': 'Departure Board', 'speed': 0.1, 'friendly': True, 'theme': 'train_station'}
+                ],
+                'abandoned_amusement_park': [
+                    {'name': 'Rusted Carousel Horse', 'speed': 0.3, 'friendly': False, 'theme': 'abandoned_amusement_park'},
+                    {'name': 'Broken Animatronic', 'speed': 0.4, 'friendly': False, 'theme': 'abandoned_amusement_park'},
+                    {'name': 'Cotton Candy Vendor', 'speed': 0.2, 'friendly': True, 'theme': 'abandoned_amusement_park'},
+                    {'name': 'Ride Operator', 'speed': 0.3, 'friendly': False, 'theme': 'abandoned_amusement_park'},
+                    {'name': 'Funhouse Mirror', 'speed': 0.1, 'friendly': False, 'theme': 'abandoned_amusement_park'},
+                    {'name': 'Lost Child', 'speed': 0.4, 'friendly': True, 'theme': 'abandoned_amusement_park'}
+                ],
+                'nursing_home': [
+                    {'name': 'Forgotten Resident', 'speed': 0.2, 'friendly': True, 'theme': 'nursing_home'},
+                    {'name': 'Night Nurse', 'speed': 0.3, 'friendly': False, 'theme': 'nursing_home'},
+                    {'name': 'Wheelchair Shadow', 'speed': 0.2, 'friendly': False, 'theme': 'nursing_home'},
+                    {'name': 'Memory Keeper', 'speed': 0.1, 'friendly': True, 'theme': 'nursing_home'},
+                    {'name': 'Bingo Caller', 'speed': 0.2, 'friendly': True, 'theme': 'nursing_home'},
+                    {'name': 'Medication Cart', 'speed': 0.3, 'friendly': False, 'theme': 'nursing_home'}
+                ],
+                'daycare': [
+                    {'name': 'Invisible Child', 'speed': 0.5, 'friendly': True, 'theme': 'daycare'},
+                    {'name': 'Naptime Guardian', 'speed': 0.2, 'friendly': True, 'theme': 'daycare'},
+                    {'name': 'Toy Box Monster', 'speed': 0.4, 'friendly': False, 'theme': 'daycare'},
+                    {'name': 'Crayon Artist', 'speed': 0.3, 'friendly': True, 'theme': 'daycare'},
+                    {'name': 'Playground Spirit', 'speed': 0.4, 'friendly': True, 'theme': 'daycare'},
+                    {'name': 'Story Time Reader', 'speed': 0.2, 'friendly': True, 'theme': 'daycare'}
+                ],
+                'internet_cafe': [
+                    {'name': 'Digital Ghost', 'speed': 0.4, 'friendly': False, 'theme': 'internet_cafe'},
+                    {'name': 'Gamer Shadow', 'speed': 0.5, 'friendly': False, 'theme': 'internet_cafe'},
+                    {'name': 'Server Admin', 'speed': 0.3, 'friendly': True, 'theme': 'internet_cafe'},
+                    {'name': 'WiFi Spirit', 'speed': 0.6, 'friendly': False, 'theme': 'internet_cafe'},
+                    {'name': 'Code Phantom', 'speed': 0.3, 'friendly': False, 'theme': 'internet_cafe'},
+                    {'name': 'Printer Jam', 'speed': 0.1, 'friendly': False, 'theme': 'internet_cafe'}
+                ],
+                'bowling_alley': [
+                    {'name': 'Pin Setter', 'speed': 0.3, 'friendly': False, 'theme': 'bowling_alley'},
+                    {'name': 'Bowling Ball Return', 'speed': 0.2, 'friendly': False, 'theme': 'bowling_alley'},
+                    {'name': 'League Captain', 'speed': 0.4, 'friendly': True, 'theme': 'bowling_alley'},
+                    {'name': 'Shoe Rental Ghost', 'speed': 0.2, 'friendly': False, 'theme': 'bowling_alley'},
+                    {'name': 'Strike Spirit', 'speed': 0.5, 'friendly': True, 'theme': 'bowling_alley'},
+                    {'name': 'Gutter Ball', 'speed': 0.3, 'friendly': False, 'theme': 'bowling_alley'}
+                ],
+                'motel': [
+                    {'name': 'Room Service', 'speed': 0.3, 'friendly': False, 'theme': 'motel'},
+                    {'name': 'Front Desk Clerk', 'speed': 0.2, 'friendly': False, 'theme': 'motel'},
+                    {'name': 'Ice Machine Ghost', 'speed': 0.2, 'friendly': False, 'theme': 'motel'},
+                    {'name': 'Checkout Shadow', 'speed': 0.4, 'friendly': False, 'theme': 'motel'},
+                    {'name': 'Highway Drifter', 'speed': 0.5, 'friendly': True, 'theme': 'motel'},
+                    {'name': 'Vacancy Sign', 'speed': 0.1, 'friendly': False, 'theme': 'motel'}
+                ],
+                'auto_shop': [
+                    {'name': 'Phantom Mechanic', 'speed': 0.4, 'friendly': False, 'theme': 'auto_shop'},
+                    {'name': 'Oil Change Ghost', 'speed': 0.3, 'friendly': False, 'theme': 'auto_shop'},
+                    {'name': 'Tool Spirit', 'speed': 0.3, 'friendly': True, 'theme': 'auto_shop'},
+                    {'name': 'Engine Block', 'speed': 0.1, 'friendly': False, 'theme': 'auto_shop'},
+                    {'name': 'Tire Pressure', 'speed': 0.2, 'friendly': False, 'theme': 'auto_shop'},
+                    {'name': 'Customer Service', 'speed': 0.3, 'friendly': True, 'theme': 'auto_shop'}
+                ],
+                'cemetery': [
+                    {'name': 'Gravedigger', 'speed': 0.3, 'friendly': False, 'theme': 'cemetery'},
+                    {'name': 'Stone Angel', 'speed': 0.1, 'friendly': True, 'theme': 'cemetery'},
+                    {'name': 'Groundskeeper', 'speed': 0.2, 'friendly': True, 'theme': 'cemetery'},
+                    {'name': 'Mourning Spirit', 'speed': 0.2, 'friendly': False, 'theme': 'cemetery'},
+                    {'name': 'Memorial Visitor', 'speed': 0.2, 'friendly': True, 'theme': 'cemetery'},
+                    {'name': 'Eternal Rest', 'speed': 0.1, 'friendly': True, 'theme': 'cemetery'}
+                ],
+                'greenhouse': [
+                    {'name': 'Plant Whisperer', 'speed': 0.2, 'friendly': True, 'theme': 'greenhouse'},
+                    {'name': 'Photosynthesis Spirit', 'speed': 0.1, 'friendly': True, 'theme': 'greenhouse'},
+                    {'name': 'Garden Tool Ghost', 'speed': 0.3, 'friendly': False, 'theme': 'greenhouse'},
+                    {'name': 'Watering Can', 'speed': 0.2, 'friendly': True, 'theme': 'greenhouse'},
+                    {'name': 'Seed Keeper', 'speed': 0.2, 'friendly': True, 'theme': 'greenhouse'},
+                    {'name': 'Humidity Phantom', 'speed': 0.3, 'friendly': False, 'theme': 'greenhouse'}
+                ],
+                'radio_station': [
+                    {'name': 'DJ Shadow', 'speed': 0.3, 'friendly': False, 'theme': 'radio_station'},
+                    {'name': 'Sound Engineer', 'speed': 0.3, 'friendly': True, 'theme': 'radio_station'},
+                    {'name': 'Radio Wave', 'speed': 0.7, 'friendly': False, 'theme': 'radio_station'},
+                    {'name': 'Microphone Spirit', 'speed': 0.2, 'friendly': False, 'theme': 'radio_station'},
+                    {'name': 'Request Caller', 'speed': 0.4, 'friendly': True, 'theme': 'radio_station'},
+                    {'name': 'Static Noise', 'speed': 0.5, 'friendly': False, 'theme': 'radio_station'}
+                ],
+                'dental_office': [
+                    {'name': 'Phantom Dentist', 'speed': 0.3, 'friendly': False, 'theme': 'dental_office'},
+                    {'name': 'Dental Hygienist', 'speed': 0.3, 'friendly': True, 'theme': 'dental_office'},
+                    {'name': 'X-Ray Phantom', 'speed': 0.2, 'friendly': False, 'theme': 'dental_office'},
+                    {'name': 'Fluoride Spirit', 'speed': 0.2, 'friendly': False, 'theme': 'dental_office'},
+                    {'name': 'Appointment Scheduler', 'speed': 0.2, 'friendly': True, 'theme': 'dental_office'},
+                    {'name': 'Dental Drill', 'speed': 0.4, 'friendly': False, 'theme': 'dental_office'}
+                ],
+                'waiting_room': [
+                    {'name': 'Magazine Reader', 'speed': 0.1, 'friendly': True, 'theme': 'waiting_room'},
+                    {'name': 'Appointment Ghost', 'speed': 0.2, 'friendly': False, 'theme': 'waiting_room'},
+                    {'name': 'Clock Watcher', 'speed': 0.1, 'friendly': False, 'theme': 'waiting_room'},
+                    {'name': 'Reception Phantom', 'speed': 0.2, 'friendly': False, 'theme': 'waiting_room'},
+                    {'name': 'Form Filler', 'speed': 0.2, 'friendly': True, 'theme': 'waiting_room'},
+                    {'name': 'Water Cooler Spirit', 'speed': 0.1, 'friendly': True, 'theme': 'waiting_room'}
+                ],
+                'elevator_shaft': [
+                    {'name': 'Elevator Operator', 'speed': 0.3, 'friendly': False, 'theme': 'elevator_shaft'},
+                    {'name': 'Cable Tension', 'speed': 0.1, 'friendly': False, 'theme': 'elevator_shaft'},
+                    {'name': 'Floor Button', 'speed': 0.1, 'friendly': False, 'theme': 'elevator_shaft'},
+                    {'name': 'Emergency Phone', 'speed': 0.1, 'friendly': True, 'theme': 'elevator_shaft'},
+                    {'name': 'Shaft Echo', 'speed': 0.4, 'friendly': False, 'theme': 'elevator_shaft'},
+                    {'name': 'Service Technician', 'speed': 0.3, 'friendly': True, 'theme': 'elevator_shaft'}
+                ],
+                'stairwell': [
+                    {'name': 'Step Counter', 'speed': 0.3, 'friendly': False, 'theme': 'stairwell'},
+                    {'name': 'Handrail Ghost', 'speed': 0.2, 'friendly': False, 'theme': 'stairwell'},
+                    {'name': 'Emergency Exit', 'speed': 0.2, 'friendly': True, 'theme': 'stairwell'},
+                    {'name': 'Echo Chamber', 'speed': 0.4, 'friendly': False, 'theme': 'stairwell'},
+                    {'name': 'Landing Spirit', 'speed': 0.2, 'friendly': False, 'theme': 'stairwell'},
+                    {'name': 'Floor Navigator', 'speed': 0.3, 'friendly': True, 'theme': 'stairwell'}
                 ]
             }
 
