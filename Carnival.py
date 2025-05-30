@@ -17,25 +17,11 @@ import os
 import random
 import sys
 import time
+from datetime import datetime
 from colorama import Fore, Style, init
-
-# Check if called with python3 command
-def check_python_command():
-    """Check if script was called with 'python3' command and exit if it was"""
-    # Get the command used to run this script
-    command = sys.argv[0]
-    program_name = os.path.basename(sys.executable)
-    
-    if program_name == "python3" or "python3" in command:
-        print(f"{Fore.RED}Please use 'python' command instead of 'python3'")
-        print(f"{Fore.YELLOW}Run: python launch.py")
-        sys.exit(0)
 
 # Launcher protection at the very beginning
 if __name__ == "__main__":
-    # First check if using python3 command
-    check_python_command()
-    
     # Then check if launched through launcher
     if os.environ.get("LAUNCHED_FROM_LAUNCHER") != "1":
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
@@ -62,7 +48,14 @@ player = {
     "season_pass": False,  # Season pass status
     "fast_passes": 0,  # Fast passes to skip lines
     "completed_quests": [],  # Completed quest IDs
-    "active_quests": []  # Currently active quests
+    "active_quests": [],  # Currently active quests
+    "hunger": 100,  # Player hunger level
+    "energy": 100,  # Player energy level
+    "food_consumed": [],  # List of foods consumed
+    "food_counts": {},  # Count of each food item consumed
+    "last_daily_reward": None,  # Last daily reward claim date
+    "relationships": {},  # NPC relationship levels
+    "entertainment_history": []  # History of entertainment attended
 }
 
 MISSIONS = {
@@ -102,7 +95,7 @@ QUESTS = {
             {"description": "Buy something from the shop", "type": "make_purchase", "target": 1}
         ]
     },
-    
+
     "weekly_quest": {
         "id": "weekly_quest",
         "name": "Weekly Spectacular",
@@ -118,7 +111,7 @@ QUESTS = {
             {"description": "Play 3 different minigames", "type": "play_different_games", "target": 3}
         ]
     },
-    
+
     "scavenger_hunt": {
         "id": "scavenger_hunt",
         "name": "Carnival Scavenger Hunt",
@@ -134,7 +127,7 @@ QUESTS = {
             {"name": "VIP Badge 📛", "location": "By the main entrance", "hint": "The first place you came, the last place you'll leave, find it where tickets you retrieve."}
         ]
     },
-    
+
     "grand_adventure": {
         "id": "grand_adventure",
         "name": "The Grand Carnival Adventure",
@@ -199,7 +192,7 @@ QUESTS = {
             "special_unlock": "Legendary Quest Line"
         }
     },
-    
+
     "seasonal_event": {
         "id": "seasonal_event",
         "name": "Seasonal Celebration",
@@ -244,7 +237,7 @@ QUESTS = {
             }
         }
     },
-    
+
     "friendship_quest": {
         "id": "friendship_quest",
         "name": "Carnival Connections",
@@ -301,7 +294,7 @@ NPCS = {
         "special_bonus": {"type": "ticket_multiplier", "value": 1.2},
         "trades": [{"give": "VIP Badge", "receive": 50, "tickets": True}]
     },
-    
+
     "Professor Puzzleworth 🧙‍♂️": {
         "missions": ["mathematician"], 
         "location": "Math Pavilion",
@@ -315,7 +308,7 @@ NPCS = {
         "special_bonus": {"type": "puzzle_boost", "value": 1.5},
         "trades": [{"give": "Logic Puzzle Set", "receive": 25, "tickets": True}]
     },
-    
+
     "Lucky Louie 🍀": {
         "missions": ["lucky"], 
         "location": "Fortune's Corner",
@@ -329,7 +322,7 @@ NPCS = {
         "special_bonus": {"type": "gambling_odds", "value": 1.1},
         "trades": [{"give": "Lucky Charm", "receive": 15, "tickets": True}]
     },
-    
+
     "Countess VIP 👑": {
         "missions": ["vip_games"], 
         "vip_only": True,
@@ -344,7 +337,7 @@ NPCS = {
         "special_bonus": {"type": "special_access", "value": "VIP Games"},
         "trades": [{"give": "VIP Memorabilia", "receive": "Luxury Game Token", "tickets": False}]
     },
-    
+
     "Captain Coaster 🎢": {
         "missions": ["coaster_fan", "theme_park_explorer"], 
         "location": "Theme Park Central",
@@ -358,7 +351,7 @@ NPCS = {
         "special_bonus": {"type": "ride_discount", "value": 0.25},
         "trades": [{"give": "Ride Photo Collection", "receive": "Fast Pass", "tickets": False}]
     },
-    
+
     "Madame Phantom 👻": {
         "missions": ["ghost_hunter"], 
         "location": "Haunted Attraction",
@@ -372,7 +365,7 @@ NPCS = {
         "special_bonus": {"type": "haunted_boost", "value": 2},
         "trades": [{"give": "Ectoplasm Sample", "receive": 40, "tickets": True}]
     },
-    
+
     "Dr. Virtual 🥽": {
         "missions": ["vr_master"], 
         "location": "VR Arcade",
@@ -386,7 +379,7 @@ NPCS = {
         "special_bonus": {"type": "vr_enhancement", "value": 1.5},
         "trades": [{"give": "Digital Blueprint", "receive": "VR Upgrade Token", "tickets": False}]
     },
-    
+
     "Grand Champion 🏆": {
         "missions": ["championship_rookie", "championship_winner"], 
         "location": "Championship Arena",
@@ -400,7 +393,7 @@ NPCS = {
         "special_bonus": {"type": "competition_edge", "value": 1.3},
         "trades": [{"give": "Champion's Medal", "receive": 60, "tickets": True}]
     },
-    
+
     "Couturier Carnival 👕": {
         "missions": ["collector"], 
         "location": "Fashion Boutique",
@@ -414,7 +407,7 @@ NPCS = {
         "special_bonus": {"type": "costume_discount", "value": 0.3},
         "trades": [{"give": "Rare Fabric", "receive": "Custom Costume", "tickets": False}]
     },
-    
+
     "Lady Loyalty 🌟": {
         "missions": ["loyal_visitor"], 
         "location": "Rewards Center",
@@ -428,7 +421,7 @@ NPCS = {
         "special_bonus": {"type": "loyalty_accelerator", "value": 2},
         "trades": [{"give": "Year Pass", "receive": 100, "tickets": True}]
     },
-    
+
     "Sage Questgiver 📜": {
         "missions": [], 
         "quests": ["daily_challenge", "weekly_quest", "scavenger_hunt", "grand_adventure"],
@@ -443,7 +436,7 @@ NPCS = {
         "special_bonus": {"type": "quest_rewards", "value": 1.5},
         "trades": [{"give": "Completed Quest Log", "receive": 80, "tickets": True}]
     },
-    
+
     "Season Director 🎫": {
         "missions": [], 
         "season_pass": True,
@@ -458,7 +451,7 @@ NPCS = {
         "special_bonus": {"type": "seasonal_access", "value": "All Seasons"},
         "trades": [{"give": "All-Season Photos", "receive": 90, "tickets": True}]
     },
-    
+
     "Chef Bonbon 🍰": {
         "missions": ["gourmet_explorer", "sweet_tooth"], 
         "location": "Food Court",
@@ -472,7 +465,7 @@ NPCS = {
         "special_bonus": {"type": "food_effectiveness", "value": 1.5},
         "trades": [{"give": "Rare Ingredient", "receive": "Special Recipe Card", "tickets": False}]
     },
-    
+
     "Maestro Melody 🎵": {
         "missions": ["music_aficionado", "entertainment_fanatic"], 
         "location": "Concert Hall",
@@ -715,7 +708,7 @@ def shop_costumes():
     available_costumes = [(name, data) for name, data in COSTUMES.items() if data["available"]]
 
     for i, (name, data) in enumerate(available_costumes):
-        price = data["price"]
+        price = data.get("price", 0)
         if data.get("halloween_discount") and is_halloween():
             price = int(price * 0.7)  # 30% discount
         elif data.get("easter_discount") and is_easter():
@@ -729,7 +722,7 @@ def shop_costumes():
     try:
         index = int(choice) - 1
         costume_name, costume_data = available_costumes[index]
-        price = costume_data["price"]
+        price = costume_data.get("price", 0)
 
         if player["tickets"] >= price:
             player["tickets"] -= price
@@ -1351,7 +1344,7 @@ def main_menu():
 
     while True:
         clear()
-        
+
         # Dynamic colored ASCII art banner with visual effects
         colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN]
         carnival_art = f"""
@@ -1364,7 +1357,7 @@ def main_menu():
 {random.choice(colors)} ░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░   ░▒▓██▓▒░   ░▒▓█▓▒░░▒▓█▓▒░░▒▓████████▓▒░
         """
         print(carnival_art)
-        
+
         # Season indicator with visual theming
         current_season = get_current_season()
         season_emojis = {
@@ -1374,18 +1367,18 @@ def main_menu():
             "spring": Fore.MAGENTA, "summer": Fore.YELLOW, 
             "fall": Fore.RED, "winter": Fore.CYAN
         }
-        
+
         # Welcome message with seasonal greeting
         print(f"{season_colors[current_season]}🎪 Welcome to the {current_season.title()} Carnival! {season_emojis[current_season]}")
-        
+
         # Random NPC greeting
         random_npc = random.choice(list(NPCS.keys()))
         random_dialogue = random.choice(NPCS[random_npc]["dialogue"])
         print(f"{Fore.YELLOW}{random_npc}: {Fore.WHITE}\"{random_dialogue}\"")
-        
+
         # Display player status with improved formatting
         print(f"\n{Fore.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{Style.RESET_ALL}")
-        
+
         # Display loyalty tier if player has any points
         loyalty_info = ""
         if player.get("loyalty_points", 0) > 0:
@@ -1394,68 +1387,68 @@ def main_menu():
                           "Platinum": Fore.CYAN, "Diamond": Fore.MAGENTA}
             colored_tier = f"{tier_colors.get(tier, Fore.WHITE)}{tier}{Style.RESET_ALL}"
             loyalty_info = f"🌟 {colored_tier} ({player['loyalty_points']} points)"
-        
+
         # Player status bar with hunger/energy indicators if applicable
         hunger_bar = ""
         energy_bar = ""
         if "hunger" in player and "energy" in player:
             hunger_level = player["hunger"]
             energy_level = player["energy"]
-            
+
             # Create visual bars
             hunger_filled = "■" * (hunger_level // 10)
             hunger_empty = "□" * ((100 - hunger_level) // 10)
             energy_filled = "■" * (energy_level // 10)
             energy_empty = "□" * ((100 - energy_level) // 10)
-            
+
             # Color code based on levels
             hunger_color = Fore.GREEN if hunger_level > 60 else Fore.YELLOW if hunger_level > 30 else Fore.RED
             energy_color = Fore.GREEN if energy_level > 60 else Fore.YELLOW if energy_level > 30 else Fore.RED
-            
+
             hunger_bar = f"🍔 {hunger_color}{hunger_filled}{hunger_empty} {hunger_level}%{Style.RESET_ALL}"
             energy_bar = f"⚡ {energy_color}{energy_filled}{energy_empty} {energy_level}%{Style.RESET_ALL}"
-        
+
         # Status display with emoji indicators
         print(f"{Fore.YELLOW}👤 {player['equipped_costume']} {player['name']} | 🎟️ Tickets: {player['tickets']} | {loyalty_info}")
         if hunger_bar and energy_bar:
             print(f"{hunger_bar} | {energy_bar}")
-            
+
         # Inventory and equipped items
         print(f"\n{Fore.MAGENTA}🎒 INVENTORY:{Style.RESET_ALL} {', '.join(player['inventory']) if player['inventory'] else 'Empty'}")
         print(f"{Fore.CYAN}⚡ ACTIVE ITEMS:{Style.RESET_ALL} {', '.join(player['equipped_items']) if player['equipped_items'] else 'None'}")
-        
+
         # Achievements and active missions
         print(f"{Fore.YELLOW}🏆 ACHIEVEMENTS:{Style.RESET_ALL} {len(player['achievements']) if 'achievements' in player else 0}")
         active_missions = len(player["missions"]) if "missions" in player else 0
         active_quests = len(player.get("active_quests", [])) 
         print(f"{Fore.GREEN}📋 ACTIVE MISSIONS:{Style.RESET_ALL} {active_missions} | {Fore.GREEN}📜 ACTIVE QUESTS:{Style.RESET_ALL} {active_quests}")
-        
+
         # VIP and season pass status
         has_vip = "VIP Pass 🌟" in player["inventory"]
         if has_vip:
             print(f"{Fore.MAGENTA}👑 VIP STATUS:{Style.RESET_ALL} Active (Special privileges unlocked)")
-        
+
         if player.get("season_pass", False):
             days_left = player.get("season_pass_days", 30)
             print(f"{Fore.GREEN}🎫 SEASON PASS:{Style.RESET_ALL} Active ({days_left} days remaining)")
-        
+
         print(f"\n{Fore.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{Style.RESET_ALL}")
-        
+
         # Special event notifications
         if is_halloween():
             print(f"{Fore.MAGENTA}🎃 SPECIAL EVENT:{Style.RESET_ALL} Halloween Spooktacular is active! Special items and quests available!")
         elif is_easter():
             print(f"{Fore.YELLOW}🐰 SPECIAL EVENT:{Style.RESET_ALL} Easter Egg Hunt is active! Find hidden eggs around the carnival!")
-        
+
         # Group options by category for better organization
         print(f"\n{Fore.YELLOW}=== CARNIVAL ATTRACTIONS ==={Style.RESET_ALL}")
         print(f"{Fore.WHITE}[1] Play Minigames        [9] Theme Park 🎢         [17] Entertainment Plaza 🎭")
         print(f"{Fore.WHITE}[10] Gambling Games       [14] Championships 🏆     [15] Quest Center 📜")
-        
+
         print(f"\n{Fore.YELLOW}=== SHOPS & SERVICES ==={Style.RESET_ALL}")
         print(f"{Fore.WHITE}[2] Ticket Shop           [3] Pet Shop 🐾          [13] Manage Pets 🐾")
         print(f"{Fore.WHITE}[12] Redeem Code          [16] Loyalty Rewards 🌟")
-        
+
         print(f"\n{Fore.YELLOW}=== MEET CHARACTERS ==={Style.RESET_ALL}")
         # Show a few prominent NPCs with their locations
         featured_npcs = []
@@ -1465,21 +1458,21 @@ def main_menu():
             featured_npcs.append((npc_name, data.get("location", "Unknown")))
             if len(featured_npcs) >= 3:  # Show top 3 NPCs
                 break
-                
+
         # Display the featured NPCs
         npc_display = " | ".join([f"{npc} ({loc})" for npc, loc in featured_npcs])
         print(f"{Fore.CYAN}Featured Characters: {Style.RESET_ALL}{npc_display}")
         print(f"{Fore.WHITE}[11] Talk to NPCs {Fore.YELLOW}⭐NEW INTERACTIVE SYSTEM!{Style.RESET_ALL}")
-        
+
         print(f"\n{Fore.YELLOW}=== PLAYER TOOLS ==={Style.RESET_ALL}")
         print(f"{Fore.WHITE}[4] Daily Challenges 📅    [5] Leaderboard 🏆")
         print(f"{Fore.WHITE}[6] Save Game              [7] Load Game              [8] Tutorials")
         print(f"{Fore.WHITE}[0] Exit")
-        
+
         print(f"\n{Fore.CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{Style.RESET_ALL}")
-        
+
         choice = input(f"{Fore.YELLOW}Select option: {Style.RESET_ALL}")
-        
+
         # Enhanced menu with better feedback and transitions
         if choice == "1":
             print(f"{Fore.CYAN}Loading minigames...{Style.RESET_ALL}")
@@ -1822,7 +1815,7 @@ def init_player_attributes():
         player["daily_challenges"] = {}
     if "last_daily_reward" not in player:
         player["last_daily_reward"] = None
-        
+
     # Initialize loyalty and championship features
     if "loyalty_points" not in player:
         player["loyalty_points"] = 0
@@ -1840,7 +1833,7 @@ def init_player_attributes():
         player["active_quests"] = []
     if "quest_progress" not in player:
         player["quest_progress"] = {}
-        
+
     # Initialize entertainment features
     if "entertainment_history" not in player:
         player["entertainment_history"] = {
@@ -1850,7 +1843,7 @@ def init_player_attributes():
         }
     if "entertainment_collectibles" not in player:
         player["entertainment_collectibles"] = []
-        
+
     # Initialize carnival features
     if "carnival_needs_system" not in player:
         player["carnival_needs_system"] = True  # Enable the hunger/energy system
@@ -1862,7 +1855,7 @@ def init_player_attributes():
         player["carnival_prizes"] = []  # Store prizes won from carnival games
     if "food_consumed" not in player:
         player["food_consumed"] = []  # Track food items consumed
-        
+
     # Initialize ticket earning features
     if "check_ins" not in player:
         player["check_ins"] = {
@@ -1884,7 +1877,6 @@ def init_player_attributes():
         }
 
 def check_daily_reward():
-    from datetime import datetime
     today = datetime.now().date()
     if player["last_daily_reward"] is None or datetime.strptime(player["last_daily_reward"], "%Y-%m-%d").date() < today:
         player["tickets"] += 10
@@ -1946,7 +1938,7 @@ def check_daily_challenges():
     from datetime import datetime
     current_day = time.strftime("%A")
     today_date = datetime.now().strftime("%Y-%m-%d")
-    
+
     # Get the challenge for the current day of the week
     # If it's not a specific day (or we need a fallback), use one of the bonus challenges
     if current_day in DAILY_CHALLENGES:
@@ -1959,24 +1951,24 @@ def check_daily_challenges():
     # Initialize daily_challenges if needed
     if "daily_challenges" not in player:
         player["daily_challenges"] = {}
-    
+
     # Initialize daily_streak if needed
     if "daily_streak" not in player:
         player["daily_streak"] = {
             "count": 0,
             "last_date": None
         }
-    
+
     # Check if player already completed today's challenge
     if current_day in player["daily_challenges"] and player["daily_challenges"][current_day]:
         print("✅ Today's challenge completed!")
         print(f"Challenge: {challenge['task']}")
         print(f"Reward: {challenge['reward']} tickets")
-        
+
         # Display streak information
         streak = player["daily_streak"]["count"]
         print(f"\n🔥 Current Streak: {streak} day" + ("s" if streak != 1 else ""))
-        
+
         if streak >= 3:
             print(Fore.CYAN + "Streak bonus active! Complete tomorrow's challenge for more rewards.")
     else:
@@ -1987,48 +1979,48 @@ def check_daily_challenges():
             last_date_obj = datetime.strptime(last_date, "%Y-%m-%d")
             today_obj = datetime.strptime(today_date, "%Y-%m-%d")
             days_diff = (today_obj - last_date_obj).days
-            
+
             # If more than 1 day has passed, reset streak
             if days_diff > 1:
                 player["daily_streak"]["count"] = 0
                 print(Fore.RED + "Your daily streak was reset! Complete challenges daily to build it up again.")
-        
+
         print(f"Task: {challenge['task']}")
         print(f"Reward: {challenge['reward']} tickets")
-        
+
         # Show current streak information
         streak = player["daily_streak"]["count"]
         print(f"\n🔥 Current Streak: {streak} day" + ("s" if streak != 1 else ""))
-        
+
         # Option to complete the challenge
         print("\n[1] Complete challenge (simulated)")
         print("[0] Return to menu")
-        
+
         choice = input("\nSelect option: ")
-        
+
         if choice == "1":
             # Mark challenge as completed
             player["daily_challenges"][current_day] = True
-            
+
             # Award base tickets
             player["tickets"] += challenge["reward"]
             print(Fore.GREEN + f"\n✅ Challenge completed! +{challenge['reward']} tickets")
-            
+
             # Update streak
             player["daily_streak"]["count"] += 1
             player["daily_streak"]["last_date"] = today_date
-            
+
             # Award loyalty points
             add_loyalty_points(3)
             print(Fore.MAGENTA + "+3 Loyalty Points for completing daily challenge!")
-            
+
             # Calculate and award streak bonus
             streak = player["daily_streak"]["count"]
             if streak >= 3:
                 streak_bonus = min(5 * (streak // 3), 25)  # Cap at 25 bonus tickets
                 player["tickets"] += streak_bonus
                 print(Fore.CYAN + f"🔥 Streak Bonus: +{streak_bonus} tickets!")
-            
+
             # Award streak achievements
             if streak == 3:
                 award_achievement("Three Day Streak: Complete daily challenges 3 days in a row")
@@ -2043,7 +2035,7 @@ def check_daily_challenges():
                 player["tickets"] += 200
                 add_loyalty_points(50)
                 print(Fore.GREEN + "🏆 Monthly Streak Bonus: +200 tickets, +50 Loyalty Points!")
-                
+
                 # Add special item to inventory
                 special_item = "Streak Champion Crown 👑"
                 if special_item not in player["inventory"]:
@@ -2098,7 +2090,6 @@ def start_game():
     player["name"] = input("> ")
     main_menu()
 
-start_game()
 def paper_scissors_rock():
     if not pay_to_play(1): 
         return
@@ -2155,67 +2146,67 @@ def talk_to_npcs():
         clear()
         print(Fore.CYAN + "=== CARNIVAL CHARACTERS ===")
         print(Fore.YELLOW + "Meet the colorful personalities that bring our carnival to life!")
-        
+
         # Display NPCs by location groups
         locations = {}
         for npc_name, data in NPCS.items():
             # Skip VIP NPCs if player doesn't have VIP pass
             if data.get("vip_only") and "VIP Pass 🌟" not in player["inventory"]:
                 continue
-                
+
             location = data.get("location", "Wandering")
             if location not in locations:
                 locations[location] = []
             locations[location].append(npc_name)
-        
+
         # Print NPCs grouped by location
         print("\n" + Fore.MAGENTA + "=== LOCATIONS ===")
         for i, (location, npcs) in enumerate(locations.items(), 1):
             print(f"{i}. {location} ({len(npcs)} characters)")
-        
+
         print("\n0. Return to Main Menu")
-        
+
         location_choice = input("\nWhere would you like to go? (0-" + str(len(locations)) + "): ")
         if location_choice == "0":
             return
-            
+
         try:
             location_idx = int(location_choice) - 1
             if location_idx < 0 or location_idx >= len(locations):
                 raise ValueError
-                
+
             # Get selected location and its NPCs
             selected_location = list(locations.keys())[location_idx]
             location_npcs = locations[selected_location]
-            
+
             while True:
                 clear()
                 print(Fore.CYAN + f"=== {selected_location.upper()} ===")
                 print(Fore.YELLOW + "Characters in this area:")
-                
+
                 # Display NPCs at the selected location
                 for i, npc_name in enumerate(location_npcs, 1):
                     print(f"{i}. {npc_name}")
-                
+
                 print("\n0. Go back to locations")
-                
+
                 npc_choice = input("\nWho would you like to talk to? (0-" + str(len(location_npcs)) + "): ")
                 if npc_choice == "0":
                     break
-                    
+
                 try:
                     npc_idx = int(npc_choice) - 1
                     if npc_idx < 0 or npc_idx >= len(location_npcs):
                         raise ValueError
-                        
+
                     # Talk to the selected NPC
                     selected_npc = location_npcs[npc_idx]
                     interact_with_npc(selected_npc)
-                    
+
                 except ValueError:
                     print(Fore.RED + "Invalid choice!")
                     time.sleep(1)
-            
+
         except ValueError:
             print(Fore.RED + "Invalid choice!")
             time.sleep(1)
@@ -2223,11 +2214,11 @@ def talk_to_npcs():
 def interact_with_npc(npc_name):
     """Detailed interaction with a specific NPC including dialogue, missions, and trading"""
     npc_data = NPCS[npc_name]
-    
+
     # Track NPC interactions for relationship building
     if "npc_relationships" not in player:
         player["npc_relationships"] = {}
-    
+
     if npc_name not in player["npc_relationships"]:
         player["npc_relationships"][npc_name] = {
             "level": 1,  # 1-5 relationship level
@@ -2236,13 +2227,13 @@ def interact_with_npc(npc_name):
             "quests_completed": 0,
             "last_special_event": None
         }
-    
+
     # Increment interaction counter
     player["npc_relationships"][npc_name]["interactions"] += 1
-    
+
     # Check if special event should trigger
     should_trigger_event = check_for_special_event(npc_name)
-    
+
     while True:
         clear()
         relationship_level = player["npc_relationships"][npc_name]["level"]
@@ -2254,12 +2245,12 @@ def interact_with_npc(npc_name):
             5: Fore.MAGENTA  # Best Friend
         }
         rel_color = relationship_colors.get(relationship_level, Fore.WHITE)
-        
+
         # Display NPC header with colorful styling based on relationship
         print(Fore.CYAN + "╔" + "═" * (len(npc_name) + 10) + "╗")
         print(Fore.CYAN + "║" + Fore.YELLOW + f"   {npc_name}   " + Fore.CYAN + "║")
         print(Fore.CYAN + "╚" + "═" * (len(npc_name) + 10) + "╝\n")
-        
+
         # Show relationship level
         relationship_titles = {
             1: "Stranger",
@@ -2269,11 +2260,11 @@ def interact_with_npc(npc_name):
             5: "Best Friend"
         }
         print(f"{rel_color}Relationship: {relationship_titles.get(relationship_level)} {Fore.RESET}({'★' * relationship_level + '☆' * (5-relationship_level)})")
-        
+
         # Show NPC description
         print(Fore.MAGENTA + "APPEARANCE:")
         print(Fore.WHITE + npc_data["description"])
-        
+
         # Special event dialogue if triggered
         if should_trigger_event:
             special_event_dialogue(npc_name)
@@ -2285,20 +2276,20 @@ def interact_with_npc(npc_name):
             print(Fore.MAGENTA + "\nDIALOGUE:")
             dialogue = get_relationship_dialogue(npc_name, relationship_level)
             print(f"{Fore.YELLOW}{npc_name}: {Fore.WHITE}\"{dialogue}\"")
-        
+
         # Display missions with better organization
         if "missions" in npc_data and npc_data["missions"]:
             print(Fore.MAGENTA + "\nMISSIONS:")
-            
+
             # Group missions by status for better organization
             completed_missions = []
             active_missions = []
             available_missions = []
-            
+
             for mission_id in npc_data["missions"]:
                 if mission_id in MISSIONS:
                     mission = MISSIONS[mission_id]
-                    
+
                     # Sort by status
                     if mission_id in player["completed_missions"]:
                         completed_missions.append((mission_id, mission))
@@ -2306,38 +2297,38 @@ def interact_with_npc(npc_name):
                         active_missions.append((mission_id, mission))
                     else:
                         available_missions.append((mission_id, mission))
-            
+
             # Display available missions first (most actionable)
             for mission_id, mission in available_missions:
                 print(f"{Fore.RED}❌ {mission['name']} (Available)")
                 print(f"   {Fore.WHITE}{mission.get('description', 'No description available.')}")
                 print(f"   {Fore.CYAN}[Press 'S' when selecting options to start this mission]")
-            
+
             # Display active missions next
             for mission_id, mission in active_missions:
                 progress = player["missions"][mission_id]
                 print(f"{Fore.YELLOW}👉 {mission['name']} ({progress}/{mission['target']})")
                 print(f"   {Fore.WHITE}{mission.get('description', 'No description available.')}")
-            
+
             # Display completed missions last
             if completed_missions:
                 print(f"\n{Fore.GREEN}Completed Missions:")
                 for mission_id, mission in completed_missions:
                     print(f"{Fore.GREEN}✅ {mission['name']}")
-        
+
         # Display quests if NPC has them
         if "quests" in npc_data and npc_data["quests"]:
             print(Fore.MAGENTA + "\nQUESTS:")
-            
+
             # Group quests by status for better organization
             completed_quests = []
             active_quests = []
             available_quests = []
-            
+
             for quest_id in npc_data["quests"]:
                 if quest_id in QUESTS:
                     quest = QUESTS[quest_id]
-                    
+
                     # Sort by status
                     if quest_id in player.get("completed_quests", []):
                         completed_quests.append((quest_id, quest))
@@ -2345,24 +2336,24 @@ def interact_with_npc(npc_name):
                         active_quests.append((quest_id, quest))
                     else:
                         available_quests.append((quest_id, quest))
-            
+
             # Display available quests first (most actionable)
             for quest_id, quest in available_quests:
                 print(f"{Fore.RED}❌ {quest['name']} (Available)")
                 print(f"   {Fore.WHITE}{quest['description']}")
                 print(f"   {Fore.CYAN}[Press 'Q' when selecting options to start this quest]")
-            
+
             # Display active quests next
             for quest_id, quest in active_quests:
                 print(f"{Fore.YELLOW}👉 {quest['name']} (In Progress)")
                 print(f"   {Fore.WHITE}{quest['description']}")
-            
+
             # Display completed quests last
             if completed_quests:
                 print(f"\n{Fore.GREEN}Completed Quests:")
                 for quest_id, quest in completed_quests:
                     print(f"{Fore.GREEN}✅ {quest['name']}")
-        
+
         # Display trades with enhanced details
         if "trades" in npc_data and npc_data["trades"]:
             print(Fore.MAGENTA + "\nTRADES:")
@@ -2370,18 +2361,18 @@ def interact_with_npc(npc_name):
                 # Check if player has the required item
                 has_item = trade['give'] in player["inventory"]
                 item_status = f"{Fore.GREEN}[In Inventory]" if has_item else f"{Fore.RED}[Not Available]"
-                
+
                 if trade.get("tickets", False):
                     print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']} tickets {item_status}")
                 else:
                     print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']} {item_status}")
-        
+
         # Display special bonus with more details
         if "special_bonus" in npc_data:
             bonus = npc_data["special_bonus"]
             bonus_type = bonus["type"].replace("_", " ").title()
             print(Fore.MAGENTA + "\nSPECIAL BONUS:")
-            
+
             # Show different text based on relationship level
             if relationship_level >= 3:  # Friend level or higher
                 if isinstance(bonus['value'], (int, float)):
@@ -2393,48 +2384,48 @@ def interact_with_npc(npc_name):
                     print(f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}x{bonus['value']} {Fore.YELLOW}(Increase friendship to maximize!)")
                 else:
                     print(f"{Fore.CYAN}{bonus_type}: {Fore.WHITE}{bonus['value']} {Fore.YELLOW}(Increase friendship to maximize!)")
-        
+
         # Interaction options
         print(Fore.MAGENTA + "\nINTERACTION OPTIONS:")
-        
+
         options = []
-        
+
         # Add mission starting options if available
         for i, mission_id in enumerate(npc_data.get("missions", [])):
             if mission_id in MISSIONS and mission_id not in player["completed_missions"] and mission_id not in player["missions"]:
                 options.append(("S", f"Start mission: {MISSIONS[mission_id]['name']}"))
                 break  # Only show one "Start Mission" option
-        
+
         # Add quest starting options if available
         for i, quest_id in enumerate(npc_data.get("quests", [])):
             if quest_id in QUESTS and quest_id not in player.get("completed_quests", []) and quest_id not in player.get("active_quests", []):
                 options.append(("Q", f"Start quest: {QUESTS[quest_id]['name']}"))
                 break  # Only show one "Start Quest" option
-        
+
         # Add trading options if available
         if "trades" in npc_data and npc_data["trades"]:
             options.append(("T", "Trade with " + npc_name.split()[0]))
-        
+
         # Add gift giving option (enhances relationship)
         options.append(("G", "Give a gift"))
-        
+
         # Always show chat option
         options.append(("C", "Chat more with " + npc_name.split()[0]))
-        
+
         # Add special option based on relationship level
         if relationship_level >= 3:
             options.append(("P", f"Personal request (Friend's Privilege - Level {relationship_level})"))
-        
+
         # Always show exit option
         options.append(("X", "Say goodbye"))
-        
+
         # Display the available options
         for code, description in options:
             print(f"{Fore.YELLOW}{code}. {Fore.WHITE}{description}")
-        
+
         # Get player choice
         action = input(f"\n{Fore.YELLOW}What would you like to do? {Fore.WHITE}").upper()
-        
+
         if action == "X":
             # Say goodbye with relationship-appropriate message
             farewell_messages = [
@@ -2447,39 +2438,39 @@ def interact_with_npc(npc_name):
             print(f"\n{Fore.YELLOW}{farewell_messages[min(relationship_level-1, len(farewell_messages)-1)]}")
             time.sleep(1.5)
             return
-            
+
         elif action == "C":
             # Chat more - actually increases relationship slightly
             relationship_progress(npc_name, "chat", 1)
             continue
-            
+
         elif action == "S":
             # Start mission
             for mission_id in npc_data.get("missions", []):
                 if mission_id in MISSIONS and mission_id not in player["completed_missions"] and mission_id not in player["missions"]:
                     start_mission(mission_id)
                     break
-            
+
         elif action == "Q":
             # Start quest
             for quest_id in npc_data.get("quests", []):
                 if quest_id in QUESTS and quest_id not in player.get("completed_quests", []) and quest_id not in player.get("active_quests", []):
                     start_quest(quest_id, npc_name)
                     break
-            
+
         elif action == "T":
             # Trade with NPC - also slightly increases relationship
             trade_with_npc(npc_name)
             relationship_progress(npc_name, "trade", 2)
-            
+
         elif action == "G":
             # Give a gift to improve relationship
             give_gift_to_npc(npc_name)
-            
+
         elif action == "P" and relationship_level >= 3:
             # Special personal request option - only for friends
             handle_personal_request(npc_name, relationship_level)
-            
+
         else:
             try:
                 # Check if player selected a trade by number
@@ -2499,41 +2490,41 @@ def give_gift_to_npc(npc_name):
     """Give a gift to an NPC to improve relationship"""
     clear()
     print(Fore.CYAN + f"=== GIVE A GIFT TO {npc_name.upper()} ===")
-    
+
     # Get a list of giftable items in inventory
     # Excluding equipped items, active pets, etc.
     giftable_items = [item for item in player["inventory"] 
                      if item not in player["equipped_items"] 
                      and "Pass" not in item 
                      and item != player["active_pet"]]
-    
+
     if not giftable_items:
         print(Fore.RED + "You don't have any items to give as gifts!")
         time.sleep(1.5)
         return
-        
+
     # Display inventory
     print(Fore.MAGENTA + "\nYOUR INVENTORY:")
     for i, item in enumerate(giftable_items, 1):
         print(f"{i}. {item}")
-    
+
     print("\n0. Cancel")
-    
+
     choice = input("\nSelect an item to give (0 to cancel): ")
     if choice == "0":
         return
-        
+
     try:
         gift_idx = int(choice) - 1
         if 0 <= gift_idx < len(giftable_items):
             gift = giftable_items[gift_idx]
-            
+
             # Remove item from inventory
             player["inventory"].remove(gift)
-            
+
             # Calculate how much the NPC likes this gift
             gift_value = calculate_gift_value(npc_name, gift)
-            
+
             # Display NPC reaction based on gift value
             if gift_value > 20:  # Loves it
                 print(f"\n{Fore.GREEN}{npc_name} is thrilled with your gift!")
@@ -2551,26 +2542,26 @@ def give_gift_to_npc(npc_name):
                 print(f"\n{Fore.YELLOW}{npc_name} seems a bit unsure about your gift.")
                 print(f"{Fore.YELLOW}{npc_name}: \"Oh, um, thanks I guess.\"")
                 relationship_progress(npc_name, "poor_gift", gift_value)
-                
+
             # Track gift giving for achievements
             player["npc_relationships"][npc_name]["gifts_given"] += 1
-            
+
             # Check for gift achievements
             total_gifts = sum(rel["gifts_given"] for rel in player["npc_relationships"].values())
             if total_gifts >= 10 and "Generous Soul" not in player.get("achievements", []):
                 award_achievement("Generous Soul")
                 player["tickets"] += 20
                 print(Fore.GREEN + "\nAchievement unlocked: Generous Soul! +20 tickets!")
-                
+
             # Bonus tickets for high relationship levels giving gifts
             relationship_level = player["npc_relationships"][npc_name]["level"]
             if relationship_level >= 4 and gift_value > 15:
                 bonus_tickets = relationship_level * 2
                 player["tickets"] += bonus_tickets
                 print(Fore.GREEN + f"\nFriendship bonus! +{bonus_tickets} tickets!")
-                
+
             input("\nPress Enter to continue...")
-            
+
         else:
             raise ValueError
     except ValueError:
@@ -2580,7 +2571,7 @@ def give_gift_to_npc(npc_name):
 def calculate_gift_value(npc_name, gift):
     """Calculate how much an NPC values a particular gift"""
     base_value = 5  # Default base value
-    
+
     # Different NPCs have different preferences
     if "Chef" in npc_name and ("Recipe" in gift or "Food" in gift or "Cake" in gift):
         base_value = 25  # Chef loves food items!
@@ -2600,44 +2591,44 @@ def calculate_gift_value(npc_name, gift):
         base_value = 22  # Fashion designer loves stylish items
     elif "Loyalty" in npc_name and ("Loyalty" in gift or "Season" in gift or "Pass" in gift):
         base_value = 20  # Loyalty manager loves loyal customer items
-    
+
     # Random variation
     variation = random.randint(-3, 3)
-    
+
     return max(1, base_value + variation)  # Minimum value of 1
 
 def check_relationship_achievements():
     """Check for achievements based on NPC relationships"""
     if "npc_relationships" not in player:
         return
-        
+
     # Total number of NPCs with relationships
     total_relationships = len(player["npc_relationships"])
-    
+
     # Count NPCs at each relationship level
     level_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     for npc, data in player["npc_relationships"].items():
         level = data.get("level", 1)
         level_counts[level] += 1
-    
+
     # People Person - Have relationships with at least 5 NPCs
     if total_relationships >= 5 and "People Person" not in player.get("achievements", []):
         award_achievement("People Person")
         player["tickets"] += 25
         print(f"{Fore.GREEN}Achievement unlocked: People Person! +25 tickets!")
-    
+
     # Social Butterfly - Have relationships with at least 10 NPCs
     if total_relationships >= 10 and "Social Butterfly" not in player.get("achievements", []):
         award_achievement("Social Butterfly")
         player["tickets"] += 50
         print(f"{Fore.GREEN}Achievement unlocked: Social Butterfly! +50 tickets!")
-    
+
     # Acquaintance Network - Have at least 5 NPCs at level 2 or higher
     if sum(level_counts[i] for i in range(2, 6)) >= 5 and "Acquaintance Network" not in player.get("achievements", []):
         award_achievement("Acquaintance Network")
         player["tickets"] += 30
         print(f"{Fore.GREEN}Achievement unlocked: Acquaintance Network! +30 tickets!")
-    
+
     # Friendship Circle - Have at least 3 NPCs at level 3 or higher
     if sum(level_counts[i] for i in range(3, 6)) >= 3 and "Friendship Circle" not in player.get("achievements", []):
         award_achievement("Friendship Circle")
@@ -2645,7 +2636,7 @@ def check_relationship_achievements():
         player["inventory"].append("Friendship Bracelet 💖")
         print(f"{Fore.GREEN}Achievement unlocked: Friendship Circle! +40 tickets!")
         print(f"{Fore.GREEN}You received: Friendship Bracelet 💖!")
-    
+
     # Inner Circle - Have at least 3 NPCs at level 4 or higher
     if sum(level_counts[i] for i in range(4, 6)) >= 3 and "Inner Circle" not in player.get("achievements", []):
         award_achievement("Inner Circle")
@@ -2653,13 +2644,13 @@ def check_relationship_achievements():
         player["inventory"].append("Inner Circle VIP Pass 💎")
         print(f"{Fore.GREEN}Achievement unlocked: Inner Circle! +75 tickets!")
         print(f"{Fore.GREEN}You received: Inner Circle VIP Pass 💎!")
-    
+
     # Best Friends Forever - Have at least 1 NPC at level 5
     if level_counts[5] >= 1 and "Best Friend Forever" not in player.get("achievements", []):
         award_achievement("Best Friend Forever")
         player["tickets"] += 50
         print(f"{Fore.GREEN}Achievement unlocked: Best Friend Forever! +50 tickets!")
-    
+
     # Soul Mate - Have at least 3 NPCs at level 5
     if level_counts[5] >= 3 and "Soul Mate" not in player.get("achievements", []):
         award_achievement("Soul Mate")
@@ -2667,27 +2658,27 @@ def check_relationship_achievements():
         player["inventory"].append("Soul Mate Medallion ✨")
         print(f"{Fore.GREEN}Achievement unlocked: Soul Mate! +100 tickets!")
         print(f"{Fore.GREEN}You received: Soul Mate Medallion ✨!")
-    
+
     # Gift Giver - Track total gifts given
     total_gifts = sum(data.get("gifts_given", 0) for _, data in player["npc_relationships"].items())
-    
+
     if total_gifts >= 5 and "Gift Giver" not in player.get("achievements", []):
         award_achievement("Gift Giver")
         player["tickets"] += 20
         print(f"{Fore.GREEN}Achievement unlocked: Gift Giver! +20 tickets!")
-    
+
     if total_gifts >= 15 and "Generous Soul" not in player.get("achievements", []):
         award_achievement("Generous Soul")
         player["tickets"] += 45
         print(f"{Fore.GREEN}Achievement unlocked: Generous Soul! +45 tickets!")
-    
+
     if total_gifts >= 30 and "Philanthropy Award" not in player.get("achievements", []):
         award_achievement("Philanthropy Award")
         player["tickets"] += 100
         player["inventory"].append("Golden Heart Trophy 🏆")
         print(f"{Fore.GREEN}Achievement unlocked: Philanthropy Award! +100 tickets!")
         print(f"{Fore.GREEN}You received: Golden Heart Trophy 🏆!")
-    
+
     # Add loyalty points based on relationship depth
     friendship_loyalty = level_counts[3] * 2 + level_counts[4] * 3 + level_counts[5] * 5
     if friendship_loyalty > 0:
@@ -2697,7 +2688,7 @@ def relationship_progress(npc_name, action_type, points):
     """Update relationship progress with an NPC"""
     if "npc_relationships" not in player:
         player["npc_relationships"] = {}
-    
+
     if npc_name not in player["npc_relationships"]:
         player["npc_relationships"][npc_name] = {
             "level": 1,
@@ -2707,14 +2698,14 @@ def relationship_progress(npc_name, action_type, points):
             "points": 0,
             "last_special_event": None
         }
-    
+
     # Add points based on action type
     player["npc_relationships"][npc_name]["points"] = player["npc_relationships"][npc_name].get("points", 0) + points
-    
+
     # Track interactions
     if action_type == "gift":
         player["npc_relationships"][npc_name]["gifts_given"] += 1
-    
+
     # Check if we should level up the relationship
     current_level = player["npc_relationships"][npc_name]["level"]
     points_needed = {
@@ -2723,12 +2714,12 @@ def relationship_progress(npc_name, action_type, points):
         3: 100,  # Points needed to reach level 4
         4: 150   # Points needed to reach level 5
     }
-    
+
     if current_level < 5 and player["npc_relationships"][npc_name]["points"] >= points_needed.get(current_level, 9999):
         # Level up!
         player["npc_relationships"][npc_name]["level"] += 1
         new_level = player["npc_relationships"][npc_name]["level"]
-        
+
         # Announce the relationship improvement
         relationship_titles = {
             2: "Acquaintance",
@@ -2736,10 +2727,10 @@ def relationship_progress(npc_name, action_type, points):
             4: "Good Friend",
             5: "Best Friend"
         }
-        
+
         print(f"\n{Fore.GREEN}✨ Your relationship with {npc_name} has improved! ✨")
         print(f"{Fore.YELLOW}You are now {relationship_titles.get(new_level, 'closer')}s!")
-        
+
         # Rewards for relationship levels
         if new_level == 3:  # Friend
             player["tickets"] += 25
@@ -2747,7 +2738,7 @@ def relationship_progress(npc_name, action_type, points):
         elif new_level == 4:  # Good Friend
             player["tickets"] += 50
             print(f"{Fore.GREEN}Good Friend Bonus: +50 tickets!")
-            
+
             # Add a special item gift from the NPC
             gift_items = {
                 "Ringmaster Rubio 🎪": "Ringmaster's Honorary Badge 🏅",
@@ -2765,54 +2756,54 @@ def relationship_progress(npc_name, action_type, points):
                 "Chef Bonbon 🍰": "Secret Recipe Card 🍳",
                 "Maestro Melody 🎵": "Golden Music Note Pin 🎵"
             }
-            
+
             if npc_name in gift_items:
                 gift = gift_items[npc_name]
                 player["inventory"].append(gift)
                 print(f"{Fore.YELLOW}{npc_name} gives you a special gift: {gift}!")
-                
+
         elif new_level == 5:  # Best Friend
             player["tickets"] += 100
             print(f"{Fore.GREEN}Best Friend Bonus: +100 tickets!")
-        
+
         # Check for relationship achievements after level change
         check_relationship_achievements()
-        
+
         time.sleep(2)
 
 def check_for_special_event(npc_name):
     """Determine if a special event should trigger for this NPC interaction"""
     if "npc_relationships" not in player:
         return False
-        
+
     if npc_name not in player["npc_relationships"]:
         return False
-    
+
     # Check when the last special event occurred
     last_event = player["npc_relationships"][npc_name].get("last_special_event")
     if last_event is None:
         # First interaction has higher chance of special event
         return random.random() < 0.4
-    
+
     # Calculate time since last event
     time_since_event = time.time() - last_event
-    
+
     # Higher relationship level = more frequent special events
     relationship_level = player["npc_relationships"][npc_name]["level"]
     event_chance = 0.05 + (relationship_level * 0.05)  # 10% at level 1, up to 30% at level 5
-    
+
     # More likely the longer it's been
     if time_since_event > 300:  # More than 5 minutes
         event_chance += 0.15
-    
+
     return random.random() < event_chance
 
 def special_event_dialogue(npc_name):
     """Generate and display a special event with an NPC"""
     relationship_level = player["npc_relationships"][npc_name]["level"]
-    
+
     print(Fore.MAGENTA + "\n✨ SPECIAL EVENT ✨")
-    
+
     # Generate a random special event appropriate to the NPC and relationship level
     events = [
         {
@@ -2875,38 +2866,38 @@ def special_event_dialogue(npc_name):
             "reward": {"tickets": random.randint(20, 50), "loyalty": 10}
         }
     ]
-    
+
     # Filter events by relationship level
     appropriate_events = [event for event in events if event["min_level"] <= relationship_level]
-    
+
     if not appropriate_events:
         # Fallback if no appropriate events (shouldn't happen)
         return
-    
+
     # Select a random event
     event = random.choice(appropriate_events)
-    
+
     # Display the event
     print(f"{Fore.YELLOW}{event['title']}")
     print(f"{Fore.WHITE}{event['description']}")
     print(f"\n{Fore.YELLOW}{npc_name}: {Fore.WHITE}\"{random.choice(event['dialogue'])}\"")
-    
+
     # Process any rewards
     if "reward" in event:
         if "tickets" in event["reward"]:
             tickets = event["reward"]["tickets"]
             player["tickets"] += tickets
             print(f"\n{Fore.GREEN}You received {tickets} tickets!")
-            
+
         if "loyalty" in event["reward"]:
             loyalty = event["reward"]["loyalty"]
             add_loyalty_points(loyalty)
             print(f"{Fore.MAGENTA}+{loyalty} Loyalty Points!")
-            
+
         if event["reward"].get("item", False):
             # Generate a special gift based on the NPC
             npc_type = npc_name.split()[0]
-            
+
             special_gifts = {
                 "Ringmaster": ["Circus History Book 📚", "Ringmaster's Whistle 🔔", "Premium Ticket Roll 🎟️"],
                 "Professor": ["Math Puzzle Cube 🧩", "Golden Compass 🧭", "Knowledge Crystal 💎"],
@@ -2923,38 +2914,38 @@ def special_event_dialogue(npc_name):
                 "Chef": ["Recipe Card 📇", "Gourmet Spice Sample 🧂", "Miniature Whisk 🍳"],
                 "Maestro": ["Musical Note Pin 🎵", "Miniature Instrument 🎸", "Concert Ticket Holder 🎫"]
             }
-            
+
             # Find the matching prefix
             matching_gifts = []
             for prefix, gifts in special_gifts.items():
                 if npc_type.startswith(prefix):
                     matching_gifts = gifts
                     break
-            
+
             if not matching_gifts:
                 # Fallback generic gifts
                 matching_gifts = ["Carnival Souvenir 🎡", "Friendship Bracelet 💝", "Commemorative Token 🪙"]
-            
+
             # Give the gift
             gift = random.choice(matching_gifts)
             player["inventory"].append(gift)
             print(f"\n{Fore.GREEN}{npc_name} gives you: {gift}!")
-    
+
     # Relationship boost from special event
     relationship_progress(npc_name, "special_event", random.randint(5, 10))
-    
+
     input("\nPress Enter to continue...")
 
 def get_relationship_dialogue(npc_name, level):
     """Get appropriate dialogue based on relationship level"""
     npc_data = NPCS[npc_name]
-    
+
     # If NPC has specific relationship dialogues, use those
     if "relationship_dialogue" in npc_data:
         rel_dialogues = npc_data["relationship_dialogue"]
         if level in rel_dialogues:
             return random.choice(rel_dialogues[level])
-    
+
     # Otherwise use the standard dialogue
     return random.choice(npc_data["dialogue"])
 
@@ -2962,7 +2953,7 @@ def handle_personal_request(npc_name, relationship_level):
     """Handle special requests that NPCs make to good friends"""
     clear()
     print(Fore.CYAN + f"=== {npc_name}'S PERSONAL REQUEST ===")
-    
+
     # Different requests based on the NPC
     requests = {
         "Ringmaster Rubio 🎪": {
@@ -3006,43 +2997,43 @@ def handle_personal_request(npc_name, relationship_level):
             "reward": {"tickets": 45, "item": "Training Partner Medal 🏅"}
         }
     }
-    
+
     # Default request if the NPC doesn't have a specific one
     default_request = {
         "title": "Special Favor",
         "description": "I could use some help with a small task. Would you mind helping me out?",
         "reward": {"tickets": 20}
     }
-    
+
     # Get the request for this NPC
     request = requests.get(npc_name, default_request)
-    
+
     print(f"{Fore.YELLOW}{request['title']}")
     print(f"{Fore.WHITE}{request['description']}")
-    
+
     # Display reward
     print(f"\n{Fore.GREEN}Reward:")
     if "tickets" in request["reward"]:
         print(f"{Fore.WHITE}- {request['reward']['tickets']} tickets")
     if "item" in request["reward"]:
         print(f"{Fore.WHITE}- {request['reward']['item']}")
-    
+
     # Player decision
     print(f"\n{Fore.YELLOW}Will you help {npc_name.split()[0]}?")
     print("1. Yes, I'll help!")
     print("2. Sorry, maybe later")
-    
+
     choice = input("\nYour choice (1-2): ")
-    
+
     if choice == "1":
         # Accept the request
         print(f"\n{Fore.GREEN}You agree to help {npc_name}.")
         print(f"{Fore.YELLOW}{npc_name}: \"Thank you so much! This means a lot to me.\"")
-        
+
         # Simulate the activity
         print(f"\n{Fore.CYAN}Time passes as you help with the request...")
         time.sleep(2)
-        
+
         # Random events during the activity
         events = [
             "You encounter an unexpected challenge but manage to overcome it.",
@@ -3052,110 +3043,110 @@ def handle_personal_request(npc_name, relationship_level):
         ]
         print(f"\n{Fore.WHITE}{random.choice(events)}")
         time.sleep(1.5)
-        
+
         # Success!
         print(f"\n{Fore.GREEN}Success! You've completed {npc_name}'s request!")
-        
+
         # Award rewards
         if "tickets" in request["reward"]:
             tickets = request["reward"]["tickets"]
             player["tickets"] += tickets
             print(f"{Fore.GREEN}You received {tickets} tickets!")
-            
+
         if "item" in request["reward"]:
             item = request["reward"]["item"]
             player["inventory"].append(item)
             print(f"{Fore.GREEN}You received: {item}!")
-        
+
         # Significant relationship boost
         relationship_progress(npc_name, "personal_request", 15)
-        
+
         # Loyalty points
         add_loyalty_points(5)
         print(f"{Fore.MAGENTA}+5 Loyalty Points for helping a carnival character!")
-        
+
     else:
         # Decline the request
         print(f"\n{Fore.YELLOW}You politely decline, explaining that you're busy.")
         print(f"{Fore.YELLOW}{npc_name}: \"I understand. Maybe another time!\"")
-        
+
         # Small relationship penalty
         relationship_progress(npc_name, "declined_request", -3)
-    
+
     input("\nPress Enter to continue...")
 
 def start_mission(mission_id):
     """Start a new mission"""
     mission = MISSIONS[mission_id]
     player["missions"][mission_id] = 0
-    
+
     print(Fore.GREEN + f"\nYou've started the mission: {mission['name']}")
     print(Fore.WHITE + mission.get("description", "Complete this mission to earn rewards!"))
     print(Fore.YELLOW + f"Reward: {mission['reward']} tickets upon completion")
-    
+
     input("\nPress Enter to continue...")
 
 def start_quest(quest_id, npc_name=None):
     """Start a new quest with enhanced NPC relationship integration
-    
+
     Args:
         quest_id: The ID of the quest to start
         npc_name: Optional name of the NPC giving the quest
     """
     quest = QUESTS[quest_id]
-    
+
     # Initialize active_quests if it doesn't exist
     if "active_quests" not in player:
         player["active_quests"] = []
-    
+
     # Don't add if already active
     if quest_id not in player["active_quests"]:
         player["active_quests"].append(quest_id)
-        
+
         # Initialize quest progress if needed
         if "quest_progress" not in player:
             player["quest_progress"] = {}
-            
+
         player["quest_progress"][quest_id] = {
             "started_time": time.time(),
             "steps_completed": 0,
             "given_by": npc_name
         }
-        
+
         # Display quest acceptance with nice formatting
         clear()
         print(Fore.CYAN + "╔" + "═" * (len(quest['name']) + 10) + "╗")
         print(Fore.CYAN + "║" + Fore.YELLOW + f"   {quest['name']}   " + Fore.CYAN + "║")
         print(Fore.CYAN + "╚" + "═" * (len(quest['name']) + 10) + "╝\n")
-        
+
         print(f"{Fore.GREEN}New quest started!")
         print(f"{Fore.WHITE}{quest['description']}")
-        
+
         # If we know who gave the quest, show that
         if npc_name:
             print(f"\n{Fore.YELLOW}{npc_name}: {Fore.WHITE}\"I'm counting on you for this. Good luck!\"")
-            
+
             # Increase relationship slightly for accepting the quest
             if "npc_relationships" in player and npc_name in player["npc_relationships"]:
                 relationship_progress(npc_name, "quest_accepted", 2)
-        
+
         # Show rewards
         print(f"\n{Fore.MAGENTA}Rewards:")
         print(Fore.YELLOW + f"• {quest['reward']} tickets upon completion")
-        
+
         # If there are additional rewards
         if "bonus_reward" in quest:
             if "type" in quest["bonus_reward"] and "amount" in quest["bonus_reward"]:
                 reward_type = quest["bonus_reward"]["type"].replace("_", " ").title()
                 reward_amount = quest["bonus_reward"]["amount"]
                 print(f"{Fore.YELLOW}• {reward_amount} {reward_type}")
-                
+
         # Add to tracked missions for daily challenges
         update_mission_progress("quests", 1)
-        
+
         # Add loyalty points for accepting a quest
         add_loyalty_points(1)
-        
+
         input(f"\n{Fore.CYAN}Press Enter to continue...")
     else:
         print(f"{Fore.YELLOW}You're already working on this quest.")
@@ -3164,17 +3155,17 @@ def start_quest(quest_id, npc_name=None):
 def trade_with_npc(npc_name):
     """Trade interface with an NPC"""
     npc_data = NPCS[npc_name]
-    
+
     if "trades" not in npc_data or not npc_data["trades"]:
         print(Fore.RED + f"{npc_name} has nothing to trade right now.")
         time.sleep(1.5)
         return
-    
+
     while True:
         clear()
         print(Fore.CYAN + f"=== TRADING WITH {npc_name.upper()} ===")
         print(Fore.YELLOW + f"Your tickets: {player['tickets']}")
-        
+
         # Display player's inventory
         print(Fore.MAGENTA + "\nYOUR INVENTORY:")
         if not player["inventory"]:
@@ -3182,7 +3173,7 @@ def trade_with_npc(npc_name):
         else:
             for i, item in enumerate(player["inventory"], 1):
                 print(f"{i}. {item}")
-        
+
         # Display available trades
         print(Fore.MAGENTA + "\nAVAILABLE TRADES:")
         for i, trade in enumerate(npc_data["trades"], 1):
@@ -3190,13 +3181,13 @@ def trade_with_npc(npc_name):
                 print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']} tickets")
             else:
                 print(f"{Fore.YELLOW}{i}. Give: {trade['give']} → Receive: {trade['receive']}")
-        
+
         print(Fore.YELLOW + "\n0. Back")
-        
+
         choice = input("\nSelect a trade (0 to exit): ")
         if choice == "0":
             return
-            
+
         try:
             trade_idx = int(choice) - 1
             if 0 <= trade_idx < len(npc_data["trades"]):
@@ -3212,13 +3203,13 @@ def process_trade(npc_name, trade):
     give_item = trade["give"]
     receive_item = trade["receive"]
     is_ticket_trade = trade.get("tickets", False)
-    
+
     # Check if player has the required item
     if give_item not in player["inventory"]:
         print(Fore.RED + f"You don't have a {give_item} to trade!")
         time.sleep(1.5)
         return
-    
+
     # Confirm trade
     clear()
     print(Fore.CYAN + f"=== CONFIRM TRADE WITH {npc_name.upper()} ===")
@@ -3227,53 +3218,53 @@ def process_trade(npc_name, trade):
         print(Fore.YELLOW + f"Receive: {receive_item} tickets")
     else:
         print(Fore.YELLOW + f"Receive: {receive_item}")
-    
+
     confirm = input("\nProceed with this trade? (y/n): ").lower()
     if confirm != "y":
         print(Fore.YELLOW + "Trade cancelled.")
         time.sleep(1)
         return
-    
+
     # Process the trade
     player["inventory"].remove(give_item)
-    
+
     if is_ticket_trade:
         player["tickets"] += receive_item
         print(Fore.GREEN + f"\nTrade complete! You received {receive_item} tickets.")
     else:
         player["inventory"].append(receive_item)
         print(Fore.GREEN + f"\nTrade complete! You received {receive_item}.")
-    
+
     time.sleep(1.5)
 
 def entertainment_plaza():
     """Main hub for accessing entertainment options like movies, music shows, and theatre"""
     # Track visits for achievement tracking
     player["entertainment_plaza_visits"] = player.get("entertainment_plaza_visits", 0) + 1
-    
+
     clear()
     print(Fore.MAGENTA + "🎭 ENTERTAINMENT PLAZA 🎭")
     print(Fore.CYAN + "Welcome to the Entertainment Plaza! Enjoy movies, music, and theatre shows.")
     print(f"Current Tickets: {player['tickets']}")
-    
+
     # Check for season pass
     has_season_pass = player.get("season_pass", False)
     if has_season_pass:
         print(Fore.GREEN + f"🎫 Season Pass Active! ({player.get('season_pass_days', 30)} days remaining)")
         print("You get 20% discount on all entertainment!")
-    
+
     # Display entertainment stats
     movies_watched = len(player["entertainment_history"]["movies_watched"])
     concerts_attended = len(player["entertainment_history"]["concerts_attended"])
     theatre_shows_seen = len(player["entertainment_history"]["theatre_shows_seen"])
     collectibles = len(player["entertainment_collectibles"])
-    
+
     print(Fore.CYAN + "\nYour Entertainment Stats:")
     print(f"🎬 Movies Watched: {movies_watched}")
     print(f"🎵 Concerts Attended: {concerts_attended}")
     print(f"🎭 Theatre Shows Seen: {theatre_shows_seen}")
     print(f"🎁 Collectibles: {collectibles}")
-    
+
     # Display entertainment options
     print("""
 [1] Cinema 🎬
@@ -3282,9 +3273,9 @@ def entertainment_plaza():
 [4] View Entertainment History
 [0] Return to Main Menu
 """)
-    
+
     choice = input("\nSelect option: ")
-    
+
     if choice == "1":
         cinema_menu()
     elif choice == "2":
@@ -3305,40 +3296,40 @@ def cinema_menu():
     clear()
     print(Fore.YELLOW + "🎬 CINEMA 🎬")
     print("Enjoy the latest blockbuster movies!")
-    
+
     # Check for season pass discount
     discount = 0.0
     if player.get("season_pass", False):
         discount = 0.2
-    
+
     # Additional discount from loyalty program
     loyalty_discount = get_loyalty_discount()
     total_discount = min(0.5, discount + loyalty_discount)  # Cap at 50% discount
-    
+
     if total_discount > 0:
         print(Fore.GREEN + f"Your current discount: {int(total_discount * 100)}%")
-    
+
     print("\nAvailable Movies:")
     for i, movie in enumerate(MOVIES, 1):
         # Calculate discounted price
         original_price = movie["price"]
         final_price = max(1, int(original_price * (1 - total_discount)))
-        
+
         # Format display with special effects indicator
         special_effect = f" [{movie['special_effect']}]" if movie["special_effect"] else ""
         print(f"[{i}] {movie['title']} - {movie['genre']} ({movie['duration']}){special_effect}")
         print(f"    Price: {final_price} tickets (Original: {original_price})")
-        
+
         # Show if already watched
         if movie["title"] in player["entertainment_history"]["movies_watched"]:
             print(Fore.CYAN + "    ✓ Watched")
-    
+
     print("[0] Return to Entertainment Plaza")
-    
+
     choice = input("\nSelect movie to watch (or 0 to return): ")
     if choice == "0":
         return entertainment_plaza()
-    
+
     try:
         movie_idx = int(choice) - 1
         if 0 <= movie_idx < len(MOVIES):
@@ -3355,7 +3346,7 @@ def cinema_menu():
 def watch_movie(movie_idx):
     """Play a movie and give rewards"""
     movie = MOVIES[movie_idx]
-    
+
     # Apply discounts
     discount = 0.0
     if player.get("season_pass", False):
@@ -3363,39 +3354,39 @@ def watch_movie(movie_idx):
     loyalty_discount = get_loyalty_discount()
     total_discount = min(0.5, discount + loyalty_discount)
     price = max(1, int(movie["price"] * (1 - total_discount)))
-    
+
     # Check if player can afford the movie
     if player["tickets"] < price:
         print(Fore.RED + f"You don't have enough tickets! Need {price} tickets.")
         time.sleep(2)
         return cinema_menu()
-    
+
     clear()
     print(Fore.YELLOW + f"Now Playing: {movie['title']}")
     print(f"Genre: {movie['genre']} | Duration: {movie['duration']}")
     print(f"Ticket Price: {price} tickets")
-    
+
     # Confirm purchase
     confirm = input("\nProceed with purchase? (y/n): ").lower()
     if confirm != "y":
         return cinema_menu()
-    
+
     # Process payment and watch movie
     player["tickets"] -= price
-    
+
     # Track spending for achievements
     player["entertainment_spent"] = player.get("entertainment_spent", 0) + price
-    
+
     # Movie simulation
     clear()
     print(Fore.YELLOW + f"🎬 {movie['title']} 🎬")
     print("\nThe movie is starting...")
     time.sleep(2)
-    
+
     # Special effects if any
     if movie["special_effect"]:
         print(Fore.CYAN + f"\n✨ Special {movie['special_effect']} Effects Activated! ✨")
-    
+
     # Simulated movie scenes
     scenes = [
         "Opening scene introduces the main characters...",
@@ -3405,23 +3396,23 @@ def watch_movie(movie_idx):
         "The climax approaches with increasing tension...",
         "Final scene resolves the story with a satisfying conclusion..."
     ]
-    
+
     for scene in scenes:
         time.sleep(1.5)
         print(f"\n{scene}")
-    
+
     time.sleep(1)
     print(Fore.GREEN + "\n🎬 The End! 🎬")
     print("You enjoyed the movie!")
-    
+
     # Track this movie in history if not already watched
     if movie["title"] not in player["entertainment_history"]["movies_watched"]:
         player["entertainment_history"]["movies_watched"].append(movie["title"])
-        
+
         # Award loyalty points for new movie
         add_loyalty_points(2)
         print(Fore.MAGENTA + "+2 Loyalty Points for watching a new movie!")
-    
+
     # Give reward
     reward = movie["reward"]
     if reward not in player["entertainment_collectibles"]:
@@ -3433,10 +3424,10 @@ def watch_movie(movie_idx):
         player["tickets"] += bonus_tickets
         print(Fore.GREEN + f"\nYou already have the {reward}.")
         print(f"Instead you received {bonus_tickets} bonus tickets! 🎟️")
-    
+
     # Check for achievements
     check_entertainment_achievements()
-    
+
     input("\nPress Enter to continue...")
     return cinema_menu()
 
@@ -3445,40 +3436,40 @@ def concert_hall_menu():
     clear()
     print(Fore.YELLOW + "🎵 CONCERT HALL 🎵")
     print("Experience amazing live music performances!")
-    
+
     # Check for season pass discount
     discount = 0.0
     if player.get("season_pass", False):
         discount = 0.2
-    
+
     # Additional discount from loyalty program
     loyalty_discount = get_loyalty_discount()
     total_discount = min(0.5, discount + loyalty_discount)  # Cap at 50% discount
-    
+
     if total_discount > 0:
         print(Fore.GREEN + f"Your current discount: {int(total_discount * 100)}%")
-    
+
     print("\nTonight's Performances:")
     for i, concert in enumerate(MUSIC_SHOWS, 1):
         # Calculate discounted price
         original_price = concert["price"]
         final_price = max(1, int(original_price * (1 - total_discount)))
-        
+
         # Format display with special effects indicator
         special_effect = f" [{concert['special_effect']}]" if concert["special_effect"] else ""
         print(f"[{i}] {concert['title']} - {concert['genre']} ({concert['duration']}){special_effect}")
         print(f"    Price: {final_price} tickets (Original: {original_price})")
-        
+
         # Show if already attended
         if concert["title"] in player["entertainment_history"]["concerts_attended"]:
             print(Fore.CYAN + "    ✓ Attended")
-    
+
     print("[0] Return to Entertainment Plaza")
-    
+
     choice = input("\nSelect concert to attend (or 0 to return): ")
     if choice == "0":
         return entertainment_plaza()
-    
+
     try:
         concert_idx = int(choice) - 1
         if 0 <= concert_idx < len(MUSIC_SHOWS):
@@ -3495,7 +3486,7 @@ def concert_hall_menu():
 def attend_concert(concert_idx):
     """Attend a concert and give rewards"""
     concert = MUSIC_SHOWS[concert_idx]
-    
+
     # Apply discounts
     discount = 0.0
     if player.get("season_pass", False):
@@ -3503,39 +3494,39 @@ def attend_concert(concert_idx):
     loyalty_discount = get_loyalty_discount()
     total_discount = min(0.5, discount + loyalty_discount)
     price = max(1, int(concert["price"] * (1 - total_discount)))
-    
+
     # Check if player can afford the concert
     if player["tickets"] < price:
         print(Fore.RED + f"You don't have enough tickets! Need {price} tickets.")
         time.sleep(2)
         return concert_hall_menu()
-    
+
     clear()
     print(Fore.YELLOW + f"Tonight's Performance: {concert['title']}")
     print(f"Genre: {concert['genre']} | Duration: {concert['duration']}")
     print(f"Ticket Price: {price} tickets")
-    
+
     # Confirm purchase
     confirm = input("\nProceed with purchase? (y/n): ").lower()
     if confirm != "y":
         return concert_hall_menu()
-    
+
     # Process payment and attend concert
     player["tickets"] -= price
-    
+
     # Track spending for achievements
     player["entertainment_spent"] = player.get("entertainment_spent", 0) + price
-    
+
     # Concert simulation
     clear()
     print(Fore.YELLOW + f"🎵 {concert['title']} 🎵")
     print("\nThe crowd is getting excited as the show is about to begin...")
     time.sleep(2)
-    
+
     # Special effects if any
     if concert["special_effect"]:
         print(Fore.CYAN + f"\n✨ Amazing {concert['special_effect']} light up the stage! ✨")
-    
+
     # Simulated concert experience
     experiences = [
         "The crowd roars as the performers take the stage...",
@@ -3545,23 +3536,23 @@ def attend_concert(concert_idx):
         "A special guest appears to join in a duet...",
         "The finale brings the house down with the biggest hit..."
     ]
-    
+
     for experience in experiences:
         time.sleep(1.5)
         print(f"\n{experience}")
-    
+
     time.sleep(1)
     print(Fore.GREEN + "\n🎵 What an amazing show! 🎵")
     print("The performance was unforgettable!")
-    
+
     # Track this concert in history if not already attended
     if concert["title"] not in player["entertainment_history"]["concerts_attended"]:
         player["entertainment_history"]["concerts_attended"].append(concert["title"])
-        
+
         # Award loyalty points for new concert
         add_loyalty_points(3)
         print(Fore.MAGENTA + "+3 Loyalty Points for attending a new concert!")
-    
+
     # Give reward
     reward = concert["reward"]
     if reward not in player["entertainment_collectibles"]:
@@ -3573,10 +3564,10 @@ def attend_concert(concert_idx):
         player["tickets"] += bonus_tickets
         print(Fore.GREEN + f"\nYou already have the {reward}.")
         print(f"Instead you received {bonus_tickets} bonus tickets! 🎟️")
-    
+
     # Check for achievements
     check_entertainment_achievements()
-    
+
     input("\nPress Enter to continue...")
     return concert_hall_menu()
 
@@ -3585,40 +3576,40 @@ def theatre_menu():
     clear()
     print(Fore.YELLOW + "🎭 THEATRE 🎭")
     print("Immerse yourself in the magic of live theatre!")
-    
+
     # Check for season pass discount
     discount = 0.0
     if player.get("season_pass", False):
         discount = 0.2
-    
+
     # Additional discount from loyalty program
     loyalty_discount = get_loyalty_discount()
     total_discount = min(0.5, discount + loyalty_discount)  # Cap at 50% discount
-    
+
     if total_discount > 0:
         print(Fore.GREEN + f"Your current discount: {int(total_discount * 100)}%")
-    
+
     print("\nCurrent Productions:")
     for i, show in enumerate(THEATRE_SHOWS, 1):
         # Calculate discounted price
         original_price = show["price"]
         final_price = max(1, int(original_price * (1 - total_discount)))
-        
+
         # Format display with special effects indicator
         special_effect = f" [{show['special_effect']}]" if show["special_effect"] else ""
         print(f"[{i}] {show['title']} - {show['genre']} ({show['duration']}){special_effect}")
         print(f"    Price: {final_price} tickets (Original: {original_price})")
-        
+
         # Show if already seen
         if show["title"] in player["entertainment_history"]["theatre_shows_seen"]:
             print(Fore.CYAN + "    ✓ Seen")
-    
+
     print("[0] Return to Entertainment Plaza")
-    
+
     choice = input("\nSelect show to see (or 0 to return): ")
     if choice == "0":
         return entertainment_plaza()
-    
+
     try:
         show_idx = int(choice) - 1
         if 0 <= show_idx < len(THEATRE_SHOWS):
@@ -3635,7 +3626,7 @@ def theatre_menu():
 def see_theatre_show(show_idx):
     """See a theatre show and give rewards"""
     show = THEATRE_SHOWS[show_idx]
-    
+
     # Apply discounts
     discount = 0.0
     if player.get("season_pass", False):
@@ -3643,39 +3634,39 @@ def see_theatre_show(show_idx):
     loyalty_discount = get_loyalty_discount()
     total_discount = min(0.5, discount + loyalty_discount)
     price = max(1, int(show["price"] * (1 - total_discount)))
-    
+
     # Check if player can afford the show
     if player["tickets"] < price:
         print(Fore.RED + f"You don't have enough tickets! Need {price} tickets.")
         time.sleep(2)
         return theatre_menu()
-    
+
     clear()
     print(Fore.YELLOW + f"Now Showing: {show['title']}")
     print(f"Genre: {show['genre']} | Duration: {show['duration']}")
     print(f"Ticket Price: {price} tickets")
-    
+
     # Confirm purchase
     confirm = input("\nProceed with purchase? (y/n): ").lower()
     if confirm != "y":
         return theatre_menu()
-    
+
     # Process payment and see show
     player["tickets"] -= price
-    
+
     # Track spending for achievements
     player["entertainment_spent"] = player.get("entertainment_spent", 0) + price
-    
+
     # Show simulation
     clear()
     print(Fore.YELLOW + f"🎭 {show['title']} 🎭")
     print("\nThe curtains rise as the production begins...")
     time.sleep(2)
-    
+
     # Special effects if any
     if show["special_effect"]:
         print(Fore.CYAN + f"\n✨ Stunning {show['special_effect']} enhance the performance! ✨")
-    
+
     # Simulated theatre experience
     acts = [
         "Act I begins, setting the scene with beautiful scenery...",
@@ -3685,23 +3676,23 @@ def see_theatre_show(show_idx):
         "The tension rises as the story reaches its climax...",
         "The final act resolves the story with emotional impact..."
     ]
-    
+
     for act in acts:
         time.sleep(1.5)
         print(f"\n{act}")
-    
+
     time.sleep(1)
     print(Fore.GREEN + "\n🎭 Bravo! 🎭")
     print("The audience erupts in applause for the magnificent performance!")
-    
+
     # Track this show in history if not already seen
     if show["title"] not in player["entertainment_history"]["theatre_shows_seen"]:
         player["entertainment_history"]["theatre_shows_seen"].append(show["title"])
-        
+
         # Award loyalty points for new theatre show
         add_loyalty_points(4)
         print(Fore.MAGENTA + "+4 Loyalty Points for seeing a new theatre production!")
-    
+
     # Give reward
     reward = show["reward"]
     if reward not in player["entertainment_collectibles"]:
@@ -3713,10 +3704,10 @@ def see_theatre_show(show_idx):
         player["tickets"] += bonus_tickets
         print(Fore.GREEN + f"\nYou already have the {reward}.")
         print(f"Instead you received {bonus_tickets} bonus tickets! 🎟️")
-    
+
     # Check for achievements
     check_entertainment_achievements()
-    
+
     input("\nPress Enter to continue...")
     return theatre_menu()
 
@@ -3724,7 +3715,7 @@ def view_entertainment_history():
     """Display player's entertainment history and collectibles"""
     clear()
     print(Fore.YELLOW + "📜 ENTERTAINMENT HISTORY 📜")
-    
+
     # Movies watched
     print(Fore.CYAN + "\nMovies Watched:")
     if player["entertainment_history"]["movies_watched"]:
@@ -3732,7 +3723,7 @@ def view_entertainment_history():
             print(f"{i}. {movie}")
     else:
         print("You haven't watched any movies yet.")
-    
+
     # Concerts attended
     print(Fore.CYAN + "\nConcerts Attended:")
     if player["entertainment_history"]["concerts_attended"]:
@@ -3740,7 +3731,7 @@ def view_entertainment_history():
             print(f"{i}. {concert}")
     else:
         print("You haven't attended any concerts yet.")
-    
+
     # Theatre shows seen
     print(Fore.CYAN + "\nTheatre Shows Seen:")
     if player["entertainment_history"]["theatre_shows_seen"]:
@@ -3748,7 +3739,7 @@ def view_entertainment_history():
             print(f"{i}. {show}")
     else:
         print("You haven't seen any theatre shows yet.")
-    
+
     # Entertainment collectibles
     print(Fore.CYAN + "\nEntertainment Collectibles:")
     if player["entertainment_collectibles"]:
@@ -3756,7 +3747,7 @@ def view_entertainment_history():
             print(f"{i}. {item}")
     else:
         print("You haven't collected any entertainment souvenirs yet.")
-    
+
     # Entertainment achievements
     print(Fore.CYAN + "\nEntertainment Achievements:")
     earned_achievements = 0
@@ -3764,18 +3755,18 @@ def view_entertainment_history():
         if achievement in player["achievements"]:
             print(f"✓ {achievement}: {description}")
             earned_achievements += 1
-    
+
     if earned_achievements == 0:
         print("You haven't earned any entertainment achievements yet.")
-    
+
     # Stats
     total_experiences = len(player["entertainment_history"]["movies_watched"]) + \
                         len(player["entertainment_history"]["concerts_attended"]) + \
                         len(player["entertainment_history"]["theatre_shows_seen"])
-    
+
     print(Fore.YELLOW + f"\nTotal Entertainment Experiences: {total_experiences}")
     print(f"Total Collectibles: {len(player['entertainment_collectibles'])}")
-    
+
     input("\nPress Enter to return to Entertainment Plaza...")
     return entertainment_plaza()
 
@@ -3786,7 +3777,7 @@ def check_entertainment_achievements():
     concerts_count = len(player["entertainment_history"]["concerts_attended"])
     theatre_count = len(player["entertainment_history"]["theatre_shows_seen"])
     collectibles_count = len(player["entertainment_collectibles"])
-    
+
     # Track genres and special effects
     sci_fi_movies = 0
     comedy_shows = 0
@@ -3795,7 +3786,7 @@ def check_entertainment_achievements():
     special_effects_count = 0
     total_spent = player.get("entertainment_spent", 0)
     plaza_visits = player.get("entertainment_plaza_visits", 0)
-    
+
     # Count genre-specific viewings
     for movie in player["entertainment_history"]["movies_watched"]:
         for m in MOVIES:
@@ -3807,7 +3798,7 @@ def check_entertainment_achievements():
                 if m["special_effect"]:
                     special_effects_count += 1
                 break
-    
+
     for concert in player["entertainment_history"]["concerts_attended"]:
         for c in MUSIC_SHOWS:
             if c["title"] == concert:
@@ -3815,7 +3806,7 @@ def check_entertainment_achievements():
                 if c["special_effect"]:
                     special_effects_count += 1
                 break
-    
+
     for show in player["entertainment_history"]["theatre_shows_seen"]:
         for s in THEATRE_SHOWS:
             if s["title"] == show:
@@ -3826,75 +3817,75 @@ def check_entertainment_achievements():
                 if s["special_effect"]:
                     special_effects_count += 1
                 break
-    
+
     # Total entertainment experiences
     total_experiences = movies_count + concerts_count + theatre_count
-    
+
     # Basic achievements
-    
+
     # Check for individual type achievements
     if movies_count >= 3 and "Movie Buff" not in player["achievements"]:
         award_achievement("Movie Buff")
-    
+
     if concerts_count >= 3 and "Music Enthusiast" not in player["achievements"]:
         award_achievement("Music Enthusiast")
-    
+
     if theatre_count >= 3 and "Theatre Lover" not in player["achievements"]:
         award_achievement("Theatre Lover")
-    
+
     # Check for connoisseur achievement (at least one of each type)
     if movies_count >= 1 and concerts_count >= 1 and theatre_count >= 1 and "Entertainment Connoisseur" not in player["achievements"]:
         award_achievement("Entertainment Connoisseur")
         # Bonus reward for being a connoisseur
         player["tickets"] += 25
         print(Fore.GREEN + "Entertainment Connoisseur bonus: +25 tickets!")
-    
+
     # Check for VIP attendance (special effects show)
     if special_effects_count > 0 and "VIP Audience" not in player["achievements"]:
         award_achievement("VIP Audience")
-    
+
     # Check for collector achievement
     if collectibles_count >= 5 and "Collector's Edition" not in player["achievements"]:
         award_achievement("Collector's Edition")
         # Bonus reward for being a collector
         add_loyalty_points(15)
         print(Fore.MAGENTA + "Collector's Edition bonus: +15 Loyalty Points!")
-    
+
     # Advanced achievements
-    
+
     # Check for advanced count achievements
     if movies_count >= 10 and "Film Festival Fanatic" not in player["achievements"]:
         award_achievement("Film Festival Fanatic")
         # Bonus reward
         player["tickets"] += 50
         print(Fore.GREEN + "Film Festival Fanatic bonus: +50 tickets!")
-    
+
     if concerts_count >= 10 and "Concert Tour VIP" not in player["achievements"]:
         award_achievement("Concert Tour VIP")
         # Bonus reward
         player["tickets"] += 50
         add_loyalty_points(25)
         print(Fore.GREEN + "Concert Tour VIP bonus: +50 tickets and +25 Loyalty Points!")
-    
+
     if theatre_count >= 10 and "Broadway Legend" not in player["achievements"]:
         award_achievement("Broadway Legend")
         # Bonus reward
         player["tickets"] += 50
         add_loyalty_points(25)
         print(Fore.GREEN + "Broadway Legend bonus: +50 tickets and +25 Loyalty Points!")
-        
+
     if special_effects_count >= 5 and "Special Effects Enthusiast" not in player["achievements"]:
         award_achievement("Special Effects Enthusiast")
         # Bonus reward
         player["tickets"] += 35
         print(Fore.GREEN + "Special Effects Enthusiast bonus: +35 tickets!")
-    
+
     if collectibles_count >= 15 and "Memorabilia Master" not in player["achievements"]:
         award_achievement("Memorabilia Master")
         # Bonus reward
         player["fast_passes"] = player.get("fast_passes", 0) + 3
         print(Fore.GREEN + "Memorabilia Master bonus: +3 Fast Passes!")
-    
+
     # Genre-specific achievements
     if sci_fi_movies >= 3 and "Sci-Fi Aficionado" not in player["achievements"]:
         award_achievement("Sci-Fi Aficionado")
@@ -3902,26 +3893,26 @@ def check_entertainment_achievements():
         if "time crystal replica" not in player["entertainment_collectibles"]:
             player["entertainment_collectibles"].append("time crystal replica")
             print(Fore.GREEN + "Sci-Fi Aficionado bonus: Received a time crystal replica!")
-    
+
     if comedy_shows >= 3 and "Comedy Club Regular" not in player["achievements"]:
         award_achievement("Comedy Club Regular")
         # Bonus reward
         player["tickets"] += 30
         print(Fore.GREEN + "Comedy Club Regular bonus: +30 tickets for a good laugh!")
-    
+
     if len(music_genres) >= 5 and "Music Genre Explorer" not in player["achievements"]:
         award_achievement("Music Genre Explorer")
         # Bonus reward
         if "multi-genre playlist" not in player["entertainment_collectibles"]:
             player["entertainment_collectibles"].append("multi-genre playlist")
             print(Fore.GREEN + "Music Genre Explorer bonus: Received a special multi-genre playlist!")
-    
+
     if drama_shows >= 3 and "Drama Devotee" not in player["achievements"]:
         award_achievement("Drama Devotee")
         # Bonus reward
         player["tickets"] += 40
         print(Fore.GREEN + "Drama Devotee bonus: +40 tickets!")
-    
+
     # Premium achievements
     if total_experiences >= 25 and "Entertainment Mogul" not in player["achievements"]:
         award_achievement("Entertainment Mogul")
@@ -3934,13 +3925,13 @@ def check_entertainment_achievements():
             player["season_pass"] = True
             player["season_pass_days"] = 7
             print(Fore.GREEN + "Entertainment Mogul bonus: Received a 7-day Season Pass!")
-    
+
     if total_spent >= 200 and "Golden Ticket" not in player["achievements"]:
         award_achievement("Golden Ticket")
         # Bonus reward
         player["tickets"] += 100
         print(Fore.GREEN + "Golden Ticket bonus: +100 tickets!")
-    
+
     if plaza_visits >= 10 and player.get("season_pass", False) and "Season Pass Pro" not in player["achievements"]:
         award_achievement("Season Pass Pro")
         # Bonus reward
@@ -3949,16 +3940,16 @@ def check_entertainment_achievements():
 
 def update_mission_progress(mission_type, amount=1):
     for mission_id, mission in MISSIONS.items():
-        if mission["type"] == mission_type and mission_id not in player["completed_missions"]:
+        if mission.get("type") == mission_type and mission_id not in player["completed_missions"]:
             if mission_id not in player["missions"]:
                 player["missions"][mission_id] = 0
             player["missions"][mission_id] += amount
-            if player["missions"][mission_id] >= mission["target"]:
-                print(Fore.GREEN + f"\n🎉 Mission Complete: {mission['name']}")
-                print(f"Reward: {mission['reward']} tickets")
-                player["tickets"] += mission["reward"]
+            if player["missions"][mission_id] >= mission.get("target", 1):
+                print(Fore.GREEN + f"\n🎉 Mission Complete: {mission.get('name', 'Unknown Mission')}")
+                print(f"Reward: {mission.get('reward', 0)} tickets")
+                player["tickets"] += mission.get("reward", 0)
                 player["completed_missions"].append(mission_id)
-                
+
                 # Add loyalty points for completing missions
                 add_loyalty_points(5)
                 check_loyalty_achievements()
@@ -3968,28 +3959,28 @@ def add_loyalty_points(points):
     # Initialize loyalty points if not present
     if "loyalty_points" not in player:
         player["loyalty_points"] = 0
-        
+
     old_tier = get_loyalty_tier()
     player["loyalty_points"] += points
     new_tier = get_loyalty_tier()
-    
+
     print(Fore.MAGENTA + f"✨ +{points} Loyalty Points! (Total: {player['loyalty_points']})")
-    
+
     # Check if player reached a new tier
     if new_tier != old_tier:
         print(Fore.YELLOW + f"🏆 CONGRATULATIONS! You've reached a new loyalty tier: {new_tier}!")
         print(f"Enjoy your new benefits: {LOYALTY_TIERS[new_tier]['discount']*100}% discount and {LOYALTY_TIERS[new_tier]['bonus']} bonus tickets per win!")
         award_achievement(f"Loyalty: Reached {new_tier}")
-    
+
 def get_loyalty_tier():
     """Determine the player's current loyalty tier based on points"""
     points = player.get("loyalty_points", 0)
     current_tier = "Bronze Member"
-    
+
     for tier, details in LOYALTY_TIERS.items():
         if points >= details["points"]:
             current_tier = tier
-    
+
     return current_tier
 
 def get_loyalty_discount():
@@ -4005,7 +3996,7 @@ def get_loyalty_bonus():
 def check_loyalty_achievements():
     """Check for loyalty-related achievements"""
     points = player.get("loyalty_points", 0)
-    
+
     if points >= 50:
         award_achievement("Loyal Fan: Earn 50 loyalty points")
     if points >= 200:
@@ -4018,40 +4009,33 @@ def track_attraction_visit(attraction_name):
     # Initialize visited attractions if needed
     if "visited_attractions" not in player:
         player["visited_attractions"] = {}
-    
+
     # Update visit count for this attraction
     if attraction_name not in player["visited_attractions"]:
         player["visited_attractions"][attraction_name] = 0
-    
+
     player["visited_attractions"][attraction_name] += 1
     visit_count = player["visited_attractions"][attraction_name]
-    
+
     # Award loyalty points
     add_loyalty_points(1)
-    
+
     # Check for repeat visit rewards (every 3 visits)
     if visit_count % 3 == 0:
         print(Fore.GREEN + f"🎁 Loyal Visitor Reward! You've visited {attraction_name} {visit_count} times!")
         print("You've earned 5 bonus tickets and a free play next time!")
         player["tickets"] += 5
-        
+
         # Mark this attraction for a free play next time
         if "free_plays" not in player:
             player["free_plays"] = {}
         player["free_plays"][attraction_name] = True
-        
+
         # Update mission progress for loyalty missions
         update_mission_progress("loyalty_points", visit_count)
 
 
-# Define loyalty tiers with their benefits
-LOYALTY_TIERS = {
-    "Bronze Member": {"points": 0, "discount": 0.0, "bonus": 0},
-    "Silver Member": {"points": 50, "discount": 0.05, "bonus": 1},
-    "Gold Member": {"points": 150, "discount": 0.10, "bonus": 2},
-    "Platinum Member": {"points": 300, "discount": 0.15, "bonus": 3},
-    "Diamond Member": {"points": 500, "discount": 0.20, "bonus": 5}
-}
+# Loyalty tiers already defined above - removing duplicate
 
 # Global variable to track if championship variables are initialized
 championship_vars_initialized = False
@@ -4196,20 +4180,20 @@ ENTERTAINMENT_ACHIEVEMENTS = {
     "Entertainment Connoisseur": "Experience at least one of each entertainment type",
     "VIP Audience": "Attend a premium show with special effects",
     "Collector's Edition": "Collect 5 different entertainment rewards",
-    
+
     # Advanced achievements
     "Film Festival Fanatic": "Watch 10 different movies",
     "Concert Tour VIP": "Attend 10 different music shows",
     "Broadway Legend": "See 10 different theatre performances",
     "Special Effects Enthusiast": "Experience 5 shows with special effects",
     "Memorabilia Master": "Collect 15 different entertainment rewards",
-    
+
     # Genre-specific achievements
     "Sci-Fi Aficionado": "Watch 3 different sci-fi movies",
     "Comedy Club Regular": "Watch 3 different comedy movies or plays",
     "Music Genre Explorer": "Attend concerts from 5 different music genres",
     "Drama Devotee": "See 3 different dramatic theatre performances",
-    
+
     # Premium achievements
     "Entertainment Mogul": "Experience at least 25 different shows total",
     "Golden Ticket": "Spend over 200 tickets on entertainment",
@@ -4291,7 +4275,7 @@ def championship_center():
     print(Fore.CYAN + "Test your skills and win big rewards in our championship events!")
     print(f"Current Tickets: {player['tickets']}")
     print("")
-    
+
     # Display available championships
     print(Fore.MAGENTA + "Available Championships:")
     for i, (name, details) in enumerate(CHAMPIONSHIPS.items(), 1):
@@ -4299,19 +4283,19 @@ def championship_center():
         print(f"    Entry Fee: {details['entry_fee']} tickets | Reward: {details['reward_tickets']} tickets")
         if "special_reward" in details:
             print(f"    Special Reward: {details['special_reward']}")
-        
+
         # Display player's records for this championship
         if name in player.get("championship_records", {}):
             record = player["championship_records"][name]
             print(f"    Your Best: {record['best_score']} points | Wins: {record['wins']} | Participations: {record['participations']}")
         print("")
-    
+
     print("[0] Return to Main Menu")
-    
+
     choice = input("\nSelect championship (or 0 to return): ")
     if choice == "0":
         return
-    
+
     # Convert to index and validate
     try:
         choice_idx = int(choice) - 1
@@ -4319,28 +4303,28 @@ def championship_center():
             print(Fore.RED + "Invalid choice!")
             time.sleep(1)
             return championship_center()
-            
+
         # Get selected championship
         championship_name = list(CHAMPIONSHIPS.keys())[choice_idx]
         championship = CHAMPIONSHIPS[championship_name]
-        
+
         # Check if player can afford entry fee
         if player["tickets"] < championship["entry_fee"]:
             print(Fore.RED + f"You don't have enough tickets! Need {championship['entry_fee']} tickets.")
             time.sleep(2)
             return championship_center()
-            
+
         # Confirm participation
         print(Fore.YELLOW + f"\nYou've selected: {championship_name}")
         print(f"Entry Fee: {championship['entry_fee']} tickets")
         confirm = input("Ready to compete? (y/n): ").lower()
-        
+
         if confirm != "y":
             return championship_center()
-            
+
         # Deduct entry fee
         player["tickets"] -= championship["entry_fee"]
-        
+
         # Start championship based on type
         if championship_name == "Minigame Master":
             score = minigame_championship()
@@ -4353,24 +4337,24 @@ def championship_center():
         else:
             print(Fore.RED + "Championship not implemented yet!")
             score = 0
-            
+
         # Update player records
         if "championship_records" not in player:
             player["championship_records"] = {}
-            
+
         if championship_name not in player["championship_records"]:
             player["championship_records"][championship_name] = {
                 "best_score": 0,
                 "wins": 0,
                 "participations": 0
             }
-            
+
         # Update participation count
         player["championship_records"][championship_name]["participations"] = player["championship_records"][championship_name].get("participations", 0) + 1
-        
+
         # Update mission progress
         update_mission_progress("championship_participation")
-        
+
         # Check if player won (score threshold)
         win_threshold = {
             "Minigame Master": 75,
@@ -4378,45 +4362,45 @@ def championship_center():
             "Theme Park Challenge": 80,
             "Casino Royale": 200
         }
-        
+
         if score >= win_threshold.get(championship_name, 100):
             print(Fore.GREEN + f"\n🏆 CONGRATULATIONS! You've won the {championship_name} Championship!")
             print(f"Reward: {championship['reward_tickets']} tickets + {championship['reward_loyalty']} loyalty points")
-            
+
             if "special_reward" in championship:
                 print(f"Special Reward: {championship['special_reward']}")
                 # Add special reward to inventory
                 special_reward_name = championship['special_reward'].split(" (")[0]  # Extract name without description
                 player["inventory"].append(special_reward_name)
-                
+
             # Award rewards
             player["tickets"] += championship["reward_tickets"]
             add_loyalty_points(championship["reward_loyalty"])
-            
+
             # Update win count
             player["championship_records"][championship_name]["wins"] = player["championship_records"][championship_name].get("wins", 0) + 1
-            
+
             # Update mission progress
             update_mission_progress("championship_win")
-            
+
             # Award achievement
             award_achievement(f"Champion: Won {championship_name}")
         else:
             print(Fore.YELLOW + f"\nYou scored {score} points in the {championship_name} Championship.")
             print("Better luck next time! Practice makes perfect.")
-            
+
             # Consolation prize - 10% of the reward
             consolation = int(championship["reward_tickets"] * 0.1)
             print(f"Consolation Prize: {consolation} tickets")
             player["tickets"] += consolation
-            
+
         # Update best score if better
         if score > player["championship_records"][championship_name].get("best_score", 0):
             player["championship_records"][championship_name]["best_score"] = score
             print(Fore.CYAN + "New personal best score!")
-        
+
         input("\nPress Enter to continue...")
-        
+
     except ValueError:
         print(Fore.RED + "Invalid choice!")
         time.sleep(1)
@@ -4427,41 +4411,41 @@ def minigame_championship():
     clear()
     print(Fore.YELLOW + "🎮 MINIGAME MASTER CHAMPIONSHIP 🎮")
     print("Compete in 5 minigames for the highest total score!")
-    
+
     # Each game's max score is 20 points, for a total of 100 possible points
     total_score = 0
     championship_minigames = ["Guess the Number", "Quick Math", "Word Shuffle", "Reaction Test", "Dart Throw"]
-    
+
     # Display the games to be played
     print("\nYou'll compete in these 5 minigames:")
     for i, game in enumerate(championship_minigames, 1):
         print(f"{i}. {game}")
-    
+
     # Initialize all score variables to avoid reference errors
     score = 0
     scaled_math_score = 0
     word_score = 0
     reaction_score = 0
     dart_score = 0
-    
+
     input("Press Enter to begin the first game...")
-    
+
     # Game 1: Guess the Number (championship version)
     clear()
     print(Fore.CYAN + "Game 1: Guess the Number")
     print("Guess the number between 1-100 in as few tries as possible.")
-    
+
     number = random.randint(1, 100)
     tries = 0
     max_tries = 10
     score = 0
-    
+
     while tries < max_tries:
         guess = input(f"Enter your guess (tries left: {max_tries - tries}): ")
         try:
             guess = int(guess)
             tries += 1
-            
+
             if guess == number:
                 score = 20 - (tries - 1) * 2  # 20 points for 1 try, -2 for each additional try
                 score = max(0, score)  # Ensure score doesn't go below 0
@@ -4472,29 +4456,29 @@ def minigame_championship():
                 print("Higher!")
             else:
                 print("Lower!")
-                
+
             if tries == max_tries:
                 print(Fore.RED + f"Out of tries! The number was {number}.")
                 print("Score: 0/20")
         except ValueError:
             print(Fore.RED + "Please enter a valid number!")
-    
+
     total_score += score
     print(f"Total championship score: {total_score}/100")
     input("\nPress Enter to continue to the next game...")
-    
+
     # Game 2: Quick Math (championship version)
     clear()
     print(Fore.CYAN + "Game 2: Quick Math")
     print("Solve math problems correctly and quickly!")
-    
+
     math_score = 0
     num_problems = 5
-    
+
     for i in range(num_problems):
         operators = ['+', '-', '*']
         op = random.choice(operators)
-        
+
         if op == '+':
             a = random.randint(10, 99)
             b = random.randint(10, 99)
@@ -4507,15 +4491,15 @@ def minigame_championship():
             a = random.randint(2, 12)
             b = random.randint(2, 12)
             correct_answer = a * b
-            
+
         start_time = time.time()
         user_answer = input(f"Problem {i+1}/{num_problems}: {a} {op} {b} = ")
         end_time = time.time()
-        
+
         try:
             user_answer = int(user_answer)
             time_taken = end_time - start_time
-            
+
             if user_answer == correct_answer:
                 # Score based on time: max 4 points per question, -1 point for every 5 seconds
                 question_score = 4 - min(3, int(time_taken / 5))
@@ -4525,20 +4509,20 @@ def minigame_championship():
                 print(Fore.RED + f"Incorrect! The answer was {correct_answer}.")
         except ValueError:
             print(Fore.RED + "Invalid input! No points awarded.")
-    
+
     # Scale to 20 points total
     scaled_math_score = (math_score / (num_problems * 4)) * 20
     scaled_math_score = round(scaled_math_score)
-    
+
     print(f"Math Game Score: {scaled_math_score}/20")
     total_score += scaled_math_score
     print(f"Total championship score: {total_score}/100")
-    
+
     input("\nPress Enter to continue to the next game...")
-    
+
     # Continue with remaining 3 games with similar structure...
     # For brevity, I'll summarize the remaining games with random scores
-    
+
     # Game 3: Word Shuffle (simplified)
     clear()
     print(Fore.CYAN + "Game 3: Word Shuffle")
@@ -4547,7 +4531,7 @@ def minigame_championship():
     total_score += word_score
     print(f"Total championship score: {total_score}/100")
     input("\nPress Enter to continue to the next game...")
-    
+
     # Game 4: Reaction Test (simplified)
     clear()
     print(Fore.CYAN + "Game 4: Reaction Test")
@@ -4556,14 +4540,14 @@ def minigame_championship():
     total_score += reaction_score
     print(f"Total championship score: {total_score}/100")
     input("\nPress Enter to continue to the next game...")
-    
+
     # Game 5: Dart Throw (simplified)
     clear()
     print(Fore.CYAN + "Game 5: Dart Throw")
     dart_score = random.randint(5, 20)
     print(f"Dart Throw Score: {dart_score}/20")
     total_score += dart_score
-    
+
     # Final results
     clear()
     print(Fore.YELLOW + "🏆 MINIGAME MASTER CHAMPIONSHIP - RESULTS 🏆")
@@ -4573,14 +4557,14 @@ def minigame_championship():
     print(f"Game 4 - Reaction Test: {reaction_score}/20")
     print(f"Game 5 - Dart Throw: {dart_score}/20")
     print(Fore.GREEN + f"TOTAL SCORE: {total_score}/100")
-    
+
     # Store final score for the championship
-    
+
     if total_score >= 75:
         print(Fore.GREEN + "CONGRATULATIONS! You've achieved a championship win!")
     else:
         print(Fore.YELLOW + "You need 75 points to win. Keep practicing!")
-        
+
     return total_score
 
 def tcg_championship():
@@ -4589,29 +4573,29 @@ def tcg_championship():
     clear()
     print(Fore.YELLOW + "🃏 TCG CHAMPIONSHIP 🃏")
     print("Battle against 4 opponents of increasing difficulty!")
-    
+
     opponents = [
         "Rookie Card Collector",
         "Amateur Duelist",
         "Professional Card Master",
         "Legendary Champion"
     ]
-    
+
     score = 0
-    
+
     for i, opponent in enumerate(opponents):
         clear()
         print(f"Round {i+1}: Facing {opponent}")
         print("Difficulty: " + "★" * (i+1))
-        
+
         # Simple simulated battle with increasing difficulty
         chance_to_win = max(10, 70 - (i * 15))  # 70%, 55%, 40%, 25% chance to win
-        
+
         print(f"\nYour deck strength: {random.randint(50, 80) - (i*5)}")
         print(f"Opponent strength: {random.randint(40, 75) + (i*8)}")
-        
+
         input("\nPress Enter to play your cards...")
-        
+
         if random.randint(1, 100) <= chance_to_win:
             print(Fore.GREEN + f"Victory! You defeated {opponent}!")
             score += 1
@@ -4620,22 +4604,22 @@ def tcg_championship():
             print(Fore.RED + f"Defeat! You were beaten by {opponent}.")
             print("Your championship run ends here.")
             break
-            
+
         input("\nPress Enter to continue to the next round...")
-    
+
     clear()
     print(Fore.YELLOW + "🃏 TCG CHAMPIONSHIP RESULTS 🃏")
     print(f"Opponents defeated: {score}/4")
-    
+
     if score == 4:
         print(Fore.GREEN + "🏆 PERFECT VICTORY! You are the new TCG Champion!")
     elif score >= 2:
         print(Fore.GREEN + "Impressive showing! You've proven your skill!")
     else:
         print(Fore.YELLOW + "Better luck next time! Keep improving your deck.")
-        
+
     input("\nPress Enter to continue...")
-    
+
     # Return score (opponents defeated, 0-4)
     return score
 
@@ -4644,7 +4628,7 @@ def theme_park_championship():
     clear()
     print(Fore.YELLOW + "🎢 THEME PARK CHALLENGE CHAMPIONSHIP 🎢")
     print("Complete special challenges at all theme park attractions!")
-    
+
     attractions = [
         {"name": "Cosmic Coaster", "challenge": "Ride the most extreme track without losing your nerve"},
         {"name": "Haunted Mansion", "challenge": "Find all 5 hidden ghosts without screaming"},
@@ -4655,48 +4639,48 @@ def theme_park_championship():
         {"name": "Magic Show", "challenge": "Volunteer and successfully perform a magic trick"},
         {"name": "Photo Booth", "challenge": "Create the most creative themed photo"}
     ]
-    
+
     total_score = 0
     max_possible = len(attractions) * 10  # Each attraction worth up to 10 points
-    
+
     print(f"\nYou'll face challenges at {len(attractions)} different attractions.")
     print("Each challenge is worth up to 10 points. Try to score as high as possible!")
-    
+
     input("\nPress Enter to begin the championship...")
-    
+
     for attraction in attractions:
         clear()
         print(Fore.CYAN + f"🎯 {attraction['name']} Challenge 🎯")
         print(f"Challenge: {attraction['challenge']}")
-        
+
         # Simulate the challenge with some user interaction
         print("\nPreparing for the challenge...")
         time.sleep(1)
-        
+
         # Random factors for challenge difficulty
         difficulty = random.randint(1, 10)
         print(f"Difficulty level: {difficulty}/10")
-        
+
         # Let player make a strategy choice
         print("\nChoose your approach:")
         print("[1] Cautious and methodical")
         print("[2] Balanced approach")
         print("[3] Bold and risky")
-        
+
         choice = input("Select your strategy (1-3): ")
-        
+
         if choice not in ["1", "2", "3"]:
             choice = "2"  # Default to balanced if invalid
-        
+
         choice = int(choice)
-        
+
         # Calculate score based on choice and randomness
         # Cautious: Lower variance, medium average
         # Balanced: Medium variance, medium average
         # Bold: High variance, potentially higher average
-        
+
         base_score = random.randint(3, 7)
-        
+
         if choice == 1:  # Cautious
             bonus = random.randint(0, 3)
             penalty = random.randint(0, 1) 
@@ -4706,13 +4690,13 @@ def theme_park_championship():
         else:  # Bold
             bonus = random.randint(0, 6)
             penalty = random.randint(0, 4)
-        
+
         # Adjust for difficulty
         difficulty_factor = (11 - difficulty) / 10  # Higher difficulty = lower factor
-        
+
         # Calculate final score (0-10 range)
         challenge_score = min(10, max(0, int((base_score + bonus - penalty) * difficulty_factor)))
-        
+
         # Show a description of the attempt
         outcomes = [
             "You struggled a bit but managed to complete the challenge.",
@@ -4721,40 +4705,40 @@ def theme_park_championship():
             "That was a close call, but you made it through!",
             "What an extraordinary performance! The park staff were amazed!"
         ]
-        
+
         if challenge_score <= 3:
             print(Fore.RED + "\nThat didn't go as planned...")
         elif challenge_score <= 6:
             print(Fore.YELLOW + f"\n{random.choice(outcomes)}")
         else:
             print(Fore.GREEN + f"\n{random.choice(outcomes)}")
-            
+
         print(f"Score for this attraction: {challenge_score}/10")
-        
+
         total_score += challenge_score
         current_progress = total_score / max_possible * 100
-        
+
         print(f"\nCurrent Championship Progress: {current_progress:.1f}%")
         print(f"Total Score: {total_score}/{max_possible}")
-        
+
         input("\nPress Enter to continue to the next attraction...")
-    
+
     # Final results
     clear()
     print(Fore.YELLOW + "🎢 THEME PARK CHAMPIONSHIP - RESULTS 🎢")
     print(f"Total Score: {total_score} out of a possible {max_possible}")
     percentage = (total_score / max_possible) * 100
     print(f"Performance Rating: {percentage:.1f}%")
-    
+
     if percentage >= 80:
         print(Fore.GREEN + "🏆 OUTSTANDING PERFORMANCE! You are the Theme Park Champion!")
     elif percentage >= 60:
         print(Fore.GREEN + "Great performance! You've shown excellent skills!")
     else:
         print(Fore.YELLOW + "Good effort! With more practice, you'll improve your score!")
-        
+
     input("\nPress Enter to continue...")
-    
+
     # Return normalized score (0-100)
     return int(percentage)
 
@@ -4766,11 +4750,11 @@ def casino_championship():
     print("\nIn this championship, you'll test your luck and skill at various casino games.")
     print("Your goal is to increase your chip count as much as possible.")
     print("The championship consists of 4 rounds with different games.")
-    
+
     # Starting chips
     chips = 100
     print(f"\nStarting chips: {chips}")
-    
+
     # Define the championship games
     championship_games = [
         {"name": "Blackjack", "description": "Get as close to 21 as possible without going over."},
@@ -4778,15 +4762,15 @@ def casino_championship():
         {"name": "Slot Machine", "description": "Pull the lever and match symbols for payouts."},
         {"name": "High Stakes Poker", "description": "Final round - all or nothing."}
     ]
-    
+
     input("\nPress Enter to begin the championship...")
-    
+
     # Round 1: Blackjack
     clear()
     print(Fore.CYAN + "Round 1: Blackjack")
     print(championship_games[0]["description"])
     print(f"Current chips: {chips}")
-    
+
     bet = 0
     while True:
         try:
@@ -4799,19 +4783,19 @@ def casino_championship():
                 print(f"Please enter a valid bet between 1 and {max_bet}.")
         except ValueError:
             print("Please enter a valid number.")
-    
+
     # Simplified Blackjack game
     dealer_card1 = random.randint(1, 10)
     dealer_card2 = random.randint(1, 10)
     dealer_total = dealer_card1 + dealer_card2
-    
+
     player_card1 = random.randint(1, 10)
     player_card2 = random.randint(1, 10)
     player_total = player_card1 + player_card2
-    
+
     print(f"\nDealer shows: {dealer_card1}, [Hidden]")
     print(f"Your cards: {player_card1}, {player_card2} (Total: {player_total})")
-    
+
     # Player's turn
     while player_total < 21:
         choice = input("\nDo you want to (H)it or (S)tand? ").upper()
@@ -4827,16 +4811,16 @@ def casino_championship():
             break
         else:
             print("Please enter H or S.")
-    
+
     # Dealer's turn if player didn't bust
     if player_total <= 21:
         print(f"\nDealer reveals second card: {dealer_card2} (Total: {dealer_total})")
-        
+
         while dealer_total < 17:
             new_card = random.randint(1, 10)
             dealer_total += new_card
             print(f"Dealer draws: {new_card} (Total: {dealer_total})")
-    
+
     # Determine winner
     if player_total > 21:
         print(Fore.RED + "You lose this round.")
@@ -4852,33 +4836,33 @@ def casino_championship():
         chips -= bet
     else:
         print(Fore.YELLOW + "It's a push (tie).")
-    
+
     print(f"\nChips after Round 1: {chips}")
-    
+
     if chips <= 0:
         print(Fore.RED + "You're out of chips! Championship over.")
         return 0
-    
+
     input("\nPress Enter to continue to the next round...")
-    
+
     # Round 2: Roulette
     clear()
     print(Fore.CYAN + "Round 2: Roulette")
     print(championship_games[1]["description"])
     print(f"Current chips: {chips}")
-    
+
     print("\nBetting Options:")
     print("[1] Red/Black (1:1 payout)")
     print("[2] Odd/Even (1:1 payout)")
     print("[3] Single Number (35:1 payout)")
-    
+
     bet_type = input("\nSelect betting option (1-3): ")
-    
+
     if bet_type not in ["1", "2", "3"]:
         bet_type = "1"  # Default to Red/Black
-    
+
     bet_type = int(bet_type)
-    
+
     # Get bet amount
     while True:
         try:
@@ -4891,22 +4875,22 @@ def casino_championship():
                 print(f"Please enter a valid bet between 1 and {max_bet}.")
         except ValueError:
             print("Please enter a valid number.")
-    
+
     # Get specific bet details
     if bet_type == 1:
         choice = input("\nBet on (R)ed or (B)lack? ").upper()
         if choice != 'R' and choice != 'B':
             choice = 'R'  # Default to Red
-        
+
         print(f"You bet {bet} chips on {'Red' if choice == 'R' else 'Black'}")
-        
+
     elif bet_type == 2:
         choice = input("\nBet on (O)dd or (E)ven? ").upper()
         if choice != 'O' and choice != 'E':
             choice = 'E'  # Default to Even
-            
+
         print(f"You bet {bet} chips on {'Odd' if choice == 'O' else 'Even'}")
-        
+
     else:  # Single number
         while True:
             try:
@@ -4919,21 +4903,21 @@ def casino_championship():
                 print("Please enter a valid number.")
                 choice = 17  # Default
                 break
-                
+
         print(f"You bet {bet} chips on number {choice}")
-    
+
     # Spin the wheel
     print("\nThe wheel is spinning...")
     time.sleep(1)
     result = random.randint(0, 36)
-    
+
     # Determine if number is red or black
     red_numbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
     is_red = result in red_numbers
     is_odd = result % 2 == 1
-    
+
     print(f"\nThe ball lands on {result} ({'Red' if is_red else 'Black'}, {'Odd' if is_odd else 'Even'})")
-    
+
     # Determine if player won
     won = False
     if bet_type == 1:  # Red/Black
@@ -4954,26 +4938,26 @@ def casino_championship():
             chips += bet * 35
         else:
             chips -= bet
-    
+
     if won:
         print(Fore.GREEN + "You won this bet!")
     else:
         print(Fore.RED + "You lost this bet.")
-        
+
     print(f"\nChips after Round 2: {chips}")
-    
+
     if chips <= 0:
         print(Fore.RED + "You're out of chips! Championship over.")
         return 0
-        
+
     input("\nPress Enter to continue to the next round...")
-    
+
     # Round 3: Slot Machine - Simplified for brevity
     clear()
     print(Fore.CYAN + "Round 3: Slot Machine")
     print(championship_games[2]["description"])
     print(f"Current chips: {chips}")
-    
+
     # Get bet amount
     while True:
         try:
@@ -4986,10 +4970,10 @@ def casino_championship():
                 print(f"Please enter a valid bet between 1 and {max_bet}.")
         except ValueError:
             print("Please enter a valid number.")
-    
+
     print("\nPulling the lever...")
     time.sleep(1)
-    
+
     symbols = ["🍒", "🍊", "🍋", "💎", "7️⃣", "⭐"]
     payouts = {
         "🍒🍒🍒": 3,
@@ -4999,12 +4983,12 @@ def casino_championship():
         "7️⃣7️⃣7️⃣": 15,
         "⭐⭐⭐": 20
     }
-    
+
     result = [random.choice(symbols) for _ in range(3)]
     result_str = "".join(result)
-    
+
     print(" ".join(result))
-    
+
     winnings = 0
     if result_str in payouts:
         winnings = bet * payouts[result_str]
@@ -5019,38 +5003,38 @@ def casino_championship():
         else:
             print(Fore.RED + "No match. Better luck next time!")
             chips -= bet
-    
+
     print(f"\nChips after Round 3: {chips}")
-    
+
     if chips <= 0:
         print(Fore.RED + "You're out of chips! Championship over.")
         return 0
-        
+
     input("\nPress Enter to continue to the final round...")
-    
+
     # Round 4: High Stakes Poker - All or nothing
     clear()
     print(Fore.CYAN + "Final Round: High Stakes Poker")
     print(championship_games[3]["description"])
     print(f"Current chips: {chips}")
-    
+
     print("\nThis is an all-or-nothing round!")
     print("You'll play one hand of poker against the championship dealer.")
     print("Win, and you'll double your chips. Lose, and you forfeit half.")
-    
+
     confirm = input("\nAre you ready to play? (y/n): ").lower()
-    
+
     if confirm != 'y':
         print("You decided to cash out without playing the final round.")
         return chips
-    
+
     print("\nDealing cards...")
     time.sleep(1)
-    
+
     # Simplified poker using card values (2-14, with 11=J, 12=Q, 13=K, 14=A)
     player_hand = [random.randint(2, 14) for _ in range(5)]
     dealer_hand = [random.randint(2, 14) for _ in range(5)]
-    
+
     # Convert numerical values to card names for display
     def card_name(value):
         if value == 14:
@@ -5063,15 +5047,15 @@ def casino_championship():
             return "J"
         else:
             return str(value)
-    
+
     player_hand_display = [card_name(card) for card in player_hand]
     dealer_hand_display = [card_name(card) for card in dealer_hand]
-    
+
     print(f"\nYour hand: {', '.join(player_hand_display)}")
-    
+
     # Let player exchange up to 3 cards
     to_exchange = input("\nWhich cards would you like to exchange? (Enter positions 1-5, separated by spaces, or 0 for none): ")
-    
+
     if to_exchange != "0":
         try:
             positions = [int(pos) for pos in to_exchange.split()]
@@ -5080,17 +5064,17 @@ def casino_championship():
                     player_hand[pos-1] = random.randint(2, 14)
         except Exception:
             print("Invalid input. No cards exchanged.")
-    
+
     # Update display after exchange
     player_hand_display = [card_name(card) for card in player_hand]
     print(f"\nYour final hand: {', '.join(player_hand_display)}")
-    
+
     # Simple hand evaluation (just using highest card for simplicity)
     player_high_card = max(player_hand)
     dealer_high_card = max(dealer_hand)
-    
+
     print(f"Dealer's hand: {', '.join(dealer_hand_display)}")
-    
+
     # Determine winner
     if player_high_card > dealer_high_card:
         print(Fore.GREEN + "\nYou win the championship final!")
@@ -5100,26 +5084,26 @@ def casino_championship():
         chips = int(chips * 0.5)  # Lose half for losing
     else:
         print(Fore.YELLOW + "\nIt's a tie! You keep your chips.")
-    
+
     print(f"\nFinal chip count: {chips}")
-    
+
     input("\nPress Enter to see your championship results...")
-    
+
     # Final results
     clear()
     print(Fore.YELLOW + "🎰 CASINO ROYALE CHAMPIONSHIP - RESULTS 🎰")
     print("Starting chips: 100")
     print(f"Final chips: {chips}")
-    
+
     if chips >= 200:
         print(Fore.GREEN + "🏆 OUTSTANDING PERFORMANCE! You are the Casino Royale Champion!")
     elif chips >= 100:
         print(Fore.GREEN + "You made a profit! Excellent performance!")
     else:
         print(Fore.YELLOW + "You lost some chips, but gained valuable experience!")
-        
+
     input("\nPress Enter to continue...")
-    
+
     # Return score based on final chips (0-300 range)
     return chips
 
@@ -5128,7 +5112,7 @@ def quest_center():
     clear()
     print(Fore.YELLOW + "📜 QUEST CENTER 📜")
     print(Fore.CYAN + "Take on exciting quests for special rewards!")
-    
+
     # Initialize quest data if needed
     if "active_quests" not in player:
         player["active_quests"] = []
@@ -5136,7 +5120,7 @@ def quest_center():
         player["completed_quests"] = []
     if "quest_progress" not in player:
         player["quest_progress"] = {}
-        
+
     # Display active quests
     print(Fore.MAGENTA + "\nActive Quests:")
     if not player["active_quests"]:
@@ -5150,14 +5134,14 @@ def quest_center():
                 print(f"• {quest['name']} - {progress}% complete")
                 print(f"  {quest['description']}")
                 print(f"  Reward: {quest['reward_tickets']} tickets + {quest['reward_loyalty']} loyalty points")
-    
+
     # Display available quests
     print(Fore.MAGENTA + "\nAvailable Quests:")
     available_quests = []
     for quest_id, quest in QUESTS.items():
         if quest_id not in player["active_quests"] and quest_id not in player["completed_quests"]:
             available_quests.append((quest_id, quest))
-            
+
     if not available_quests:
         print("No available quests at the moment. Check back later!")
     else:
@@ -5166,13 +5150,13 @@ def quest_center():
             print(f"    {quest['description']}")
             print(f"    Reward: {quest['reward_tickets']} tickets + {quest['reward_loyalty']} loyalty points")
             print(f"    Expires: {quest['expiry']}")
-    
+
     print("\n[A] Accept a Quest")
     print("[C] Claim Completed Quest Rewards")
     print("[0] Return to Main Menu")
-    
+
     choice = input("\nSelect option: ").upper()
-    
+
     if choice == "0":
         return
     elif choice == "A":
@@ -5181,7 +5165,7 @@ def quest_center():
             print(Fore.RED + "No quests available to accept!")
             time.sleep(1.5)
             return quest_center()
-            
+
         quest_num = input("Enter quest number to accept: ")
         try:
             quest_idx = int(quest_num) - 1
@@ -5189,51 +5173,51 @@ def quest_center():
                 print(Fore.RED + "Invalid quest number!")
                 time.sleep(1.5)
                 return quest_center()
-                
+
             quest_id, quest = available_quests[quest_idx]
             player["active_quests"].append(quest_id)
             player["quest_progress"][quest_id] = 0
-            
+
             print(Fore.GREEN + f"Quest accepted: {quest['name']}")
             print("Check back often to track your progress!")
-            
+
         except ValueError:
             print(Fore.RED + "Please enter a valid number!")
-            
+
         time.sleep(1.5)
         return quest_center()
-        
+
     elif choice == "C":
         # Claim rewards for completed quests
         completed = []
         for quest_id in player["active_quests"]:
             if player["quest_progress"].get(quest_id, 0) >= 100:
                 completed.append(quest_id)
-                
+
         if not completed:
             print(Fore.RED + "No completed quests to claim rewards for!")
             time.sleep(1.5)
             return quest_center()
-            
+
         print(Fore.GREEN + "Claiming rewards for completed quests:")
         for quest_id in completed:
             quest = QUESTS[quest_id]
             print(f"• {quest['name']}: {quest['reward_tickets']} tickets + {quest['reward_loyalty']} loyalty points")
             player["tickets"] += quest["reward_tickets"]
             add_loyalty_points(quest["reward_loyalty"])
-            
+
             # Remove from active and add to completed
             player["active_quests"].remove(quest_id)
             player["completed_quests"].append(quest_id)
-            
+
             # Award achievement
             award_achievement(f"Quest Completed: {quest['name']}")
-            
+
         print(Fore.YELLOW + f"Total tickets now: {player['tickets']}")
-        
+
         time.sleep(2)
         return quest_center()
-        
+
     else:
         print(Fore.RED + "Invalid option!")
         time.sleep(1)
@@ -5243,29 +5227,29 @@ def loyalty_rewards_center():
     """Display loyalty status and available rewards"""
     clear()
     print(Fore.YELLOW + "🌟 LOYALTY REWARDS CENTER 🌟")
-    
+
     # Get current tier and points
     current_points = player.get("loyalty_points", 0)
     current_tier = get_loyalty_tier()
-    
+
     print(f"Current Loyalty Points: {current_points}")
     print(f"Current Tier: {current_tier}")
-    
+
     # Show current tier benefits
     tier_details = LOYALTY_TIERS[current_tier]
     print("\nYour Benefits:")
     print(f"• {tier_details['discount']*100}% discount on all purchases")
     print(f"• {tier_details['bonus']} bonus tickets per win")
-    
+
     # Show progress to next tier
     next_tier = None
     next_tier_points = float('inf')
-    
+
     for tier, details in LOYALTY_TIERS.items():
         if details["points"] > current_points and details["points"] < next_tier_points:
             next_tier = tier
             next_tier_points = details["points"]
-    
+
     if next_tier:
         points_needed = next_tier_points - current_points
         print(f"\nNext Tier: {next_tier} (Need {points_needed} more points)")
@@ -5274,26 +5258,26 @@ def loyalty_rewards_center():
         print(f"• {LOYALTY_TIERS[next_tier]['bonus']} bonus tickets per win")
     else:
         print("\nCongratulations! You've reached the highest loyalty tier!")
-    
+
     print("\nWays to Earn Loyalty Points:")
     print("• Play minigames: +1 point per game")
     print("• Visit theme park attractions: +1 point per visit")
     print("• Complete quests: +5-40 points depending on quest")
     print("• Win championships: +20-35 points per championship")
     print("• Complete missions: +5 points per mission")
-    
+
     print("\n[1] Redeem Loyalty Rewards")
     print("[0] Return to Main Menu")
-    
+
     choice = input("\nSelect option: ")
-    
+
     if choice == "0":
         return
     elif choice == "1":
         # Redeem loyalty rewards
         clear()
         print(Fore.YELLOW + "🎁 LOYALTY REWARDS 🎁")
-        
+
         # Define rewards that can be redeemed with loyalty points
         rewards = [
             {"name": "Free Season Pass Day", "description": "Add 1 day to your season pass", "cost": 20},
@@ -5303,45 +5287,45 @@ def loyalty_rewards_center():
             {"name": "Exclusive Costume", "description": "Unique costume only available through loyalty", "cost": 100},
             {"name": "Legendary Pet", "description": "Special pet with enhanced abilities", "cost": 200}
         ]
-        
+
         print(f"Available Points: {current_points}")
         print("\nAvailable Rewards:")
-        
+
         for i, reward in enumerate(rewards, 1):
             print(f"[{i}] {reward['name']} - {reward['cost']} points")
             print(f"    {reward['description']}")
-        
+
         print("[0] Back")
-        
+
         choice = input("\nSelect reward to redeem: ")
         if choice == "0":
             return loyalty_rewards_center()
-            
+
         try:
             reward_idx = int(choice) - 1
             if reward_idx < 0 or reward_idx >= len(rewards):
                 print(Fore.RED + "Invalid selection!")
                 time.sleep(1.5)
                 return loyalty_rewards_center()
-                
+
             selected_reward = rewards[reward_idx]
-            
+
             # Check if player has enough points
             if current_points < selected_reward["cost"]:
                 print(Fore.RED + f"Not enough loyalty points! Need {selected_reward['cost']} points.")
                 time.sleep(1.5)
                 return loyalty_rewards_center()
-                
+
             # Confirm redemption
             print(f"\nRedeem {selected_reward['name']} for {selected_reward['cost']} loyalty points?")
             confirm = input("Confirm (y/n): ").lower()
-            
+
             if confirm != "y":
                 return loyalty_rewards_center()
-                
+
             # Process redemption
             player["loyalty_points"] -= selected_reward["cost"]
-            
+
             # Apply reward effect based on type
             if selected_reward["name"] == "Free Season Pass Day":
                 if player.get("season_pass", False):
@@ -5351,44 +5335,44 @@ def loyalty_rewards_center():
                     player["season_pass"] = True
                     player["season_pass_days"] = 1
                     print(Fore.GREEN + "Season pass activated for 1 day!")
-            
+
             elif selected_reward["name"] == "Fast Pass":
                 player["fast_passes"] = player.get("fast_passes", 0) + 1
                 print(Fore.GREEN + "Fast Pass added to your inventory!")
-            
+
             elif selected_reward["name"] == "VIP Card Pack":
                 print(Fore.GREEN + "VIP Card Pack added to your inventory!")
                 # Add special cards (implementation would depend on card system)
                 player["inventory"].append("VIP Card Pack")
-            
+
             elif selected_reward["name"] == "2x Tickets Booster":
                 player["ticket_multiplier"] = 2
                 player["multiplier_games_left"] = 5
                 print(Fore.GREEN + "Ticket Booster activated for your next 5 games!")
-            
+
             elif selected_reward["name"] == "Exclusive Costume":
                 costume_name = "Loyalty Champion 🌠"
                 if "costumes" not in player:
                     player["costumes"] = []
                 player["costumes"].append(costume_name)
                 print(Fore.GREEN + f"Exclusive costume '{costume_name}' added to your collection!")
-            
+
             elif selected_reward["name"] == "Legendary Pet":
                 pet_name = "Loyal Companion 🦊"
                 if "pets" not in player:
                     player["pets"] = []
                 player["pets"].append(pet_name)
                 print(Fore.GREEN + f"Legendary pet '{pet_name}' added to your collection!")
-            
+
             print(f"Remaining loyalty points: {player['loyalty_points']}")
             input("\nPress Enter to continue...")
-            
+
         except ValueError:
             print(Fore.RED + "Please enter a valid number!")
             time.sleep(1.5)
-            
+
         return loyalty_rewards_center()
-    
+
     else:
         print(Fore.RED + "Invalid option!")
         time.sleep(1)
@@ -5470,9 +5454,9 @@ def memory_match():
 def get_current_season():
     """Determine the current season for seasonal events"""
     from datetime import datetime
-    
+
     current_month = datetime.now().month
-    
+
     if 6 <= current_month <= 8:  # June, July, August
         return "summer"
     elif 9 <= current_month <= 10:  # September, October
@@ -5491,14 +5475,14 @@ def get_current_season():
 def check_special_holiday():
     """Check if today is a special holiday and return its name if it is"""
     from datetime import datetime
-    
+
     today = datetime.now()
     month = today.month
     day = today.day
-    
+
     # Create a simple lookup tuple for the current date
     current_date = (month, day)
-    
+
     # Define holidays
     if current_date == (1, 1):
         return "New Year's Day"
@@ -5514,59 +5498,59 @@ def check_special_holiday():
         return "Thanksgiving"  # Approximate for 2024
     elif current_date == (12, 25):
         return "Christmas"
-    
+
     # Check for Easter (approximate - first Sunday of April for simplicity)
     # In reality Easter date calculation is complex
     if month == 4 and day <= 7:
         # Check if it's a Sunday
         if today.weekday() == 6:  # 6 = Sunday
             return "Easter"
-    
+
     # No holiday found
     return None
-    
+
 def food_stand():
     """Visit a food stand to buy refreshments that restore hunger and energy"""
     clear()
     print(Fore.YELLOW + "🍦 CARNIVAL FOOD STANDS 🍕")
     print("Delicious carnival treats to satisfy your hunger!")
     print(f"Your Tickets: {player['tickets']}")
-    
+
     # Show hunger and energy levels
     hunger = player.get("hunger", 100)
     energy = player.get("energy", 100)
     print(Fore.CYAN + f"Hunger: {hunger}% | Energy: {energy}%")
-    
+
     # Get the current season for seasonal treats
     current_season = get_current_season()
-    
+
     # Show available food items
     print("\nAvailable Treats:")
     available_foods = []
-    
+
     # First add year-round foods
     for food in CARNIVAL_FOODS:
         if food["seasonal"] is None:
             available_foods.append(food)
-    
+
     # Then add any seasonal foods
     for food in CARNIVAL_FOODS:
         if food["seasonal"] == current_season:
             available_foods.append(food)
-    
+
     # Display the menu
     for i, food in enumerate(available_foods, 1):
         seasonal_tag = " (Seasonal Special!)" if food["seasonal"] is not None else ""
         print(f"[{i}] {food['name']} - {food['price']} tickets{seasonal_tag}")
         print(f"    Restores: Hunger +{food['hunger']}%, Energy +{food['energy']}%")
-    
+
     print("[0] Return to Theme Park")
-    
+
     # Get player choice
     choice = input("\nWhat would you like to eat? ")
     if choice == "0":
         return theme_park_menu()
-    
+
     try:
         food_idx = int(choice) - 1
         if 0 <= food_idx < len(available_foods):
@@ -5577,34 +5561,34 @@ def food_stand():
         print(Fore.RED + "Invalid choice!")
         time.sleep(1.5)
         return food_stand()
-    
+
     # Purchase the food
     if player["tickets"] >= selected_food["price"]:
         player["tickets"] -= selected_food["price"]
-        
+
         # Apply the effects
         player["hunger"] = min(100, player["hunger"] + selected_food["hunger"])
         player["energy"] = min(100, player["energy"] + selected_food["energy"])
-        
+
         # Initialize food_consumed if it doesn't exist
         if "food_consumed" not in player:
             player["food_consumed"] = []
-            
+
         # Track food consumption
         player["food_consumed"].append(selected_food["name"])
-        
+
         # Feedback
         print(Fore.GREEN + f"\nYou enjoy a delicious {selected_food['name']}!")
         print(f"Hunger restored to {player['hunger']}%")
         print(f"Energy restored to {player['energy']}%")
-        
+
         # Check for achievements
         check_food_achievements()
-        
+
         # Add loyalty points
         add_loyalty_points(1)
         print(Fore.MAGENTA + "+1 Loyalty Point for enjoying carnival food!")
-        
+
         # Ask if they want more food
         more_food = input("\nWould you like something else? (y/n): ").lower()
         if more_food == "y":
@@ -5613,7 +5597,7 @@ def food_stand():
         print(Fore.RED + f"Not enough tickets! You need {selected_food['price']} tickets.")
         time.sleep(1.5)
         return food_stand()
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -5621,32 +5605,32 @@ def check_food_achievements():
     """Check and award achievements related to food consumption"""
     unique_food_count = len(set(player.get("food_consumed", [])))
     total_items_consumed = sum(player.get("food_counts", {}).values())
-    
+
     # Basic foodie achievement
     if unique_food_count >= 5 and "Carnival Foodie" not in player["achievements"]:
         award_achievement("Carnival Foodie")
         player["tickets"] += 10
         print(Fore.GREEN + "Achievement unlocked: Carnival Foodie! +10 tickets!")
-    
+
     # Advanced gourmet achievement
     if unique_food_count >= 10 and "Carnival Gourmet" not in player["achievements"]:
         award_achievement("Carnival Gourmet")
         player["tickets"] += 25
         print(Fore.GREEN + "Achievement unlocked: Carnival Gourmet! +25 tickets!")
-        
+
     # Food enthusiast achievement - based on total items consumed
     if total_items_consumed >= 20 and "Food Enthusiast" not in player["achievements"]:
         award_achievement("Food Enthusiast")
         player["tickets"] += 15
         print(Fore.GREEN + "Achievement unlocked: Food Enthusiast! +15 tickets!")
-    
+
     # Check for seasonal food achievements
     seasons_sampled = set()
     for food_name in player.get("food_consumed", []):
         for food in CARNIVAL_FOODS:
             if food["name"] == food_name and food["seasonal"] is not None:
                 seasons_sampled.add(food["seasonal"])
-    
+
     if len(seasons_sampled) >= 3 and "Seasonal Taster" not in player["achievements"]:
         award_achievement("Seasonal Taster")
         player["tickets"] += 20
@@ -5658,20 +5642,20 @@ def carnival_games_menu():
     print(Fore.CYAN + "🎯 CARNIVAL GAMES 🎮")
     print("Test your skill and win exciting prizes!")
     print(f"Your Tickets: {player['tickets']}")
-    
+
     # Show available games
     print("\nAvailable Games:")
     for i, game in enumerate(CARNIVAL_GAMES, 1):
         print(f"[{i}] {game['name']} - {game['price']} tickets")
         print(f"    Difficulty: {game['difficulty'].capitalize()}")
-    
+
     print("[0] Return to Theme Park")
-    
+
     # Get player choice
     choice = input("\nWhich game would you like to play? ")
     if choice == "0":
         return theme_park_menu()
-    
+
     try:
         game_idx = int(choice) - 1
         if 0 <= game_idx < len(CARNIVAL_GAMES):
@@ -5682,44 +5666,44 @@ def carnival_games_menu():
         print(Fore.RED + "Invalid choice!")
         time.sleep(1.5)
         return carnival_games_menu()
-    
+
     # Check if player can afford the game
     if player["tickets"] >= selected_game["price"]:
         player["tickets"] -= selected_game["price"]
-        
+
         # Play the selected game
         result = play_carnival_game(selected_game)
-        
+
         # Process the result and potentially award a prize
         if result["success"]:
             prize = random.choice(selected_game["prizes"])
-            
+
             # Initialize carnival_prizes if it doesn't exist
             if "carnival_prizes" not in player:
                 player["carnival_prizes"] = []
-                
+
             player["carnival_prizes"].append(prize)
-            
+
             # Award bonus tickets for winning!
             bonus_tickets = random.randint(2, 5)
             player["tickets"] += bonus_tickets
-            
+
             print(Fore.GREEN + f"\nCongratulations! You won: {prize}")
             print(Fore.YELLOW + f"Bonus: +{bonus_tickets} tickets!")
-            
+
             # Add to inventory for consistency with other systems
             if prize not in player["inventory"]:
                 player["inventory"].append(prize)
-            
+
             # Check for achievements
             check_carnival_game_achievements()
-            
+
             # Award loyalty points
             add_loyalty_points(2)
             print(Fore.MAGENTA + "+2 Loyalty Points for winning a carnival game!")
         else:
             print(Fore.YELLOW + "\nSo close! Better luck next time!")
-        
+
         # Ask if they want to play again
         play_again = input("\nWould you like to play another game? (y/n): ").lower()
         if play_again == "y":
@@ -5728,7 +5712,7 @@ def carnival_games_menu():
         print(Fore.RED + f"Not enough tickets! You need {selected_game['price']} tickets.")
         time.sleep(1.5)
         return carnival_games_menu()
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -5737,9 +5721,9 @@ def play_carnival_game(game):
     clear()
     game_name = game["name"]
     difficulty = game["difficulty"]
-    
+
     print(Fore.YELLOW + f"Playing: {game_name}")
-    
+
     # Set win probability based on difficulty
     if difficulty == "easy":
         win_chance = 0.6  # 60% chance to win
@@ -5751,12 +5735,12 @@ def play_carnival_game(game):
         win_chance = 1.0  # Always "win" a fortune
     else:
         win_chance = 0.5  # Default
-    
+
     # Simulate the game with some descriptive text
     if "Ring Toss" in game_name:
         rings = 3
         rings_landed = 0
-        
+
         print("\nYou have 3 rings to toss onto bottle necks!")
         for i in range(rings):
             input(f"\nPress Enter to toss ring {i+1}...")
@@ -5765,15 +5749,15 @@ def play_carnival_game(game):
                 print(Fore.GREEN + "The ring lands perfectly around a bottle neck!")
             else:
                 print(Fore.RED + "The ring bounces off and falls to the ground.")
-        
+
         # Need at least 1 ring to win
         success = rings_landed > 0
         print(f"\nRings landed: {rings_landed}/{rings}")
-        
+
     elif "Balloon Dart" in game_name:
         darts = 3
         balloons_popped = 0
-        
+
         print("\nYou have 3 darts to pop the balloons!")
         for i in range(darts):
             input(f"\nPress Enter to throw dart {i+1}...")
@@ -5782,15 +5766,15 @@ def play_carnival_game(game):
                 print(Fore.GREEN + "POP! The balloon bursts!")
             else:
                 print(Fore.RED + "Your dart misses the balloon.")
-        
+
         # Need at least 1 balloon to win
         success = balloons_popped > 0
         print(f"\nBalloons popped: {balloons_popped}/{darts}")
-        
+
     elif "Milk Bottle" in game_name:
         print("\nYou need to knock down a pyramid of milk bottles with one throw!")
         input("\nPress Enter to throw the ball...")
-        
+
         success = random.random() < win_chance
         if success:
             print(Fore.GREEN + "CRASH! All the bottles tumble down!")
@@ -5799,11 +5783,11 @@ def play_carnival_game(game):
                 print(Fore.RED + "The ball hits the bottles but they barely wobble.")
             else:
                 print(Fore.RED + "You knock down some bottles, but not all of them.")
-        
+
     elif "Basketball" in game_name:
         shots = 3
         baskets_made = 0
-        
+
         print("\nYou have 3 shots to make a basket!")
         for i in range(shots):
             input(f"\nPress Enter to take shot {i+1}...")
@@ -5812,15 +5796,15 @@ def play_carnival_game(game):
                 print(Fore.GREEN + "SWISH! Nothing but net!")
             else:
                 print(Fore.RED + "The ball bounces off the rim.")
-        
+
         # Need at least 1 basket to win
         success = baskets_made > 0
         print(f"\nBaskets made: {baskets_made}/{shots}")
-        
+
     elif "Water Gun" in game_name:
         print("\nAim your water gun at the target and fill the balloon!")
         input("\nPress Enter to start shooting...")
-        
+
         # Simulate a timed challenge
         progress = 0
         target = 100
@@ -5830,42 +5814,42 @@ def play_carnival_game(game):
             increment = random.randint(15, 25)
             progress = min(target, progress + increment)
             print(f"{progress}%... ", end="", flush=True)
-        
+
         print("\n")
         # Determine if player was fast enough
         time_factor = random.random()
         success = time_factor < win_chance + 0.2  # Slightly easier
-        
+
         if success:
             print(Fore.GREEN + "POP! Your balloon fills up first and bursts!")
         else:
             print(Fore.RED + "Another player's balloon pops before yours!")
-        
+
     elif "Whack-A-Mole" in game_name:
         hits = 0
         target_hits = 5
         attempts = 8
-        
+
         print(f"\nWhack {target_hits} moles in {attempts} attempts!")
         for i in range(attempts):
             time.sleep(0.7)
             mole_appears = random.choice(["left", "center", "right"])
             print(f"\nA mole appears on the {mole_appears}!")
             choice = input("Where do you whack? (left/center/right): ").lower()
-            
+
             if choice == mole_appears:
                 hits += 1
                 print(Fore.GREEN + "WHACK! You got it!")
             else:
                 print(Fore.RED + "MISS! The mole escapes!")
-        
+
         success = hits >= target_hits
         print(f"\nMoles whacked: {hits}/{target_hits}")
-        
+
     elif "High Striker" in game_name:
         print("\nTest your strength! Hit the lever to send the puck up the tower!")
         input("\nPress Enter to swing the hammer...")
-        
+
         # Generate a random strength value
         strength = random.random()
         if strength < 0.3:
@@ -5880,30 +5864,30 @@ def play_carnival_game(game):
         else:
             print(Fore.GREEN + "DING! The puck hits the bell at the top!")
             height = "PERFECT"
-        
+
         success = height == "PERFECT"
         print(f"\nStrength result: {height}")
-        
+
     elif "Duck Pond" in game_name:
         print("\nPick a rubber duck from the pond to reveal your prize!")
         input("\nPress Enter to select a duck...")
-        
+
         # This game is mostly about luck
         ducks = ["red", "blue", "yellow", "green", "purple", "orange"]
         chosen_duck = random.choice(ducks)
         print(f"\nYou selected a {chosen_duck} duck!")
-        
+
         # Almost always win something in duck pond
         success = random.random() < 0.9
         if success:
             print(Fore.GREEN + "There's a winning symbol on the bottom!")
         else:
             print(Fore.RED + "No winning symbol on this duck, sorry!")
-        
+
     elif "Fortune Teller" in game_name:
         print("\nThe mysterious fortune teller beckons you closer...")
         input("\nPress Enter to have your fortune told...")
-        
+
         fortunes = [
             "A thrilling adventure awaits you in the near future.",
             "Good luck will follow you throughout the day.",
@@ -5916,54 +5900,54 @@ def play_carnival_game(game):
             "A mysterious stranger will change your perspective.",
             "Love and laughter will fill your days ahead."
         ]
-        
+
         chosen_fortune = random.choice(fortunes)
         print(Fore.MAGENTA + f"\nThe fortune teller says: \"{chosen_fortune}\"")
         print("She hands you a fortune card with the message written on it.")
-        
+
         # Always "win" at fortune telling
         success = True
-    
+
     else:
         # Generic game if none of the above
         print("\nYou try your luck at the game...")
         input("\nPress Enter to make your attempt...")
-        
+
         success = random.random() < win_chance
         if success:
             print(Fore.GREEN + "Success! You did it!")
         else:
             print(Fore.RED + "Not quite! Better luck next time!")
-    
+
     # Slight energy cost for playing carnival games
     player["energy"] = max(0, player["energy"] - 5)
-    
+
     return {"success": success, "game": game_name}
 
 def check_carnival_game_achievements():
     """Check and award achievements related to carnival games"""
     prize_count = len(player.get("carnival_prizes", []))
     unique_prizes = set(player.get("carnival_prizes", []))
-    
+
     # Prize collector achievement
     if prize_count >= 5 and "Prize Winner" not in player["achievements"]:
         award_achievement("Prize Winner")
         player["tickets"] += 15
         print(Fore.GREEN + "Achievement unlocked: Prize Winner! +15 tickets!")
-    
+
     # Advanced collector achievement
     if len(unique_prizes) >= 10 and "Prize Collector" not in player["achievements"]:
         award_achievement("Prize Collector")
         player["tickets"] += 30
         print(Fore.GREEN + "Achievement unlocked: Prize Collector! +30 tickets!")
-    
+
     # Check if player has won all game types
     game_types_won = set()
     for prize in player.get("carnival_prizes", []):
         for game in CARNIVAL_GAMES:
             if prize in game["prizes"]:
                 game_types_won.add(game["name"])
-    
+
     if len(game_types_won) >= 5 and "Carnival Game Master" not in player["achievements"]:
         award_achievement("Carnival Game Master")
         player["tickets"] += 50
@@ -5973,43 +5957,43 @@ def seasonal_event():
     """Special seasonal events and activities"""
     clear()
     current_season = get_current_season()
-    
+
     # Check if a seasonal event is active
     if current_season not in SEASONAL_EVENTS:
         print(Fore.YELLOW + "There are no special seasonal events right now.")
         input("Press Enter to return to the theme park...")
         return theme_park_menu()
-    
+
     # Get the current seasonal event
     event = SEASONAL_EVENTS[current_season]
-    
+
     # Display event information
     print(Fore.MAGENTA + f"🎉 {event['name'].upper()} 🎉")
     print(Fore.CYAN + "Special limited-time seasonal event!")
     print(f"Your Tickets: {player['tickets']}")
-    
+
     # Show decorations
     print(Fore.YELLOW + "\nFestive Decorations:")
     for decoration in event["decorations"]:
         print(f"- {decoration}")
-    
+
     # Show special characters
     print(Fore.GREEN + "\nSpecial Characters:")
     for character in event["special_characters"]:
         print(f"- {character}")
-    
+
     # Show special attractions
     print(Fore.BLUE + "\nSpecial Attractions:")
     for i, attraction in enumerate(event["special_attractions"], 1):
         print(f"[{i}] {attraction} - 5 tickets")
-    
+
     print("[4] Meet Special Characters - 3 tickets")
     print("[5] Seasonal Photo Opportunity - 4 tickets")
     print("[0] Return to Theme Park")
-    
+
     # Get player choice
     choice = input("\nWhat would you like to do? ")
-    
+
     if choice == "0":
         return theme_park_menu()
     elif choice in ["1", "2", "3"]:
@@ -6017,21 +6001,21 @@ def seasonal_event():
         attraction_idx = int(choice) - 1
         if attraction_idx < len(event["special_attractions"]):
             attraction = event["special_attractions"][attraction_idx]
-            
+
             # Check if player can afford it
             if player["tickets"] >= 5:
                 player["tickets"] -= 5
-                
+
                 # Track attraction visit
                 if "seasonal_attractions_visited" not in player:
                     player["seasonal_attractions_visited"] = []
                 player["seasonal_attractions_visited"].append(attraction)
-                
+
                 # Display the experience
                 clear()
                 print(Fore.CYAN + f"🎉 {attraction} 🎉")
                 print("You participate in this special seasonal attraction!")
-                
+
                 # Simulate the experience with descriptions
                 experiences = [
                     f"You have an amazing time at the {attraction}!",
@@ -6039,23 +6023,23 @@ def seasonal_event():
                     f"Everyone is enjoying the festive atmosphere at the {attraction}!",
                     f"You create wonderful memories at the {attraction}!"
                 ]
-                
+
                 for experience in random.sample(experiences, 3):
                     print(f"\n{experience}")
                     time.sleep(1.5)
-                
+
                 # Give a special seasonal souvenir
                 souvenir = f"{current_season.capitalize()} {attraction} Memento"
                 if "seasonal_souvenirs" not in player:
                     player["seasonal_souvenirs"] = []
                 player["seasonal_souvenirs"].append(souvenir)
                 player["inventory"].append(souvenir)
-                
+
                 print(Fore.GREEN + f"\nYou received: {souvenir}")
-                
+
                 # Check for achievements
                 check_seasonal_achievements()
-                
+
                 # Add loyalty points
                 add_loyalty_points(3)
                 print(Fore.MAGENTA + "+3 Loyalty Points for enjoying a seasonal attraction!")
@@ -6067,15 +6051,15 @@ def seasonal_event():
         # Meet special characters
         if player["tickets"] >= 3:
             player["tickets"] -= 3
-            
+
             clear()
             print(Fore.YELLOW + "🎭 MEETING SEASONAL CHARACTERS 🎭")
-            
+
             # Choose a random character to meet
             character = random.choice(event["special_characters"])
-            
+
             print(f"\nYou get to meet {character}!")
-            
+
             # Simulate the interaction
             interactions = [
                 f"{character} greets you warmly and poses for a photo!",
@@ -6083,22 +6067,22 @@ def seasonal_event():
                 f"{character} gives you a special high-five and a seasonal greeting!",
                 f"You get an autograph from {character} on your event program!"
             ]
-            
+
             for interaction in random.sample(interactions, 2):
                 print(f"\n{interaction}")
                 time.sleep(1.5)
-            
+
             # Add to collection
             if "characters_met" not in player:
                 player["characters_met"] = []
             player["characters_met"].append(character)
-            
+
             # Check for achievements
             if len(player.get("characters_met", [])) >= 5 and "Character Friend" not in player["achievements"]:
                 award_achievement("Character Friend")
                 player["tickets"] += 20
                 print(Fore.GREEN + "Achievement unlocked: Character Friend! +20 tickets!")
-            
+
             # Add loyalty points
             add_loyalty_points(2)
             print(Fore.MAGENTA + "+2 Loyalty Points for meeting a seasonal character!")
@@ -6110,10 +6094,10 @@ def seasonal_event():
         # Seasonal photo opportunity
         if player["tickets"] >= 4:
             player["tickets"] -= 4
-            
+
             clear()
             print(Fore.CYAN + "📸 SEASONAL PHOTO OPPORTUNITY 📸")
-            
+
             # Choose a random backdrop
             backdrops = [
                 f"{current_season.capitalize()} Wonderland",
@@ -6122,36 +6106,36 @@ def seasonal_event():
                 f"{current_season.capitalize()} Magic"
             ]
             backdrop = random.choice(backdrops)
-            
+
             print(f"\nYou pose in front of the '{backdrop}' photo backdrop!")
-            
+
             # Choose a prop
             props = [
                 "festive hat", "seasonal prop", "themed accessory", 
                 "celebration banner", "decorative item"
             ]
             prop = random.choice(props)
-            
+
             print(f"You use a {prop} to enhance your photo!")
-            
+
             # Take the photo
             print("\nThe photographer counts down: 3... 2... 1... SMILE!")
             time.sleep(1)
             print(Fore.GREEN + "Perfect shot!")
-            
+
             # Add to collection
             photo_name = f"{current_season.capitalize()} Photo: {backdrop}"
             player["inventory"].append(photo_name)
-            
+
             print(Fore.GREEN + f"You received: {photo_name}")
-            
+
             # Check photo collection achievement
             seasonal_photos = [item for item in player["inventory"] if "Photo:" in item]
             if len(seasonal_photos) >= 4 and "Seasonal Photographer" not in player["achievements"]:
                 award_achievement("Seasonal Photographer")
                 player["tickets"] += 25
                 print(Fore.GREEN + "Achievement unlocked: Seasonal Photographer! +25 tickets!")
-            
+
             # Add loyalty points
             add_loyalty_points(2)
             print(Fore.MAGENTA + "+2 Loyalty Points for a seasonal photo!")
@@ -6163,7 +6147,7 @@ def seasonal_event():
         print(Fore.RED + "Invalid choice!")
         time.sleep(1.5)
         return seasonal_event()
-    
+
     input("\nPress Enter to return to the seasonal event menu...")
     return seasonal_event()
 
@@ -6171,31 +6155,31 @@ def check_seasonal_achievements():
     """Check and award achievements related to seasonal events"""
     seasonal_attractions = player.get("seasonal_attractions_visited", [])
     seasonal_souvenirs = player.get("seasonal_souvenirs", [])
-    
+
     # Seasonal participation
     if len(seasonal_attractions) >= 3 and "Seasonal Participant" not in player["achievements"]:
         award_achievement("Seasonal Participant")
         player["tickets"] += 20
         print(Fore.GREEN + "Achievement unlocked: Seasonal Participant! +20 tickets!")
-    
+
     # Seasonal collector
     if len(seasonal_souvenirs) >= 5 and "Seasonal Collector" not in player["achievements"]:
         award_achievement("Seasonal Collector")
         player["tickets"] += 30
         print(Fore.GREEN + "Achievement unlocked: Seasonal Collector! +30 tickets!")
-    
+
     # Multi-season achievement
     visited_seasons = set()
     for attraction in seasonal_attractions:
         for season, event in SEASONAL_EVENTS.items():
             if attraction in event["special_attractions"]:
                 visited_seasons.add(season)
-    
+
     if len(visited_seasons) >= 3 and "Year-Round Celebrator" not in player["achievements"]:
         award_achievement("Year-Round Celebrator")
         player["tickets"] += 50
         print(Fore.GREEN + "Achievement unlocked: Year-Round Celebrator! +50 tickets!")
-        
+
         # Special reward
         special_item = "Four Seasons Crown 👑"
         if special_item not in player["inventory"]:
@@ -6209,7 +6193,7 @@ def theme_park_menu():
     clear()
     # Check for special events
     current_season = get_current_season()
-    
+
     # Display seasonal theme
     if current_season == "summer":
         print(Fore.YELLOW + "☀️ Welcome to SUMMER SPLASH CARNIVAL! ☀️")
@@ -6225,20 +6209,20 @@ def theme_park_menu():
         print(Fore.LIGHTMAGENTA_EX + "Flower displays and special spring-themed treats!")
     else:
         print(Fore.LIGHTMAGENTA_EX + "🎢 Welcome to the SPECTACULAR CARNIVAL! 🎢")
-    
+
     print(f"Your Tickets: {player['tickets']}")
-    
+
     # Show hunger and energy levels if enabled
     if player.get("carnival_needs_system", False):
         hunger = player.get("hunger", 100)
         energy = player.get("energy", 100)
         print(Fore.YELLOW + f"Hunger: {hunger}% | Energy: {energy}%")
-        
+
         if hunger < 30:
             print(Fore.RED + "You're getting hungry! Visit a food stand soon.")
         if energy < 30:
             print(Fore.RED + "You're getting tired! Take a break soon.")
-    
+
     # Show fast passes
     fast_passes = player.get("fast_passes", 0)
     if fast_passes > 0:
@@ -6250,19 +6234,19 @@ def theme_park_menu():
         days_left = player.get("season_pass_days", 30)
         print(Fore.GREEN + f"Season Pass Active! ({days_left} days remaining)")
         print("All attraction prices are reduced by 30%!")
-    
+
     # Show hunger and energy levels for carnival experience
     if player.get("carnival_needs_system", True):
         hunger = player.get("hunger", 100)
         energy = player.get("energy", 100)
-        
+
         # Visual hunger and energy bars
         hunger_bar = "█" * (hunger // 10) + "░" * ((100 - hunger) // 10)
         energy_bar = "█" * (energy // 10) + "░" * ((100 - energy) // 10)
-        
+
         print(Fore.YELLOW + "\nHunger: |" + hunger_bar + f"| {hunger}%")
         print(Fore.CYAN + "Energy: |" + energy_bar + f"| {energy}%")
-        
+
         # Warnings if low
         if hunger < 30 or energy < 30:
             print(Fore.RED + "⚠️ You're getting " + 
@@ -6270,34 +6254,34 @@ def theme_park_menu():
                   (" and " if hunger < 30 and energy < 30 else "") + 
                   ("tired" if energy < 30 else "") + 
                   "! Visit the food stands soon.")
-    
+
     print("\n🎪 CARNIVAL FEATURES 🎪")
     print("[F] Food Stands 🍕 - Delicious treats to restore hunger and energy!")
     print("[G] Carnival Games 🎮 - Test your skill and win prizes!")
     print("[E] Seasonal Events 🎭 - Special limited-time attractions!")
-    
+
     print("\nThrilling Rides:")
     print("[1] Cosmic Coaster 🚀 - 5 tickets")
     print("[2] Log Flume 💦 - 4 tickets")
     print("[3] Thunder Mountain ⛰️ - 6 tickets")
     print("[4] Drop Tower 🗼 - 7 tickets")
     print("[5] Spinning Teacups ☕ - 3 tickets")
-    
+
     print("\nWater Rides:")
     print("[6] Splash Mountain 💦 - 5 tickets")
     print("[7] River Rapids 🌊 - 5 tickets")
     print("[8] Water Slides 🏄 - 4 tickets")
-    
+
     print("\nSpooky Adventures:")
     print("[9] Haunted Mansion 👻 - 6 tickets")
     print("[10] Ghost Train 👺 - 4 tickets")
     print("[11] Zombie Escape 🧟 - 7 tickets")
-    
+
     print("\nFamily Rides:")
     print("[12] Ferris Wheel 🎡 - 3 tickets")
     print("[13] Carnival Carousel 🎠 - 2 tickets")
     print("[14] Bumper Cars 🚗 - 3 tickets")
-    
+
     print("\nSpecial Attractions:")
     print("[15] Virtual Reality Experience 🥽 - 7 tickets")
     print("[16] 4D Cinema 🎬 - 5 tickets")
@@ -6306,16 +6290,16 @@ def theme_park_menu():
     print("[19] Photo Booth 📸 - 2 tickets")
     print("[20] Magic Show 🎩 - 5 tickets")
     print("[21] Petting Zoo 🦙 - 3 tickets")
-    
+
     print("\nSpecial Access:")
     print("[22] Purchase Season Pass - 200 tickets (30% off all attractions for 30 days!)")
     print("[23] Purchase Fast Passes - 50 tickets (Skip the line for 5 attractions!)")
     print("[24] VIP Tour - 100 tickets (Guided tour with behind-the-scenes access!)")
-    
+
     print("\n[0] Back to Main Menu")
-    
+
     choice = input("\nSelect an attraction or feature: ")
-    
+
     # Carnival Features
     if choice.lower() == "f":
         food_stand()
@@ -6323,7 +6307,7 @@ def theme_park_menu():
         carnival_games_menu()
     elif choice.lower() == "e":
         seasonal_event()
-        
+
     # Thrilling Rides
     elif choice == "1":
         cosmic_coaster()
@@ -6335,7 +6319,7 @@ def theme_park_menu():
         drop_tower()
     elif choice == "5":
         spinning_teacups()
-    
+
     # Water Rides
     elif choice == "6":
         splash_mountain()
@@ -6343,7 +6327,7 @@ def theme_park_menu():
         river_rapids()
     elif choice == "8":
         water_slides()
-    
+
     # Spooky Adventures
     elif choice == "9":
         haunted_mansion()
@@ -6351,7 +6335,7 @@ def theme_park_menu():
         ghost_train()
     elif choice == "11":
         zombie_escape()
-    
+
     # Family Rides
     elif choice == "12":
         ferris_wheel()
@@ -6359,7 +6343,7 @@ def theme_park_menu():
         carnival_carousel()
     elif choice == "14":
         bumper_cars()
-    
+
     # Special Attractions
     elif choice == "15":
         vr_experience()
@@ -6375,7 +6359,7 @@ def theme_park_menu():
         magic_show()
     elif choice == "21":
         petting_zoo()
-        
+
     # Special Access
     elif choice == "22":
         purchase_season_pass()
@@ -6396,12 +6380,12 @@ def purchase_season_pass():
         confirm = input("Would you like to add 30 more days for 200 tickets? (y/n): ")
         if confirm.lower() != "y":
             return theme_park_menu()
-    
+
     if player["tickets"] < season_pass_cost:
         print(Fore.RED + f"Not enough tickets! You need {season_pass_cost} tickets.")
         input("Press Enter to continue...")
         return theme_park_menu()
-    
+
     player["tickets"] -= season_pass_cost
     if player.get("season_pass", False):
         player["season_pass_days"] += 30
@@ -6411,11 +6395,11 @@ def purchase_season_pass():
         player["season_pass_days"] = 30
         print(Fore.GREEN + "Season pass activated for 30 days!")
         print("You'll get 30% off all theme park attractions!")
-    
+
     # Add loyalty points for season pass purchase
     add_loyalty_points(20)
     print(Fore.MAGENTA + "+20 Loyalty Points for purchasing a season pass!")
-    
+
     input("Press Enter to continue...")
     return theme_park_menu()
 
@@ -6423,45 +6407,45 @@ def purchase_fast_passes():
     """Purchase fast passes to skip lines"""
     fast_pass_cost = 50
     fast_pass_count = 5
-    
+
     if player["tickets"] < fast_pass_cost:
         print(Fore.RED + f"Not enough tickets! You need {fast_pass_cost} tickets.")
         input("Press Enter to continue...")
         return theme_park_menu()
-    
+
     player["tickets"] -= fast_pass_cost
     player["fast_passes"] = player.get("fast_passes", 0) + fast_pass_count
     print(Fore.GREEN + f"You've purchased {fast_pass_count} Fast Passes!")
     print("You can use them to skip lines on attractions.")
-    
+
     # Add loyalty points for fast pass purchase
     add_loyalty_points(10)
     print(Fore.MAGENTA + "+10 Loyalty Points for purchasing fast passes!")
-    
+
     input("Press Enter to continue...")
     return theme_park_menu()
 
 def vip_tour():
     """Take a VIP behind-the-scenes tour of the theme park"""
     vip_tour_cost = 100
-    
+
     if player["tickets"] < vip_tour_cost:
         print(Fore.RED + f"Not enough tickets! You need {vip_tour_cost} tickets.")
         input("Press Enter to continue...")
         return theme_park_menu()
-    
+
     player["tickets"] -= vip_tour_cost
-    
+
     clear()
     print(Fore.CYAN + "🌟 VIP BEHIND-THE-SCENES TOUR 🌟")
     print("\nWelcome to your exclusive VIP tour of the theme park!")
     print("Your tour guide for today is Jordan, a veteran park employee.")
-    
+
     # Tour sequence
     print("\nJordan: Welcome to our behind-the-scenes tour! I'll be showing you how our rides work,")
     print("        introducing you to some of our performers, and sharing some theme park secrets!")
     time.sleep(2)
-    
+
     # Ride mechanics
     print("\n🔧 RIDE MECHANICS TOUR 🔧")
     print("You're taken to the maintenance area of the Cosmic Coaster...")
@@ -6469,7 +6453,7 @@ def vip_tour():
     print("Jordan: These coaster cars use magnetic propulsion to achieve speeds of up to 70mph!")
     print("        Our team of 20 engineers check every ride each morning for safety.")
     time.sleep(2)
-    
+
     # Character workshop
     print("\n🎭 CHARACTER WORKSHOP 🎭")
     print("You visit the workshop where costumes and animatronics are created...")
@@ -6477,7 +6461,7 @@ def vip_tour():
     print("Jordan: Each character costume takes about 80 hours to make by hand.")
     print("        The animatronics in the Haunted Mansion have over 40 points of articulation!")
     time.sleep(2)
-    
+
     # Special effects
     print("\n✨ SPECIAL EFFECTS DEMONSTRATION ✨")
     print("The team demonstrates how various special effects are created...")
@@ -6485,7 +6469,7 @@ def vip_tour():
     print("Jordan: The fog in the Haunted Mansion is created using ultrasonic foggers.")
     print("        For water rides, we recycle and filter over 500,000 gallons of water daily!")
     time.sleep(2)
-    
+
     # Control room
     print("\n🖥️ PARK CONTROL CENTER 🖥️")
     print("You're shown the control center where all rides are monitored...")
@@ -6493,33 +6477,33 @@ def vip_tour():
     print("Jordan: From here, we can see the status of every ride in the park.")
     print("        Our backup generators can power the entire park for 12 hours in an emergency.")
     time.sleep(2)
-    
+
     # VIP lounge
     print("\n🍹 VIP LOUNGE 🍹")
     print("The tour ends with refreshments in the exclusive VIP lounge...")
     time.sleep(2)
     print("Jordan: Please enjoy some complimentary refreshments!")
     print("        As a VIP tour participant, you'll also receive this exclusive souvenir.")
-    
+
     # Award a special souvenir
     vip_souvenir = "VIP Tour Badge 🌟"
     if "inventory" not in player:
         player["inventory"] = []
     player["inventory"].append(vip_souvenir)
     print(Fore.GREEN + f"\nYou received: {vip_souvenir}")
-    
+
     # Add loyalty points
     add_loyalty_points(25)
     print(Fore.MAGENTA + "+25 Loyalty Points for taking the VIP tour!")
-    
+
     # Add achievement
     if "VIP Explorer" not in player["achievements"]:
         award_achievement("VIP Explorer")
-    
+
     # Fast pass bonus
     player["fast_passes"] = player.get("fast_passes", 0) + 2
     print(Fore.GREEN + "Bonus: You received 2 Fast Passes!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -6527,82 +6511,82 @@ def thunder_mountain():
     """Wild mine cart adventure through a mountain with special effects"""
     if not pay_to_play(6):
         return
-    
+
     clear()
     print(Fore.YELLOW + "⛰️ THUNDER MOUNTAIN ⛰️")
     print("Hold on tight for this wild mine cart adventure!")
-    
+
     # Track for mission
     track_attraction_visit("Thunder Mountain")
-    
+
     # Add delay for suspense
     time.sleep(1.5)
-    
+
     # Ride begins
     print("\nYou climb aboard an old mining cart and secure the safety bar.")
     print("The ride operator tips his hat: 'Y'all enjoy yer adventure now, ya hear?'")
     time.sleep(2)
-    
+
     # Start of the ride
     print("\nWith a mechanical clunk, your cart starts moving...")
     print("It slowly climbs up the first hill, the chains clicking beneath you...")
     time.sleep(2)
-    
+
     # First drop
     print("\nYou reach the top of the hill and pause for a moment...")
     time.sleep(1)
     print("WHOOSH! Your cart plummets down the first drop!")
     print("The wind rushes past your face as you speed through a dark tunnel!")
     time.sleep(2)
-    
+
     # Cave section
     print("\nYour cart races through a dimly lit cave...")
     print("Glowing gems and crystals line the walls, creating a mesmerizing light show.")
     print("You hear the sound of mining picks and ghostly whispers...")
     time.sleep(2)
-    
+
     # Waterfall section
     print("\nYou emerge from the cave and speed past a roaring waterfall!")
     print("A fine mist sprays your face as you zoom by.")
     time.sleep(2)
-    
+
     # Decision point
     print("\nThe track splits ahead! Your cart could go left or right.")
     choice = input("Which way do you lean? (left/right): ").lower()
-    
+
     if choice == "left":
         print("\nYou lean left and your cart veers onto the left track...")
         print("This route takes you through an abandoned mining town!")
         print("Animatronic miners tip their hats as you speed past.")
         time.sleep(2)
-        
+
         print("\nYour cart enters an old saloon and crashes through the swinging doors!")
         print("Inside, the player piano is playing by itself as you race through.")
         time.sleep(2)
-        
+
         # Special scene for left path
         print("\nAs you exit the saloon, you spot a hidden gold nugget!")
         nugget_found = "Gold Nugget Souvenir 💰"
         player["inventory"].append(nugget_found)
         print(Fore.GREEN + f"You received: {nugget_found}")
-        
+
     else:  # right or any other input
         print("\nYou lean right and your cart veers onto the right track...")
         print("This route takes you through a terrifying cave-in!")
         print("Rocks appear to fall all around you, but narrowly miss your cart.")
         time.sleep(2)
-        
+
         print("\nYour cart zooms past an old dynamite storage area...")
         print("BOOM! Special effects create the illusion of an explosion behind you!")
         print("The heat from the pyrotechnics warms your back as you escape!")
         time.sleep(2)
-        
+
         # Special scene for right path
         print("\nAs you escape the explosion, you notice a strange glowing crystal!")
         crystal_found = "Thunder Mountain Crystal 💎"
         player["inventory"].append(crystal_found)
         print(Fore.GREEN + f"You received: {crystal_found}")
-    
+
     # Final drop
     print("\nBoth paths rejoin for the grand finale...")
     print("Your cart climbs the highest peak of Thunder Mountain...")
@@ -6612,15 +6596,15 @@ def thunder_mountain():
     print("WHOOOOOOSH! Your cart plummets down at incredible speed!")
     print("You raise your hands and scream with delight!")
     time.sleep(2)
-    
+
     # End of ride
     print("\nYour cart gradually slows down and returns to the station.")
     print("The ride operator grins: 'Hope y'all struck it rich in there!'")
-    
+
     # Loyalty points
     add_loyalty_points(3)
     print(Fore.MAGENTA + "+3 Loyalty Points for riding Thunder Mountain!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -6628,25 +6612,25 @@ def drop_tower():
     """Thrilling drop tower experience with multiple drops"""
     if not pay_to_play(7):
         return
-    
+
     clear()
     print(Fore.RED + "🗼 THE DROP TOWER 🗼")
     print("Experience the ultimate free-fall sensation!")
-    
+
     # Track for mission
     track_attraction_visit("Drop Tower")
-    
+
     # Ride begins
     print("\nYou're secured into your seat with a heavy-duty harness.")
     print("The ride operator checks all safety systems twice.")
     print("'Keep your hands inside the ride at all times and enjoy the view... while you can.'")
     time.sleep(2)
-    
+
     # Ascent
     print("\nWith a mechanical hum, your seat begins to rise...")
     print("The tower is 200 feet tall, and you're heading all the way to the top.")
     time.sleep(1.5)
-    
+
     for height in [50, 100, 150, 200]:
         print(f"\nYou're now {height} feet above the ground...")
         if height == 100:
@@ -6656,13 +6640,13 @@ def drop_tower():
         elif height == 200:
             print("You've reached the top! The view is breathtaking!")
         time.sleep(1.5)
-    
+
     # At the top
     print("\nYour seat hovers at the top of the tower...")
     print("You have a moment to appreciate the incredible view...")
     print("The entire theme park and surrounding landscape stretches out beneath you.")
     time.sleep(3)
-    
+
     # The drop
     print("\n3...")
     time.sleep(1)
@@ -6674,10 +6658,10 @@ def drop_tower():
     print("You plummet toward the ground at incredible speed!")
     print("The wind rushes past as your stomach feels like it's floating!")
     time.sleep(2)
-    
+
     # Surprise elements - random events during the drop
     surprise = random.randint(1, 4)
-    
+
     if surprise == 1:
         print("\nHalfway down, the tower unexpectedly STOPS!")
         time.sleep(1)
@@ -6692,23 +6676,23 @@ def drop_tower():
     else:
         print("\nLED lights flash in sequence as you fall through the tower!")
         print("It's like falling through a tunnel of colorful stars!")
-    
+
     time.sleep(1.5)
-    
+
     # The end - magnetic braking
     print("\nJust when you think you're about to hit the ground...")
     print("The magnetic brakes engage and slow your descent!")
     print("Your fall slows dramatically, leaving you with an incredible adrenaline rush!")
     time.sleep(2)
-    
+
     # Reaction
     print("\nAs your seat gently returns to the loading platform, you notice")
     print("your heart is still pounding from the incredible experience!")
-    
+
     # Photo opportunity
     print("\nThe ride operator grins: 'Want to see your drop photo?'")
     see_photo = input("Would you like to see your photo? (y/n): ").lower()
-    
+
     if see_photo == "y":
         expressions = ["terrified", "thrilled", "screaming with delight", "eyes closed tight", 
                       "arms raised high", "perfectly calm (surprisingly)"]
@@ -6716,18 +6700,18 @@ def drop_tower():
         print(f"\nYour photo shows you looking {expression} during the big drop!")
         photo_souvenir = "Drop Tower Photo 📸"
         buy_photo = input("Would you like to buy this photo for 2 tickets? (y/n): ").lower()
-        
+
         if buy_photo == "y" and player["tickets"] >= 2:
             player["tickets"] -= 2
             player["inventory"].append(photo_souvenir)
             print(Fore.GREEN + f"You received: {photo_souvenir}")
         elif buy_photo == "y":
             print(Fore.RED + "Not enough tickets to buy the photo!")
-    
+
     # Loyalty points
     add_loyalty_points(3)
     print(Fore.MAGENTA + "+3 Loyalty Points for surviving the Drop Tower!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -6735,22 +6719,22 @@ def spinning_teacups():
     """Classic spinning teacup ride with varying speeds"""
     if not pay_to_play(3):
         return
-    
+
     clear()
     print(Fore.MAGENTA + "☕ SPINNING TEACUPS ☕")
     print("The classic fairground favorite with a colorful twist!")
-    
+
     # Track for mission
     track_attraction_visit("Spinning Teacups")
-    
+
     # Ride begins
     print("\nYou approach a large rotating platform with colorful teacups.")
     teacup_colors = ["pink", "blue", "green", "purple", "yellow", "red"]
-    
+
     print("\nAvailable teacups:")
     for i, color in enumerate(teacup_colors, 1):
         print(f"[{i}] {color.capitalize()} teacup")
-    
+
     # Choose teacup
     try:
         choice = int(input("\nChoose your teacup (1-6): "))
@@ -6760,22 +6744,22 @@ def spinning_teacups():
     except (ValueError, IndexError):
         color = random.choice(teacup_colors)
         print(f"Invalid choice. You're assigned to the {color} teacup.")
-    
+
     print(f"\nYou climb into the {color} teacup and sit down.")
     print("Each teacup has a wheel in the center that you can spin to go even faster!")
     time.sleep(2)
-    
+
     # Ride starts
     print("\nThe ride starts to move, and the platform begins rotating...")
     print("Your teacup starts to gently spin on its own...")
     time.sleep(2)
-    
+
     # Interactive spinning
     print("\nHow fast do you want to spin your teacup?")
     print("[1] Take it easy - gentle spinning")
     print("[2] Medium speed - fun but not too wild")
     print("[3] Maximum speed - spin as fast as possible!")
-    
+
     try:
         spin_choice = int(input("Choose your spin speed (1-3): "))
         if spin_choice < 1 or spin_choice > 3:
@@ -6783,7 +6767,7 @@ def spinning_teacups():
     except ValueError:
         spin_choice = random.randint(1, 3)
         print(f"Invalid choice. Setting to speed level {spin_choice}.")
-    
+
     # Different experiences based on spin choice
     if spin_choice == 1:
         print("\nYou spin the wheel gently, enjoying a pleasant rotation.")
@@ -6792,7 +6776,7 @@ def spinning_teacups():
         time.sleep(2)
         print("\nYou finish the ride feeling happy and not at all dizzy.")
         dizzy_factor = "not dizzy at all"
-    
+
     elif spin_choice == 2:
         print("\nYou spin the wheel with moderate effort.")
         print("Your teacup spins faster, creating a fun whirling sensation!")
@@ -6800,7 +6784,7 @@ def spinning_teacups():
         time.sleep(2)
         print("\nYou finish the ride with a slight case of the wobbles.")
         dizzy_factor = "slightly dizzy"
-    
+
     else:  # spin_choice == 3
         print("\nYou grip the wheel and spin with all your might!")
         print("Your teacup becomes a colorful blur as it spins wildly!")
@@ -6809,21 +6793,21 @@ def spinning_teacups():
         time.sleep(2)
         print("\nYou finish the ride stumbling and dizzy, but exhilarated!")
         dizzy_factor = "extremely dizzy but thrilled"
-        
+
         # Special reward for brave spinners
         special_item = "Dizzy Champion Badge 💫"
         if special_item not in player["inventory"]:
             player["inventory"].append(special_item)
             print(Fore.GREEN + f"For your bravery, you received: {special_item}")
-    
+
     # End of ride
     print(f"\nYou exit the {color} teacup, {dizzy_factor}.")
     print("That was a colorful, spinning adventure!")
-    
+
     # Loyalty points
     add_loyalty_points(2)
     print(Fore.MAGENTA + "+2 Loyalty Points for riding the Spinning Teacups!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -6831,25 +6815,25 @@ def river_rapids():
     """Navigate rushing waters in a circular raft with friends"""
     if not pay_to_play(5):
         return
-    
+
     clear()
     print(Fore.BLUE + "🌊 RIVER RAPIDS 🌊")
     print("Navigate rushing waters in this thrilling water adventure!")
-    
+
     # Track for mission
     track_attraction_visit("River Rapids")
-    
+
     # Ride begins
     print("\nYou climb into a large circular raft with several other passengers.")
     print("Everyone grabs the handles in the center as the attendant pushes you off.")
     time.sleep(2)
-    
+
     # Start of journey
     print("\nYour raft begins floating down a gentle river...")
     print("The scenery is beautiful with lush vegetation on both sides.")
     print("Birds chirp and butterflies flutter around colorful flowers.")
     time.sleep(2)
-    
+
     # First rapids
     print("\nYou hear the sound of rushing water ahead...")
     print("Your raft approaches the first section of rapids!")
@@ -6857,38 +6841,38 @@ def river_rapids():
     print("SPLASH! The raft bounces and spins as it hits the churning water!")
     print("Everyone screams and laughs as water sprays into the raft!")
     time.sleep(2)
-    
+
     # Interactive moment
     print("\nThe raft reaches a calm section, but there are rapids ahead on both sides.")
     choice = input("Do you want to lean left, right, or stay centered? (left/right/center): ").lower()
-    
+
     if choice == "left":
         print("\nEveryone leans left, steering the raft toward the left rapids...")
         print("These rapids are extra bumpy with lots of rocks!")
         print("The raft spins rapidly as you bounce through the turbulent water!")
         print("SPLASH! A wave crashes over the left side, soaking you completely!")
         wetness = "soaked"
-        
+
     elif choice == "right":
         print("\nEveryone leans right, steering the raft toward the right rapids...")
         print("This route takes you through a series of small waterfalls!")
         print("Your stomach drops as the raft plunges down each cascade!")
         print("SPLASH! You get moderately wet from the spray of the falls!")
         wetness = "moderately wet"
-        
+
     else:  # center or any other input
         print("\nYou stay centered, heading straight down the middle channel...")
         print("This route is smoother but leads to a big wave at the end!")
         print("The raft glides smoothly until...")
         print("WHOOSH! You hit the standing wave and get splashed from all sides!")
         wetness = "splashed from all directions"
-    
+
     # Cave section
     print("\nYour raft enters a mysterious cave...")
     print("Glowing formations illuminate the ceiling, creating magical reflections on the water.")
     print("The echoing sounds of dripping water create an eerie atmosphere.")
     time.sleep(2)
-    
+
     # Final rapids
     print("\nYou exit the cave and hear the roar of the biggest rapids yet!")
     print("Everyone holds on tight as the raft approaches...")
@@ -6897,22 +6881,22 @@ def river_rapids():
     print("Your raft bounces, spins, and rocks through the wildest rapids yet!")
     print("Water splashes in from every direction!")
     time.sleep(2)
-    
+
     # End of ride
     print(f"\nYour raft finally reaches calm water and returns to the station, everyone {wetness}.")
     print("That was an exciting whitewater adventure!")
-    
+
     # Special souvenir chance
     if random.random() < 0.3:  # 30% chance
         souvenir = "River Rapids Water Bottle 🍶"
         if souvenir not in player["inventory"]:
             player["inventory"].append(souvenir)
             print(Fore.GREEN + f"\nYou found a {souvenir} floating in the water at the end!")
-    
+
     # Loyalty points
     add_loyalty_points(3)
     print(Fore.MAGENTA + "+3 Loyalty Points for navigating the River Rapids!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -6920,14 +6904,14 @@ def water_slides():
     """Experience multiple water slides of varying intensity"""
     if not pay_to_play(4):
         return
-    
+
     clear()
     print(Fore.CYAN + "🏄 WATER SLIDES 🏄")
     print("Choose from five different slides of varying intensity!")
-    
+
     # Track for mission
     track_attraction_visit("Water Slides")
-    
+
     # Available slides
     slides = [
         {"name": "Gentle Glider", "color": "Blue", "intensity": "Mild", "description": "A gentle, winding slide perfect for beginners."},
@@ -6936,13 +6920,13 @@ def water_slides():
         {"name": "Plummet Dive", "color": "Orange", "intensity": "High", "description": "A steep drop slide that gives you weightlessness."},
         {"name": "Extreme Vortex", "color": "Red", "intensity": "Extreme", "description": "A pitch-black slide with unexpected drops and turns."}
     ]
-    
+
     # Display slides
     print("\nAvailable Slides:")
     for i, slide in enumerate(slides, 1):
         print(f"[{i}] {slide['name']} ({slide['color']}) - {slide['intensity']} intensity")
         print(f"    {slide['description']}")
-    
+
     # Choose slide
     try:
         choice = int(input("\nWhich slide would you like to try? (1-5): "))
@@ -6952,17 +6936,17 @@ def water_slides():
     except (ValueError, IndexError):
         slide = random.choice(slides)
         print(f"Invalid choice. You're assigned to the {slide['name']}.")
-    
+
     print(f"\nYou climb the stairs to the {slide['name']} water slide.")
     print(f"The {slide['color']} tube gleams in the sunlight.")
-    
+
     # Slide experience
     print("\nYou sit at the top of the slide, water rushing past you.")
     print("The attendant gives you a thumbs up...")
     input("Press Enter when you're ready to go...")
-    
+
     print("\nYou push off and begin your descent!")
-    
+
     # Different experiences based on slide choice
     if slide["name"] == "Gentle Glider":
         print("\nYou glide smoothly down the winding blue slide.")
@@ -6972,7 +6956,7 @@ def water_slides():
         print("\nYou splash into the landing pool with a gentle 'swoosh'.")
         print("That was a nice, easy ride!")
         experience = "relaxing"
-        
+
     elif slide["name"] == "Twisty Tornado":
         print("\nYou zip down the green slide, encountering turn after turn!")
         print("Left, right, left, right - the twists keep coming!")
@@ -6981,29 +6965,29 @@ def water_slides():
         print("\nAfter the final twist, you splash into the landing pool with a 'splash'!")
         print("That was a fun, twisty adventure!")
         experience = "twisty and fun"
-        
+
     elif slide["name"] == "Rapid Racer":
         print("\nThe yellow racing slide is straight and FAST!")
         print("You accelerate quickly, racing down at high speed!")
         print("Water sprays around you as you zoom toward the bottom.")
-        
+
         # Timer for racing slide
         race_time = round(random.uniform(9.5, 15.2), 1)
         time.sleep(2)
         print("\nYou splash into the landing pool with a big 'SPLASH'!")
         print(f"Your time: {race_time} seconds!")
-        
+
         if race_time < 10.5:
             print("That's one of the fastest times today!")
             experience = "incredibly fast"
-            
+
             # Special achievement for fast time
             if "Speed Demon" not in player["achievements"]:
                 award_achievement("Speed Demon")
         else:
             print("Not bad! The slide was super fast!")
             experience = "very fast"
-        
+
     elif slide["name"] == "Plummet Dive":
         print("\nYou look down the steep orange slide with a gulp...")
         print("It's nearly vertical at the start!")
@@ -7016,7 +7000,7 @@ def water_slides():
         print("\nYou hit the runout section and splash into the landing pool with a big 'KERPLUNK'!")
         print("Your heart is racing from the adrenaline rush!")
         experience = "heart-pounding"
-        
+
     else:  # Extreme Vortex
         print("\nYou enter the dark red tube with trepidation...")
         print("As soon as you start, you're plunged into complete darkness!")
@@ -7029,30 +7013,30 @@ def water_slides():
         print("\nFinally, you see light and splash into the landing pool with a massive 'SPLOOSH'!")
         print("That was the most intense water slide experience ever!")
         experience = "absolutely thrilling"
-        
+
         # Special souvenir for brave riders
         special_item = "Extreme Rider Badge 🌊"
         if special_item not in player["inventory"]:
             player["inventory"].append(special_item)
             print(Fore.GREEN + f"For your bravery, you received: {special_item}")
-    
+
     # End of ride
     print(f"\nYou climb out of the pool, the {experience} ride leaving you exhilarated.")
-    
+
     # Multiple rides option
     more_slides = input("\nWould you like to try another slide? (y/n): ").lower()
-    
+
     if more_slides == "y" and player["tickets"] >= 2:
         player["tickets"] -= 2
         print(Fore.YELLOW + "You paid 2 tickets for another slide!")
         water_slides()  # Recursive call for another ride
     elif more_slides == "y":
         print(Fore.RED + "Not enough tickets for another slide!")
-    
+
     # Loyalty points
     add_loyalty_points(2)
     print(Fore.MAGENTA + "+2 Loyalty Points for riding the Water Slides!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -7060,25 +7044,25 @@ def ghost_train():
     """Spooky ghost train ride through a haunted forest"""
     if not pay_to_play(4):
         return
-    
+
     clear()
     print(Fore.MAGENTA + "👺 GHOST TRAIN 👺")
     print("A spooky journey through the spirit realm!")
-    
+
     # Track for mission
     track_attraction_visit("Ghost Train")
-    
+
     # Ride begins
     print("\nYou board an old-fashioned train car decorated with cobwebs and skulls.")
     print("The conductor, dressed as a skeleton, welcomes you aboard.")
     print("'Welcome to the Ghost Train! Please keep your limbs inside... if you want to keep them!'")
     time.sleep(2)
-    
+
     # Train starts
     print("\nWith a ghostly whistle, the train lurches forward into a dark tunnel...")
     print("Eerie music plays from hidden speakers as you enter the haunted forest.")
     time.sleep(2)
-    
+
     # The experience - random scares
     scares = [
         "A ghost bride appears beside the tracks, reaching toward the train!",
@@ -7090,19 +7074,19 @@ def ghost_train():
         "The train seems to derail and fall, creating a moment of panic before continuing normally!",
         "Ghostly children play hide and seek around your car, giggling eerily!"
     ]
-    
+
     # Scare intensity tracker
     fear_level = 0
-    
+
     # A series of randomized scares
     for _ in range(4):
         scare = random.choice(scares)
         scares.remove(scare)  # Don't repeat scares
-        
+
         print(f"\n{scare}")
-        
+
         reaction = input("How do you react? (scream/laugh/close eyes/stay calm): ").lower()
-        
+
         if reaction == "scream":
             print("You let out a scream! The skeleton conductor seems pleased.")
             fear_level += 3
@@ -7115,23 +7099,23 @@ def ghost_train():
         else:  # stay calm or any other input
             print("You remain stoic. The skeleton conductor looks impressed.")
             fear_level += 1
-        
+
         time.sleep(1.5)
-    
+
     # Grand finale
     print("\nThe train approaches the final scene - a massive graveyard...")
     print("Suddenly, all the graves open at once and spectral figures rise!")
     print("They surround the train, reaching in through the windows!")
     print("The lights flicker and go out completely!")
     time.sleep(3)
-    
+
     print("\nA moment of complete darkness and silence...")
     time.sleep(2)
-    
+
     print("\nThe lights come back on and you're back at the station!")
     print("'We hope you enjoyed your journey to the other side,' says the conductor.")
     print("'Or perhaps... you never left?'")
-    
+
     # Different endings based on fear level
     if fear_level > 8:
         print("\nYou exit the train with shaky legs, thoroughly spooked!")
@@ -7145,13 +7129,13 @@ def ghost_train():
     else:
         print("\nYou exit the train with a smile, having enjoyed the theatrics but not really scared.")
         ending = "amused but not scared"
-    
+
     # Souvenir photo
     print("\nThe ride attendant shows you a photo taken during the ride.")
     print(f"It shows you looking {ending} during one of the scary moments!")
-    
+
     buy_photo = input("Would you like to buy this photo for 2 tickets? (y/n): ").lower()
-    
+
     if buy_photo == "y" and player["tickets"] >= 2:
         player["tickets"] -= 2
         photo_souvenir = "Ghost Train Photo 👻"
@@ -7159,11 +7143,11 @@ def ghost_train():
         print(Fore.GREEN + f"You received: {photo_souvenir}")
     elif buy_photo == "y":
         print(Fore.RED + "Not enough tickets to buy the photo!")
-    
+
     # Loyalty points
     add_loyalty_points(2)
     print(Fore.MAGENTA + "+2 Loyalty Points for surviving the Ghost Train!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -7171,20 +7155,20 @@ def carnival_carousel():
     """Beautiful classic carousel ride with hand-carved animals"""
     if not pay_to_play(2):
         return
-    
+
     clear()
     print(Fore.YELLOW + "🎠 CARNIVAL CAROUSEL 🎠")
     print("Experience the timeless magic of our beautifully restored carousel!")
-    
+
     # Track for mission
     track_attraction_visit("Carnival Carousel")
-    
+
     # Ride begins
     print("\nYou approach the magnificent carousel, admiring its intricate details.")
     print("Colorful lights twinkle as the ornate organ music fills the air.")
     print("The carousel features dozens of hand-carved and painted animals.")
     time.sleep(2)
-    
+
     # Choose animal
     animals = [
         {"name": "Majestic Horse", "color": "White", "special": "Jeweled saddle"},
@@ -7196,11 +7180,11 @@ def carnival_carousel():
         {"name": "Exotic Tiger", "color": "Orange", "special": "Illuminated stripes"},
         {"name": "Friendly Elephant", "color": "Gray", "special": "Decorative canopy"}
     ]
-    
+
     print("\nAvailable carousel animals:")
     for i, animal in enumerate(animals, 1):
         print(f"[{i}] {animal['name']} - {animal['color']} with {animal['special']}")
-    
+
     try:
         choice = int(input("\nWhich animal would you like to ride? (1-8): "))
         if choice < 1 or choice > 8:
@@ -7209,23 +7193,23 @@ def carnival_carousel():
     except (ValueError, IndexError):
         animal = random.choice(animals)
         print(f"Invalid choice. You're assigned to the {animal['name']}.")
-    
+
     print(f"\nYou climb onto the {animal['color']} {animal['name']} with its {animal['special']}.")
     print("You hold onto the brass pole as the ride attendant checks that everyone is secure.")
     time.sleep(2)
-    
+
     # Ride starts
     print("\nThe carousel begins to move, gradually picking up speed...")
     print("The beautiful organ music plays a cheerful melody.")
     print("Colorful lights reflect off the mirrored panels as you rotate.")
     time.sleep(2)
-    
+
     # Ride experience
     print("\nYou go up and down on your animal as the carousel spins.")
     print("The world outside becomes a colorful blur as you focus on the intricate details.")
     print("There's something magical and timeless about the carousel experience.")
     time.sleep(2)
-    
+
     # Special moments based on animal choice
     if animal["name"] == "Majestic Horse":
         print("\nYour white horse seems to glow under the carousel lights.")
@@ -7247,16 +7231,16 @@ def carnival_carousel():
             "wonderfully nostalgic"
         ]
         special_moment = random.choice(special_moments)
-    
+
     # End of ride
     print("\nThe carousel gradually slows to a stop.")
     print(f"You dismount from your {animal['name']}, {special_moment}.")
     print("It was a simple but delightful experience!")
-    
+
     # Photo opportunity
     print("\nA photographer shows you a candid photo they took during the ride.")
     buy_photo = input("Would you like to buy a carousel photo for 2 tickets? (y/n): ").lower()
-    
+
     if buy_photo == "y" and player["tickets"] >= 2:
         player["tickets"] -= 2
         photo_souvenir = "Carousel Photo 🎠"
@@ -7264,11 +7248,11 @@ def carnival_carousel():
         print(Fore.GREEN + f"You received: {photo_souvenir}")
     elif buy_photo == "y":
         print(Fore.RED + "Not enough tickets to buy the photo!")
-    
+
     # Loyalty points
     add_loyalty_points(1)
     print(Fore.MAGENTA + "+1 Loyalty Point for riding the Carnival Carousel!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -7276,26 +7260,26 @@ def bumper_cars():
     """Classic bumper car ride with electric cars"""
     if not pay_to_play(3):
         return
-    
+
     clear()
     print(Fore.BLUE + "🚗 BUMPER CARS 🚗")
     print("Crash into friends in these electric cars!")
-    
+
     # Track for mission
     track_attraction_visit("Bumper Cars")
-    
+
     # Ride begins
     print("\nYou enter the bumper car arena, where colorful electric cars")
     print("zip around a metal floor, sparks flying from the ceiling poles.")
-    
+
     # Choose car
     car_colors = ["Red", "Blue", "Green", "Yellow", "Purple", "Orange"]
     available_cars = random.sample(car_colors, min(4, len(car_colors)))
-    
+
     print("\nAvailable cars:")
     for i, color in enumerate(available_cars, 1):
         print(f"[{i}] {color} Car")
-    
+
     try:
         choice = int(input("\nWhich car would you like to drive? (1-4): "))
         if choice < 1 or choice > len(available_cars):
@@ -7304,58 +7288,58 @@ def bumper_cars():
     except (ValueError, IndexError):
         car_color = random.choice(available_cars)
         print(f"Invalid choice. You're assigned to the {car_color} Car.")
-    
+
     print(f"\nYou climb into the {car_color} Car and buckle the safety belt.")
     print("You test the pedal and steering wheel, ready for some bumping action!")
     time.sleep(2)
-    
+
     # Generate other drivers
     other_drivers = []
     for color in available_cars:
         if color != car_color:
             driver_type = random.choice(["aggressive", "defensive", "unpredictable", "strategic"])
             other_drivers.append({"color": color, "style": driver_type})
-    
+
     # Ride starts
     print("\nThe buzzer sounds and the floor electrifies!")
     print("All cars spring to life, and the bumping begins!")
     time.sleep(1)
-    
+
     # Bumper car sequence
     print("\nYou press the pedal and your car lurches forward...")
-    
+
     # Track collisions
     collisions = 0
     greatest_hit = None
     times_hit = 0
-    
+
     # Simulated bumper car action (3 rounds)
     for round_num in range(1, 4):
         print(f"\n--- Round {round_num} ---")
-        
+
         # Player action
         print("\nWhat's your strategy?")
         print("[1] Go after a specific car")
         print("[2] Drive defensively and avoid hits")
         print("[3] Go wild and bump anyone in your path")
-        
+
         strategy = input("Choose your strategy (1-3): ")
-        
+
         if strategy == "1":
             # Target a specific car
             target_options = [driver["color"] for driver in other_drivers]
-            
+
             print("\nWhich car do you want to target?")
             for i, color in enumerate(target_options, 1):
                 print(f"[{i}] {color} Car")
-            
+
             try:
                 target_idx = int(input("Enter choice: ")) - 1
                 target = other_drivers[target_idx]["color"]
             except (ValueError, IndexError):
                 target = random.choice(target_options)
                 print(f"Invalid choice. Targeting the {target} Car instead.")
-            
+
             hit_chance = 0.7  # 70% chance to hit targeted car
             if random.random() < hit_chance:
                 print(f"\nYou aim for the {target} Car and WHAM! A direct hit!")
@@ -7366,7 +7350,7 @@ def bumper_cars():
             else:
                 print(f"\nYou aim for the {target} Car but they swerve away at the last second!")
                 print("You narrowly avoid hitting the wall instead!")
-        
+
         elif strategy == "2":
             # Defensive driving
             dodge_chance = 0.8  # 80% chance to avoid being hit
@@ -7378,11 +7362,11 @@ def bumper_cars():
                 print(f"\nDespite your defensive driving, the {hit_by} Car catches you off guard!")
                 print(f"BANG! The {hit_by} Car hits you from behind, jolting you forward!")
                 times_hit += 1
-        
+
         else:  # strategy == "3" or any other input
             # Go wild
             hits = random.randint(0, 2)  # Can hit 0-2 cars
-            
+
             if hits == 0:
                 print("\nYou zoom around wildly but don't manage to hit anyone!")
                 print("Better luck in the next round!")
@@ -7392,17 +7376,17 @@ def bumper_cars():
                 for hit_car in hit_cars:
                     print(f"CRASH! You slam into the {hit_car} Car!")
                 collisions += hits
-                
+
                 if hits > 0:
                     greatest_hit = hit_cars[0]
-            
+
             # But might get hit in return
             if random.random() < 0.4:  # 40% chance to get hit
                 hit_by = random.choice(other_drivers)["color"]
                 print(f"\nWhile you're driving wild, the {hit_by} Car gets revenge!")
                 print("BANG! You get jolted sideways from the impact!")
                 times_hit += 1
-        
+
         # Other drivers' actions
         if round_num < 3:  # Only do this for the first two rounds
             random_event = random.choice([
@@ -7414,18 +7398,18 @@ def bumper_cars():
             ])
             print(f"\n{random_event}")
             time.sleep(1.5)
-    
+
     # End of ride
     print("\nThe buzzer sounds again, and all cars gradually slow to a stop.")
     print("The bumper car session is over!")
-    
+
     # Results
     print("\n🚗 Your Bumper Car Stats 🚗")
     print(f"Total collisions caused: {collisions}")
     print(f"Times you were hit: {times_hit}")
     if greatest_hit:
         print(f"Your greatest hit was on the {greatest_hit} Car!")
-    
+
     # Award based on performance
     if collisions >= 3:
         print("\nYou were a bumping champion out there!")
@@ -7439,11 +7423,11 @@ def bumper_cars():
         if award not in player["inventory"]:
             player["inventory"].append(award)
             print(Fore.GREEN + f"You received: {award}")
-    
+
     # Loyalty points
     add_loyalty_points(2)
     print(Fore.MAGENTA + "+2 Loyalty Points for the bumper car experience!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -7451,14 +7435,14 @@ def cinema_4d():
     """4D Cinema experience with sensory effects"""
     if not pay_to_play(5):
         return
-    
+
     clear()
     print(Fore.CYAN + "🎬 4D CINEMA 🎬")
     print("Experience movies with environmental effects!")
-    
+
     # Track for mission
     track_attraction_visit("4D Cinema")
-    
+
     # Available 4D films
     films = [
         {"title": "Ocean Explorer", "genre": "Documentary", "length": "20 min", 
@@ -7470,13 +7454,13 @@ def cinema_4d():
         {"title": "Thrill Ride", "genre": "Action", "length": "12 min", 
          "effects": ["Moving Seats", "Air Blasts", "Vibration", "Strobe Lights"]}
     ]
-    
+
     # Display films
     print("\nToday's 4D Films:")
     for i, film in enumerate(films, 1):
         print(f"[{i}] {film['title']} - {film['genre']} ({film['length']})")
         print(f"    Effects: {', '.join(film['effects'])}")
-    
+
     # Choose film
     try:
         choice = int(input("\nWhich film would you like to see? (1-4): "))
@@ -7486,18 +7470,18 @@ def cinema_4d():
     except (ValueError, IndexError):
         film = random.choice(films)
         print(f"Invalid choice. You'll be watching {film['title']}.")
-    
+
     # Prepare for the film
     print(f"\nYou enter the 4D theater for '{film['title']}'.")
     print("The usher hands you a pair of 3D glasses and shows you to your seat.")
     print("The specialized chairs have built-in effects systems.")
     time.sleep(2)
-    
+
     # Film starts
     print(f"\nThe lights dim and '{film['title']}' begins...")
     print("The 3D visuals immediately pop out from the screen, creating depth and realism.")
     time.sleep(2)
-    
+
     # Film experience based on the film chosen
     if film["title"] == "Ocean Explorer":
         # Ocean Explorer experience
@@ -7510,9 +7494,9 @@ def cinema_4d():
         print("The ocean breeze is simulated with cool air flowing through the theater.")
         time.sleep(1.5)
         print("As you pass a coral reef, the scent of the ocean fills the air!")
-        
+
         highlight = "swimming with dolphins as water sprayed from the ceiling"
-        
+
     elif film["title"] == "Cosmic Adventure":
         # Cosmic Adventure experience
         print("\nYou board a spaceship for an intergalactic journey...")
@@ -7524,9 +7508,9 @@ def cinema_4d():
         print("A nearby star explodes with brilliant strobe effects!")
         time.sleep(1.5)
         print("Air blasts hit your neck as alien creatures fly past your ship!")
-        
+
         highlight = "the meteor shower sequence with intense seat movement"
-        
+
     elif film["title"] == "Jungle Quest":
         # Jungle Quest experience
         print("\nYou venture deep into an unexplored rainforest...")
@@ -7538,9 +7522,9 @@ def cinema_4d():
         print("Something brushes against your legs - the ticklers simulating plants!")
         time.sleep(1.5)
         print("A waterfall appears, and a gentle spray of water mists your face!")
-        
+
         highlight = "the butterfly swarm with scents and gentle ticklers on your legs"
-        
+
     else:  # Thrill Ride
         # Thrill Ride experience
         print("\nYou're strapped into a virtual roller coaster adventure...")
@@ -7552,25 +7536,25 @@ def cinema_4d():
         print("The entire seat vibrates as you cross a rickety wooden track section!")
         time.sleep(1.5)
         print("Strobe lights create a dizzying effect as you spin through a loop!")
-        
+
         highlight = "the massive loop-de-loop with synchronized seat movement"
-    
+
     # Film ends
     time.sleep(2)
     print(f"\nThe '{film['title']}' experience comes to an end.")
     print("The lights come up as you remove your 3D glasses.")
     print(f"The most incredible part was {highlight}!")
-    
+
     # Souvenir
     souvenir = f"4D Experience Ticket: {film['title']} 🎟️"
     if souvenir not in player["inventory"]:
         player["inventory"].append(souvenir)
         print(Fore.GREEN + f"\nYou received: {souvenir}")
-    
+
     # Loyalty points
     add_loyalty_points(3)
     print(Fore.MAGENTA + "+3 Loyalty Points for experiencing 4D Cinema!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -7578,38 +7562,38 @@ def dinosaur_safari():
     """Travel back in time to see prehistoric creatures"""
     if not pay_to_play(6):
         return
-    
+
     clear()
     print(Fore.GREEN + "🦕 DINOSAUR SAFARI 🦕")
     print("Travel back in time to see prehistoric creatures!")
-    
+
     # Track for mission
     track_attraction_visit("Dinosaur Safari")
-    
+
     # Ride begins
     print("\nYou enter the Dinosaur Safari building, designed like a research facility.")
     print("A park ranger greets you: 'Welcome to the Temporal Dinosaur Safari!'")
     print("'Today you'll journey 65 million years into the past using our time rover.'")
     time.sleep(2)
-    
+
     # Pre-show
     print("\nYou watch a brief pre-show video explaining the 'technology'")
     print("behind the time travel and safety precautions for observing dinosaurs.")
     print("'Remember,' says the scientist on screen, 'we're observing only. No interaction!'")
     time.sleep(2)
-    
+
     # Board the vehicle
     print("\nYou board a rugged-looking vehicle called the 'Time Rover'.")
     print("It has oversized wheels and reinforced windows for 'dinosaur protection'.")
     print("The ranger secures your safety harness and starts the vehicle's 'temporal engines'.")
     time.sleep(2)
-    
+
     # Start of safari
     print("\nThe time machine activates! Lights flash and fog fills the chamber...")
     print("The vehicle shakes and rumbles as you 'travel through time'...")
     print("Suddenly, everything clears, and you find yourself in a prehistoric landscape!")
     time.sleep(2)
-    
+
     # Dinosaur encounters
     dinos = [
         {"name": "Triceratops", "behavior": "grazing peacefully on ferns", "reaction": "barely notices you"},
@@ -7618,25 +7602,25 @@ def dinosaur_safari():
         {"name": "Pteranodon", "behavior": "soaring overhead", "reaction": "screeches loudly"},
         {"name": "Parasaurolophus", "behavior": "calling to its herd with its crest", "reaction": "the herd responds with similar calls"}
     ]
-    
+
     # Show several dinosaur encounters
     print("\nYour ranger guide starts the safari tour...")
-    
+
     for i in range(3):  # Three random encounters
         dino = random.choice(dinos)
         dinos.remove(dino)  # Don't repeat dinosaurs
-        
+
         print("\nThe Time Rover rounds a corner, and there it is!")
         print(f"A real {dino['name']} {dino['behavior']}!")
         print(f"As your vehicle approaches, the {dino['name']} {dino['reaction']}.")
         print("You take plenty of photos of this incredible sight!")
-        
+
         # Interactive moment
         print("\nThe ranger asks if you want to:")
         print("[1] Move closer for a better view")
         print("[2] Stay at a safe distance")
         choice = input("What do you do? (1/2): ")
-        
+
         if choice == "1":
             # Closer approach
             if random.random() < 0.7:
@@ -7652,49 +7636,49 @@ def dinosaur_safari():
             print(f"\nYou observe the {dino['name']} from a respectful distance.")
             print("The magnificent creature continues its natural behavior undisturbed.")
             print("The ranger commends your respect for wildlife protocols.")
-        
+
         time.sleep(2)
-    
+
     # T-Rex encounter - the main event
     print("\nThe radio crackles with an urgent message:")
     print("'Ranger, be advised: T-Rex detected in your sector. Proceed with caution.'")
     print("\nYour heart races as the Time Rover enters a dense forest area...")
     time.sleep(2)
-    
+
     print("\nSuddenly, trees crash down ahead!")
     print("A massive Tyrannosaurus Rex bursts through the foliage, roaring ferociously!")
     print("The ground shakes with each step of the apex predator!")
     time.sleep(2)
-    
+
     # T-Rex chase sequence
     print("\nThe T-Rex spots your rover and charges!")
     print("'HANG ON!' shouts the ranger, throwing the vehicle into reverse!")
     print("The massive dinosaur pursues you through the prehistoric jungle!")
     print("Your rover bounces violently over the terrain as the T-Rex gains ground!")
     time.sleep(2)
-    
+
     print("\nJust as the T-Rex is about to catch you, the vehicle plunges into a cave!")
     print("The dinosaur roars in frustration, too large to follow!")
     print("That was an incredibly close call!")
     time.sleep(2)
-    
+
     # Return to present
     print("\n'Initiating emergency temporal recall!' announces the ranger.")
     print("The time machine activates, surroundings blur, and lights flash...")
     print("With a final jolt, you return to the present day!")
     time.sleep(2)
-    
+
     # End of ride
     print("\nThe ranger wipes sweat from his brow: 'Well folks, that was")
     print("a bit closer than our usual tours! Welcome back to the present!'")
     print("You exit the Time Rover on slightly shaky legs, thoroughly thrilled!")
-    
+
     # Souvenir photo
     print("\nAt the exit, monitors display photos taken during your adventure.")
     print("There's a great shot of you looking terrified during the T-Rex chase!")
-    
+
     buy_photo = input("Would you like to buy this photo for 3 tickets? (y/n): ").lower()
-    
+
     if buy_photo == "y" and player["tickets"] >= 3:
         player["tickets"] -= 3
         photo_souvenir = "Dinosaur Safari Photo with T-Rex 📸"
@@ -7702,17 +7686,17 @@ def dinosaur_safari():
         print(Fore.GREEN + f"You received: {photo_souvenir}")
     elif buy_photo == "y":
         print(Fore.RED + "Not enough tickets to buy the photo!")
-    
+
     # Bonus souvenir
     dino_souvenir = "Dinosaur Tooth Replica 🦷"
     if dino_souvenir not in player["inventory"]:
         player["inventory"].append(dino_souvenir)
         print(Fore.GREEN + f"You also received a {dino_souvenir} as a memento!")
-    
+
     # Loyalty points
     add_loyalty_points(4)
     print(Fore.MAGENTA + "+4 Loyalty Points for surviving the Dinosaur Safari!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -7720,14 +7704,14 @@ def petting_zoo():
     """Meet and feed friendly farm animals"""
     if not pay_to_play(3):
         return
-    
+
     clear()
     print(Fore.GREEN + "🦙 PETTING ZOO 🦙")
     print("Meet and feed friendly farm animals!")
-    
+
     # Track for mission
     track_attraction_visit("Petting Zoo")
-    
+
     # Animals in the petting zoo
     animals = [
         {"name": "Goats", "behavior": "playful and curious", "likes": "being scratched behind the ears"},
@@ -7737,56 +7721,56 @@ def petting_zoo():
         {"name": "Alpacas", "behavior": "dignified and inquisitive", "likes": "gentle handling and treats"},
         {"name": "Pot-Bellied Pigs", "behavior": "intelligent and food-motivated", "likes": "belly rubs"}
     ]
-    
+
     # Entry to the zoo
     print("\nYou enter the petting zoo area, a clean and well-maintained space")
     print("filled with friendly farm animals and the sound of happy children.")
     print("A zoo keeper hands you a small paper cone filled with animal feed.")
     print("'Remember to let the animals approach you and be gentle,' they advise.")
     time.sleep(2)
-    
+
     # Animal encounters
     visited_animals = []
     feed_remaining = 3  # You can feed 3 times
-    
+
     while feed_remaining > 0 and len(visited_animals) < len(animals):
         # Show available animals
         print("\nWhich animals would you like to visit?")
         available_animals = [animal for animal in animals if animal not in visited_animals]
-        
+
         for i, animal in enumerate(available_animals, 1):
             print(f"[{i}] {animal['name']}")
-        
+
         print(f"[0] Exit (you still have {feed_remaining} portions of feed)")
-        
+
         try:
             choice = int(input("Choose animals to visit: "))
             if choice == 0:
                 break
-                
+
             if choice < 1 or choice > len(available_animals):
                 raise ValueError
-                
+
             animal = available_animals[choice-1]
             visited_animals.append(animal)
-            
+
         except (ValueError, IndexError):
             print("Invalid choice. Please try again.")
             continue
-        
+
         # Visit the chosen animals
         print(f"\nYou approach the area with the {animal['name']}.")
         print(f"They are {animal['behavior']} and seem interested in your feed.")
         print(f"You learn they especially enjoy {animal['likes']}.")
-        
+
         interaction = input("\nWould you like to feed or pet them? (feed/pet): ").lower()
-        
+
         if interaction == "feed" and feed_remaining > 0:
             print(f"\nYou offer some feed to the {animal['name']}.")
             print("They eagerly eat from your hand, their whiskers tickling your palm.")
             print("It's a delightful experience to connect with these animals!")
             feed_remaining -= 1
-            
+
             # Special random events
             events = [
                 f"A baby {animal['name'].lower()} comes over for extra attention!",
@@ -7794,11 +7778,11 @@ def petting_zoo():
                 f"A zoo keeper shares an interesting fact about {animal['name'].lower()}!",
                 f"A particularly photogenic {animal['name'].lower()[:-1]} poses perfectly for a photo!"
             ]
-            
+
             if random.random() < 0.6:  # 60% chance of special event
                 special_event = random.choice(events)
                 print(f"\n{special_event}")
-                
+
                 # Photo opportunity for the fourth event
                 if events.index(special_event) == 3:
                     photo_chance = True
@@ -7806,15 +7790,15 @@ def petting_zoo():
                     photo_chance = False
             else:
                 photo_chance = False
-            
+
         elif interaction == "feed" and feed_remaining <= 0:
             print("\nYou're out of feed! You can still pet the animals though.")
             print(f"You gently pet the {animal['name']} instead.")
-            
+
         else:  # pet or anything else
             print(f"\nYou gently pet the {animal['name']}, being respectful of their space.")
             print(f"They seem to enjoy your attention, especially when you focus on {animal['likes']}.")
-            
+
             # Chance for a special reaction
             if random.random() < 0.4:  # 40% chance
                 special_reactions = [
@@ -7823,13 +7807,13 @@ def petting_zoo():
                     f"A small {animal['name'].lower()[:-1]} follows you as you start to walk away!"
                 ]
                 print(f"\n{random.choice(special_reactions)}")
-        
+
         # Photo opportunity
         photo_chance = False
         if photo_chance or random.random() < 0.3:  # 30% chance otherwise
             print("\nA staff photographer captures a wonderful moment between you and the animals!")
             buy_photo = input("Would you like to buy this special photo for 2 tickets? (y/n): ").lower()
-            
+
             if buy_photo == "y" and player["tickets"] >= 2:
                 player["tickets"] -= 2
                 photo_name = f"{animal['name']} Encounter Photo 📸"
@@ -7837,13 +7821,13 @@ def petting_zoo():
                 print(Fore.GREEN + f"You received: {photo_name}")
             elif buy_photo == "y":
                 print(Fore.RED + "Not enough tickets to buy the photo!")
-        
+
         time.sleep(2)
-    
+
     # End of visit
     if feed_remaining <= 0:
         print("\nYou've used all your animal feed!")
-    
+
     if len(visited_animals) >= 3:
         print("\nYou've had a wonderful time visiting with various animals at the petting zoo!")
         # Award special souvenir for visiting many animals
@@ -7853,15 +7837,15 @@ def petting_zoo():
             print(Fore.GREEN + f"For your love of animals, you received: {special_souvenir}")
     else:
         print("\nYou've enjoyed your time at the petting zoo!")
-    
+
     # Handwashing reminder
     print("\nThe zoo keeper reminds you to wash your hands at the sink station")
     print("before leaving the petting zoo area. Animal safety first!")
-    
+
     # Loyalty points
     add_loyalty_points(2)
     print(Fore.MAGENTA + "+2 Loyalty Points for visiting the Petting Zoo!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -7869,14 +7853,14 @@ def zombie_escape():
     """Interactive zombie apocalypse experience with choices"""
     if not pay_to_play(7):
         return
-    
+
     clear()
     print(Fore.GREEN + "🧟 ZOMBIE ESCAPE 🧟")
     print("Can you survive the zombie apocalypse?")
-    
+
     # Track for mission
     track_attraction_visit("Zombie Escape")
-    
+
     # Ride begins
     print("\nYou enter what looks like an abandoned laboratory.")
     print("A scientist in a torn lab coat rushes up to you.")
@@ -7884,34 +7868,34 @@ def zombie_escape():
     print("'The infection is spreading, and the zombies are everywhere!'")
     print("'You need to help us escape this facility!'")
     time.sleep(3)
-    
+
     # Start of interactive experience
     print("\nSuddenly, alarms blare and red emergency lights flash!")
     print("'They've broken through the main door! We need to move NOW!'")
-    
+
     # Track survival
     survived = True
     zombie_encounters = 0
     has_weapon = False
     has_keycard = False
-    
+
     # First choice
     print("\nYou have three possible routes:")
     print("[1] Through the main corridor - it's direct but might have zombies")
     print("[2] Through the air vents - slower but possibly safer")
     print("[3] Wait for security to arrive")
-    
+
     choice1 = input("What do you choose? (1-3): ")
-    
+
     if choice1 == "1":
         print("\nYou dash into the main corridor!")
         print("As you run, you hear moaning echoes bouncing off the walls...")
         time.sleep(1.5)
         print("\nSuddenly, a zombie scientist lurches around the corner!")
         zombie_encounters += 1
-        
+
         fight_choice = input("Do you fight or run? (fight/run): ").lower()
-        
+
         if fight_choice == "fight":
             print("\nYou look around for a weapon and grab a fire extinguisher!")
             print("You blast the zombie with foam and then hit it with the canister!")
@@ -7922,7 +7906,7 @@ def zombie_escape():
         else:
             print("\nYou sprint past the zombie, barely avoiding its grasp!")
             print("Your heart pounds as you hear it shuffling after you.")
-    
+
     elif choice1 == "2":
         print("\nYou climb into the air vents!")
         print("The metal creaks as you crawl through the narrow passages.")
@@ -7930,9 +7914,9 @@ def zombie_escape():
         time.sleep(2)
         print("\nAs you crawl, you spot a security office below through a vent.")
         print("You can see a keycard and a stun baton on the desk.")
-        
+
         grab_choice = input("Do you try to grab them? (y/n): ").lower()
-        
+
         if grab_choice == "y":
             print("\nYou carefully remove the vent cover and reach down...")
             if random.random() < 0.7:  # 70% success chance
@@ -7948,24 +7932,24 @@ def zombie_escape():
                 has_keycard = True
         else:
             print("\nYou continue through the vents without the items.")
-    
+
     else:  # choice1 == "3" or any other input
         print("\nYou decide to wait for security...")
         print("Minutes pass with no sign of help...")
         print("\nSuddenly, three zombies in security uniforms burst in!")
         print("They were the security team - now infected!")
         zombie_encounters += 3
-        
+
         # This is a bad choice, but give them a chance
         print("\nYou have no choice but to run!")
         print("As you flee, you grab a keycard from a desk!")
         has_keycard = True
         survived = random.random() < 0.5  # 50% survival chance
-        
+
         if not survived:
             print("\nThe zombies are too numerous! They surround you!")
             print("Game over! You have been infected!")
-    
+
     # Continue if survived first encounter
     if survived:
         # Second choice - if they've made it this far
@@ -7973,18 +7957,18 @@ def zombie_escape():
         print("[1] Laboratory - might have a cure or weapons")
         print("[2] Exit doors - requires keycard for emergency exit")
         print("[3] Garage - might have vehicles for escape")
-        
+
         choice2 = input("Where do you go? (1-3): ")
-        
+
         if choice2 == "1":
             print("\nYou enter the main laboratory...")
             print("Broken test tubes and lab equipment are scattered everywhere.")
             print("You find a prototype weapon - a sonic disruptor that stuns zombies!")
             has_weapon = True
-            
+
             print("\nAs you search for a cure, three zombies emerge from the back room!")
             zombie_encounters += 3
-            
+
             if has_weapon:
                 print("\nYou use the sonic disruptor to stun the zombies!")
                 print("While they're immobilized, you rush past them!")
@@ -7992,21 +7976,21 @@ def zombie_escape():
                 print("\nWith no weapon, you have to be creative!")
                 print("You throw chemicals to create a smokescreen and dash past them!")
                 survived = random.random() < 0.6  # 60% survival chance
-                
+
                 if not survived:
                     print("\nA zombie grabs you through the smoke! You can't break free!")
                     print("Game over! You have been infected!")
-        
+
         elif choice2 == "2":
             print("\nYou rush to the emergency exit doors!")
-            
+
             if has_keycard:
                 print("\nYou swipe the keycard and the doors begin to open!")
                 print("Freedom is just beyond these doors!")
             else:
                 print("\nThe exit requires a keycard that you don't have!")
                 print("You frantically search nearby desks as moaning grows louder...")
-                
+
                 if random.random() < 0.4:  # 40% chance to find keycard
                     print("Luck is on your side! You find a keycard in a drawer!")
                     has_keycard = True
@@ -8015,19 +7999,19 @@ def zombie_escape():
                     print("You can't find a keycard! The doors won't open!")
                     print("\nA horde of zombies rounds the corner, blocking your escape route!")
                     zombie_encounters += 5
-                    
+
                     if has_weapon:
                         print("You use your weapon to clear a path and run back into the facility!")
                     else:
                         print("With no weapon and no escape route, you're cornered!")
                         survived = False
                         print("Game over! You have been infected!")
-        
+
         else:  # choice2 == "3" or any other input
             print("\nYou make your way to the garage level...")
             print("Several vehicles are parked here, but you need keys.")
             print("\nYou spot a key rack on the wall!")
-            
+
             if random.random() < 0.7:  # 70% chance to find keys
                 print("You grab a set of keys for a nearby jeep!")
                 print("\nAs you start the engine, zombies begin pouring into the garage!")
@@ -8036,27 +8020,27 @@ def zombie_escape():
                 print("The key rack is empty! Someone already took all the keys!")
                 print("\nZombies begin entering the garage from multiple entrances!")
                 zombie_encounters += 4
-                
+
                 if has_weapon:
                     print("You use your weapon to fight your way to a maintenance exit!")
                 else:
                     print("With no weapon and no vehicle, you're in serious trouble!")
                     survived = random.random() < 0.3  # Only 30% survival chance
-                    
+
                     if not survived:
                         print("The zombies overwhelm you! Game over!")
-    
+
     # Final outcome
     if survived:
         print("\n🎉 CONGRATULATIONS! YOU SURVIVED! 🎉")
         print(f"Zombie encounters: {zombie_encounters}")
-        
+
         # Reward based on performance
         if zombie_encounters == 0:
             print("\nPerfect stealth run! You never encountered a single zombie!")
             survival_rating = "Perfect"
             tickets_reward = 15
-            
+
             # Special achievement
             if "Ghost Runner" not in player["achievements"]:
                 award_achievement("Ghost Runner")
@@ -8072,11 +8056,11 @@ def zombie_escape():
             print("\nYou survived by the skin of your teeth! That was close!")
             survival_rating = "Marginal"
             tickets_reward = 5
-        
+
         # Award tickets
         player["tickets"] += tickets_reward
         print(Fore.GREEN + f"You earned {tickets_reward} bonus tickets!")
-        
+
         # Souvenir
         souvenir = f"Zombie Survival Badge ({survival_rating}) 🧪"
         player["inventory"].append(souvenir)
@@ -8086,19 +8070,19 @@ def zombie_escape():
         print("Better luck next time!")
         print("\nThe staff help you 'decontaminate' and exit the attraction.")
         print("Even though you didn't survive, it was an exciting experience!")
-        
+
         # Consolation prize
         player["tickets"] += 2
         print(Fore.GREEN + "You received 2 consolation tickets!")
-        
+
         souvenir = "Zombie Victim Tag ☣️"
         player["inventory"].append(souvenir)
         print(Fore.GREEN + f"You received: {souvenir}")
-    
+
     # Loyalty points
     add_loyalty_points(4)
     print(Fore.MAGENTA + "+4 Loyalty Points for experiencing Zombie Escape!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -8106,47 +8090,47 @@ def splash_mountain():
     """Thrilling log ride with a big splash finale"""
     if not pay_to_play(5):
         return
-    
+
     clear()
     print(Fore.BLUE + "💦 SPLASH MOUNTAIN 💦")
     print("Prepare to get wet on this exciting water adventure!")
-    
+
     # Track for mission
     track_attraction_visit("Splash Mountain")
-    
+
     # Ride begins
     print("\nYou climb into a hollowed-out log boat and secure yourself.")
     print("The ride attendant reminds you: 'You may get wet on this ride!'")
     time.sleep(2)
-    
+
     # Start of journey
     print("\nYour log begins its journey, floating gently through a peaceful river...")
     print("Colorful animatronic animals sing cheerful songs along the banks.")
     time.sleep(2)
-    
+
     # First small drop
     print("\nYou approach a small drop...")
     time.sleep(1)
     print("Whoosh! Your log slides down, creating a small splash!")
     print("Just a teaser of what's to come...")
     time.sleep(2)
-    
+
     # Middle section
     print("\nYour log winds through a charming forest scene...")
     print("More animatronic animals tell the story of the mountain.")
     time.sleep(2)
-    
+
     # Cave section
     print("\nYou enter a dark cave... the music becomes more ominous...")
     print("Strange glowing eyes peek out from the darkness.")
     time.sleep(2)
-    
+
     # Climb to final drop
     print("\nYour log begins the long climb up to the summit of Splash Mountain...")
     print("Clickety-clack... the chain pulls you higher and higher...")
     print("You can see the entire park as you near the top!")
     time.sleep(3)
-    
+
     # The big drop
     print("\nYou reach the top and pause for a moment...")
     print("You look down at the MASSIVE drop before you...")
@@ -8157,11 +8141,11 @@ def splash_mountain():
     print("Your log plummets down the steep drop at high speed!")
     print("You raise your arms and scream with excitement!")
     time.sleep(2)
-    
+
     # The splash
     splash_size = random.choice(["ENORMOUS", "MASSIVE", "GIGANTIC", "COLOSSAL"])
     print(f"\nSPLASH!!! Your log creates an {splash_size} wave as it hits the water!")
-    
+
     # Wetness factor - random
     wetness = random.randint(1, 3)
     if wetness == 1:
@@ -8176,19 +8160,19 @@ def splash_mountain():
         print("SPLOOSH! You get COMPLETELY SOAKED from head to toe!")
         print("You couldn't be wetter if you'd jumped in a pool!")
         wetness_result = "absolutely drenched"
-        
+
         # Special achievement for getting soaked
         if "Water Warrior" not in player["achievements"]:
             award_achievement("Water Warrior")
-    
+
     # End of ride
     print(f"\nYour log returns to the station, and you step out {wetness_result}.")
     print("That was an exhilarating adventure!")
-    
+
     # Photo opportunity
     print("\n'Want to see your splash photo?' asks the attendant.")
     see_photo = input("Would you like to see your splash photo? (y/n): ").lower()
-    
+
     if see_photo == "y":
         expressions = ["screaming with delight", "eyes closed tight", "arms raised high", 
                       "looking terrified", "laughing", "perfectly composed"]
@@ -8196,18 +8180,18 @@ def splash_mountain():
         print(f"\nYour photo shows you {expression} during the big drop!")
         photo_souvenir = "Splash Mountain Photo 📸"
         buy_photo = input("Would you like to buy this photo for 2 tickets? (y/n): ").lower()
-        
+
         if buy_photo == "y" and player["tickets"] >= 2:
             player["tickets"] -= 2
             player["inventory"].append(photo_souvenir)
             print(Fore.GREEN + f"You received: {photo_souvenir}")
         elif buy_photo == "y":
             print(Fore.RED + "Not enough tickets to buy the photo!")
-    
+
     # Loyalty points
     add_loyalty_points(3)
     print(Fore.MAGENTA + "+3 Loyalty Points for braving Splash Mountain!")
-    
+
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
@@ -8215,11 +8199,11 @@ def cosmic_coaster():
     """Cosmic Coaster ride simulation with multiple paths and outcomes"""
     if not pay_to_play(5):
         return
-    
+
     clear()
     print(Fore.CYAN + "🚀 Welcome to the COSMIC COASTER! 🚀")
     print("Hold tight as we blast off into the cosmos!")
-    
+
     print("\nThe ride operator secures your safety harness...")
     time.sleep(1.5)
     print("3...")
@@ -8229,14 +8213,14 @@ def cosmic_coaster():
     print("1...")
     time.sleep(0.7)
     print(Fore.YELLOW + "BLAST OFF! 🚀")
-    
+
     # Interactive ride simulation
     print("\nYour rocket coaster reaches a fork in the cosmic path!")
     print("[1] Take the Meteor Shower path")
     print("[2] Take the Black Hole path")
-    
+
     path = input("Choose your path (1/2): ")
-    
+
     if path == "1":
         print("\nYou zoom through a dazzling meteor shower!")
         print("Colorful space rocks pass just inches from your car!")
@@ -8266,7 +8250,7 @@ def cosmic_coaster():
         print(f"You earned {reward} tickets for your extreme adventure!")
         player["tickets"] += reward
         award_achievement("Wormhole Survivor: Braved the black hole path")
-    
+
     print("\nThe ride attendant helps you exit the coaster.")
     print("What an amazing experience!")
 
@@ -8274,11 +8258,11 @@ def log_flume():
     """Log flume water ride with randomized splash outcomes"""
     if not pay_to_play(4):
         return
-    
+
     clear()
     print(Fore.BLUE + "💦 Welcome to the WILD WATER LOG FLUME! 💦")
     print("Get ready to make a splash!")
-    
+
     print("\nYou climb aboard your hollow log boat...")
     time.sleep(1)
     print("The water current carries you through a peaceful river...")
@@ -8286,12 +8270,12 @@ def log_flume():
     print("Birds chirp and animatronic animals wave as you pass by...")
     time.sleep(1.5)
     print(Fore.YELLOW + "Wait! You're approaching the final drop!")
-    
+
     # Build suspense
     input("\nPress Enter to brace for impact...")
-    
+
     drop_height = random.choice(["small", "medium", "large", "extreme"])
-    
+
     if drop_height == "small":
         print("\nA gentle slope sends you down with a mild splash!")
         reward = 3
@@ -8306,10 +8290,10 @@ def log_flume():
         print("Everyone within 30 feet gets completely drenched!")
         reward = 12
         award_achievement("Tsunami Maker: Experienced the legendary extreme drop")
-    
+
     print(f"\nYou earned {reward} tickets from your water adventure!")
     player["tickets"] += reward
-    
+
     # Easter egg: rare rainbow sighting
     if random.randint(1, 10) == 1:
         print(Fore.MAGENTA + "\n✨ SPECIAL EVENT: A rainbow appears over the splash zone! ✨")
@@ -8321,25 +8305,25 @@ def haunted_mansion():
     """Interactive haunted house experience with jump scares and rewards"""
     if not pay_to_play(6):
         return
-    
+
     clear()
     print(Fore.RED + "👻 Welcome to the HAUNTED MANSION! 👻")
     print("Enter... if you dare!")
-    
+
     bravery = 100
     rewards = 0
-    
+
     # Intro
     print("\nThe door creaks open, inviting you inside...")
     time.sleep(1.5)
     print("A ghostly butler bows and gestures toward the hallway...")
     time.sleep(1.5)
-    
+
     # Room 1
     print("\n--- The Portrait Gallery ---")
     print("The eyes in the paintings seem to follow your movement...")
     choice = input("Do you [1] Look closer at the paintings or [2] Hurry past? ")
-    
+
     if choice == "1":
         if random.randint(1, 10) > 4:
             print("\nAs you examine a portrait, it WINKS at you!")
@@ -8349,12 +8333,12 @@ def haunted_mansion():
             print("\nSUDDENLY! The portrait changes to a screaming face!")
             print("You jump back, startled!")
             bravery -= 20
-    
+
     # Room 2
     print("\n--- The Dining Room ---")
     print("A grand feast is laid out, but the chairs are occupied by transparent figures...")
     choice = input("Do you [1] Sit down at the table or [2] Stay by the wall? ")
-    
+
     if choice == "1":
         print("\nAs you sit, the ghosts raise their glasses to you!")
         print("One passes through you, leaving a chilling sensation.")
@@ -8364,12 +8348,12 @@ def haunted_mansion():
         print("\nAs you hug the wall, a hidden panel opens!")
         print("A skeletal hand reaches out for you!")
         bravery -= 15
-    
+
     # Room 3
     print("\n--- The Séance Chamber ---")
     print("A crystal ball glows in the center of the room...")
     choice = input("Do you [1] Touch the crystal ball or [2] Observe from a distance? ")
-    
+
     if choice == "1":
         outcome = random.randint(1, 10)
         if outcome > 7:
@@ -8381,11 +8365,11 @@ def haunted_mansion():
             print("\nThe ball turns blood red and lets out a piercing scream!")
             print("You nearly faint from shock!")
             bravery -= 25
-    
+
     # Final room and results
     print("\n--- The Exit ---")
     print("You've reached the final room of the mansion.")
-    
+
     if bravery > 70:
         print(Fore.GREEN + "\nThe ghosts are impressed by your courage!")
         bonus = random.randint(5, 10)
@@ -8401,7 +8385,7 @@ def haunted_mansion():
         print(Fore.RED + "\nYou rush out of the mansion, badly shaken!")
         print("At least you survived...")
         rewards = max(1, rewards)
-    
+
     print(f"\nTotal tickets earned: {rewards}")
     player["tickets"] += rewards
 
@@ -8409,18 +8393,18 @@ def ferris_wheel():
     """Peaceful Ferris wheel ride with random events and photo opportunities"""
     if not pay_to_play(3):
         return
-    
+
     clear()
     print(Fore.CYAN + "🎡 Welcome to the GRAND FERRIS WHEEL! 🎡")
     print("Enjoy spectacular views from the top!")
-    
+
     # Start the ride
     print("\nYou board your passenger car...")
     time.sleep(1)
     print("The wheel begins to turn slowly...")
     time.sleep(1.5)
     print("You rise higher and higher above the carnival...")
-    
+
     # Random events
     events = [
         "You spot a beautiful rainbow in the distance! +2 tickets",
@@ -8430,33 +8414,33 @@ def ferris_wheel():
         "You spot someone you know down below and wave frantically! +1 ticket",
         "The wheel stops with you at the very top for an amazing photo op! +4 tickets"
     ]
-    
+
     event = random.choice(events)
     reward = int(event.split("+")[1].split()[0])
-    
+
     time.sleep(2)
     print(Fore.YELLOW + f"\n{event}")
-    
+
     # Photo opportunity
     print("\nAs your car reaches the top, a camera flashes!")
     take_photo = input("Would you like to purchase the photo for 1 ticket? (y/n): ")
-    
+
     if take_photo.lower() == 'y' and player["tickets"] >= 1:
         player["tickets"] -= 1
         print(Fore.GREEN + "You'll receive your commemorative Ferris wheel photo!")
         print("The photo clerk gives you a bonus ticket for your purchase!")
         reward += 1
-        
+
         # Easter egg: rare perfect photo
         if random.randint(1, 20) == 1:
             print(Fore.MAGENTA + "\n✨ PERFECT SHOT! The photographer captured a once-in-a-lifetime sunset! ✨")
             print("You receive 5 bonus tickets for the magical moment!")
             reward += 5
             award_achievement("Picture Perfect: Got the legendary Ferris wheel photo")
-    
+
     player["tickets"] += reward
     print(f"\nYou earned a total of {reward} tickets from your peaceful ride!")
-    
+
     # Sometimes the ride operator lets you go around twice
     if random.randint(1, 10) == 1:
         print(Fore.GREEN + "\nLUCKY! The operator lets you stay on for a second rotation!")
@@ -8467,29 +8451,29 @@ def vr_experience():
     """Virtual reality experience with different scenarios and challenges"""
     if not pay_to_play(7):
         return
-    
+
     clear()
     print(Fore.CYAN + "🥽 Welcome to the VIRTUAL REALITY EXPERIENCE! 🥽")
     print("Step into another world!")
-    
+
     # Choose your VR world
     print("\nSelect your virtual experience:")
     print("[1] 🌋 Volcano Explorer")
     print("[2] 🌊 Deep Sea Adventure")
     print("[3] 🚀 Space Station Mission")
     print("[4] 🏰 Fantasy Kingdom")
-    
+
     world = input("Choose your experience (1-4): ")
-    
+
     # Simulation and results
     rewards = 0
-    
+
     if world == "1":  # Volcano Explorer
         print("\nYou're equipped with a heat-resistant suit and lowered into an active volcano!")
         print("The heat is intense, and molten lava bubbles below...")
-        
+
         choice = input("\nDo you [1] Take a sample of rare volcanic crystals or [2] Document the unusual formations? ")
-        
+
         if choice == "1":
             if random.randint(1, 10) > 3:
                 print("\nSuccess! You collect a stunning crystal formation worth studying!")
@@ -8504,13 +8488,13 @@ def vr_experience():
             print("\nYou capture amazing footage of previously undocumented lava formations!")
             print("Your documentation will help scientists understand volcanic behavior.")
             rewards += 8
-    
+
     elif world == "2":  # Deep Sea Adventure
         print("\nYour submersible descends into the darkest depths of the ocean...")
         print("Strange bioluminescent creatures illuminate the darkness...")
-        
+
         choice = input("\nDo you [1] Explore a mysterious underwater cave or [2] Follow a giant squid? ")
-        
+
         if choice == "1":
             print("\nThe cave opens into a vast underwater cavern filled with ancient ruins!")
             print("You discover evidence of an unknown civilization!")
@@ -8526,13 +8510,13 @@ def vr_experience():
                 print("\nThe squid notices you and disappears into the darkness...")
                 print("At least you caught a glimpse of the magnificent creature.")
                 rewards += 5
-    
+
     elif world == "3":  # Space Station Mission
         print("\nYou're aboard the International Space Station, floating in zero gravity...")
         print("Earth is a beautiful blue marble beneath you...")
-        
+
         choice = input("\nDo you [1] Perform critical repair mission or [2] Conduct scientific experiments? ")
-        
+
         if choice == "1":
             success = random.randint(1, 10) > 3
             print("\nYou spacewalk to fix a damaged solar panel...")
@@ -8547,13 +8531,13 @@ def vr_experience():
             print("\nYour experiments yield fascinating results about crystal growth in space!")
             print("The data will help future missions and research.")
             rewards += 8
-    
+
     elif world == "4":  # Fantasy Kingdom
         print("\nYou step into a magical medieval world with castles and dragons...")
         print("A royal messenger approaches you with an urgent quest...")
-        
+
         choice = input("\nDo you [1] Hunt the dragon threatening the kingdom or [2] Search for a magical artifact? ")
-        
+
         if choice == "1":
             if random.randint(1, 10) > 5:
                 print("\nAfter an epic battle, you befriend the dragon instead of slaying it!")
@@ -8568,15 +8552,15 @@ def vr_experience():
             print("Its glow illuminates the entire kingdom!")
             rewards += 9
             award_achievement("Artifact Hunter: Found the magical staff")
-    
+
     else:
         print("\nThe technician helps you select the Volcano Explorer experience...")
         print("You have an amazing time exploring the virtual volcano!")
         rewards += 6
-    
+
     print(f"\nAmazing! You earned {rewards} tickets from your virtual adventure!")
     player["tickets"] += rewards
-    
+
     # Bonus for first-time users
     if "VR Experience" not in player.get("attractions_visited", []):
         if "attractions_visited" not in player:
@@ -8589,33 +8573,33 @@ def mirror_maze():
     """Navigate through a complex mirror maze with challenges and rewards"""
     if not pay_to_play(4):
         return
-    
+
     clear()
     print(Fore.MAGENTA + "🪞 Welcome to the MIRROR MAZE! 🪞")
     print("Can you find your way through the labyrinth of reflections?")
-    
+
     # Initialize maze variables
     wrong_turns = 0
     dead_ends = 0
     progress = 0
     max_progress = 5
-    
+
     while progress < max_progress and wrong_turns < 3:
         print(f"\nProgress: {'🚶' * progress}{'◻️' * (max_progress - progress)}")
         print(f"Wrong turns: {'❌' * wrong_turns}")
-        
+
         # Random mirror maze event
         event_type = random.choice(["junction", "trick", "dead_end", "helper"])
-        
+
         if event_type == "junction":
             print("\nYou come to a junction with multiple reflections of the path ahead.")
             print("[1] Take the left path")
             print("[2] Take the right path")
             print("[3] Go straight ahead")
-            
+
             choice = input("Which way do you go? ")
             correct = random.randint(1, 3)
-            
+
             if choice == str(correct):
                 print(Fore.GREEN + "\nGood choice! You continue deeper into the maze.")
                 progress += 1
@@ -8623,14 +8607,14 @@ def mirror_maze():
                 print(Fore.RED + "\nYou walk straight into a mirror! Ouch!")
                 print("That was the wrong path.")
                 wrong_turns += 1
-        
+
         elif event_type == "trick":
             print("\nYou see what looks like an exit sign, but something seems off...")
             print("[1] Follow the exit sign")
             print("[2] Ignore it and find another path")
-            
+
             choice = input("What do you do? ")
-            
+
             if choice == "2":
                 print(Fore.GREEN + "\nWise choice! That was a trick reflection.")
                 print("You avoid a dead end and continue on the right path.")
@@ -8640,15 +8624,15 @@ def mirror_maze():
                 print("You've hit a dead end and need to backtrack.")
                 dead_ends += 1
                 wrong_turns += 1
-        
+
         elif event_type == "dead_end":
             print("\nYou suddenly realize you're facing a wall of mirrors with no obvious path.")
             print("[1] Feel along the left wall")
             print("[2] Feel along the right wall")
             print("[3] Turn around and go back")
-            
+
             choice = input("What do you do? ")
-            
+
             if choice == "3":
                 print(Fore.YELLOW + "\nYou backtrack and find the correct path again.")
                 # No penalty but no progress either
@@ -8661,15 +8645,15 @@ def mirror_maze():
                 else:
                     print(Fore.RED + "\nThere's no way through here. You'll have to go back.")
                     wrong_turns += 1
-        
+
         elif event_type == "helper":
             print("\nYou notice a small child also lost in the maze.")
             print("They seem to know the way and offer to help you.")
             print("[1] Follow the child")
             print("[2] Continue on your own")
-            
+
             choice = input("What do you do? ")
-            
+
             if choice == "1":
                 print(Fore.GREEN + "\nThe child leads you through a confusing section!")
                 print("You've made great progress!")
@@ -8677,13 +8661,13 @@ def mirror_maze():
             else:
                 print(Fore.YELLOW + "\nYou continue on your own, making slow but steady progress.")
                 progress += 1
-    
+
     # Results
     if progress >= max_progress:
         print(Fore.GREEN + "\n🎉 Congratulations! You've successfully navigated the Mirror Maze! 🎉")
         reward = 10 - (wrong_turns * 2)
         reward = max(reward, 5)  # Minimum 5 tickets for completion
-        
+
         if wrong_turns == 0:
             print("Perfect run! No wrong turns at all!")
             reward += 5
@@ -8692,7 +8676,7 @@ def mirror_maze():
         print(Fore.RED + "\nYou've taken too many wrong turns and decide to use the emergency exit.")
         print("Better luck next time!")
         reward = max(1, progress)
-    
+
     print(f"\nYou earned {reward} tickets!")
     player["tickets"] += reward
 
@@ -8700,32 +8684,32 @@ def photo_booth():
     """Take fun photos with props and filters in the photo booth"""
     if not pay_to_play(2):
         return
-    
+
     clear()
     print(Fore.YELLOW + "📸 Welcome to the CARNIVAL PHOTO BOOTH! 📸")
     print("Create a fun memory to take home!")
     reward = 0
-    
+
     # Choose photo style
     print("\nSelect your photo style:")
     print("[1] 🎭 Funny Faces")
     print("[2] 🦸 Superhero Theme")
     print("[3] 🧙 Magical Effects")
     print("[4] 🌈 Rainbow Filters")
-    
+
     style = input("Choose your style (1-4): ")
-    
+
     # Choose props
     props = [
         "Oversized Sunglasses", "Silly Hat", "Feather Boa", 
         "Mustache on a Stick", "Tiara", "Cartoon Speech Bubble",
         "Giant Bowtie", "Cowboy Hat", "Pirate Eye Patch"
     ]
-    
+
     print("\nAvailable props:")
     for i, prop in enumerate(props):
         print(f"[{i+1}] {prop}")
-    
+
     prop_choice = input("Choose a prop number (1-9): ")
     try:
         prop_choice = int(prop_choice) - 1
@@ -8735,7 +8719,7 @@ def photo_booth():
             chosen_prop = random.choice(props)
     except (ValueError, IndexError):
         chosen_prop = random.choice(props)
-    
+
     # Take the photos
     print("\nGet ready for your photo session!")
     print("3...")
@@ -8745,11 +8729,11 @@ def photo_booth():
     print("1...")
     time.sleep(0.7)
     print(Fore.YELLOW + "SMILE! 📸")
-    
+
     # Photo results
     style_name = ["Funny Faces", "Superhero Theme", "Magical Effects", "Rainbow Filters"][int(style)-1 if style in "1234" else 0]
     print(f"\nGreat job! Your {style_name} photos with the {chosen_prop} look amazing!")
-    
+
     # Special combinations with bonus rewards
     bonus = 0
     if (style == "2" and chosen_prop == "Tiara"):
@@ -8765,18 +8749,18 @@ def photo_booth():
         print(Fore.MAGENTA + "\n✨ SPECIAL COMBO: The Magical Message! ✨")
         print("Your magical photo with a speech bubble looks like it's straight out of a storybook!")
         bonus = 2
-    
+
     # Base reward
     reward = 3 + bonus
-    
+
     # Photo package options
     print("\nPhoto Package Options:")
     print("[1] Basic - 1 printed photo (Free)")
     print("[2] Standard - 3 printed photos (+1 ticket)")
     print("[3] Deluxe - 5 printed photos + digital copies (+3 tickets)")
-    
+
     package = input("Choose your package (1-3): ")
-    
+
     if package == "2" and player["tickets"] >= 1:
         player["tickets"] -= 1
         print("\nYou've selected the Standard package!")
@@ -8790,7 +8774,7 @@ def photo_booth():
     else:
         print("\nYou've selected the Basic package!")
         print("You'll receive 1 printed photo.")
-    
+
     print(f"\nYou earned {reward} tickets from your photo session!")
     player["tickets"] += reward
 
@@ -8798,38 +8782,38 @@ def magic_show():
     """Interactive magic show where you can volunteer and win prizes"""
     if not pay_to_play(5):
         return
-    
+
     clear()
     print(Fore.BLUE + "🎩 Welcome to the MYSTICAL MAGIC SHOW! 🎩")
     print("Prepare to be amazed by the Great Zoltar!")
-    
+
     # Find your seat
     print("\nThe usher shows you to your seat. The theater is filling up!")
     print("The lights dim and smoke fills the stage...")
     time.sleep(2)
-    
+
     print(Fore.YELLOW + "\n🎭 LADIES AND GENTLEMEN! 🎭")
     print("🎭 WELCOME TO THE MOST MAGICAL SHOW ON EARTH! 🎭")
     print("🎭 I AM THE GREAT ZOLTAR! 🎭")
-    
+
     # Interactive magic tricks
     rewards = 0
-    
+
     # Trick 1 - Card Trick
     print("\n--- The Impossible Card Trick ---")
     print("The Great Zoltar asks for a volunteer from the audience...")
-    
+
     volunteer = input("Do you want to volunteer? (y/n): ")
-    
+
     if volunteer.lower() == 'y':
         print("\nYou raise your hand and are selected!")
         print("You join Zoltar on stage. He asks you to pick a card, any card...")
-        
+
         # Simulate card selection
         suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
         values = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
         card = f"{random.choice(values)} of {random.choice(suits)}"
-        
+
         print(f"\nYou select the {card} and show it to the audience, but not to Zoltar.")
         print("He asks you to put it back in the deck, which he shuffles thoroughly.")
         time.sleep(1.5)
@@ -8841,13 +8825,13 @@ def magic_show():
         rewards += 5
     else:
         print("\nAnother audience member volunteers and is amazed by the trick!")
-    
+
     # Trick 2 - Disappearing Act
     print("\n--- The Mysterious Vanishing Box ---")
     print("Zoltar presents a large box and asks if anyone can verify it's empty.")
-    
+
     inspect = input("Do you want to inspect the box? (y/n): ")
-    
+
     if inspect.lower() == 'y':
         print("\nYou join Zoltar on stage again!")
         print("You check the box thoroughly and confirm there are no hidden compartments.")
@@ -8857,9 +8841,9 @@ def magic_show():
         time.sleep(1.5)
         print("The box is opened to reveal... EMPTY!")
         print("The audience is stunned!")
-        
+
         choice = input("\nZoltar asks if you want to look for the assistant. Do you? (y/n): ")
-        
+
         if choice.lower() == 'y':
             if random.randint(1, 10) > 7:
                 print("\nYou discover the secret to the trick! Zoltar is impressed by your perception!")
@@ -8875,28 +8859,28 @@ def magic_show():
             print("Zoltar appreciates your respect for the art of illusion!")
             print("He awards you 2 tickets!")
             rewards += 2
-    
+
     # Trick 3 - Mind Reading
     print("\n--- The Astonishing Mind Reading ---")
     print("For his final trick, Zoltar claims he can read the thoughts of audience members!")
-    
+
     participate = input("Do you want to participate in the mind reading? (y/n): ")
-    
+
     if participate.lower() == 'y':
         print("\nZoltar points at you! 'Yes, you in the audience! I sense strong thought energy!'")
         print("He asks you to think of a number between 1 and 50...")
-        
+
         # This is just for show - the "magic" will work regardless
         number = input("Enter your number (Zoltar won't see this): ")
-        
+
         print("\nZoltar concentrates deeply...")
         print("He writes something on a piece of paper and seals it in an envelope.")
         print("He hands the envelope to another audience member to hold.")
-        
+
         # Build suspense
         print("\nHe asks you to reveal your number to the audience...")
         time.sleep(2)
-        
+
         # The trick "works" 80% of the time
         if random.randint(1, 10) <= 8:
             print(f"\nThe envelope is opened to reveal the number {number}!")
@@ -8910,12 +8894,12 @@ def magic_show():
             print("'The psychic energies must be disturbed today,' he mutters.")
             print("He still gives you 2 tickets for participating!")
             rewards += 2
-    
+
     # Show conclusion
     print("\nThe Great Zoltar takes his final bow as the audience gives a standing ovation!")
     print(f"You earned a total of {rewards} tickets from the magical experience!")
     player["tickets"] += rewards
-    
+
     # Rare special ending
     if random.randint(1, 20) == 1:
         print(Fore.MAGENTA + "\n✨ SPECIAL EVENT: After the show, Zoltar gives you a signed magic wand! ✨")
@@ -9194,14 +9178,14 @@ def treasure_hunt():
         return
     if not pay_to_play(5):
         return
-        
+
     clear()
     print(Fore.YELLOW + "🏆 TREASURE HUNT 🏆")
     print("Find hidden treasures in the carnival grounds!")
-    
+
     # Game setup
     grid_size = 5
-    
+
     # Place treasures (for future grid implementation)
     treasures = []
     for _ in range(3):
@@ -9209,28 +9193,28 @@ def treasure_hunt():
         while (x, y) in treasures:
             x, y = random.randint(0, grid_size-1), random.randint(0, grid_size-1)
         treasures.append((x, y))
-    
+
     # Game variables
     attempts = 8
     score = 0
-    
+
     # Simple treasure grid
     treasure_items = ["💎", "👑", "💰", "⭐", "❌"]
     map_size = 5
     treasure_map = random.choices(treasure_items, weights=[1, 1, 2, 2, 4], k=map_size)
-    
+
     while attempts > 0:
         clear()
         print(Fore.YELLOW + "🏆 TREASURE HUNT 🏆")
         print(f"Attempts remaining: {attempts}")
-        
+
         # Display map with hidden treasures
         print("\nMap:", " ".join("?" * map_size))
-        
+
         # Get user input
         try:
             choice = int(input(f"\nChoose location (1-{map_size}): ")) - 1
-            
+
             if 0 <= choice < map_size:
                 find = treasure_map[choice]
                 if find == "💎":
@@ -9247,37 +9231,37 @@ def treasure_hunt():
                     score += 3
                 else:
                     print(Fore.RED + "Nothing here! ❌")
-                
+
                 # Replace the item with a blank space
                 treasure_map[choice] = " "
             else:
                 print(Fore.RED + "Invalid location!")
-                
+
             attempts -= 1
             time.sleep(1)
-            
+
         except (ValueError, IndexError):
             print(Fore.RED + "Invalid input! Please enter a number.")
             time.sleep(1)
-    
+
     # Game result
     clear()
     print(Fore.YELLOW + "🏆 TREASURE HUNT RESULTS 🏆")
-    
+
     # Show final map
     print("\nFinal Map:", " ".join(treasure_map))
-    
+
     print(f"\nYour score: {score}")
-    
+
     # Award tickets based on score
     tickets = score
     if tickets > 0:
         print(Fore.GREEN + f"You earned {tickets} tickets!")
         player["tickets"] += tickets
-        
+
         if score >= 20:
             award_achievement("Treasure Hunter")
-            
+
     input("\nPress Enter to continue...")
     update_mission_progress("vip_games")
 
@@ -9464,10 +9448,10 @@ def manage_deck():
     """Manage your TCG card deck"""
     if "card_collection" not in player:
         player["card_collection"] = []
-    
+
     if "current_deck" not in player:
         player["current_deck"] = []
-    
+
     while True:
         clear()
         print(Fore.CYAN + "📋 Deck Management")
@@ -9477,9 +9461,9 @@ def manage_deck():
         print("[3] Build new deck")
         print("[4] Card collection info")
         print("[0] Back")
-        
+
         choice = input("\nChoose option: ")
-        
+
         if choice == "1":
             view_card_collection()
         elif choice == "2":
@@ -9746,7 +9730,7 @@ def card_battle(opponent=None, championship=False):
     """Card battle game using the player's card collection"""
     if "card_collection" not in player:
         player["card_collection"] = []
-        
+
     # Generate card database if not defined
     if "CARD_DATABASE" not in globals():
         global CARD_DATABASE
@@ -9763,22 +9747,22 @@ def card_battle(opponent=None, championship=False):
             "Mystic Wizard": {"emoji": "🧙", "power": 8, "element": "arcane"},
             "Legendary Champion's Card": {"emoji": "🏆", "power": 10, "element": "legendary"}
         }
-    
+
     if len(player["card_collection"]) < 3:
         print(Fore.RED + "You need at least 3 cards to play!")
         print("Visit the shop to buy card packs!")
         input("Press Enter to continue...")
         return False
-    
+
     clear()
     print(Fore.CYAN + "🃏 CARD BATTLE 🃏")
-    
+
     # Opponent selection
     if opponent is None:
         opponent = random.choice(["Novice Duelist", "Card Enthusiast", "Deck Master"])
-    
+
     print(f"Opponent: {opponent}")
-    
+
     # Draw cards for player
     available_cards = player["card_collection"].copy()
     player_hand = []
@@ -9786,7 +9770,7 @@ def card_battle(opponent=None, championship=False):
         card = random.choice(available_cards)
         player_hand.append(card)
         available_cards.remove(card)
-    
+
     # Draw cards for CPU
     cpu_cards = list(CARD_DATABASE.keys())
     cpu_hand = []
@@ -9794,21 +9778,21 @@ def card_battle(opponent=None, championship=False):
         card = random.choice(cpu_cards)
         cpu_hand.append(card)
         cpu_cards.remove(card)
-    
+
     # Battle
     rounds = 3
     player_score = 0
     cpu_score = 0
-    
+
     for round_num in range(1, rounds+1):
         clear()
         print(Fore.CYAN + f"🃏 CARD BATTLE - Round {round_num}/{rounds} 🃏")
         print(f"Score: You {player_score} - {cpu_score} CPU")
-        
+
         print("\nYour hand:")
         for i, card in enumerate(player_hand, 1):
             print(f"{i}. {CARD_DATABASE[card]['emoji']} {card} (Power: {CARD_DATABASE[card]['power']})")
-        
+
         # Player selects card
         valid_choice = False
         choice = -1
@@ -9822,13 +9806,13 @@ def card_battle(opponent=None, championship=False):
             except ValueError:
                 print(Fore.RED + "Invalid input! Please enter a number.")
                 continue
-        
+
         player_card = player_hand[choice]
         cpu_card = random.choice(cpu_hand)
-        
+
         print(f"\nYou played: {CARD_DATABASE[player_card]['emoji']} {player_card}")
         print(f"CPU played: {CARD_DATABASE[cpu_card]['emoji']} {cpu_card}")
-        
+
         if CARD_DATABASE[player_card]['power'] > CARD_DATABASE[cpu_card]['power']:
             print(Fore.GREEN + "You win this round!")
             player_score += 1
@@ -9837,14 +9821,14 @@ def card_battle(opponent=None, championship=False):
             cpu_score += 1
         else:
             print(Fore.YELLOW + "It's a tie!")
-        
+
         player_hand.remove(player_card)
         cpu_hand.remove(cpu_card)
         time.sleep(1)
-    
+
     # Game result
     print(f"\nFinal Score - You: {player_score} | CPU: {cpu_score}")
-    
+
     if player_score > cpu_score:
         tickets = 10
         print(Fore.GREEN + f"You won the battle! +{tickets} tickets!")
@@ -9859,22 +9843,22 @@ def card_battle(opponent=None, championship=False):
         print(Fore.YELLOW + f"It's a tie! +{tickets} tickets")
         player["tickets"] += tickets
         return True
-        
+
 def buy_card_pack():
     """Purchase a card pack containing random cards"""
     pack_cost = 15
-    
+
     if player["tickets"] < pack_cost:
         print(Fore.RED + f"Not enough tickets! You need {pack_cost} tickets.")
         return
-    
+
     # Confirm purchase
     print(f"Buy a card pack for {pack_cost} tickets? (y/n)")
     if input("> ").lower() != 'y':
         return
-        
+
     player["tickets"] -= pack_cost
-    
+
     # Generate card database if not defined
     if "CARD_DATABASE" not in globals():
         global CARD_DATABASE
@@ -9890,46 +9874,46 @@ def buy_card_pack():
             "Forest Elf": {"emoji": "🌳", "power": 5, "element": "nature"},
             "Mystic Wizard": {"emoji": "🧙", "power": 8, "element": "arcane"}
         }
-    
+
     # Initialize card collection if needed
     if "card_collection" not in player:
         player["card_collection"] = []
-    
+
     # Draw cards
     cards_per_pack = 3
     cards = list(CARD_DATABASE.keys())
     new_cards = []
-    
+
     for _ in range(cards_per_pack):
         card = random.choice(cards)
         new_cards.append(card)
         player["card_collection"].append(card)
-    
+
     # Display results
     print(Fore.GREEN + "\nCard Pack Opened!")
     print("You got:")
     for card in new_cards:
         print(f"{CARD_DATABASE[card]['emoji']} {card} (Power: {CARD_DATABASE[card]['power']})")
-    
+
     # Achievement
     if len(player["card_collection"]) >= 10:
         award_achievement("Card Collector")
-        
+
     input("\nPress Enter to continue...")
-    
+
 def view_card_collection():
     """View all cards owned by the player"""
     clear()
-    
+
     if "card_collection" not in player:
         player["card_collection"] = []
-    
+
     if not player["card_collection"]:
         print(Fore.YELLOW + "You don't have any cards yet!")
         print("Visit the shop to buy card packs!")
         input("\nPress Enter to continue...")
         return
-    
+
     # Generate card database if not defined
     if "CARD_DATABASE" not in globals():
         global CARD_DATABASE
@@ -9946,9 +9930,9 @@ def view_card_collection():
             "Mystic Wizard": {"emoji": "🧙", "power": 8, "element": "arcane"},
             "Legendary Champion's Card": {"emoji": "🏆", "power": 10, "element": "legendary"}
         }
-    
+
     print(Fore.CYAN + "🃏 YOUR CARD COLLECTION 🃏")
-    
+
     # Group cards by element
     cards_by_element = {}
     for card in player["card_collection"]:
@@ -9956,14 +9940,14 @@ def view_card_collection():
         if element not in cards_by_element:
             cards_by_element[element] = []
         cards_by_element[element].append(card)
-    
+
     # Display cards by element
     for element, cards in cards_by_element.items():
         print(f"\n{element.upper()} CARDS:")
         for card in cards:
             card_data = CARD_DATABASE.get(card, {"emoji": "❓", "power": 0})
             print(f"{card_data['emoji']} {card} (Power: {card_data['power']})")
-    
+
     print(f"\nTotal Cards: {len(player['card_collection'])}")
     input("\nPress Enter to continue...")
 
@@ -9997,23 +9981,23 @@ def weather_effects():
             "special_events": ["Snowman Building", "Winter Carnival Games"]
         }
     }
-    
+
     current_weather = random.choice(list(weather_conditions.keys()))
     weather_data = weather_conditions[current_weather]
-    
+
     print(f"\n{Fore.CYAN}🌤️  Current Weather: {current_weather.title()}{Style.RESET_ALL}")
     print(f"{weather_data['description']}")
-    
+
     # Apply weather effects
     if "mood_boost" in weather_data["effects"]:
         print(f"{Fore.GREEN}Your mood is lifted by the beautiful weather!")
-    
+
     return current_weather, weather_data
 
 # Expanded NPC Relationship System
 def advanced_npc_system():
     """Enhanced NPC interaction system with deep relationships"""
-    
+
     # Extended NPC personalities
     npc_personalities = {
         "optimistic": {
@@ -10041,13 +10025,13 @@ def advanced_npc_system():
             "relationship_bonus": 1.3
         }
     }
-    
+
     return npc_personalities
 
 # Multi-layered Achievement System
 def complex_achievement_system():
     """Comprehensive achievement tracking with multiple categories"""
-    
+
     achievement_categories = {
         "Explorer": {
             "Carnival Wanderer": "Visit 50 different attractions",
@@ -10085,31 +10069,31 @@ def complex_achievement_system():
             "Anniversary Celebrant": "Attend special anniversary events"
         }
     }
-    
+
     return achievement_categories
 
 # Advanced Mini-Game Collection
 def premium_minigames():
     """Collection of sophisticated mini-games for enhanced gameplay"""
-    
+
     def rhythm_carnival():
         """Musical rhythm game with carnival themes"""
         print(f"\n{Fore.MAGENTA}🎵 RHYTHM CARNIVAL 🎵{Style.RESET_ALL}")
         print("Match the beat of the carnival music!")
-        
+
         beats = ["🥁", "🎺", "🎪", "🎠", "🎡"]
         sequence = [random.choice(beats) for _ in range(8)]
-        
+
         print("Watch the sequence:")
         for beat in sequence:
             print(beat, end=" ", flush=True)
             time.sleep(0.8)
-        
+
         print("\n\nNow repeat it back!")
         player_input = input("Enter the sequence (separate with spaces): ").split()
-        
+
         score = sum(1 for i, beat in enumerate(player_input) if i < len(sequence) and beat == sequence[i])
-        
+
         if score == len(sequence):
             print(f"{Fore.GREEN}Perfect rhythm! You've won the grand prize!")
             return 150
@@ -10119,7 +10103,7 @@ def premium_minigames():
         else:
             print(f"{Fore.RED}Keep practicing! You scored {score}/{len(sequence)}")
             return 25
-    
+
     def carnival_trivia():
         """Advanced trivia game about carnival history and fun facts"""
         questions = [
@@ -10142,32 +10126,32 @@ def premium_minigames():
                 "explanation": "In carnival terminology, a 'mark' is a potential customer or target for games."
             }
         ]
-        
+
         print(f"\n{Fore.CYAN}🧠 CARNIVAL TRIVIA CHALLENGE 🧠{Style.RESET_ALL}")
         score = 0
-        
+
         for i, q in enumerate(questions, 1):
             print(f"\nQuestion {i}: {q['question']}")
             for option in q['options']:
                 print(option)
-            
+
             answer = input("Your answer: ").upper().strip()
-            
+
             if answer == q['answer']:
                 print(f"{Fore.GREEN}Correct! {q['explanation']}")
                 score += 1
             else:
                 print(f"{Fore.RED}Wrong! The correct answer was {q['answer']}. {q['explanation']}")
-        
+
         print(f"\nFinal Score: {score}/{len(questions)}")
         return score * 50
-    
+
     return {"rhythm_carnival": rhythm_carnival, "carnival_trivia": carnival_trivia}
 
 # Immersive Storytelling System
 def interactive_story_mode():
     """Branching narrative system for carnival adventures"""
-    
+
     story_chapters = {
         "mystery_of_the_missing_mascot": {
             "title": "The Mystery of the Missing Mascot",
@@ -10189,13 +10173,13 @@ def interactive_story_mode():
             ]
         }
     }
-    
+
     return story_chapters
 
 # Enhanced Economic System
 def carnival_economy():
     """Complex economic simulation for the carnival experience"""
-    
+
     economic_factors = {
         "inflation": {
             "ticket_prices": 1.0,
@@ -10213,7 +10197,7 @@ def carnival_economy():
             "surplus": ["ticket_stock", "food_ingredients"]
         }
     }
-    
+
     return economic_factors
 
 # Main execution - launcher already checked at the beginning of the file
