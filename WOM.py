@@ -1942,7 +1942,7 @@ your monster companions!
         while not valid_choice:
             clear_screen()
             self.print_title()
-            print(f"{Fore.CYAN}Professor Oak:{Style.RESET_ALL} Welcome to the world of monsters!")
+            print(f"{Fore.CYAN}Professor Pino:{Style.RESET_ALL} Welcome to the world of monsters!")
             print("It's time to choose your first monster companion for your journey.")
             print("\nYou have three choices:")
 
@@ -3048,7 +3048,7 @@ your monster companions!
         location_events = {
             "Hometown": [
                 "You stroll around the peaceful streets of your hometown.",
-                "You run into Professor Oak who gives you a free Potion!",
+                "You run into Professor Pino who gives you a free Potion!",
                 "Your neighbor gives you a spare Monster Ball they found.",
                 "You find $30 that someone dropped near the lab."
             ],
