@@ -42,7 +42,7 @@ def init_database():
 # Get save file path for a player
 def get_save_path(player_name, save_name):
     """Get the file path for a save file"""
-    return os.path.join(SAVE_DIR, f"{player_name}_{save_name}.pickle")
+    return os.path.join(SAVE_DIR, f"{save_name}.json")
 
 # Game constants
 MAX_MONSTER_LEVEL = 50
@@ -434,6 +434,33 @@ class Player:
         # Initialize quest items
         self.quest_items = []
         
+        # Emotional Response System
+        self.reputation = {
+            "kindness": 0,      # Helping, healing, showing mercy
+            "cruelty": 0,       # Unnecessarily harsh actions
+            "bravery": 0,       # Taking risks, facing danger
+            "wisdom": 0,        # Making thoughtful choices
+            "greed": 0,         # Prioritizing money/items over others
+            "honor": 0,         # Keeping promises, fair play
+            "recklessness": 0,  # Dangerous or thoughtless actions
+            "compassion": 0     # Caring for others' wellbeing
+        }
+        self.npc_relationships = {}  # Track individual NPC relationships
+        self.monster_bonds = {}      # Track emotional bonds with monsters
+        self.recent_actions = []     # Track recent player actions for context
+        
+        # Narrative Reflection System
+        self.story_moments = []      # Track significant story moments for reflection
+        self.moral_choices = []      # Track moral decisions and their outcomes
+        self.reflection_points = 0   # Earned through meaningful actions
+        
+        # Advanced Dialogue System
+        self.dialogue_history = {}   # Track conversations with NPCs
+        self.conversation_flags = {} # Track conversation state flags
+        self.dialogue_choices_made = [] # Track choices made in conversations
+        self.character_opinions = {} # How NPCs view the player based on dialogue
+        self.unlocked_dialogue_trees = set() # Advanced dialogue options unlocked
+        
         # New RPG attributes
         self.skills = {
             'Monster Training': 1,
@@ -582,6 +609,384 @@ class Player:
             return result
 
         return "Invalid item selected."
+    
+    def track_action(self, action_type: str, context: str = "", value: int = 1):
+        """Track player actions for emotional response system"""
+        import time
+        
+        # Add to recent actions (keep last 20 actions)
+        action_data = {
+            "type": action_type,
+            "context": context,
+            "value": value,
+            "timestamp": time.time()
+        }
+        self.recent_actions.append(action_data)
+        if len(self.recent_actions) > 20:
+            self.recent_actions.pop(0)
+        
+        # Update reputation based on action type
+        if action_type == "heal_monster":
+            self.reputation["kindness"] += value
+            self.reputation["compassion"] += value
+        elif action_type == "help_npc":
+            self.reputation["kindness"] += value * 2
+            self.reputation["honor"] += value
+        elif action_type == "spare_enemy":
+            self.reputation["compassion"] += value * 2
+            self.reputation["wisdom"] += value
+        elif action_type == "cruel_action":
+            self.reputation["cruelty"] += value
+            self.reputation["kindness"] = max(0, self.reputation["kindness"] - value)
+        elif action_type == "brave_deed":
+            self.reputation["bravery"] += value
+        elif action_type == "wise_choice":
+            self.reputation["wisdom"] += value
+        elif action_type == "greedy_action":
+            self.reputation["greed"] += value
+            self.reputation["honor"] = max(0, self.reputation["honor"] - value)
+        elif action_type == "reckless_action":
+            self.reputation["recklessness"] += value
+            self.reputation["wisdom"] = max(0, self.reputation["wisdom"] - value)
+        elif action_type == "honorable_action":
+            self.reputation["honor"] += value
+        
+        # Cap reputation values at reasonable ranges
+        for trait in self.reputation:
+            self.reputation[trait] = max(-50, min(100, self.reputation[trait]))
+    
+    def update_monster_bond(self, monster_name: str, bond_change: int, reason: str = ""):
+        """Update emotional bond with a specific monster"""
+        if monster_name not in self.monster_bonds:
+            self.monster_bonds[monster_name] = {
+                "trust": 50,
+                "happiness": 50,
+                "loyalty": 50,
+                "respect": 50,
+                "fear": 0
+            }
+        
+        bond = self.monster_bonds[monster_name]
+        
+        # Adjust bonds based on reason
+        if "heal" in reason.lower():
+            bond["trust"] += bond_change
+            bond["happiness"] += bond_change
+        elif "victory" in reason.lower():
+            bond["respect"] += bond_change
+            bond["loyalty"] += bond_change
+        elif "abandon" in reason.lower():
+            bond["trust"] -= bond_change * 2
+            bond["loyalty"] -= bond_change * 2
+        elif "cruel" in reason.lower():
+            bond["fear"] += bond_change
+            bond["trust"] -= bond_change
+        elif "care" in reason.lower():
+            bond["happiness"] += bond_change
+            bond["trust"] += bond_change
+        
+        # Cap bond values
+        for emotion in bond:
+            bond[emotion] = max(0, min(100, bond[emotion]))
+    
+    def update_npc_relationship(self, npc_name: str, relationship_change: int, reason: str = ""):
+        """Update relationship with a specific NPC"""
+        if npc_name not in self.npc_relationships:
+            self.npc_relationships[npc_name] = {
+                "trust": 50,
+                "respect": 50,
+                "friendship": 50,
+                "fear": 0,
+                "admiration": 50
+            }
+        
+        relationship = self.npc_relationships[npc_name]
+        
+        # Adjust relationships based on reason
+        if "help" in reason.lower():
+            relationship["trust"] += relationship_change
+            relationship["friendship"] += relationship_change
+        elif "impress" in reason.lower():
+            relationship["admiration"] += relationship_change
+            relationship["respect"] += relationship_change
+        elif "betray" in reason.lower():
+            relationship["trust"] -= relationship_change * 2
+            relationship["friendship"] -= relationship_change
+        elif "threaten" in reason.lower():
+            relationship["fear"] += relationship_change
+            relationship["trust"] -= relationship_change
+        
+        # Cap relationship values
+        for emotion in relationship:
+            relationship[emotion] = max(0, min(100, relationship[emotion]))
+    
+    def get_reputation_summary(self) -> str:
+        """Get a summary of the player's reputation"""
+        dominant_traits = []
+        for trait, value in self.reputation.items():
+            if value >= 30:
+                dominant_traits.append(f"{trait.title()}: {value}")
+        
+        if not dominant_traits:
+            return "You have no particularly notable reputation traits."
+        
+        return "Your reputation: " + ", ".join(dominant_traits)
+    
+    def add_story_moment(self, moment_type: str, description: str, location: str, consequences: str = ""):
+        """Add a significant story moment for later reflection"""
+        import time
+        
+        story_moment = {
+            "type": moment_type,
+            "description": description,
+            "location": location,
+            "consequences": consequences,
+            "timestamp": time.time(),
+            "reflected_upon": False
+        }
+        self.story_moments.append(story_moment)
+        
+        # Keep only last 15 story moments to avoid memory bloat
+        if len(self.story_moments) > 15:
+            self.story_moments.pop(0)
+    
+    def add_moral_choice(self, choice_description: str, option_chosen: str, outcome: str, karma_impact: dict):
+        """Track a moral choice and its consequences"""
+        import time
+        
+        moral_choice = {
+            "choice": choice_description,
+            "chosen_option": option_chosen,
+            "outcome": outcome,
+            "karma_impact": karma_impact,
+            "timestamp": time.time(),
+            "location": self.location,
+            "reflected_upon": False
+        }
+        self.moral_choices.append(moral_choice)
+        
+        # Apply karma impact to reputation
+        for trait, change in karma_impact.items():
+            if trait in self.reputation:
+                self.reputation[trait] += change
+        
+        # Keep only last 10 moral choices
+        if len(self.moral_choices) > 10:
+            self.moral_choices.pop(0)
+    
+    def earn_reflection_points(self, points: int, reason: str = ""):
+        """Earn reflection points for meaningful actions"""
+        self.reflection_points += points
+        if reason:
+            self.track_action("earn_reflection", reason, points)
+    
+    def record_dialogue_choice(self, npc_name: str, dialogue_id: str, choice_text: str, consequence: str = ""):
+        """Record a dialogue choice and its consequences"""
+        import time
+        
+        dialogue_record = {
+            "npc": npc_name,
+            "dialogue_id": dialogue_id,
+            "choice": choice_text,
+            "consequence": consequence,
+            "timestamp": time.time(),
+            "location": self.location
+        }
+        self.dialogue_choices_made.append(dialogue_record)
+        
+        # Update dialogue history with this NPC
+        if npc_name not in self.dialogue_history:
+            self.dialogue_history[npc_name] = []
+        self.dialogue_history[npc_name].append(dialogue_record)
+        
+        # Keep only last 20 dialogue choices
+        if len(self.dialogue_choices_made) > 20:
+            self.dialogue_choices_made.pop(0)
+    
+    def set_conversation_flag(self, flag_name: str, value: any):
+        """Set a conversation state flag"""
+        self.conversation_flags[flag_name] = value
+    
+    def get_conversation_flag(self, flag_name: str, default: any = None):
+        """Get a conversation state flag"""
+        return self.conversation_flags.get(flag_name, default)
+    
+    def update_character_opinion(self, npc_name: str, opinion_change: int, reason: str = ""):
+        """Update how an NPC views the player based on dialogue choices"""
+        if npc_name not in self.character_opinions:
+            self.character_opinions[npc_name] = {
+                "respect": 50,
+                "trust": 50,
+                "friendliness": 50,
+                "interest": 50
+            }
+        
+        opinion = self.character_opinions[npc_name]
+        
+        # Adjust opinion based on reason
+        if "respectful" in reason.lower():
+            opinion["respect"] += opinion_change
+            opinion["trust"] += opinion_change // 2
+        elif "rude" in reason.lower():
+            opinion["respect"] -= opinion_change
+            opinion["friendliness"] -= opinion_change
+        elif "honest" in reason.lower():
+            opinion["trust"] += opinion_change
+            opinion["respect"] += opinion_change // 2
+        elif "deceptive" in reason.lower():
+            opinion["trust"] -= opinion_change * 2
+        elif "friendly" in reason.lower():
+            opinion["friendliness"] += opinion_change
+            opinion["interest"] += opinion_change // 2
+        elif "interesting" in reason.lower():
+            opinion["interest"] += opinion_change
+        else:
+            # General opinion change
+            for trait in opinion:
+                opinion[trait] += opinion_change // 4
+        
+        # Cap opinion values
+        for trait in opinion:
+            opinion[trait] = max(0, min(100, opinion[trait]))
+    
+    def unlock_dialogue_tree(self, tree_name: str):
+        """Unlock a new dialogue tree based on player actions or progress"""
+        self.unlocked_dialogue_trees.add(tree_name)
+        self.track_action("unlock_dialogue", f"Unlocked {tree_name} dialogue tree", 1)
+
+def generate_monster_reaction(player, monster_name: str, context: str = "encounter") -> str:
+    """Generate emotional reaction from a monster based on player reputation and bond"""
+    reactions = []
+    
+    # Get monster bond if exists
+    bond = player.monster_bonds.get(monster_name, {
+        "trust": 50, "happiness": 50, "loyalty": 50, "respect": 50, "fear": 0
+    })
+    
+    # Base reactions on context
+    if context == "encounter":
+        if player.reputation["cruelty"] > 30:
+            if bond["fear"] > 70:
+                reactions.append(f"The {monster_name} cowers in terror, remembering your cruel reputation.")
+            else:
+                reactions.append(f"The {monster_name} eyes you warily, sensing your harsh nature.")
+        elif player.reputation["kindness"] > 30:
+            if bond["trust"] > 70:
+                reactions.append(f"The {monster_name} approaches you with complete trust and affection.")
+            else:
+                reactions.append(f"The {monster_name} seems curious about your gentle aura.")
+        elif player.reputation["bravery"] > 30:
+            reactions.append(f"The {monster_name} shows respect for your courageous spirit.")
+    
+    elif context == "battle":
+        if bond["loyalty"] > 80:
+            reactions.append(f"The {monster_name} fights with unwavering determination for you!")
+        elif bond["fear"] > 60:
+            reactions.append(f"The {monster_name} hesitates, afraid of disappointing you.")
+        elif bond["trust"] < 30:
+            reactions.append(f"The {monster_name} seems reluctant to follow your commands.")
+    
+    elif context == "victory":
+        if bond["respect"] > 70:
+            reactions.append(f"The {monster_name} looks at you with deep admiration and pride.")
+        elif player.reputation["honor"] > 40:
+            reactions.append(f"The {monster_name} nods approvingly at your honorable victory.")
+    
+    return reactions[0] if reactions else f"The {monster_name} regards you neutrally."
+
+def generate_npc_reaction(player, npc_name: str, context: str = "dialogue") -> str:
+    """Generate emotional reaction from an NPC based on player reputation and relationship"""
+    reactions = []
+    
+    # Get NPC relationship if exists
+    relationship = player.npc_relationships.get(npc_name, {
+        "trust": 50, "respect": 50, "friendship": 50, "fear": 0, "admiration": 50
+    })
+    
+    # Base reactions on player reputation
+    if player.reputation["kindness"] > 50:
+        if relationship["friendship"] > 70:
+            reactions.append(f"{npc_name} greets you warmly, their eyes lighting up with joy.")
+        else:
+            reactions.append(f"{npc_name} smiles genuinely, appreciating your kind nature.")
+    
+    elif player.reputation["cruelty"] > 40:
+        if relationship["fear"] > 60:
+            reactions.append(f"{npc_name} backs away nervously, clearly intimidated by your presence.")
+        else:
+            reactions.append(f"{npc_name} regards you with obvious suspicion and caution.")
+    
+    elif player.reputation["wisdom"] > 40:
+        if relationship["respect"] > 70:
+            reactions.append(f"{npc_name} speaks to you with deep respect and deference.")
+        else:
+            reactions.append(f"{npc_name} listens carefully to your words, recognizing your wisdom.")
+    
+    elif player.reputation["greed"] > 40:
+        if relationship["trust"] < 30:
+            reactions.append(f"{npc_name} clutches their belongings, not trusting your intentions.")
+        else:
+            reactions.append(f"{npc_name} seems wary of making any deals with you.")
+    
+    # Context-specific reactions
+    if context == "shop":
+        if player.reputation["honor"] > 50:
+            reactions.append(f"{npc_name} offers you a special discount for being such an honorable customer.")
+        elif player.reputation["greed"] > 50:
+            reactions.append(f"{npc_name} doubles their prices, knowing your greedy reputation.")
+    
+    elif context == "quest":
+        if relationship["trust"] > 80:
+            reactions.append(f"{npc_name} entrusts you with their most precious quest.")
+        elif relationship["trust"] < 30:
+            reactions.append(f"{npc_name} hesitates to give you important tasks.")
+    
+    return reactions[0] if reactions else f"{npc_name} greets you politely but distantly."
+
+def get_monster_battle_bonus(player, monster_name: str) -> dict:
+    """Calculate battle bonuses based on monster bond with player"""
+    bond = player.monster_bonds.get(monster_name, {
+        "trust": 50, "happiness": 50, "loyalty": 50, "respect": 50, "fear": 0
+    })
+    
+    bonuses = {
+        "attack_bonus": 0.0,
+        "defense_bonus": 0.0,
+        "accuracy_bonus": 0.0,
+        "crit_bonus": 0.0
+    }
+    
+    # High loyalty gives attack bonus
+    if bond["loyalty"] > 80:
+        bonuses["attack_bonus"] = 0.2
+    elif bond["loyalty"] > 60:
+        bonuses["attack_bonus"] = 0.1
+    
+    # High trust gives accuracy bonus
+    if bond["trust"] > 80:
+        bonuses["accuracy_bonus"] = 0.15
+    elif bond["trust"] > 60:
+        bonuses["accuracy_bonus"] = 0.1
+    
+    # High respect gives critical hit bonus
+    if bond["respect"] > 80:
+        bonuses["crit_bonus"] = 0.1
+    elif bond["respect"] > 60:
+        bonuses["crit_bonus"] = 0.05
+    
+    # High happiness gives defense bonus
+    if bond["happiness"] > 80:
+        bonuses["defense_bonus"] = 0.15
+    elif bond["happiness"] > 60:
+        bonuses["defense_bonus"] = 0.1
+    
+    # Fear reduces all bonuses
+    if bond["fear"] > 50:
+        fear_penalty = (bond["fear"] - 50) / 100
+        for bonus_type in bonuses:
+            bonuses[bonus_type] *= (1 - fear_penalty)
+    
+    return bonuses
 
 
 # Battle class
@@ -2451,68 +2856,628 @@ your monster companions!
                 variant_stats[variant] = variant_stats.get(variant, 0) + 1
         return variant_stats
 
-    def load_and_repair_save(self, save_path: str) -> dict:
-        """Load save file with auto-repair functionality"""
+    def save_file_recovery_wizard(self, save_path: str) -> dict:
+        """Advanced Save File Recovery Wizard with user-friendly options"""
         import json as json_module
         
+        clear_screen()
+        print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}║                    SAVE FILE RECOVERY WIZARD                     ║{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        print(f"{Fore.YELLOW}Save file appears to be corrupted or damaged.{Style.RESET_ALL}")
+        print(f"File: {save_path}\n")
+        
+        # Analyze the file to determine corruption type
+        corruption_type, analysis = self.analyze_save_corruption(save_path)
+        
+        print(f"{Fore.CYAN}Analysis Results:{Style.RESET_ALL}")
+        print(f"Corruption Type: {corruption_type}")
+        print(f"Details: {analysis}\n")
+        
+        # Show recovery options
+        print(f"{Fore.GREEN}Recovery Options:{Style.RESET_ALL}")
+        print("1. Auto-Repair (Recommended) - Attempt automatic recovery")
+        print("2. Manual Recovery - Choose specific recovery method")
+        print("3. Restore from Backup - Use previous backup if available")
+        print("4. Create Fresh Save - Start with minimal recovered data")
+        print("5. Skip Recovery - Continue without loading this save")
+        
+        while True:
+            choice = input(f"\n{Fore.CYAN}Select recovery option (1-5): {Style.RESET_ALL}").strip()
+            
+            if choice == "1":
+                return self.auto_repair_save(save_path, corruption_type)
+            elif choice == "2":
+                return self.manual_recovery_menu(save_path, corruption_type)
+            elif choice == "3":
+                return self.restore_from_backup(save_path)
+            elif choice == "4":
+                return self.create_recovery_save(save_path)
+            elif choice == "5":
+                return self.create_emergency_save()
+            else:
+                print(f"{Fore.RED}Invalid option. Please choose 1-5.{Style.RESET_ALL}")
+
+    def analyze_save_corruption(self, save_path: str) -> tuple:
+        """Analyze save file to determine corruption type and details"""
         try:
-            # Try loading as JSON first
+            with open(save_path, 'rb') as f:
+                raw_data = f.read()
+            
+            if len(raw_data) == 0:
+                return "Empty File", "Save file contains no data"
+            
+            # Try to determine file format
+            try:
+                with open(save_path, 'r') as f:
+                    text_data = f.read()
+                
+                if text_data.strip().startswith('{') and text_data.strip().endswith('}'):
+                    return "JSON Format", "Appears to be JSON but may have syntax errors"
+                elif text_data.strip().startswith('{'):
+                    return "Incomplete JSON", "JSON file missing closing bracket"
+                elif text_data.strip().endswith('}'):
+                    return "Truncated JSON", "JSON file missing opening bracket"
+                else:
+                    return "Unknown Text Format", "Text file with unknown format"
+            except UnicodeDecodeError:
+                return "Binary Format", "Appears to be pickle or other binary format"
+                
+        except FileNotFoundError:
+            return "Missing File", "Save file does not exist"
+        except PermissionError:
+            return "Access Denied", "Cannot read save file due to permissions"
+        except Exception as e:
+            return "Unknown Error", f"Unexpected error: {str(e)}"
+
+    def auto_repair_save(self, save_path: str, corruption_type: str) -> dict:
+        """Automatic repair with progress feedback"""
+        import json as json_module
+        
+        print(f"\n{Fore.CYAN}Starting automatic repair...{Style.RESET_ALL}")
+        
+        # Step 1: Try JSON repair
+        print("Step 1: Attempting JSON repair...")
+        try:
+            with open(save_path, 'r') as f:
+                content = f.read()
+            
+            # Advanced JSON repair techniques
+            content = content.strip()
+            
+            # Fix common JSON issues
+            if not content.startswith('{'):
+                content = '{' + content
+            if not content.endswith('}'):
+                content += '}'
+            
+            # Fix common escape issues
+            content = content.replace('\\"', '"').replace('\\\\', '\\')
+            
+            # Try to parse
+            save_data = json_module.loads(content)
+            print(f"{Fore.GREEN}✓ JSON repair successful!{Style.RESET_ALL}")
+            
+            # Create backup and save repaired version
+            self.create_backup(save_path)
+            with open(save_path, 'w') as f:
+                json_module.dump(save_data, f, indent=2)
+            
+            return save_data
+            
+        except:
+            print(f"{Fore.YELLOW}✗ JSON repair failed{Style.RESET_ALL}")
+        
+        # Step 2: Try pickle format
+        print("Step 2: Attempting pickle format recovery...")
+        try:
+            with open(save_path, 'rb') as f:
+                save_data = pickle.load(f)
+            print(f"{Fore.GREEN}✓ Pickle format recovery successful!{Style.RESET_ALL}")
+            
+            # Convert to JSON
+            json_path = save_path.replace('.pickle', '.json')
+            with open(json_path, 'w') as f:
+                json_module.dump(save_data, f, indent=2)
+            
+            return save_data
+            
+        except:
+            print(f"{Fore.YELLOW}✗ Pickle recovery failed{Style.RESET_ALL}")
+        
+        # Step 3: Create emergency recovery save
+        print("Step 3: Creating emergency recovery save...")
+        return self.create_emergency_save()
+
+    def manual_recovery_menu(self, save_path: str, corruption_type: str) -> dict:
+        """Manual recovery options menu"""
+        clear_screen()
+        print(f"{Fore.CYAN}Manual Recovery Options{Style.RESET_ALL}\n")
+        
+        print("1. JSON Syntax Repair - Fix brackets, quotes, and commas")
+        print("2. Pickle to JSON Conversion - Convert old pickle format")
+        print("3. Data Extraction - Extract readable data from corrupted file")
+        print("4. Template Reconstruction - Rebuild save using template")
+        print("5. Back to main recovery menu")
+        
+        while True:
+            choice = input(f"\n{Fore.CYAN}Select recovery method (1-5): {Style.RESET_ALL}").strip()
+            
+            if choice == "1":
+                return self.repair_json_syntax(save_path)
+            elif choice == "2":
+                return self.convert_pickle_to_json(save_path)
+            elif choice == "3":
+                return self.extract_save_data(save_path)
+            elif choice == "4":
+                return self.reconstruct_from_template(save_path)
+            elif choice == "5":
+                return self.save_file_recovery_wizard(save_path)
+            else:
+                print(f"{Fore.RED}Invalid option. Please choose 1-5.{Style.RESET_ALL}")
+
+    def create_backup(self, save_path: str):
+        """Create backup of original corrupted file"""
+        try:
+            backup_path = save_path + f".backup_{int(time.time())}"
+            with open(save_path, 'rb') as original:
+                with open(backup_path, 'wb') as backup:
+                    backup.write(original.read())
+            print(f"{Fore.GREEN}Backup created: {backup_path}{Style.RESET_ALL}")
+        except:
+            print(f"{Fore.YELLOW}Warning: Could not create backup{Style.RESET_ALL}")
+
+    def restore_from_backup(self, save_path: str) -> dict:
+        """Restore from available backups"""
+        save_dir = os.path.dirname(save_path)
+        base_name = os.path.basename(save_path)
+        
+        # Find backup files
+        backups = []
+        if os.path.exists(save_dir):
+            for filename in os.listdir(save_dir):
+                if filename.startswith(base_name + ".backup_"):
+                    backup_path = os.path.join(save_dir, filename)
+                    timestamp = filename.split("backup_")[1]
+                    backups.append((backup_path, timestamp))
+        
+        if not backups:
+            print(f"{Fore.YELLOW}No backup files found.{Style.RESET_ALL}")
+            input("Press Enter to continue...")
+            return self.create_emergency_save()
+        
+        # Sort by timestamp (newest first)
+        backups.sort(key=lambda x: x[1], reverse=True)
+        
+        print(f"\n{Fore.CYAN}Available Backups:{Style.RESET_ALL}")
+        for i, (path, timestamp) in enumerate(backups[:5]):  # Show max 5 backups
+            date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(timestamp)))
+            print(f"{i+1}. Backup from {date_str}")
+        
+        while True:
+            choice = input(f"\n{Fore.CYAN}Select backup to restore (1-{len(backups[:5])} or 0 to cancel): {Style.RESET_ALL}").strip()
+            
+            try:
+                if choice == "0":
+                    return self.create_emergency_save()
+                
+                backup_index = int(choice) - 1
+                if 0 <= backup_index < len(backups[:5]):
+                    return self.load_and_repair_save(backups[backup_index][0])
+                else:
+                    print(f"{Fore.RED}Invalid selection.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED}Please enter a valid number.{Style.RESET_ALL}")
+
+    def create_recovery_save(self, save_path: str) -> dict:
+        """Create a fresh save with recovered data where possible"""
+        print(f"\n{Fore.CYAN}Creating recovery save...{Style.RESET_ALL}")
+        
+        recovery_data = {
+            "player_name": "Recovered Player",
+            "trainer_level": 5,
+            "location": "Hometown",
+            "money": 500,
+            "monsters": [],
+            "inventory": {"Healing Potion": 3, "Monster Ball": 5},
+            "save_time": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "recovery_note": "This save was created by the recovery wizard"
+        }
+        
+        # Try to extract any readable data from corrupted file
+        try:
+            extracted_data = self.extract_readable_data(save_path)
+            if extracted_data:
+                recovery_data.update(extracted_data)
+                print(f"{Fore.GREEN}Some data recovered from corrupted file.{Style.RESET_ALL}")
+        except:
+            pass
+        
+        print(f"{Fore.GREEN}Recovery save created successfully!{Style.RESET_ALL}")
+        input("Press Enter to continue...")
+        return recovery_data
+
+    def create_emergency_save(self) -> dict:
+        """Create minimal emergency save data"""
+        return {
+            "player_name": "Emergency Recovery",
+            "trainer_level": 1,
+            "location": "Hometown",
+            "money": 100,
+            "monsters": [],
+            "inventory": {"Healing Potion": 1},
+            "save_time": "Emergency Recovery",
+            "emergency_recovery": True
+        }
+
+    def load_and_repair_save(self, save_path: str) -> dict:
+        """Enhanced load function with recovery wizard integration"""
+        try:
+            # First try normal loading
+            import json as json_module
             with open(save_path, 'r') as f:
                 save_data = json_module.load(f)
                 print(f"{Fore.GREEN}Save file loaded successfully.{Style.RESET_ALL}")
                 return save_data
-        except json_module.JSONDecodeError:
-            print(f"{Fore.YELLOW}JSON corrupted, attempting to repair...{Style.RESET_ALL}")
-            # Try to repair corrupted JSON
+        except:
+            # If normal loading fails, launch recovery wizard
+            return self.save_file_recovery_wizard(save_path)
+
+    def repair_json_syntax(self, save_path: str) -> dict:
+        """Advanced JSON syntax repair with detailed error handling"""
+        import json as json_module
+        import re
+        
+        print(f"\n{Fore.CYAN}JSON Syntax Repair in progress...{Style.RESET_ALL}")
+        
+        try:
+            with open(save_path, 'r') as f:
+                content = f.read()
+            
+            original_content = content
+            print(f"Original file size: {len(content)} characters")
+            
+            # Step 1: Basic cleanup
+            content = content.strip()
+            
+            # Step 2: Fix bracket issues
+            if not content.startswith('{'):
+                content = '{' + content
+                print("✓ Added missing opening bracket")
+            
+            if not content.endswith('}'):
+                content += '}'
+                print("✓ Added missing closing bracket")
+            
+            # Step 3: Fix common JSON issues
+            fixes_applied = []
+            
+            # Fix trailing commas
+            content = re.sub(r',(\s*[}\]])', r'\1', content)
+            if content != original_content:
+                fixes_applied.append("Removed trailing commas")
+            
+            # Fix unescaped quotes
+            content = re.sub(r'(?<!\\)"(?=[^,}\]:\s])', r'\\"', content)
+            
+            # Fix missing quotes around keys
+            content = re.sub(r'(\w+)(\s*:)', r'"\1"\2', content)
+            
+            # Step 4: Try to parse
             try:
-                with open(save_path, 'r') as f:
-                    content = f.read()
-                
-                # Basic JSON repair attempts
-                content = content.strip()
-                if not content.endswith('}'):
-                    content += '}'
-                if not content.startswith('{'):
-                    content = '{' + content
-                
-                # Try to parse the repaired content
                 save_data = json_module.loads(content)
-                print(f"{Fore.GREEN}Save file repaired and loaded successfully.{Style.RESET_ALL}")
+                print(f"{Fore.GREEN}✓ JSON syntax repair successful!{Style.RESET_ALL}")
                 
-                # Save the repaired version
+                if fixes_applied:
+                    print(f"Fixes applied: {', '.join(fixes_applied)}")
+                
+                # Create backup and save
+                self.create_backup(save_path)
                 with open(save_path, 'w') as f:
                     json_module.dump(save_data, f, indent=2)
                 
+                input("Press Enter to continue...")
                 return save_data
-            except:
-                print(f"{Fore.YELLOW}JSON repair failed, trying pickle format...{Style.RESET_ALL}")
-        except FileNotFoundError:
-            raise
+                
+            except json_module.JSONDecodeError as e:
+                print(f"{Fore.RED}JSON syntax repair failed: {str(e)}{Style.RESET_ALL}")
+                print("Falling back to emergency recovery...")
+                input("Press Enter to continue...")
+                return self.create_emergency_save()
+                
+        except Exception as e:
+            print(f"{Fore.RED}Error during JSON repair: {str(e)}{Style.RESET_ALL}")
+            input("Press Enter to continue...")
+            return self.create_emergency_save()
+
+    def convert_pickle_to_json(self, save_path: str) -> dict:
+        """Convert pickle format saves to JSON"""
+        import json as json_module
         
-        # Try loading as pickle if JSON fails
+        print(f"\n{Fore.CYAN}Converting pickle to JSON format...{Style.RESET_ALL}")
+        
         try:
             with open(save_path, 'rb') as f:
                 save_data = pickle.load(f)
-                print(f"{Fore.YELLOW}Loaded legacy pickle format, converting to JSON...{Style.RESET_ALL}")
-                
-                # Convert to JSON format and save
-                json_path = save_path.replace('.pickle', '.json')
-                with open(json_path, 'w') as f:
-                    json_module.dump(save_data, f, indent=2)
-                
-                return save_data
+            
+            print(f"{Fore.GREEN}✓ Pickle file loaded successfully{Style.RESET_ALL}")
+            print(f"Data keys found: {list(save_data.keys()) if isinstance(save_data, dict) else 'Non-dict data'}")
+            
+            # Create JSON version
+            json_path = save_path.replace('.pickle', '.json').replace('.dat', '.json')
+            with open(json_path, 'w') as f:
+                json_module.dump(save_data, f, indent=2)
+            
+            print(f"{Fore.GREEN}✓ Converted to JSON format: {json_path}{Style.RESET_ALL}")
+            input("Press Enter to continue...")
+            return save_data
+            
+        except Exception as e:
+            print(f"{Fore.RED}Pickle conversion failed: {str(e)}{Style.RESET_ALL}")
+            print("The file may not be in pickle format or may be corrupted.")
+            input("Press Enter to continue...")
+            return self.create_emergency_save()
+
+    def extract_save_data(self, save_path: str) -> dict:
+        """Extract readable data from corrupted files"""
+        import re
+        print(f"\n{Fore.CYAN}Extracting readable data...{Style.RESET_ALL}")
+        
+        extracted_data = {
+            "player_name": "Data Recovery",
+            "trainer_level": 1,
+            "location": "Hometown",
+            "money": 100,
+            "monsters": [],
+            "inventory": {},
+            "save_time": "Data Extraction"
+        }
+        
+        try:
+            with open(save_path, 'r', errors='ignore') as f:
+                content = f.read()
+            
+            # Extract player name
+            name_match = re.search(r'"?player_name"?\s*:\s*"([^"]+)"', content)
+            if name_match:
+                extracted_data["player_name"] = name_match.group(1)
+                print(f"✓ Extracted player name: {name_match.group(1)}")
+            
+            # Extract trainer level
+            level_match = re.search(r'"?trainer_level"?\s*:\s*(\d+)', content)
+            if level_match:
+                extracted_data["trainer_level"] = int(level_match.group(1))
+                print(f"✓ Extracted trainer level: {level_match.group(1)}")
+            
+            # Extract location
+            location_match = re.search(r'"?location"?\s*:\s*"([^"]+)"', content)
+            if location_match:
+                extracted_data["location"] = location_match.group(1)
+                print(f"✓ Extracted location: {location_match.group(1)}")
+            
+            # Extract money
+            money_match = re.search(r'"?money"?\s*:\s*(\d+)', content)
+            if money_match:
+                extracted_data["money"] = int(money_match.group(1))
+                print(f"✓ Extracted money: ${money_match.group(1)}")
+            
+            print(f"{Fore.GREEN}Data extraction completed!{Style.RESET_ALL}")
+            
+        except Exception as e:
+            print(f"{Fore.YELLOW}Extraction encountered errors: {str(e)}{Style.RESET_ALL}")
+            print("Using minimal recovery data.")
+        
+        input("Press Enter to continue...")
+        return extracted_data
+
+    def reconstruct_from_template(self, save_path: str) -> dict:
+        """Reconstruct save using template and extracted data"""
+        print(f"\n{Fore.CYAN}Reconstructing save from template...{Style.RESET_ALL}")
+        
+        # Create comprehensive template
+        template_data = {
+            "player_name": "Template Recovery",
+            "trainer_level": 5,
+            "location": "Hometown",
+            "money": 500,
+            "monsters": [],
+            "inventory": {
+                "Healing Potion": 5,
+                "Monster Ball": 10,
+                "Super Potion": 2
+            },
+            "active_monster_index": 0,
+            "exp": 0,
+            "exp_to_level": 100,
+            "tokens": 500,
+            "story_progress": {},
+            "quest_items": [],
+            "completed_quests": [],
+            "active_quests": [],
+            "equipment": {},
+            "skills": {},
+            "materials": {
+                'Monster Essence': 0,
+                'Crystal Shards': 0,
+                'Metal Ore': 0,
+                'Ancient Bones': 0,
+                'Mystic Herbs': 0
+            },
+            "guild": None,
+            "guild_rank": 'Member',
+            "guild_contribution": 0,
+            "visited_areas": ['Forest Grove'],
+            "battle_wins": 0,
+            "battle_losses": 0,
+            "playtime": 0,
+            "daily_tasks": {
+                'catch_monsters': {'progress': 0, 'target': 3, 'completed': False},
+                'win_battles': {'progress': 0, 'target': 5, 'completed': False},
+                'explore_areas': {'progress': 0, 'target': 2, 'completed': False},
+                'use_items': {'progress': 0, 'target': 4, 'completed': False}
+            },
+            "save_time": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "template_reconstruction": True
+        }
+        
+        # Try to merge with extracted data
+        try:
+            extracted_data = self.extract_readable_data(save_path)
+            template_data.update(extracted_data)
+            print(f"{Fore.GREEN}✓ Template merged with extracted data{Style.RESET_ALL}")
         except:
-            print(f"{Fore.RED}Could not load or repair save file.{Style.RESET_ALL}")
-            # Return minimal save data to prevent crashes
-            return {
-                "player_name": "Recovered Player",
-                "trainer_level": 1,
-                "location": "Hometown", 
-                "money": 100,
-                "monsters": [],
-                "inventory": {},
-                "save_time": "Unknown"
-            }
+            print(f"{Fore.YELLOW}Using pure template data{Style.RESET_ALL}")
+        
+        # Give player a starter monster
+        try:
+            all_monsters = self.create_all_monsters()
+            if "Springraze" in all_monsters:
+                starter = all_monsters["Springraze"].clone()
+                template_data["monsters"] = [starter]
+                print(f"✓ Added starter monster: Springraze")
+        except:
+            print(f"{Fore.YELLOW}Could not add starter monster{Style.RESET_ALL}")
+        
+        print(f"{Fore.GREEN}Template reconstruction completed!{Style.RESET_ALL}")
+        input("Press Enter to continue...")
+        return template_data
+
+    def extract_readable_data(self, save_path: str) -> dict:
+        """Helper function to extract any readable data from corrupted file"""
+        import re
+        try:
+            # Try multiple approaches to extract data
+            extracted = {}
+            
+            # Approach 1: Try as text file
+            with open(save_path, 'r', errors='ignore') as f:
+                content = f.read()
+                
+                # Use regex to find key-value pairs
+                patterns = {
+                    'player_name': r'"?player_name"?\s*:\s*"([^"]+)"',
+                    'trainer_level': r'"?trainer_level"?\s*:\s*(\d+)',
+                    'location': r'"?location"?\s*:\s*"([^"]+)"',
+                    'money': r'"?money"?\s*:\s*(\d+)'
+                }
+                
+                for key, pattern in patterns.items():
+                    match = re.search(pattern, content)
+                    if match:
+                        value = match.group(1)
+                        if key in ['trainer_level', 'money']:
+                            extracted[key] = int(value)
+                        else:
+                            extracted[key] = value
+            
+            return extracted
+            
+        except:
+            return {}
+
+    def recovery_wizard_menu(self):
+        """Access the Save File Recovery Wizard from the main menu"""
+        clear_screen()
+        print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}║                    SAVE FILE RECOVERY WIZARD                     ║{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        print(f"{Fore.YELLOW}This tool helps recover corrupted or damaged save files.{Style.RESET_ALL}")
+        print(f"Please select the save file you'd like to recover:\n")
+        
+        # Get list of save files
+        if not self.db_available:
+            print(f"{Fore.RED}Save system is not available.{Style.RESET_ALL}")
+            input("Press Enter to continue...")
+            return
+        
+        save_slots = self.get_save_slots()
+        
+        print(f"{Fore.GREEN}Available save files:{Style.RESET_ALL}")
+        for i, slot_info in enumerate(save_slots, 1):
+            status = slot_info['status']
+            name = slot_info['name']
+            time_info = slot_info['time']
+            
+            if status == "Empty":
+                print(f"{i}. {Fore.GRAY}Empty Slot{Style.RESET_ALL}")
+            else:
+                print(f"{i}. {name} - {time_info}")
+        
+        print(f"{len(save_slots) + 1}. Enter custom file path")
+        print(f"{len(save_slots) + 2}. Back to main menu")
+        
+        while True:
+            try:
+                choice = input(f"\n{Fore.CYAN}Select save file to recover (1-{len(save_slots) + 2}): {Style.RESET_ALL}").strip()
+                
+                if choice == str(len(save_slots) + 2):
+                    return
+                elif choice == str(len(save_slots) + 1):
+                    # Custom file path
+                    file_path = input(f"{Fore.CYAN}Enter save file path: {Style.RESET_ALL}").strip()
+                    if os.path.exists(file_path):
+                        try:
+                            recovered_data = self.save_file_recovery_wizard(file_path)
+                            if recovered_data:
+                                print(f"{Fore.GREEN}Recovery completed successfully!{Style.RESET_ALL}")
+                                input("Press Enter to continue...")
+                            return
+                        except Exception as e:
+                            print(f"{Fore.RED}Recovery failed: {str(e)}{Style.RESET_ALL}")
+                            input("Press Enter to continue...")
+                            return
+                    else:
+                        print(f"{Fore.RED}File not found: {file_path}{Style.RESET_ALL}")
+                        continue
+                else:
+                    slot_num = int(choice)
+                    if 1 <= slot_num <= len(save_slots):
+                        slot_info = save_slots[slot_num - 1]
+                        if slot_info['status'] != "Empty":
+                            save_path = get_save_path("recovery", f"slot_{slot_num}")
+                            if os.path.exists(save_path):
+                                try:
+                                    recovered_data = self.save_file_recovery_wizard(save_path)
+                                    if recovered_data:
+                                        print(f"{Fore.GREEN}Recovery completed successfully!{Style.RESET_ALL}")
+                                        
+                                        # Offer to load the recovered save
+                                        load_choice = input(f"{Fore.CYAN}Load the recovered save now? (y/n): {Style.RESET_ALL}").strip().lower()
+                                        if load_choice == 'y':
+                                            # Create a Player object from recovered data
+                                            try:
+                                                player = Player(recovered_data["player_name"])
+                                                # Restore all player data
+                                                for key, value in recovered_data.items():
+                                                    if hasattr(player, key):
+                                                        setattr(player, key, value)
+                                                
+                                                self.player = player
+                                                print(f"{Fore.GREEN}Recovered save loaded successfully!{Style.RESET_ALL}")
+                                            except Exception as e:
+                                                print(f"{Fore.YELLOW}Could not load recovered save: {str(e)}{Style.RESET_ALL}")
+                                        
+                                        input("Press Enter to continue...")
+                                    return
+                                except Exception as e:
+                                    print(f"{Fore.RED}Recovery failed: {str(e)}{Style.RESET_ALL}")
+                                    input("Press Enter to continue...")
+                                    return
+                            else:
+                                print(f"{Fore.RED}Save file not found for slot {slot_num}{Style.RESET_ALL}")
+                                continue
+                        else:
+                            print(f"{Fore.YELLOW}Slot {slot_num} is empty.{Style.RESET_ALL}")
+                            continue
+                    else:
+                        print(f"{Fore.RED}Invalid selection.{Style.RESET_ALL}")
+                        continue
+                        
+            except ValueError:
+                print(f"{Fore.RED}Please enter a valid number.{Style.RESET_ALL}")
+                continue
 
     def load_game(self, save_name: Optional[str] = None) -> bool:
         """Load a saved game state from file with comprehensive data restoration"""
@@ -3075,6 +4040,19 @@ your monster companions!
             self.show_daily_tasks()
         elif cmd == "events":
             self.show_events()
+        elif cmd == "recovery":
+            self.recovery_wizard_menu()
+        elif cmd == "emotions" or cmd == "bonds":
+            self.show_emotional_status()
+        elif cmd == "reflect" or cmd == "reflection":
+            self.narrative_reflection_menu()
+        elif cmd == "contemplate":
+            self.quick_reflection()
+        elif cmd == "talk" or cmd == "dialogue":
+            self.npc_dialogue_menu()
+        elif cmd.startswith("talk "):
+            npc_name = cmd[5:].strip()
+            self.start_npc_conversation(npc_name)
         else:
             print(f"Unknown command: {cmd}")
             print("Type 'help' to see available commands.")
@@ -3567,6 +4545,319 @@ even in broad daylight. Near the summit, you discover a small shrine partially h
 A tall, cloaked figure stands beside it, motionless until you approach.
 
 {Fore.MAGENTA}Keeper of Shadows:{Style.RESET_ALL} "Few find their way here. Fewer still are worthy of the peak's secrets.
+This mountain stands at the convergence of all elemental energies. It is here that the ancient seal was first created,
+and here that it must be restored when the time comes.
+
+You carry the weight of destiny, young trainer. I can sense it in your aura.
+But you are not yet ready for what lies beneath this peak. Return when you have gathered the four elemental crystals,
+and I will guide you to the Chamber of Sealing."
+
+The figure vanishes like smoke, leaving only the echo of their words.""",
+                    "min_level": 35,
+                    "next_event": "shadow_peak_2"
+                },
+                {
+                    "id": "shadow_peak_2", 
+                    "text": f"""You return to Shadow Peak with the four elemental crystals in your possession.
+The Keeper of Shadows materializes before you as if they were waiting.
+
+{Fore.MAGENTA}Keeper of Shadows:{Style.RESET_ALL} "You have done well, chosen one. The crystals sing with elemental harmony.
+But know this - the path ahead is fraught with danger. The Sealed Darkness has grown strong during its imprisonment,
+feeding on fear and despair from across the lands.
+
+Below this peak lies the Chamber of Sealing. There you will face not only the darkness itself,
+but also the trials of your own heart. Only one who remains true to their purpose can hope to succeed."
+
+The ground beneath your feet begins to glow with mystical energy.
+
+{Fore.MAGENTA}Keeper of Shadows:{Style.RESET_ALL} "Step forward, and let the mountain judge your worth."
+
+A hidden passage opens in the rock face, leading deep into the mountain's heart.""",
+                    "min_level": 45,
+                    "condition": lambda: self.player and hasattr(self.player, 'quest_items') and 
+                                       len([item for item in self.player.quest_items if "Crystal" in item]) >= 4,
+                    "reward": {"type": "access", "name": "Chamber of Sealing"},
+                    "next_event": "shadow_peak_complete"
+                }
+            ],
+            "Enchanted Grove": [
+                {
+                    "id": "enchanted_grove_1",
+                    "text": f"""Deep within the Enchanted Grove, you discover a clearing where time itself seems to flow differently.
+Ancient trees tower overhead, their leaves shimmering with ethereal light.
+
+A voice speaks from everywhere and nowhere:
+
+{Fore.GREEN}Spirit of the Grove:{Style.RESET_ALL} "Welcome, young soul. This place exists between moments,
+where past and future converge. We have watched your journey with great interest.
+The darkness that threatens the world once consumed entire forests like this one.
+
+We offer you a glimpse of what was lost, and what might be saved."
+
+Suddenly, you see visions of the world as it once was - vibrant, alive, and in perfect harmony.""",
+                    "min_level": 25,
+                    "next_event": "enchanted_grove_2"
+                },
+                {
+                    "id": "enchanted_grove_2",
+                    "text": f"""The Spirit of the Grove shows you more visions - this time of the approaching darkness.
+
+{Fore.GREEN}Spirit of the Grove:{Style.RESET_ALL} "See how the shadow spreads, corrupting all it touches.
+But also see this - points of light that resist the darkness. You are one such light, trainer.
+
+Take this seed. Plant it when the darkness seems overwhelming, and remember that even in the deepest shadow,
+new life can take root."
+
+You received a {Fore.GREEN}Seed of Hope{Style.RESET_ALL}!
+
+{Fore.GREEN}Spirit of the Grove:{Style.RESET_ALL} "There are others like you scattered across the realms.
+A knight who guards the Celestial Bridge, a scholar who protects the Library of Ages,
+a healer who tends to the wounded in the Sanctuary of Light. Find them, and together you may stand a chance."
+
+The visions fade, but the knowledge remains.""",
+                    "min_level": 30,
+                    "reward": {"type": "quest_item", "name": "Seed of Hope"},
+                    "next_event": "enchanted_grove_3"
+                },
+                {
+                    "id": "enchanted_grove_3",
+                    "text": f"""When you return to the Enchanted Grove, you find it under attack by shadow creatures.
+The ancient trees are withering as dark energy spreads through the clearing.
+
+{Fore.GREEN}Spirit of the Grove:{Style.RESET_ALL} "The darkness... it has found us! Quick, trainer!
+Use the Seed of Hope - plant it in the Heart of the Grove before all is lost!"
+
+You plant the seed in the center of the clearing. Immediately, brilliant light erupts from the ground,
+pushing back the shadows and restoring life to the grove.
+
+{Fore.GREEN}Spirit of the Grove:{Style.RESET_ALL} "You have saved us! As promised, here is knowledge of your allies.
+Seek the Celestial Bridge to the north, where Sir Luminous guards the passage between realms.
+May the light of hope guide your path!"
+
+You received the {Fore.CYAN}Map of Allies{Style.RESET_ALL}!""",
+                    "min_level": 35,
+                    "condition": lambda: self.player and hasattr(self.player, 'quest_items') and 
+                                       "Seed of Hope" in self.player.quest_items,
+                    "reward": {"type": "quest_item", "name": "Map of Allies"},
+                    "next_event": "enchanted_grove_complete"
+                }
+            ],
+            "Celestial Bridge": [
+                {
+                    "id": "celestial_bridge_1",
+                    "text": f"""You arrive at the Celestial Bridge, a magnificent structure of pure light spanning a chasm between worlds.
+A knight in radiant armor stands guard at its center.
+
+{Fore.YELLOW}Sir Luminous:{Style.RESET_ALL} "Hold, traveler! This bridge connects the mortal realm to the celestial plane.
+In these dark times, I must be cautious of who I allow to pass.
+
+But wait... I sense something familiar about you. You carry the essence of hope, don't you?
+The Spirit of the Grove spoke truly - you are indeed one of the chosen ones.
+
+However, before I can share the knowledge you seek, you must prove your dedication to the light.
+Return when you have grown stronger in both body and spirit.""",
+                    "min_level": 32,
+                    "condition": lambda: self.player and hasattr(self.player, 'quest_items') and 
+                                       "Map of Allies" in self.player.quest_items,
+                    "next_event": "celestial_bridge_2"
+                },
+                {
+                    "id": "celestial_bridge_2",
+                    "text": f"""Sir Luminous examines you with eyes that seem to see into your very soul.
+
+{Fore.YELLOW}Sir Luminous:{Style.RESET_ALL} "Yes, you have grown indeed. The light within you burns brighter.
+I will share with you the secret of the Celestial Weapons - artifacts that can harm even the Sealed Darkness itself.
+
+But know this: these weapons choose their wielders. You cannot simply take them by force.
+They respond only to pure intentions and selfless courage."
+
+He hands you a glowing scroll.
+
+You received the {Fore.YELLOW}Scroll of Celestial Weapons{Style.RESET_ALL}!
+
+{Fore.YELLOW}Sir Luminous:{Style.RESET_ALL} "Seek the Sanctuary of Light to the east, where Healer Serenity tends to the wounded.
+She possesses one of these weapons - the Staff of Restoration. But she will only entrust it to one who has proven their compassion.
+
+The other weapon, the Sword of Truth, lies hidden in the Library of Ages, guarded by Scholar Wisdom.
+You must answer his riddles to prove your understanding of the greater picture."
+
+Thunder rumbles in the distance as dark clouds gather.""",
+                    "min_level": 38,
+                    "reward": {"type": "quest_item", "name": "Scroll of Celestial Weapons"},
+                    "next_event": "celestial_bridge_3"
+                },
+                {
+                    "id": "celestial_bridge_3",
+                    "text": f"""When you return to the Celestial Bridge, you find Sir Luminous engaged in battle with shadow creatures
+attempting to corrupt the bridge itself.
+
+{Fore.YELLOW}Sir Luminous:{Style.RESET_ALL} "Trainer! Perfect timing! These shadows seek to sever the connection
+between realms. If they succeed, the celestial plane will be cut off from our world!
+
+Help me defend the bridge! Together we can drive them back!"
+
+You and Sir Luminous fight side by side, your combined light pushing back the darkness.
+
+{Fore.YELLOW}Sir Luminous:{Style.RESET_ALL} "Well fought, ally! Your courage in battle proves your worth.
+Take this - my personal blessing. It will enhance the power of any celestial weapon you wield."
+
+You received {Fore.YELLOW}Sir Luminous's Blessing{Style.RESET_ALL}!
+
+{Fore.YELLOW}Sir Luminous:{Style.RESET_ALL} "The final battle approaches. When you face the Sealed Darkness,
+remember that you do not fight alone. The light of all who believe in hope fights with you!"
+
+The bridge glows brighter than ever, a beacon of hope in the growing darkness.""",
+                    "min_level": 42,
+                    "condition": lambda: self.player and hasattr(self.player, 'quest_items') and 
+                                       "Scroll of Celestial Weapons" in self.player.quest_items,
+                    "reward": {"type": "blessing", "name": "Luminous's Blessing"},
+                    "next_event": "celestial_bridge_complete"
+                }
+            ],
+            "Sanctuary of Light": [
+                {
+                    "id": "sanctuary_1",
+                    "text": f"""You arrive at the Sanctuary of Light, a peaceful temple where injured creatures from across the realms
+come to heal. A gentle woman in white robes tends to a wounded Springraze.
+
+{Fore.CYAN}Healer Serenity:{Style.RESET_ALL} "Welcome, traveler. All who enter here are welcome, regardless of their past.
+I sense great purpose in you, but also deep burdens. 
+
+The creatures tell me of growing darkness across the lands. Many who come here speak of corruption and shadow.
+If you truly seek to help, I have tasks that would prove your compassion."
+
+She gestures to the many injured creatures around the sanctuary.
+
+{Fore.CYAN}Healer Serenity:{Style.RESET_ALL} "Help me tend to these poor souls. Return when you have learned more about healing
+both body and spirit. True power comes not from strength alone, but from the desire to protect and nurture.""",
+                    "min_level": 30,
+                    "condition": lambda: self.player and hasattr(self.player, 'quest_items') and 
+                                       "Scroll of Celestial Weapons" in self.player.quest_items,
+                    "next_event": "sanctuary_2"
+                },
+                {
+                    "id": "sanctuary_2", 
+                    "text": f"""Healer Serenity watches as you help tend to the injured creatures with genuine care and patience.
+
+{Fore.CYAN}Healer Serenity:{Style.RESET_ALL} "Your touch brings comfort to these beings. You have the heart of a true healer.
+The Staff of Restoration calls to those who put others' wellbeing before their own.
+
+But before I can entrust it to you, you must face one final test. Deep in the Caverns of Sorrow,
+there lies a creature consumed by darkness - not evil, but simply lost and in pain.
+Bring it back to the light, and the staff shall be yours."
+
+She gives you a small vial of glowing water.
+
+You received {Fore.CYAN}Holy Water{Style.RESET_ALL}!
+
+{Fore.CYAN}Healer Serenity:{Style.RESET_ALL} "This water can cleanse corruption, but only if used with genuine love and compassion.
+Remember - the creature in the caverns is not your enemy. It is a victim that needs saving."
+
+In the distance, you hear the mournful howling of something in terrible pain.""",
+                    "min_level": 36,
+                    "reward": {"type": "quest_item", "name": "Holy Water"},
+                    "next_event": "sanctuary_3"
+                },
+                {
+                    "id": "sanctuary_3",
+                    "text": f"""You return from the Caverns of Sorrow, leading a now-peaceful Shadow Wolf that has been cleansed of corruption.
+Healer Serenity's eyes fill with tears of joy.
+
+{Fore.CYAN}Healer Serenity:{Style.RESET_ALL} "You have done what many would consider impossible. You saved a creature
+that others would have simply destroyed. This is true strength - the power to heal rather than harm.
+
+The Staff of Restoration is yours. Use it wisely, for it amplifies not just healing magic, but the pure intentions
+of its wielder."
+
+A brilliant staff materializes in her hands and she offers it to you.
+
+You received the {Fore.WHITE}Staff of Restoration{Style.RESET_ALL}!
+
+{Fore.CYAN}Healer Serenity:{Style.RESET_ALL} "When you face the ultimate darkness, remember this moment. 
+Remember that even the most corrupted soul can be saved if someone is willing to try.
+Go now, with the blessings of all who have been healed by compassion."
+
+The sanctuary glows with warm, healing light as every creature within bows in respect.""",
+                    "min_level": 40,
+                    "condition": lambda: self.player and hasattr(self.player, 'quest_items') and 
+                                       "Holy Water" in self.player.quest_items,
+                    "reward": {"type": "weapon", "name": "Staff of Restoration"},
+                    "next_event": "sanctuary_complete"
+                }
+            ],
+            "Library of Ages": [
+                {
+                    "id": "library_1",
+                    "text": f"""You enter the vast Library of Ages, where knowledge from across time and space is preserved.
+An elderly scholar with eyes like starlight looks up from an ancient tome.
+
+{Fore.MAGENTA}Scholar Wisdom:{Style.RESET_ALL} "Ah, a seeker of knowledge. But what kind of knowledge do you seek?
+Power? Glory? Or perhaps... understanding?
+
+I have spent millennia studying the nature of good and evil, light and shadow. 
+The Sword of Truth that you seek can only be wielded by one who understands the deepest mysteries.
+
+Answer me this: What is the source of true darkness?"
+
+The scholar waits patiently for your response, surrounded by floating books and scrolls.""",
+                    "min_level": 34,
+                    "condition": lambda: self.player and hasattr(self.player, 'quest_items') and 
+                                       "Scroll of Celestial Weapons" in self.player.quest_items,
+                    "next_event": "library_2"
+                },
+                {
+                    "id": "library_2",
+                    "text": f"""Scholar Wisdom nods thoughtfully at your answer.
+
+{Fore.MAGENTA}Scholar Wisdom:{Style.RESET_ALL} "Interesting perspective. Now, another question:
+If you had the power to destroy all evil instantly, but it would also destroy the free will of every being,
+would you do it?"
+
+Books around the library rustle as if blown by an invisible wind.
+
+{Fore.MAGENTA}Scholar Wisdom:{Style.RESET_ALL} "The Sword of Truth reveals not just falsehood, but the complex nature
+of reality itself. Good and evil, light and shadow - they are not always as clear-cut as they seem.
+
+One more question: What gives a person the right to judge others?"
+
+The ancient scholar's eyes seem to pierce through to your very soul.""",
+                    "min_level": 38,
+                    "next_event": "library_3"
+                },
+                {
+                    "id": "library_3",
+                    "text": f"""Scholar Wisdom closes the ancient tome and stands.
+
+{Fore.MAGENTA}Scholar Wisdom:{Style.RESET_ALL} "Your answers show wisdom beyond your years. You understand that true judgment
+comes not from power, but from compassion and understanding.
+
+The Sword of Truth is not a weapon of destruction, but of revelation. It shows things as they truly are,
+cutting through deception and illusion. In the hands of one who seeks understanding rather than vengeance,
+it becomes a tool of justice rather than destruction."
+
+A magnificent sword materializes, its blade gleaming with inner light.
+
+You received the {Fore.WHITE}Sword of Truth{Style.RESET_ALL}!
+
+{Fore.MAGENTA}Scholar Wisdom:{Style.RESET_ALL} "Remember this when you face the Sealed Darkness:
+It was not always evil. Once, it was simply another being seeking its place in the cosmos.
+Perhaps understanding can succeed where force has failed.
+
+Go now, armed with knowledge as much as with weapons. May wisdom guide your path."
+
+The library fills with a soft, eternal light as countless books open to reveal their secrets.""",
+                    "min_level": 42,
+                    "reward": {"type": "weapon", "name": "Sword of Truth"},
+                    "next_event": "library_complete"
+                }
+            ],
+            "Shadow Peak": [
+                {
+                    "id": "shadow_peak_1",
+                    "text": f"""As you approach Shadow Peak's summit, you discover an ancient shrine carved from obsidian.
+A mysterious figure cloaked in shadows emerges from behind the shrine.
+
+{Fore.MAGENTA}Keeper of Shadows:{Style.RESET_ALL} "Greetings, young trainer. I have been expecting you.
 This mountain stands as a gateway between our world and realms beyond understanding.
 The shadows grow longer each day, suggesting the ancient balance is disturbed.
 
@@ -4448,6 +5739,13 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 - Monster Fusion: Combine two monsters (level 25+) to create a stronger monster
 - Championship: Battle against elite trainers with your best monsters (level 20+)
 - Game Saving: Save your progress and continue later
+
+{Fore.YELLOW}NARRATIVE & SOCIAL FEATURES:{Style.RESET_ALL}
+- reflect/reflection: Access deep narrative reflection on your journey
+- contemplate: Quick contemplation of recent events and choices
+- emotions/bonds: View emotional bonds with monsters and NPC relationships
+- talk/dialogue: View available NPCs for conversation in current location
+- talk [name]: Start a conversation with a specific NPC
 
 {Fore.YELLOW}MONSTER STATS:{Style.RESET_ALL}
 - HP: Health points, when it reaches 0 the monster faints
@@ -6694,3 +7992,661 @@ if __name__ == "__main__":
         print(f"\n\nAn error occurred: {e}")
         import traceback
         traceback.print_exc()
+
+    def narrative_reflection_menu(self):
+        """Interactive menu for deep narrative reflection"""
+        clear_screen()
+        print(f"{Fore.MAGENTA}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}║                    NARRATIVE REFLECTION                         ║{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        print(f"{Fore.CYAN}Take a moment to reflect on your journey...{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Reflection Points: {self.player.reflection_points}{Style.RESET_ALL}\n")
+        
+        while True:
+            print(f"{Fore.GREEN}What would you like to reflect upon?{Style.RESET_ALL}")
+            print("1. Recent Story Moments")
+            print("2. Moral Choices and Consequences") 
+            print("3. Character Growth and Relationships")
+            print("4. Return to game")
+            
+            choice = input(f"\n{Fore.CYAN}Select an option: {Style.RESET_ALL}").strip()
+            
+            if choice == "1":
+                self.reflect_on_story_moments()
+            elif choice == "2":
+                self.reflect_on_moral_choices()
+            elif choice == "3":
+                self.reflect_on_character_growth()
+            elif choice == "4":
+                clear_screen()
+                break
+            else:
+                print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+                input("Press Enter to continue...")
+                clear_screen()
+
+    def reflect_on_story_moments(self):
+        """Reflect on recent significant story moments"""
+        clear_screen()
+        print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}║                     STORY MOMENTS                               ║{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        if not self.player.story_moments:
+            print(f"{Fore.YELLOW}You haven't experienced any significant story moments yet.{Style.RESET_ALL}")
+            print("As you progress through your journey, meaningful moments will be recorded here for reflection.")
+        else:
+            print(f"{Fore.MAGENTA}Reflecting on your recent experiences...{Style.RESET_ALL}\n")
+            
+            for i, moment in enumerate(self.player.story_moments[-5:], 1):
+                print(f"{Fore.WHITE}{i}. {moment['type'].title()} at {moment['location']}{Style.RESET_ALL}")
+                print(f"   {moment['description']}")
+                if moment['consequences']:
+                    print(f"   {Fore.YELLOW}Consequences: {moment['consequences']}{Style.RESET_ALL}")
+                
+                if not moment['reflected_upon']:
+                    print(f"\n{Fore.CYAN}Take a moment to consider this experience...{Style.RESET_ALL}")
+                    reflection = input(f"{Fore.GREEN}What did you learn from this moment? (Press Enter to skip): {Style.RESET_ALL}")
+                    
+                    if reflection.strip():
+                        moment['reflected_upon'] = True
+                        self.player.earn_reflection_points(2, f"Reflected on {moment['type']}")
+                        print(f"{Fore.GREEN}Your reflection has been noted. +2 Reflection Points{Style.RESET_ALL}")
+                
+                print()
+        
+        input("Press Enter to continue...")
+
+    def reflect_on_moral_choices(self):
+        """Reflect on moral decisions and their outcomes"""
+        clear_screen()
+        print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}║                    MORAL CHOICES                                ║{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        if not self.player.moral_choices:
+            print(f"{Fore.YELLOW}You haven't faced any significant moral dilemmas yet.{Style.RESET_ALL}")
+            print("When you encounter difficult choices, they will be recorded here for reflection.")
+        else:
+            print(f"{Fore.MAGENTA}Contemplating your moral journey...{Style.RESET_ALL}\n")
+            
+            for i, choice in enumerate(self.player.moral_choices[-3:], 1):
+                print(f"{Fore.WHITE}{i}. {choice['choice']}{Style.RESET_ALL}")
+                print(f"   {Fore.CYAN}You chose: {choice['chosen_option']}{Style.RESET_ALL}")
+                print(f"   {Fore.YELLOW}Outcome: {choice['outcome']}{Style.RESET_ALL}")
+                
+                # Show karma impact
+                if choice['karma_impact']:
+                    impacts = []
+                    for trait, change in choice['karma_impact'].items():
+                        color = Fore.GREEN if change > 0 else Fore.RED
+                        sign = "+" if change > 0 else ""
+                        impacts.append(f"{color}{trait.title()}: {sign}{change}{Style.RESET_ALL}")
+                    print(f"   Karma Impact: {', '.join(impacts)}")
+                
+                if not choice['reflected_upon']:
+                    print(f"\n{Fore.CYAN}How do you feel about this choice now?{Style.RESET_ALL}")
+                    reflection = input(f"{Fore.GREEN}Would you choose differently? What did you learn? (Press Enter to skip): {Style.RESET_ALL}")
+                    
+                    if reflection.strip():
+                        choice['reflected_upon'] = True
+                        self.player.earn_reflection_points(3, f"Reflected on moral choice")
+                        print(f"{Fore.GREEN}Your moral reflection has deepened your wisdom. +3 Reflection Points{Style.RESET_ALL}")
+                
+                print()
+        
+        input("Press Enter to continue...")
+
+    def reflect_on_character_growth(self):
+        """Reflect on relationships and personal development"""
+        clear_screen()
+        print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}║                 CHARACTER GROWTH                                ║{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        print(f"{Fore.MAGENTA}Reflecting on your personal journey...{Style.RESET_ALL}\n")
+        
+        # Analyze reputation changes
+        dominant_traits = [trait for trait, value in self.player.reputation.items() if value >= 20]
+        if dominant_traits:
+            print(f"{Fore.WHITE}Your Character Development:{Style.RESET_ALL}")
+            for trait in dominant_traits:
+                value = self.player.reputation[trait]
+                print(f"  • {trait.title()}: {Fore.GREEN if value >= 40 else Fore.YELLOW}{value}{Style.RESET_ALL}")
+        
+        # Relationship analysis
+        strong_bonds = [name for name, bond in self.player.monster_bonds.items() 
+                       if any(emotion > 70 for emotion in bond.values())]
+        if strong_bonds:
+            print(f"\n{Fore.WHITE}Strong Monster Bonds:{Style.RESET_ALL}")
+            for name in strong_bonds:
+                print(f"  • {name}")
+        
+        trusted_npcs = [name for name, rel in self.player.npc_relationships.items() 
+                       if rel.get('trust', 50) > 70]
+        if trusted_npcs:
+            print(f"\n{Fore.WHITE}Trusted Allies:{Style.RESET_ALL}")
+            for name in trusted_npcs:
+                print(f"  • {name}")
+        
+        print(f"\n{Fore.CYAN}What aspects of your growth are you most proud of?{Style.RESET_ALL}")
+        growth_reflection = input(f"{Fore.GREEN}Share your thoughts (Press Enter to skip): {Style.RESET_ALL}")
+        
+        if growth_reflection.strip():
+            self.player.earn_reflection_points(2, "Reflected on personal growth")
+            print(f"{Fore.GREEN}Self-awareness brings wisdom. +2 Reflection Points{Style.RESET_ALL}")
+        
+        input("\nPress Enter to continue...")
+
+    def quick_reflection(self):
+        """Quick contemplation without full menu"""
+        if not self.player.story_moments and not self.player.moral_choices:
+            print(f"{Fore.YELLOW}You pause for a moment of quiet contemplation...{Style.RESET_ALL}")
+            print("The journey ahead feels full of possibilities.")
+        else:
+            print(f"{Fore.CYAN}You take a moment to reflect on recent events...{Style.RESET_ALL}")
+            
+            if self.player.story_moments:
+                recent_moment = self.player.story_moments[-1]
+                print(f"You think about {recent_moment['description'][:80]}...")
+            
+            if self.player.moral_choices:
+                recent_choice = self.player.moral_choices[-1]
+                print(f"You consider your recent choice: {recent_choice['chosen_option']}")
+        
+        input("Press Enter to continue...")
+
+    def create_npcs(self):
+        """Create dynamic NPCs with personality traits and dialogue trees"""
+        return {
+            "Hometown": [
+                {
+                    "name": "Elder Marcus",
+                    "personality": ["wise", "patient", "mysterious"],
+                    "backstory": "Guardian of ancient monster knowledge",
+                    "opinion_of_player": 60,
+                    "dialogue_trees": ["wisdom", "guidance", "lore"],
+                    "secrets": ["ancient_fusion", "legendary_locations"],
+                    "mood": "contemplative"
+                },
+                {
+                    "name": "Trainer Sarah",
+                    "personality": ["enthusiastic", "competitive", "encouraging"],
+                    "backstory": "Former champion seeking to train new talents",
+                    "opinion_of_player": 55,
+                    "dialogue_trees": ["training", "battle_tips", "encouragement"],
+                    "secrets": ["advanced_techniques", "hidden_training_spots"],
+                    "mood": "energetic"
+                },
+                {
+                    "name": "Merchant Jin",
+                    "personality": ["shrewd", "friendly", "observant"],
+                    "backstory": "Traveling merchant with rare items and gossip",
+                    "opinion_of_player": 50,
+                    "dialogue_trees": ["trade", "rumors", "distant_lands"],
+                    "secrets": ["rare_items", "market_trends"],
+                    "mood": "business-like"
+                }
+            ],
+            "Ancient Forest": [
+                {
+                    "name": "Forest Hermit",
+                    "personality": ["reclusive", "nature-loving", "cryptic"],
+                    "backstory": "Lives in harmony with forest monsters",
+                    "opinion_of_player": 45,
+                    "dialogue_trees": ["nature", "forest_secrets", "solitude"],
+                    "secrets": ["hidden_groves", "monster_communication"],
+                    "mood": "serene"
+                },
+                {
+                    "name": "Lost Explorer",
+                    "personality": ["confused", "grateful", "adventurous"],
+                    "backstory": "Explorer who got lost seeking ancient ruins",
+                    "opinion_of_player": 40,
+                    "dialogue_trees": ["exploration", "being_lost", "gratitude"],
+                    "secrets": ["map_fragments", "dangerous_paths"],
+                    "mood": "worried"
+                }
+            ],
+            "Crystal Caverns": [
+                {
+                    "name": "Crystal Sage",
+                    "personality": ["ancient", "knowledgeable", "ethereal"],
+                    "backstory": "Guardian spirit bound to the crystals",
+                    "opinion_of_player": 35,
+                    "dialogue_trees": ["crystals", "ancient_power", "prophecy"],
+                    "secrets": ["crystal_magic", "sealed_chambers"],
+                    "mood": "otherworldly"
+                }
+            ],
+            "Mystic Mountains": [
+                {
+                    "name": "Mountain Guide",
+                    "personality": ["tough", "reliable", "straightforward"],
+                    "backstory": "Experienced guide who knows every mountain path",
+                    "opinion_of_player": 50,
+                    "dialogue_trees": ["survival", "mountain_lore", "weather"],
+                    "secrets": ["secret_paths", "avalanche_warnings"],
+                    "mood": "focused"
+                }
+            ],
+            "Frozen Wasteland": [
+                {
+                    "name": "Ice Shaman",
+                    "personality": ["stoic", "spiritual", "harsh"],
+                    "backstory": "Keeper of ice magic and frozen secrets",
+                    "opinion_of_player": 30,
+                    "dialogue_trees": ["ice_magic", "survival", "spirits"],
+                    "secrets": ["frozen_artifacts", "spirit_communication"],
+                    "mood": "cold"
+                }
+            ]
+        }
+
+    def npc_dialogue_menu(self):
+        """Show available NPCs for conversation in current location"""
+        clear_screen()
+        print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}║                        CONVERSATIONS                            ║{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        npcs = self.create_npcs()
+        location_npcs = npcs.get(self.player.location, [])
+        
+        if not location_npcs:
+            print(f"{Fore.YELLOW}There's no one to talk to in {self.player.location}.{Style.RESET_ALL}")
+            print("Try exploring other locations to meet interesting characters.")
+            input("Press Enter to continue...")
+            return
+        
+        print(f"{Fore.MAGENTA}People you can talk to in {self.player.location}:{Style.RESET_ALL}\n")
+        
+        for i, npc in enumerate(location_npcs, 1):
+            # Get NPC opinion and relationship status
+            opinion = self.player.character_opinions.get(npc["name"], {})
+            avg_opinion = sum(opinion.values()) / len(opinion) if opinion else 50
+            
+            relationship = "Stranger"
+            if avg_opinion >= 80:
+                relationship = "Close Friend"
+            elif avg_opinion >= 65:
+                relationship = "Friend"
+            elif avg_opinion >= 35:
+                relationship = "Acquaintance"
+            elif avg_opinion >= 20:
+                relationship = "Distant"
+            else:
+                relationship = "Distrustful"
+            
+            print(f"{Fore.WHITE}{i}. {npc['name']}{Style.RESET_ALL}")
+            print(f"   {npc['backstory']}")
+            print(f"   Relationship: {Fore.CYAN}{relationship}{Style.RESET_ALL}")
+            print()
+        
+        print(f"{len(location_npcs) + 1}. Return to game")
+        
+        while True:
+            choice = input(f"\n{Fore.GREEN}Who would you like to talk to? {Style.RESET_ALL}").strip()
+            
+            try:
+                choice_num = int(choice)
+                if 1 <= choice_num <= len(location_npcs):
+                    selected_npc = location_npcs[choice_num - 1]
+                    self.start_npc_conversation(selected_npc["name"])
+                    break
+                elif choice_num == len(location_npcs) + 1:
+                    break
+                else:
+                    print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
+
+    def start_npc_conversation(self, npc_name: str):
+        """Start a dynamic conversation with an NPC"""
+        npcs = self.create_npcs()
+        npc = None
+        
+        # Find the NPC
+        for location_npcs in npcs.values():
+            for character in location_npcs:
+                if character["name"].lower() == npc_name.lower():
+                    npc = character
+                    break
+            if npc:
+                break
+        
+        if not npc:
+            print(f"{Fore.RED}I don't see {npc_name} here.{Style.RESET_ALL}")
+            input("Press Enter to continue...")
+            return
+        
+        # Get player's relationship with this NPC
+        opinion = self.player.character_opinions.get(npc["name"], {
+            "respect": 50, "trust": 50, "friendliness": 50, "interest": 50
+        })
+        avg_opinion = sum(opinion.values()) / len(opinion)
+        
+        self.run_dialogue_conversation(npc, avg_opinion)
+
+    def run_dialogue_conversation(self, npc: dict, relationship_level: float):
+        """Run a dynamic branching conversation with an NPC"""
+        clear_screen()
+        print(f"{Fore.MAGENTA}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}║                    CONVERSATION                                 ║{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+        
+        print(f"{Fore.CYAN}You approach {npc['name']}.{Style.RESET_ALL}\n")
+        
+        # Generate greeting based on relationship and personality
+        greeting = self.generate_npc_greeting(npc, relationship_level)
+        print(f"{Fore.WHITE}{npc['name']}: {greeting}{Style.RESET_ALL}\n")
+        
+        conversation_active = True
+        conversation_depth = 0
+        
+        while conversation_active and conversation_depth < 10:
+            conversation_depth += 1
+            
+            # Generate dialogue options based on context
+            options = self.generate_dialogue_options(npc, relationship_level, conversation_depth)
+            
+            print(f"{Fore.GREEN}How do you respond?{Style.RESET_ALL}")
+            for i, option in enumerate(options, 1):
+                print(f"{i}. {option['text']}")
+            print(f"{len(options) + 1}. End conversation")
+            
+            while True:
+                choice = input(f"\n{Fore.CYAN}Choose your response: {Style.RESET_ALL}").strip()
+                
+                try:
+                    choice_num = int(choice)
+                    if 1 <= choice_num <= len(options):
+                        selected_option = options[choice_num - 1]
+                        response = self.process_dialogue_choice(npc, selected_option, relationship_level)
+                        
+                        print(f"\n{Fore.WHITE}{npc['name']}: {response}{Style.RESET_ALL}\n")
+                        
+                        # Record the dialogue choice
+                        self.player.record_dialogue_choice(
+                            npc["name"], 
+                            f"conversation_{conversation_depth}",
+                            selected_option["text"],
+                            selected_option.get("consequence", "")
+                        )
+                        
+                        # Update relationship based on choice
+                        if "opinion_change" in selected_option:
+                            self.player.update_character_opinion(
+                                npc["name"],
+                                selected_option["opinion_change"],
+                                selected_option.get("reason", "")
+                            )
+                        
+                        # Check if conversation should continue
+                        if selected_option.get("ends_conversation", False):
+                            conversation_active = False
+                        
+                        break
+                    elif choice_num == len(options) + 1:
+                        conversation_active = False
+                        break
+                    else:
+                        print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+                except ValueError:
+                    print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
+        
+        # End conversation
+        farewell = self.generate_npc_farewell(npc, relationship_level)
+        print(f"{Fore.WHITE}{npc['name']}: {farewell}{Style.RESET_ALL}")
+        
+        # Award reflection points for meaningful conversations
+        if conversation_depth >= 3:
+            self.player.earn_reflection_points(1, f"Had a meaningful conversation with {npc['name']}")
+            print(f"{Fore.GREEN}+1 Reflection Point for engaging conversation{Style.RESET_ALL}")
+        
+        input("\nPress Enter to continue...")
+
+    def generate_npc_greeting(self, npc: dict, relationship_level: float) -> str:
+        """Generate a greeting based on NPC personality and relationship"""
+        personality = npc["personality"]
+        name = self.player.name
+        
+        if relationship_level >= 80:
+            if "wise" in personality:
+                return f"Ah, {name}, my dear friend. Your wisdom grows with each visit."
+            elif "enthusiastic" in personality:
+                return f"{name}! Great to see you again! Ready for another adventure?"
+            elif "friendly" in personality:
+                return f"Welcome back, {name}! Always a pleasure to see you."
+            else:
+                return f"Hello again, {name}. Good to see a trusted friend."
+        elif relationship_level >= 50:
+            if "wise" in personality:
+                return f"Greetings, {name}. I sense your journey has taught you much."
+            elif "enthusiastic" in personality:
+                return f"Hey there, {name}! How's your training going?"
+            elif "mysterious" in personality:
+                return f"{name}... the paths bring us together once more."
+            else:
+                return f"Hello, {name}. What brings you here today?"
+        elif relationship_level >= 30:
+            if "reclusive" in personality:
+                return "Oh... it's you again. What do you want?"
+            elif "stoic" in personality:
+                return "You return. State your business."
+            elif "cautious" in personality:
+                return "I see you've come back. Be careful what you ask."
+            else:
+                return "Hello there. What can I do for you?"
+        else:
+            if "distrustful" in personality:
+                return "What do you want? Make it quick."
+            elif "cold" in personality:
+                return "You again. I have little time for chatter."
+            else:
+                return "What brings a stranger to speak with me?"
+
+    def generate_dialogue_options(self, npc: dict, relationship_level: float, depth: int) -> list:
+        """Generate dialogue options based on NPC and conversation context"""
+        options = []
+        trees = npc["dialogue_trees"]
+        personality = npc["personality"]
+        
+        # Basic conversation starters
+        if depth == 1:
+            if "lore" in trees:
+                options.append({
+                    "text": "Tell me about this place.",
+                    "type": "information",
+                    "opinion_change": 2,
+                    "reason": "showed interest"
+                })
+            
+            if "training" in trees and relationship_level >= 40:
+                options.append({
+                    "text": "Could you give me some training advice?",
+                    "type": "help_request",
+                    "opinion_change": 3,
+                    "reason": "respectful request for help"
+                })
+            
+            options.append({
+                "text": "How are you doing today?",
+                "type": "friendly",
+                "opinion_change": 1,
+                "reason": "friendly small talk"
+            })
+            
+            if "rude" in personality:
+                options.append({
+                    "text": "You look pretty useless.",
+                    "type": "insult",
+                    "opinion_change": -10,
+                    "reason": "rude insult",
+                    "ends_conversation": True
+                })
+        
+        # Deeper conversation options
+        elif depth >= 2:
+            if relationship_level >= 60 and "secrets" in npc:
+                options.append({
+                    "text": "Is there anything special about this area?",
+                    "type": "secret_inquiry",
+                    "opinion_change": 1,
+                    "reason": "showed deeper interest"
+                })
+            
+            if "wise" in personality:
+                options.append({
+                    "text": "What wisdom can you share with me?",
+                    "type": "wisdom_request",
+                    "opinion_change": 2,
+                    "reason": "respectful wisdom seeking"
+                })
+            
+            if relationship_level >= 70:
+                options.append({
+                    "text": "I feel like we're becoming good friends.",
+                    "type": "friendship",
+                    "opinion_change": 5,
+                    "reason": "friendly bonding"
+                })
+        
+        # Personality-specific options
+        if "competitive" in personality:
+            options.append({
+                "text": "Want to have a friendly competition?",
+                "type": "challenge",
+                "opinion_change": 3,
+                "reason": "engaging competition spirit"
+            })
+        
+        if "mysterious" in personality and relationship_level >= 50:
+            options.append({
+                "text": "You seem to know more than you let on.",
+                "type": "mystery_probe",
+                "opinion_change": -1,
+                "reason": "prying into secrets"
+            })
+        
+        # Always include a polite option
+        options.append({
+            "text": "Thank you for your time.",
+            "type": "polite_exit",
+            "opinion_change": 1,
+            "reason": "polite conversation",
+            "ends_conversation": True
+        })
+        
+        return options[:4]  # Limit to 4 options for readability
+
+    def process_dialogue_choice(self, npc: dict, choice: dict, relationship_level: float) -> str:
+        """Process a dialogue choice and return NPC response"""
+        choice_type = choice["type"]
+        personality = npc["personality"]
+        
+        responses = {
+            "information": [
+                f"This place holds many secrets. Those who seek knowledge will find it.",
+                f"There's more to {self.player.location} than meets the eye.",
+                f"Every location has its own energy and purpose."
+            ],
+            "help_request": [
+                "The key to success is patience and understanding your monsters.",
+                "Never give up, even when the path seems impossible.",
+                "True strength comes from the bond with your monsters."
+            ],
+            "friendly": [
+                "I'm doing well, thank you for asking.",
+                "Each day brings new challenges and opportunities.",
+                "Life is good when you find your purpose."
+            ],
+            "insult": [
+                "That was uncalled for. This conversation is over.",
+                "I have no time for rudeness.",
+                "Perhaps you should learn some manners."
+            ],
+            "secret_inquiry": [
+                "Some secrets are earned through trust and time.",
+                "There are hidden places that few have discovered.",
+                "The wise know when to seek and when to wait."
+            ],
+            "wisdom_request": [
+                "True wisdom comes from experience and reflection.",
+                "The journey teaches us more than the destination.",
+                "Listen to your heart, but also use your mind."
+            ],
+            "friendship": [
+                "I appreciate your friendship as well.",
+                "It's rare to find someone you can truly trust.",
+                "Friendship is one of life's greatest treasures."
+            ],
+            "challenge": [
+                "I admire your competitive spirit!",
+                "Competition brings out the best in us.",
+                "Perhaps someday we'll test our skills."
+            ],
+            "mystery_probe": [
+                "Some things are better left unspoken.",
+                "Knowledge comes to those who are ready.",
+                "Not all mysteries are meant to be solved quickly."
+            ],
+            "polite_exit": [
+                "It was pleasant speaking with you.",
+                "Take care on your journey.",
+                "May your path be filled with discovery."
+            ]
+        }
+        
+        # Get appropriate response based on choice type
+        base_responses = responses.get(choice_type, ["I see."])
+        
+        # Modify response based on personality
+        if "wise" in personality and choice_type in ["wisdom_request", "information"]:
+            wisdom_responses = [
+                "The ancient texts speak of balance in all things.",
+                "Understanding comes not from knowledge alone, but from applying it wisely.",
+                "The greatest teachers are often our own experiences."
+            ]
+            base_responses.extend(wisdom_responses)
+        
+        if "enthusiastic" in personality:
+            enthusiasm_boost = " Your enthusiasm is infectious!"
+            selected = random.choice(base_responses)
+            if choice_type != "insult":
+                return selected + enthusiasm_boost
+        
+        return random.choice(base_responses)
+
+    def generate_npc_farewell(self, npc: dict, relationship_level: float) -> str:
+        """Generate a farewell message based on relationship"""
+        personality = npc["personality"]
+        
+        if relationship_level >= 70:
+            if "wise" in personality:
+                return "Go well, friend. May wisdom light your path."
+            elif "enthusiastic" in personality:
+                return "See you later! Can't wait to hear about your adventures!"
+            else:
+                return "Take care, my friend. Until we meet again."
+        elif relationship_level >= 40:
+            if "wise" in personality:
+                return "Farewell. May your journey bring you knowledge."
+            else:
+                return "Safe travels on your journey."
+        else:
+            return "Goodbye."
+
+def main():
+    """Main function to start the game"""
+    try:
+        game = Game()
+        game.start_game()
+    except Exception as e:
+        print(f"\n\nAn error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+
+if __name__ == "__main__":
+    main()
