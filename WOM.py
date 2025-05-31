@@ -2,6 +2,7 @@ import random
 import time
 import os
 import pickle
+import json
 import sys
 from typing import List, Dict, Optional, Tuple
 from colorama import Fore, Style, init
@@ -204,6 +205,28 @@ class Monster:
 
     def gain_exp(self, amount: int) -> bool:
         """Give exp to monster, return True if leveled up"""
+        # Check if monster is at trainer level cap before adding exp
+        player = None
+        for game_obj in globals().values():
+            if isinstance(game_obj, Game) and hasattr(game_obj, 'player'):
+                player = game_obj.player
+                if player and hasattr(player, 'monsters'):
+                    for monster in player.monsters:
+                        if monster is self:
+                            break
+        
+        # If monster is at max level (double trainer level), give exp to trainer instead
+        if player and hasattr(player, 'trainer_level'):
+            max_monster_level = player.trainer_level * 2
+            if self.level >= max_monster_level:
+                # Monster is maxed, give exp to trainer instead
+                print(f"{Fore.CYAN}{self.name} is at max level! Trainer gains {amount} EXP instead.{Style.RESET_ALL}")
+                if hasattr(player, 'gain_trainer_exp'):
+                    trainer_leveled = player.gain_trainer_exp(amount)
+                    if trainer_leveled:
+                        print(f"{Fore.GREEN}Trainer leveled up! New level: {player.trainer_level}{Style.RESET_ALL}")
+                return False
+        
         self.exp += amount
         if self.exp >= self.exp_to_level:
             self.level_up()
@@ -223,12 +246,13 @@ class Monster:
                             # Found the player that owns this monster
                             break
 
-        # Apply trainer level cap if applicable
+        # Apply trainer level cap if applicable (monsters can level up to double trainer level)
         if player and hasattr(player, 'trainer_level'):
-            if self.level >= player.trainer_level:
-                # Monster is at or above trainer level, don't level up
-                print(f"{Fore.YELLOW}Warning: {self.name} cannot level up beyond your trainer level ({player.trainer_level}).{Style.RESET_ALL}")
-                self.exp = self.exp_to_level - 1  # Cap exp just below next level
+            max_monster_level = player.trainer_level * 2
+            if self.level >= max_monster_level:
+                # Monster is at max level (double trainer level), don't level up
+                # Cap exp to prevent further level up attempts
+                self.exp = min(self.exp, self.exp_to_level - 1)
                 return
 
         self.level += 1
@@ -1142,6 +1166,13 @@ class Game:
             level=7
         )
 
+        whistleaf = Monster(
+            "Whistleaf", "Grass", 40, 35, 45, 60,
+            [leaf_attack, vine_whip, swift],
+            "A musical plant monster that creates melodies with its leaves in the wind.",
+            level=5
+        )
+
         emberbear = Monster(
             "Emberbear", "Fire", 60, 55, 45, 40,
             [fire_fang, body_slam, flame_thrower],
@@ -1404,6 +1435,7 @@ class Game:
             "Buzzer": buzzer,
             "Rockling": rockling,
             "Floracat": floracat,
+            "Whistleaf": whistleaf,
             "Emberbear": emberbear,
             "Coralfish": coralfish,
             "Boltfox": boltfox,
@@ -1757,9 +1789,11 @@ class Game:
                 running = False
             elif choice == "2":
                 # Load game from slots
-                self.show_load_game_menu()
-                # Game loop will be started directly after loading, so we can return here
-                return
+                load_result = self.show_load_game_menu()
+                if load_result:
+                    # Game was loaded and game loop started, so we can return here
+                    return
+                # If load_result is False, user chose to go back, so continue the main menu loop
             elif choice == "3":
                 # Quit game
                 print("\nThank you for playing World of Monsters!")
@@ -1829,94 +1863,121 @@ class Game:
         # Get save slot information
         save_slots, saved_games = self.get_save_slots()
 
-        while True:
-            clear_screen()
-            self.print_title()
+        max_attempts = 10
+        attempts = 0
+        
+        while attempts < max_attempts:
+            attempts += 1
+            try:
+                clear_screen()
+                self.print_title()
 
-            print(f"{Fore.CYAN}SAVE GAME{Style.RESET_ALL}\n")
+                print(f"{Fore.CYAN}SAVE GAME{Style.RESET_ALL}\n")
 
-            # Display save slots
-            for i, slot in enumerate(save_slots):
-                if slot in saved_games:
-                    print(f"{i+1}. {slot} {Fore.YELLOW}[OVERWRITE]{Style.RESET_ALL}")
-                else:
-                    print(f"{i+1}. {slot} {Fore.GREEN}[EMPTY]{Style.RESET_ALL}")
+                # Display save slots
+                for i, slot in enumerate(save_slots):
+                    if slot in saved_games:
+                        print(f"{i+1}. {slot} {Fore.YELLOW}[OVERWRITE]{Style.RESET_ALL}")
+                    else:
+                        print(f"{i+1}. {slot} {Fore.GREEN}[EMPTY]{Style.RESET_ALL}")
 
-            print(f"\n4. {Fore.YELLOW}Back to Game{Style.RESET_ALL}")
+                print(f"\n4. {Fore.YELLOW}Back to Game{Style.RESET_ALL}")
 
-            choice = input(f"\n{Fore.CYAN}Enter your choice (1-4): {Style.RESET_ALL}")
+                choice = input(f"\n{Fore.CYAN}Enter your choice (1-4): {Style.RESET_ALL}").strip()
 
-            if choice == "4":
-                return
-
-            if choice in ["1", "2", "3"]:
-                slot_idx = int(choice) - 1
-                save_name = save_slots[slot_idx]
-
-                # Confirm overwrite if slot already has a save
-                if save_name in saved_games:
-                    confirm = input(f"{Fore.YELLOW}This slot already has a saved game. Overwrite? (y/n): {Style.RESET_ALL}").lower()
-                    if confirm != 'y' and confirm != 'yes':
-                        continue
-
-                # Save the game
-                if self.save_game(save_name):
-                    print(f"{Fore.GREEN}Game saved successfully to {save_name}!{Style.RESET_ALL}")
-                    input("Press Enter to continue...")
+                if choice == "4":
                     return
+                elif choice in ["1", "2", "3"]:
+                    # Process save slot selection
+                    slot_idx = int(choice) - 1
+                    slot_name = save_slots[slot_idx]
+                    
+                    if slot_name in saved_games:
+                        confirm = input(f"{Fore.YELLOW}This slot already has a saved game. Overwrite? (y/n): {Style.RESET_ALL}").lower().strip()
+                        if confirm != 'y':
+                            continue
+                    
+                    if self.save_game(slot_name):
+                        input("Press Enter to continue...")
+                        return
+                    else:
+                        input("Press Enter to continue...")
+                        continue
                 else:
-                    print(f"{Fore.RED}Failed to save game to {save_name}.{Style.RESET_ALL}")
+                    print(f"{Fore.RED}Invalid choice. Please select 1-4.{Style.RESET_ALL}")
                     input("Press Enter to continue...")
-            else:
-                print(f"{Fore.RED}Invalid choice. Please enter 1-4.{Style.RESET_ALL}")
+            except (EOFError, KeyboardInterrupt):
+                print(f"\n{Fore.YELLOW}Save cancelled.{Style.RESET_ALL}")
+                return
+            except Exception as e:
+                print(f"{Fore.RED}Error in save menu: {e}{Style.RESET_ALL}")
                 input("Press Enter to continue...")
+        
+        print(f"{Fore.RED}Too many attempts. Returning to game.{Style.RESET_ALL}")
+        input("Press Enter to continue...")
 
     def show_load_game_menu(self):
         """Show load game menu with save slots"""
         # Get save slot information
         save_slots, saved_games = self.get_save_slots()
 
-        while True:
-            clear_screen()
-            self.print_title()
+        max_attempts = 10
+        attempts = 0
+        
+        while attempts < max_attempts:
+            attempts += 1
+            try:
+                clear_screen()
+                self.print_title()
 
-            print(f"{Fore.CYAN}LOAD GAME{Style.RESET_ALL}\n")
+                print(f"{Fore.CYAN}LOAD GAME{Style.RESET_ALL}\n")
 
-            # Display save slots
-            for i, slot in enumerate(save_slots):
-                if slot in saved_games:
-                    print(f"{i+1}. {slot} {Fore.GREEN}[SAVED GAME]{Style.RESET_ALL}")
-                else:
-                    print(f"{i+1}. {slot} {Fore.RED}[EMPTY]{Style.RESET_ALL}")
-
-            print(f"\n4. {Fore.YELLOW}Back to Game{Style.RESET_ALL}")
-
-            choice = input(f"\n{Fore.CYAN}Enter your choice (1-4): {Style.RESET_ALL}")
-
-            if choice == "4":
-                return False
-
-            if choice in ["1", "2", "3"]:
-                slot_idx = int(choice) - 1
-                save_name = save_slots[slot_idx]
-
-                if save_name in saved_games:
-                    # Load the game
-                    if self.load_game(save_name):
-                        print(f"{Fore.GREEN}Game loaded successfully from {save_name}!{Style.RESET_ALL}")
-                        input("Press Enter to continue...")
-                        # Start game loop immediately after loading
-                        self.game_loop()
-                        return True
+                # Display save slots
+                for i, slot in enumerate(save_slots):
+                    if slot in saved_games:
+                        print(f"{i+1}. {slot} {Fore.GREEN}[SAVED GAME]{Style.RESET_ALL}")
                     else:
-                        print(f"{Fore.RED}Failed to load game from {save_name}.{Style.RESET_ALL}")
+                        print(f"{i+1}. {slot} {Fore.RED}[EMPTY]{Style.RESET_ALL}")
+
+                print(f"\n4. {Fore.YELLOW}Back to Game{Style.RESET_ALL}")
+
+                choice = input(f"\n{Fore.CYAN}Enter your choice (1-4): {Style.RESET_ALL}").strip()
+
+                if choice == "4":
+                    return False
+                elif choice in ["1", "2", "3"]:
+                    slot_idx = int(choice) - 1
+                    save_name = save_slots[slot_idx]
+
+                    if save_name in saved_games:
+                        # Load the game
+                        if self.load_game(save_name):
+                            print(f"{Fore.GREEN}Game loaded successfully from {save_name}!{Style.RESET_ALL}")
+                            input("Press Enter to continue...")
+                            # Start game loop immediately after loading
+                            self.game_loop()
+                            return True
+                        else:
+                            print(f"{Fore.RED}Failed to load game from {save_name}.{Style.RESET_ALL}")
+                            input("Press Enter to continue...")
+                            continue
+                    else:
+                        print(f"{Fore.RED}No saved game found in {save_name}.{Style.RESET_ALL}")
                         input("Press Enter to continue...")
+                        continue
                 else:
-                    print(f"{Fore.RED}No saved game found in {save_name}.{Style.RESET_ALL}")
+                    print(f"{Fore.RED}Invalid choice. Please enter 1-4.{Style.RESET_ALL}")
                     input("Press Enter to continue...")
-            else:
-                print(f"{Fore.RED}Invalid choice. Please enter 1-4.{Style.RESET_ALL}")
+            except (EOFError, KeyboardInterrupt):
+                print(f"\n{Fore.YELLOW}Load cancelled.{Style.RESET_ALL}")
+                return False
+            except Exception as e:
+                print(f"{Fore.RED}Error in load menu: {e}{Style.RESET_ALL}")
                 input("Press Enter to continue...")
+        
+        print(f"{Fore.RED}Too many attempts. Returning to main menu.{Style.RESET_ALL}")
+        input("Press Enter to continue...")
+        return False
 
     def print_title(self):
         """Print game title screen"""
@@ -1970,26 +2031,42 @@ your monster companions!
 
     def game_loop(self):
         """Main game loop"""
-        while self.running:
-            # Handle turns and random encounters
-            self.turn_count += 1
+        try:
+            while self.running:
+                # Handle turns and random encounters
+                self.turn_count += 1
 
-            if not self.current_battle:
-                # Check for random encounter (if not in hometown)
-                if (self.player and self.player.location != "Hometown" and 
-                    random.random() < WILD_ENCOUNTER_RATE and 
-                    self.player.has_usable_monster()):
-                    wild_monster = self.get_wild_monster_for_location(self.player.location)
-                    self.start_battle(wild_monster)
-                    continue  # Skip to next iteration to handle battle
+                if not self.current_battle:
+                    # Check for random encounter (if not in hometown)
+                    if (self.player and self.player.location != "Hometown" and 
+                        random.random() < WILD_ENCOUNTER_RATE and 
+                        self.player.has_usable_monster()):
+                        wild_monster = self.get_wild_monster_for_location(self.player.location)
+                        self.start_battle(wild_monster)
+                        continue  # Skip to next iteration to handle battle
 
-            # Show game state
-            clear_screen()
-            self.display_game_state()
+                # Show game state
+                clear_screen()
+                self.display_game_state()
 
-            # Get and process player command
-            command = input(f"\n{Fore.CYAN}What will you do? {Style.RESET_ALL}").strip().lower()
-            self.process_command(command)
+                # Get and process player command with error handling
+                try:
+                    command = input(f"\n{Fore.CYAN}What will you do? {Style.RESET_ALL}").strip().lower()
+                    if command:  # Only process if command is not empty
+                        self.process_command(command)
+                    else:
+                        print("Please enter a command. Type 'help' for available commands.")
+                        time.sleep(1)
+                except (EOFError, KeyboardInterrupt):
+                    print(f"\n{Fore.YELLOW}Game interrupted. Exiting...{Style.RESET_ALL}")
+                    self.running = False
+                    break
+                except Exception as e:
+                    print(f"\n{Fore.RED}Error processing command: {e}{Style.RESET_ALL}")
+                    time.sleep(1)
+        except Exception as e:
+            print(f"\n{Fore.RED}Game loop error: {e}{Style.RESET_ALL}")
+            self.running = False
 
     def display_game_state(self):
         """Display the current game state to the player"""
@@ -2008,6 +2085,7 @@ your monster companions!
         # Show location and basic player info
         print(f"{Fore.YELLOW}Location: {player.location}{Style.RESET_ALL}")
         print(f"Trainer: {player.name}")
+        print(f"Trainer Level: {player.trainer_level} (Monster Level Cap: {player.trainer_level * 2})")
         print(f"Money: ${player.money}")
 
         # Show active monster
@@ -2373,6 +2451,69 @@ your monster companions!
                 variant_stats[variant] = variant_stats.get(variant, 0) + 1
         return variant_stats
 
+    def load_and_repair_save(self, save_path: str) -> dict:
+        """Load save file with auto-repair functionality"""
+        import json as json_module
+        
+        try:
+            # Try loading as JSON first
+            with open(save_path, 'r') as f:
+                save_data = json_module.load(f)
+                print(f"{Fore.GREEN}Save file loaded successfully.{Style.RESET_ALL}")
+                return save_data
+        except json_module.JSONDecodeError:
+            print(f"{Fore.YELLOW}JSON corrupted, attempting to repair...{Style.RESET_ALL}")
+            # Try to repair corrupted JSON
+            try:
+                with open(save_path, 'r') as f:
+                    content = f.read()
+                
+                # Basic JSON repair attempts
+                content = content.strip()
+                if not content.endswith('}'):
+                    content += '}'
+                if not content.startswith('{'):
+                    content = '{' + content
+                
+                # Try to parse the repaired content
+                save_data = json_module.loads(content)
+                print(f"{Fore.GREEN}Save file repaired and loaded successfully.{Style.RESET_ALL}")
+                
+                # Save the repaired version
+                with open(save_path, 'w') as f:
+                    json_module.dump(save_data, f, indent=2)
+                
+                return save_data
+            except:
+                print(f"{Fore.YELLOW}JSON repair failed, trying pickle format...{Style.RESET_ALL}")
+        except FileNotFoundError:
+            raise
+        
+        # Try loading as pickle if JSON fails
+        try:
+            with open(save_path, 'rb') as f:
+                save_data = pickle.load(f)
+                print(f"{Fore.YELLOW}Loaded legacy pickle format, converting to JSON...{Style.RESET_ALL}")
+                
+                # Convert to JSON format and save
+                json_path = save_path.replace('.pickle', '.json')
+                with open(json_path, 'w') as f:
+                    json_module.dump(save_data, f, indent=2)
+                
+                return save_data
+        except:
+            print(f"{Fore.RED}Could not load or repair save file.{Style.RESET_ALL}")
+            # Return minimal save data to prevent crashes
+            return {
+                "player_name": "Recovered Player",
+                "trainer_level": 1,
+                "location": "Hometown", 
+                "money": 100,
+                "monsters": [],
+                "inventory": {},
+                "save_time": "Unknown"
+            }
+
     def load_game(self, save_name: Optional[str] = None) -> bool:
         """Load a saved game state from file with comprehensive data restoration"""
         if not self.db_available:
@@ -2382,18 +2523,24 @@ your monster companions!
         try:
             if save_name:
                 # Load specific save if name is provided
-                if not self.player or not hasattr(self.player, 'name'):
-                    print(f"{Fore.RED}Cannot load: Player not initialized.{Style.RESET_ALL}")
-                    return False
-
-                save_path = get_save_path(self.player.name, save_name)
+                # First, try to find the save file in the saves directory
+                save_path = None
+                if os.path.exists(SAVE_DIR):
+                    for filename in os.listdir(SAVE_DIR):
+                        if filename.startswith(save_name) and filename.endswith('.json'):
+                            save_path = os.path.join(SAVE_DIR, filename)
+                            break
+                
+                if not save_path:
+                    # Try alternate save path format
+                    save_path = os.path.join(SAVE_DIR, f"{save_name}.json")
 
                 if not os.path.exists(save_path):
                     print(f"{Fore.RED}Save '{save_name}' not found.{Style.RESET_ALL}")
                     return False
 
-                with open(save_path, 'rb') as f:
-                    save_data = pickle.load(f)
+                # Try to load the save file with auto-repair
+                save_data = self.load_and_repair_save(save_path)
             else:
                 # Show available saves for selection
                 saves = []
@@ -2436,12 +2583,16 @@ your monster companions!
                     return False
 
             # Apply the comprehensive save data to the current game state
-            player = Player(save_data["player_name"])
-            player.location = save_data["player_location"]
-            player.money = save_data["player_money"]
-            player.monsters = save_data["player_monsters"]
-            player.inventory = save_data["player_inventory"]
-            player.active_monster_index = save_data["player_active_monster_index"]
+            # Handle different save file formats
+            player_name = save_data.get("player_name") or save_data.get("name", "Unknown Player")
+            player = Player(player_name)
+            
+            # Set basic player attributes with fallbacks
+            player.location = save_data.get("player_location") or save_data.get("location", "Hometown")
+            player.money = save_data.get("player_money") or save_data.get("money", 100)
+            player.monsters = save_data.get("player_monsters") or save_data.get("monsters", [])
+            player.inventory = save_data.get("player_inventory") or save_data.get("inventory", {})
+            player.active_monster_index = save_data.get("player_active_monster_index") or save_data.get("active_monster_index", 0)
             
             # Restore enhanced player progression data
             player.trainer_level = save_data.get("player_trainer_level", 5)
