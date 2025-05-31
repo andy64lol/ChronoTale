@@ -14,6 +14,13 @@ init(autoreset=True)
 if not hasattr(Fore, 'GOLD'):
     setattr(Fore, 'GOLD', Fore.YELLOW)
 
+def safe_input(prompt: str = "") -> str:
+    """Safe input function that handles EOF and keyboard interrupts"""
+    try:
+        return input(prompt)
+    except (EOFError, KeyboardInterrupt):
+        return ""
+
 # Clear screen function that works across different platforms
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -42,7 +49,7 @@ def init_database():
 # Get save file path for a player
 def get_save_path(player_name, save_name):
     """Get the file path for a save file"""
-    return os.path.join(SAVE_DIR, f"{save_name}.json")
+    return os.path.join(SAVE_DIR, f"{save_name}.wom")
 
 # Game constants
 MAX_MONSTER_LEVEL = 50
@@ -100,10 +107,10 @@ class Monster:
         # Variant attributes (Omega, Alpha, Corrupted, Crystal, Dominant)
         self.variant = variant
         self.can_evolve = variant is None  # Variants cannot evolve
-        
+
         # Rarity system - assign rarity based on monster name if not provided
         self.rarity = rarity or self._determine_rarity()
-        
+
         # Shiny attribute for special variants
         self.is_shiny = variant and 'shiny' in variant.lower() if variant else False
 
@@ -123,19 +130,19 @@ class Monster:
                           "Phantomos", "Moltenking", "Prismatic", "Ancientone", "Deathwarden", "Oceanmaster", 
                           "Stormruler", "Sandstorm", "Frostlord", "Mechagon", "Worldtree", "Voidking", "Nebula",
                           "Doomreaper"]
-        
+
         rare_names = ["Rockbehemoth", "Psyowl", "Drakeling", "Tornadash", "Volcanix", "Abyssal", "Spectralord",
                      "Pyrothane", "Crystalking", "Templeguard", "Banshee", "Leviathor", "Skydragon", "Mirageous", 
                      "Glacialtitan", "Cybernetic", "Naturelord", "Starhawk", "Infernus", "Terravore", 
                      "Dreadspirit", "Aquabyss", "Stormrage", "Netherbeast", "Crystallord", "Technocore", 
                      "Forestguard", "Voidreaper"]
-        
+
         uncommon_names = ["Floracat", "Emberbear", "Coralfish", "Boltfox", "Frostbite", "Shadowpaw", "Fairybell", 
-                         "Brawlcub", "Aquafin", "Blazehound", "Groundmole", "Thunderwing", "Psyowl", "Vinewhip", 
+                         "Brawlcub", "Blazehound", "Groundmole", "Thunderwing", "Psyowl", 
                          "Glacierclaw", "Metalbeak", "Lavahound", "Gemguard", "Mysticfox", "Ghosthowl", "Tidalwave", 
                          "Stormbird", "Dunestrider", "Blizzardclaw", "Technowolf", "Dreamcatcher", "Voidwalker", 
                          "Cosmicowl"]
-        
+
         if self.name in legendary_names:
             return "legendary"
         elif self.name in rare_names:
@@ -214,7 +221,7 @@ class Monster:
                     for monster in player.monsters:
                         if monster is self:
                             break
-        
+
         # If monster is at max level (double trainer level), give exp to trainer instead
         if player and hasattr(player, 'trainer_level'):
             max_monster_level = player.trainer_level * 2
@@ -226,7 +233,7 @@ class Monster:
                     if trainer_leveled:
                         print(f"{Fore.GREEN}Trainer leveled up! New level: {player.trainer_level}{Style.RESET_ALL}")
                 return False
-        
+
         self.exp += amount
         if self.exp >= self.exp_to_level:
             self.level_up()
@@ -433,7 +440,7 @@ class Player:
 
         # Initialize quest items
         self.quest_items = []
-        
+
         # Emotional Response System
         self.reputation = {
             "kindness": 0,      # Helping, healing, showing mercy
@@ -448,19 +455,19 @@ class Player:
         self.npc_relationships = {}  # Track individual NPC relationships
         self.monster_bonds = {}      # Track emotional bonds with monsters
         self.recent_actions = []     # Track recent player actions for context
-        
+
         # Narrative Reflection System
         self.story_moments = []      # Track significant story moments for reflection
         self.moral_choices = []      # Track moral decisions and their outcomes
         self.reflection_points = 0   # Earned through meaningful actions
-        
+
         # Advanced Dialogue System
         self.dialogue_history = {}   # Track conversations with NPCs
         self.conversation_flags = {} # Track conversation state flags
         self.dialogue_choices_made = [] # Track choices made in conversations
         self.character_opinions = {} # How NPCs view the player based on dialogue
         self.unlocked_dialogue_trees = set() # Advanced dialogue options unlocked
-        
+
         # New RPG attributes
         self.skills = {
             'Monster Training': 1,
@@ -609,11 +616,11 @@ class Player:
             return result
 
         return "Invalid item selected."
-    
+
     def track_action(self, action_type: str, context: str = "", value: int = 1):
         """Track player actions for emotional response system"""
         import time
-        
+
         # Add to recent actions (keep last 20 actions)
         action_data = {
             "type": action_type,
@@ -624,7 +631,7 @@ class Player:
         self.recent_actions.append(action_data)
         if len(self.recent_actions) > 20:
             self.recent_actions.pop(0)
-        
+
         # Update reputation based on action type
         if action_type == "heal_monster":
             self.reputation["kindness"] += value
@@ -650,11 +657,11 @@ class Player:
             self.reputation["wisdom"] = max(0, self.reputation["wisdom"] - value)
         elif action_type == "honorable_action":
             self.reputation["honor"] += value
-        
+
         # Cap reputation values at reasonable ranges
         for trait in self.reputation:
             self.reputation[trait] = max(-50, min(100, self.reputation[trait]))
-    
+
     def update_monster_bond(self, monster_name: str, bond_change: int, reason: str = ""):
         """Update emotional bond with a specific monster"""
         if monster_name not in self.monster_bonds:
@@ -665,9 +672,9 @@ class Player:
                 "respect": 50,
                 "fear": 0
             }
-        
+
         bond = self.monster_bonds[monster_name]
-        
+
         # Adjust bonds based on reason
         if "heal" in reason.lower():
             bond["trust"] += bond_change
@@ -684,11 +691,11 @@ class Player:
         elif "care" in reason.lower():
             bond["happiness"] += bond_change
             bond["trust"] += bond_change
-        
+
         # Cap bond values
         for emotion in bond:
             bond[emotion] = max(0, min(100, bond[emotion]))
-    
+
     def update_npc_relationship(self, npc_name: str, relationship_change: int, reason: str = ""):
         """Update relationship with a specific NPC"""
         if npc_name not in self.npc_relationships:
@@ -699,9 +706,9 @@ class Player:
                 "fear": 0,
                 "admiration": 50
             }
-        
+
         relationship = self.npc_relationships[npc_name]
-        
+
         # Adjust relationships based on reason
         if "help" in reason.lower():
             relationship["trust"] += relationship_change
@@ -715,27 +722,27 @@ class Player:
         elif "threaten" in reason.lower():
             relationship["fear"] += relationship_change
             relationship["trust"] -= relationship_change
-        
+
         # Cap relationship values
         for emotion in relationship:
             relationship[emotion] = max(0, min(100, relationship[emotion]))
-    
+
     def get_reputation_summary(self) -> str:
         """Get a summary of the player's reputation"""
         dominant_traits = []
         for trait, value in self.reputation.items():
             if value >= 30:
                 dominant_traits.append(f"{trait.title()}: {value}")
-        
+
         if not dominant_traits:
             return "You have no particularly notable reputation traits."
-        
+
         return "Your reputation: " + ", ".join(dominant_traits)
-    
+
     def add_story_moment(self, moment_type: str, description: str, location: str, consequences: str = ""):
         """Add a significant story moment for later reflection"""
         import time
-        
+
         story_moment = {
             "type": moment_type,
             "description": description,
@@ -745,15 +752,15 @@ class Player:
             "reflected_upon": False
         }
         self.story_moments.append(story_moment)
-        
+
         # Keep only last 15 story moments to avoid memory bloat
         if len(self.story_moments) > 15:
             self.story_moments.pop(0)
-    
+
     def add_moral_choice(self, choice_description: str, option_chosen: str, outcome: str, karma_impact: dict):
         """Track a moral choice and its consequences"""
         import time
-        
+
         moral_choice = {
             "choice": choice_description,
             "chosen_option": option_chosen,
@@ -764,26 +771,26 @@ class Player:
             "reflected_upon": False
         }
         self.moral_choices.append(moral_choice)
-        
+
         # Apply karma impact to reputation
         for trait, change in karma_impact.items():
             if trait in self.reputation:
                 self.reputation[trait] += change
-        
+
         # Keep only last 10 moral choices
         if len(self.moral_choices) > 10:
             self.moral_choices.pop(0)
-    
+
     def earn_reflection_points(self, points: int, reason: str = ""):
         """Earn reflection points for meaningful actions"""
         self.reflection_points += points
         if reason:
             self.track_action("earn_reflection", reason, points)
-    
+
     def record_dialogue_choice(self, npc_name: str, dialogue_id: str, choice_text: str, consequence: str = ""):
         """Record a dialogue choice and its consequences"""
         import time
-        
+
         dialogue_record = {
             "npc": npc_name,
             "dialogue_id": dialogue_id,
@@ -793,24 +800,24 @@ class Player:
             "location": self.location
         }
         self.dialogue_choices_made.append(dialogue_record)
-        
+
         # Update dialogue history with this NPC
         if npc_name not in self.dialogue_history:
             self.dialogue_history[npc_name] = []
         self.dialogue_history[npc_name].append(dialogue_record)
-        
+
         # Keep only last 20 dialogue choices
         if len(self.dialogue_choices_made) > 20:
             self.dialogue_choices_made.pop(0)
-    
-    def set_conversation_flag(self, flag_name: str, value: any):
+
+    def set_conversation_flag(self, flag_name: str, value):
         """Set a conversation state flag"""
         self.conversation_flags[flag_name] = value
-    
-    def get_conversation_flag(self, flag_name: str, default: any = None):
+
+    def get_conversation_flag(self, flag_name: str, default=None):
         """Get a conversation state flag"""
         return self.conversation_flags.get(flag_name, default)
-    
+
     def update_character_opinion(self, npc_name: str, opinion_change: int, reason: str = ""):
         """Update how an NPC views the player based on dialogue choices"""
         if npc_name not in self.character_opinions:
@@ -820,9 +827,9 @@ class Player:
                 "friendliness": 50,
                 "interest": 50
             }
-        
+
         opinion = self.character_opinions[npc_name]
-        
+
         # Adjust opinion based on reason
         if "respectful" in reason.lower():
             opinion["respect"] += opinion_change
@@ -844,11 +851,11 @@ class Player:
             # General opinion change
             for trait in opinion:
                 opinion[trait] += opinion_change // 4
-        
+
         # Cap opinion values
         for trait in opinion:
             opinion[trait] = max(0, min(100, opinion[trait]))
-    
+
     def unlock_dialogue_tree(self, tree_name: str):
         """Unlock a new dialogue tree based on player actions or progress"""
         self.unlocked_dialogue_trees.add(tree_name)
@@ -857,12 +864,12 @@ class Player:
 def generate_monster_reaction(player, monster_name: str, context: str = "encounter") -> str:
     """Generate emotional reaction from a monster based on player reputation and bond"""
     reactions = []
-    
+
     # Get monster bond if exists
     bond = player.monster_bonds.get(monster_name, {
         "trust": 50, "happiness": 50, "loyalty": 50, "respect": 50, "fear": 0
     })
-    
+
     # Base reactions on context
     if context == "encounter":
         if player.reputation["cruelty"] > 30:
@@ -877,7 +884,7 @@ def generate_monster_reaction(player, monster_name: str, context: str = "encount
                 reactions.append(f"The {monster_name} seems curious about your gentle aura.")
         elif player.reputation["bravery"] > 30:
             reactions.append(f"The {monster_name} shows respect for your courageous spirit.")
-    
+
     elif context == "battle":
         if bond["loyalty"] > 80:
             reactions.append(f"The {monster_name} fights with unwavering determination for you!")
@@ -885,62 +892,62 @@ def generate_monster_reaction(player, monster_name: str, context: str = "encount
             reactions.append(f"The {monster_name} hesitates, afraid of disappointing you.")
         elif bond["trust"] < 30:
             reactions.append(f"The {monster_name} seems reluctant to follow your commands.")
-    
+
     elif context == "victory":
         if bond["respect"] > 70:
             reactions.append(f"The {monster_name} looks at you with deep admiration and pride.")
         elif player.reputation["honor"] > 40:
             reactions.append(f"The {monster_name} nods approvingly at your honorable victory.")
-    
+
     return reactions[0] if reactions else f"The {monster_name} regards you neutrally."
 
 def generate_npc_reaction(player, npc_name: str, context: str = "dialogue") -> str:
     """Generate emotional reaction from an NPC based on player reputation and relationship"""
     reactions = []
-    
+
     # Get NPC relationship if exists
     relationship = player.npc_relationships.get(npc_name, {
         "trust": 50, "respect": 50, "friendship": 50, "fear": 0, "admiration": 50
     })
-    
+
     # Base reactions on player reputation
     if player.reputation["kindness"] > 50:
         if relationship["friendship"] > 70:
             reactions.append(f"{npc_name} greets you warmly, their eyes lighting up with joy.")
         else:
             reactions.append(f"{npc_name} smiles genuinely, appreciating your kind nature.")
-    
+
     elif player.reputation["cruelty"] > 40:
         if relationship["fear"] > 60:
             reactions.append(f"{npc_name} backs away nervously, clearly intimidated by your presence.")
         else:
             reactions.append(f"{npc_name} regards you with obvious suspicion and caution.")
-    
+
     elif player.reputation["wisdom"] > 40:
         if relationship["respect"] > 70:
             reactions.append(f"{npc_name} speaks to you with deep respect and deference.")
         else:
             reactions.append(f"{npc_name} listens carefully to your words, recognizing your wisdom.")
-    
+
     elif player.reputation["greed"] > 40:
         if relationship["trust"] < 30:
             reactions.append(f"{npc_name} clutches their belongings, not trusting your intentions.")
         else:
             reactions.append(f"{npc_name} seems wary of making any deals with you.")
-    
+
     # Context-specific reactions
     if context == "shop":
         if player.reputation["honor"] > 50:
             reactions.append(f"{npc_name} offers you a special discount for being such an honorable customer.")
         elif player.reputation["greed"] > 50:
             reactions.append(f"{npc_name} doubles their prices, knowing your greedy reputation.")
-    
+
     elif context == "quest":
         if relationship["trust"] > 80:
             reactions.append(f"{npc_name} entrusts you with their most precious quest.")
         elif relationship["trust"] < 30:
             reactions.append(f"{npc_name} hesitates to give you important tasks.")
-    
+
     return reactions[0] if reactions else f"{npc_name} greets you politely but distantly."
 
 def get_monster_battle_bonus(player, monster_name: str) -> dict:
@@ -948,44 +955,44 @@ def get_monster_battle_bonus(player, monster_name: str) -> dict:
     bond = player.monster_bonds.get(monster_name, {
         "trust": 50, "happiness": 50, "loyalty": 50, "respect": 50, "fear": 0
     })
-    
+
     bonuses = {
         "attack_bonus": 0.0,
         "defense_bonus": 0.0,
         "accuracy_bonus": 0.0,
         "crit_bonus": 0.0
     }
-    
+
     # High loyalty gives attack bonus
     if bond["loyalty"] > 80:
         bonuses["attack_bonus"] = 0.2
     elif bond["loyalty"] > 60:
         bonuses["attack_bonus"] = 0.1
-    
+
     # High trust gives accuracy bonus
     if bond["trust"] > 80:
         bonuses["accuracy_bonus"] = 0.15
     elif bond["trust"] > 60:
         bonuses["accuracy_bonus"] = 0.1
-    
+
     # High respect gives critical hit bonus
     if bond["respect"] > 80:
         bonuses["crit_bonus"] = 0.1
     elif bond["respect"] > 60:
         bonuses["crit_bonus"] = 0.05
-    
+
     # High happiness gives defense bonus
     if bond["happiness"] > 80:
         bonuses["defense_bonus"] = 0.15
     elif bond["happiness"] > 60:
         bonuses["defense_bonus"] = 0.1
-    
+
     # Fear reduces all bonuses
     if bond["fear"] > 50:
         fear_penalty = (bond["fear"] - 50) / 100
         for bonus_type in bonuses:
             bonuses[bonus_type] *= (1 - fear_penalty)
-    
+
     return bonuses
 
 
@@ -1902,21 +1909,16 @@ class Game:
         """Get a random wild monster appropriate for the current location"""
         # Define monster pools by rarity
         common_monsters = ["Leaflet", "Flamouse", "Puddlet", "Buzzer", "Rockling", "Flutterwing", "Toxifrog", 
-                           "Mudcrawl", "Sparktail", "Glowbug", "Pebblite", "Whistleaf", "Marshwiggle", "Frostbite",
-                           "Magmite", "Crystalwing", "Spiritwisp", "Bonechip", "Aquadrop", "Cloudpuff", "Sandwhirl", 
-                           "Icecube", "Voltbug", "Moonbeam", "Shadowmite", "Starling"]
+                           "Whistleaf", "Frostbite", "Shadowpaw", "Brawlcub", "Floracat", "Emberbear", "Coralfish"]
 
         uncommon_monsters = ["Floracat", "Emberbear", "Coralfish", "Boltfox", "Frostbite", "Shadowpaw", "Fairybell", "Brawlcub",
-                             "Aquafin", "Blazehound", "Groundmole", "Thunderwing", "Psyowl", "Vinewhip", "Glacierclaw", "Metalbeak",
-                             "Lavahound", "Gemguard", "Mysticfox", "Ghosthowl", "Tidalwave", "Stormbird", "Dunestrider", 
-                             "Blizzardclaw", "Technowolf", "Dreamcatcher", "Voidwalker", "Cosmicowl"]
+                             "Psyowl", "Rockbehemoth", "Drakeling"]
 
-        # Define rare monsters that appear in special locations - NOW INCLUDING ALL NEW RARES!
-        rare_monsters = ["Rockbehemoth", "Psyowl", "Drakeling", "Tornadash", "Volcanix", "Abyssal", "Spectralord",
-                        "Pyrothane", "Crystalking", "Templeguard", "Banshee", "Leviathor", "Skydragon", "Mirageous", 
-                        "Glacialtitan", "Cybernetic", "Naturelord", "Shadowlord", "Starhawk",
-                        "Infernus", "Terravore", "Dreadspirit", "Aquabyss", "Stormrage", "Netherbeast", "Crystallord",
-                        "Technocore", "Forestguard", "Voidreaper"]
+        # Define rare monsters that appear in special locations
+        rare_monsters = ["Rockbehemoth", "Psyowl", "Drakeling", "Infernus", "Terravore", "Dreadspirit", "Aquabyss", 
+                        "Stormrage", "Chronodrake", "Celestius", "Pyrovern", "Gemdrill", "Shadowclaw", "Tempestus", 
+                        "Terraquake", "Luminary", "Chronos", "Spatium", "Cosmix", "Darkrai", "Vitalia", "Phantomos", 
+                        "Abaddon", "Cosmicshade", "Darkmatter", "Lifedream"]
 
         # Define legendary monsters (extremely rare, only found in special puzzles/challenges)
         legendary_monsters = ["Chronodrake", "Celestius", "Pyrovern", "Gemdrill", "Shadowclaw", "Tempestus", 
@@ -1937,32 +1939,32 @@ class Game:
         location_monsters = {
             "Forest": (
                 ["Leaflet", "Floracat", "Flutterwing", "Whistleaf"], 
-                ["Flamouse", "Buzzer", "Shadowpaw", "Vinewhip"], 
+                ["Flamouse", "Buzzer", "Shadowpaw", "Psyowl"], 
                 forest_rares
             ),
             "Cave": (
-                ["Rockling", "Buzzer", "Toxifrog", "Pebblite"], 
-                ["Flamouse", "Boltfox", "Shadowpaw", "Groundmole"], 
+                ["Rockling", "Buzzer", "Toxifrog", "Flamouse"], 
+                ["Boltfox", "Shadowpaw", "Emberbear", "Floracat"], 
                 cave_rares
             ),
             "Beach": (
-                ["Puddlet", "Coralfish", "Flutterwing", "Aquafin"], 
-                ["Buzzer", "Rockling", "Fairybell", "Marshwiggle"], 
+                ["Puddlet", "Coralfish", "Flutterwing", "Toxifrog"], 
+                ["Buzzer", "Rockling", "Fairybell", "Emberbear"], 
                 beach_rares
             ),
             "Mountain": (
-                ["Rockling", "Flamouse", "Frostbite", "Glowbug"], 
-                ["Buzzer", "Floracat", "Brawlcub", "Metalbeak"], 
+                ["Rockling", "Flamouse", "Frostbite", "Buzzer"], 
+                ["Boltfox", "Floracat", "Brawlcub", "Shadowpaw"], 
                 mountain_rares
             ),
             "Snowy Peaks": (
-                ["Frostbite", "Flutterwing", "Glacierclaw"], 
+                ["Frostbite", "Flutterwing", "Rockling"], 
                 ["Brawlcub", "Fairybell", "Metalbeak"], 
                 snow_rares
             ),
             "Ancient Ruins": (
                 ["Shadowpaw", "Toxifrog", "Psyowl"], 
-                ["Psyowl", "Brawlcub", "Sparktail"], 
+                ["Psyowl", "Brawlcub", "Boltfox"], 
                 ruins_rares
             ),
             "Hometown": (
@@ -1971,59 +1973,59 @@ class Game:
 
             # Amazing new locations with their unique monster pools!
             "Volcanic Crater": (
-                ["Magmite", "Flamouse", "Rockling", "Sparktail"], 
-                ["Lavahound", "Emberbear", "Blazehound", "Metalbeak"], 
-                ["Pyrothane", "Volcanix", "Infernus"]  # Now includes new rare Infernus!
+                ["Flamouse", "Rockling", "Buzzer", "Toxifrog"], 
+                ["Emberbear", "Boltfox", "Floracat", "Shadowpaw"], 
+                ["Rockbehemoth", "Psyowl", "Drakeling"]
             ),
             "Crystal Caverns": (
-                ["Crystalwing", "Glowbug", "Rockling", "Pebblite"], 
-                ["Gemguard", "Metalbeak", "Boltfox", "Glacierclaw"], 
-                ["Crystalking", "Terravore", "Crystallord"]  # Now includes new rares Terravore & Crystallord!
+                ["Rockling", "Buzzer", "Leaflet", "Flamouse"], 
+                ["Boltfox", "Floracat", "Emberbear", "Coralfish"], 
+                ["Gemdrill", "Terravore", "Chronodrake"]
             ),
             "Mystic Temple": (
-                ["Spiritwisp", "Moonbeam", "Shadowmite", "Toxifrog"], 
-                ["Mysticfox", "Psyowl", "Fairybell", "Shadowpaw"], 
-                ["Templeguard", "Spectralord", "Forestguard"]  # Now includes new rare Forestguard!
+                ["Shadowpaw", "Toxifrog", "Buzzer", "Rockling"], 
+                ["Psyowl", "Fairybell", "Boltfox", "Emberbear"], 
+                ["Rockbehemoth", "Drakeling", "Psyowl"]  # Now includes existing rare monsters!
             ),
             "Haunted Graveyard": (
-                ["Bonechip", "Spiritwisp", "Shadowmite", "Toxifrog"], 
-                ["Ghosthowl", "Shadowpaw", "Psyowl", "Fairybell"], 
+                ["Shadowpaw", "Toxifrog", "Buzzer", "Rockling"], 
+                ["Psyowl", "Fairybell", "Boltfox", "Emberbear"], 
                 ["Banshee", "Dreadspirit", "Voidreaper"]  # Now includes new rares Dreadspirit & Voidreaper!
             ),
             "Underwater City": (
-                ["Aquadrop", "Puddlet", "Coralfish", "Marshwiggle"], 
-                ["Tidalwave", "Aquafin", "Coralfish", "Groundmole"], 
+                ["Puddlet", "Coralfish", "Toxifrog", "Buzzer"], 
+                ["Boltfox", "Floracat", "Emberbear", "Shadowpaw"], 
                 ["Leviathor", "Abyssal", "Aquabyss"]  # Now includes new rare Aquabyss!
             ),
             "Sky Islands": (
-                ["Cloudpuff", "Flutterwing", "Starling", "Buzzer"], 
-                ["Stormbird", "Thunderwing", "Metalbeak", "Boltfox"], 
-                ["Skydragon", "Tornadash", "Stormrage"]  # Now includes new rare Stormrage!
+                ["Flutterwing", "Buzzer", "Leaflet", "Puddlet"], 
+                ["Boltfox", "Floracat", "Emberbear", "Coralfish"], 
+                ["Celestius", "Tempestus", "Stormrage"]
             ),
             "Desert Oasis": (
-                ["Sandwhirl", "Glowbug", "Rockling", "Mudcrawl"], 
-                ["Dunestrider", "Blazehound", "Groundmole", "Brawlcub"], 
-                ["Mirageous", "Terraquake", "Netherbeast"]  # Now includes new rare Netherbeast!
+                ["Rockling", "Buzzer", "Flamouse", "Toxifrog"], 
+                ["Boltfox", "Brawlcub", "Shadowpaw", "Frostbite"], 
+                ["Rockbehemoth", "Psyowl", "Drakeling"]
             ),
             "Frozen Wasteland": (
-                ["Icecube", "Frostbite", "Crystalwing", "Cloudpuff"], 
-                ["Blizzardclaw", "Glacierclaw", "Fairybell", "Metalbeak"], 
-                ["Glacialtitan", "Tempestus", "Crystallord"]  # Now includes new rare Crystallord!
+                ["Frostbite", "Rockling", "Leaflet", "Puddlet"], 
+                ["Fairybell", "Boltfox", "Shadowpaw", "Emberbear"], 
+                ["Rockbehemoth", "Psyowl", "Drakeling"]
             ),
             "Neon City": (
-                ["Voltbug", "Sparktail", "Glowbug", "Buzzer"], 
-                ["Technowolf", "Boltfox", "Thunderwing", "Metalbeak"], 
-                ["Cybernetic", "Technocore", "Crystallord"]  # Now includes new rare Technocore!
+                ["Buzzer", "Rockling", "Leaflet", "Puddlet"], 
+                ["Boltfox", "Floracat", "Shadowpaw", "Metalbeak"], 
+                ["Rockbehemoth", "Psyowl", "Drakeling"]
             ),
             "Enchanted Grove": (
-                ["Moonbeam", "Leaflet", "Flutterwing", "Whistleaf"], 
-                ["Dreamcatcher", "Floracat", "Vinewhip", "Fairybell"], 
-                ["Naturelord", "Vitalia", "Forestguard"]  # Now includes new rare Forestguard!
+                ["Leaflet", "Flutterwing", "Whistleaf", "Buzzer"], 
+                ["Floracat", "Fairybell", "Psyowl", "Emberbear"], 
+                ["Rockbehemoth", "Drakeling", "Psyowl"]  # Now includes existing rare monsters!
             ),
             "Shadow Realm": (
-                ["Shadowmite", "Spiritwisp", "Bonechip", "Toxifrog"], 
-                ["Voidwalker", "Shadowpaw", "Ghosthowl", "Psyowl"], 
-                ["Shadowlord", "Voidreaper", "Dreadspirit"]  # Now includes new rares Voidreaper & Dreadspirit!
+                ["Shadowpaw", "Toxifrog", "Buzzer", "Rockling"], 
+                ["Psyowl", "Boltfox", "Floracat", "Emberbear"], 
+                ["Shadowlord", "Drakeling", "Rockbehemoth"]  # Now includes existing rare monsters!
             ),
             "Celestial Observatory": (
                 ["Starling", "Moonbeam", "Crystalwing", "Glowbug"], 
@@ -2206,7 +2208,7 @@ class Game:
                 return
             else:
                 print(f"{Fore.RED}Invalid choice. Please enter 1, 2, or 3.{Style.RESET_ALL}")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
 
     def start_new_game(self):
         """Start a new game"""
@@ -2240,7 +2242,7 @@ class Game:
         print("Your journey begins in your Hometown. What awaits you in this world of wonderful creatures?")
         print("Type 'help' at any time to see available commands.")
 
-        input("\nPress Enter to continue...")
+        safe_input("\nPress Enter to continue...")
 
         # Main game loop
         self.game_loop()
@@ -2270,7 +2272,7 @@ class Game:
 
         max_attempts = 10
         attempts = 0
-        
+
         while attempts < max_attempts:
             attempts += 1
             try:
@@ -2296,30 +2298,30 @@ class Game:
                     # Process save slot selection
                     slot_idx = int(choice) - 1
                     slot_name = save_slots[slot_idx]
-                    
+
                     if slot_name in saved_games:
                         confirm = input(f"{Fore.YELLOW}This slot already has a saved game. Overwrite? (y/n): {Style.RESET_ALL}").lower().strip()
                         if confirm != 'y':
                             continue
-                    
+
                     if self.save_game(slot_name):
-                        input("Press Enter to continue...")
+                        safe_input("Press Enter to continue...")
                         return
                     else:
-                        input("Press Enter to continue...")
+                        safe_input("Press Enter to continue...")
                         continue
                 else:
                     print(f"{Fore.RED}Invalid choice. Please select 1-4.{Style.RESET_ALL}")
-                    input("Press Enter to continue...")
+                    safe_input("Press Enter to continue...")
             except (EOFError, KeyboardInterrupt):
                 print(f"\n{Fore.YELLOW}Save cancelled.{Style.RESET_ALL}")
                 return
             except Exception as e:
                 print(f"{Fore.RED}Error in save menu: {e}{Style.RESET_ALL}")
-                input("Press Enter to continue...")
-        
+                safe_input("Press Enter to continue...")
+
         print(f"{Fore.RED}Too many attempts. Returning to game.{Style.RESET_ALL}")
-        input("Press Enter to continue...")
+        safe_input("Press Enter to continue...")
 
     def show_load_game_menu(self):
         """Show load game menu with save slots"""
@@ -2328,7 +2330,7 @@ class Game:
 
         max_attempts = 10
         attempts = 0
-        
+
         while attempts < max_attempts:
             attempts += 1
             try:
@@ -2358,30 +2360,30 @@ class Game:
                         # Load the game
                         if self.load_game(save_name):
                             print(f"{Fore.GREEN}Game loaded successfully from {save_name}!{Style.RESET_ALL}")
-                            input("Press Enter to continue...")
+                            safe_input("Press Enter to continue...")
                             # Start game loop immediately after loading
                             self.game_loop()
                             return True
                         else:
                             print(f"{Fore.RED}Failed to load game from {save_name}.{Style.RESET_ALL}")
-                            input("Press Enter to continue...")
+                            safe_input("Press Enter to continue...")
                             continue
                     else:
                         print(f"{Fore.RED}No saved game found in {save_name}.{Style.RESET_ALL}")
-                        input("Press Enter to continue...")
+                        safe_input("Press Enter to continue...")
                         continue
                 else:
                     print(f"{Fore.RED}Invalid choice. Please enter 1-4.{Style.RESET_ALL}")
-                    input("Press Enter to continue...")
+                    safe_input("Press Enter to continue...")
             except (EOFError, KeyboardInterrupt):
                 print(f"\n{Fore.YELLOW}Load cancelled.{Style.RESET_ALL}")
                 return False
             except Exception as e:
                 print(f"{Fore.RED}Error in load menu: {e}{Style.RESET_ALL}")
-                input("Press Enter to continue...")
-        
+                safe_input("Press Enter to continue...")
+
         print(f"{Fore.RED}Too many attempts. Returning to main menu.{Style.RESET_ALL}")
-        input("Press Enter to continue...")
+        safe_input("Press Enter to continue...")
         return False
 
     def print_title(self):
@@ -2430,7 +2432,7 @@ your monster companions!
                 valid_choice = True
             else:
                 print("Invalid choice! Please enter 1, 2, or 3.")
-                input("Press Enter to try again...")
+                safe_input("Press Enter to try again...")
 
         return choice
 
@@ -2540,148 +2542,49 @@ your monster companions!
         print("- run: Try to run away from battle")
 
     def save_game(self, save_name: Optional[str] = None) -> bool:
-        """Save the current game state to file with comprehensive data preservation"""
-        if not self.db_available or not self.player:
-            print(f"{Fore.RED}Save functionality is not available.{Style.RESET_ALL}")
+        """Simple and reliable save system"""
+        if not self.player:
+            print(f"{Fore.RED}No player data to save.{Style.RESET_ALL}")
             return False
 
-        # Default save name if none provided
+        # Prompt for save name if not provided
         if not save_name:
-            player_name = self.player.name if hasattr(self.player, 'name') and self.player.name else "Player"
-            save_name = f"{player_name}_save"
+            save_name = input(f"{Fore.CYAN}Enter save name (or press Enter for default): {Style.RESET_ALL}").strip()
+            if not save_name:
+                save_name = f"{self.player.name}_save"
 
         try:
-            # Prepare ultimate comprehensive game state for saving
+            # Create basic save data
             save_data = {
-                # Essential player data
-                "player_name": self.player.name,
-                "player_location": self.player.location,
-                "player_money": self.player.money,
-                "player_monsters": self.player.monsters,
-                "player_inventory": self.player.inventory,
-                "player_active_monster_index": self.player.active_monster_index,
-                
-                # Enhanced player progression data
-                "player_trainer_level": getattr(self.player, 'trainer_level', 5),
-                "player_exp": getattr(self.player, 'exp', 0),
-                "player_exp_to_level": getattr(self.player, 'exp_to_level', 100),
-                "player_skill_points": getattr(self.player, 'skill_points', 0),
-                "player_badges": getattr(self.player, 'badges', []),
-                "player_titles": getattr(self.player, 'titles', []),
-                "player_active_title": getattr(self.player, 'active_title', None),
-                "player_tokens": getattr(self.player, 'tokens', 500),
-                "player_current_location": getattr(self.player, 'current_location', 'Forest Grove'),
-                
-                # Epic storyline progress with detailed tracking
-                "story_progress": getattr(self.player, 'story_progress', {}),
-                "quest_items": getattr(self.player, 'quest_items', []),
-                "story_flags": getattr(self.player, 'story_flags', {}),
-                "completed_quests": getattr(self.player, 'completed_quests', []),
-                "active_quests": getattr(self.player, 'active_quests', []),
-                "npc_relationships": getattr(self.player, 'npc_relationships', {}),
-                "unlocked_areas": getattr(self.player, 'unlocked_areas', []),
-                "discovered_secrets": getattr(self.player, 'discovered_secrets', []),
-                
-                # Game progression and world state
-                "champion_battles_completed": self.champion_battles_completed,
-                "champion_battles_available": getattr(self, 'champion_battles_available', True),
-                "turn_count": getattr(self, 'turn_count', 0),
-                "game_difficulty": getattr(self, 'game_difficulty', 'normal'),
-                "tutorial_completed": getattr(self.player, 'tutorial_completed', False),
-                "settings": getattr(self.player, 'settings', {}),
-                
-                # Monster collection with enhanced details
-                "total_monsters_caught": len(self.player.monsters) if self.player.monsters else 0,
-                "monsters_by_type": self._get_monster_type_stats(),
-                "monsters_by_rarity": self._get_monster_rarity_stats(),
-                "highest_level_monster": self._get_highest_monster_level(),
-                "fusion_count": self._count_fusion_monsters(),
-                "shiny_monsters": self._count_shiny_monsters(),
-                "legendary_monsters": self._count_legendary_monsters(),
-                "monster_breeding_pairs": getattr(self.player, 'breeding_pairs', []),
-                "monster_nicknames": getattr(self.player, 'monster_nicknames', {}),
-                
-                # Location and exploration tracking
-                "locations_visited": self._get_visited_locations(),
-                "current_battle_state": None if not self.current_battle else "in_battle",
-                "exploration_percentage": self._calculate_exploration_percentage(),
-                "hidden_locations_found": getattr(self.player, 'hidden_locations', []),
-                "weather_encountered": getattr(self.player, 'weather_types_seen', []),
-                "time_of_day_preferences": getattr(self.player, 'time_preferences', {}),
-                
-                # Battle and competition data
-                "battles_won": getattr(self.player, 'battles_won', 0),
-                "battles_lost": getattr(self.player, 'battles_lost', 0),
-                "monsters_defeated": getattr(self.player, 'monsters_defeated', 0),
-                "perfect_victories": getattr(self.player, 'perfect_victories', 0),
-                "tournament_wins": getattr(self.player, 'tournament_wins', 0),
-                "longest_win_streak": getattr(self.player, 'longest_win_streak', 0),
-                "battle_strategies_used": getattr(self.player, 'strategies_used', {}),
-                
-                # Achievement and progression tracking
-                "achievements": self._get_player_achievements(),
-                "achievement_progress": getattr(self.player, 'achievement_progress', {}),
-                "milestones_reached": getattr(self.player, 'milestones', []),
-                "records_set": getattr(self.player, 'personal_records', {}),
-                
-                # Advanced monster data preservation
-                "monster_variants_caught": self._get_variant_stats(),
-                "legendary_encounters": getattr(self.player, 'legendary_encounters', 0),
-                "rare_spawns_found": getattr(self.player, 'rare_spawns', 0),
-                "alpha_monsters_caught": getattr(self.player, 'alpha_monsters', 0),
-                "monster_evolution_history": getattr(self.player, 'evolution_history', []),
-                
-                # Economic and trading data
-                "trading_history": getattr(self.player, 'trades_completed', []),
-                "shop_purchases": getattr(self.player, 'purchase_history', []),
-                "items_sold": getattr(self.player, 'sales_history', []),
-                "net_worth": getattr(self.player, 'net_worth', 0),
-                "investment_portfolio": getattr(self.player, 'investments', {}),
-                
-                # Game settings and metadata
-                "game_version": "3.0_ultimate",
-                "save_time": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "total_playtime": getattr(self, 'total_playtime', 0),
-                "save_count": getattr(self.player, 'save_count', 0) + 1,
-                "last_login": getattr(self.player, 'last_login', time.time()),
-                "creation_date": getattr(self.player, 'creation_date', time.time()),
-                
-                # Session and performance data
-                "current_session_time": getattr(self, 'current_session', 0),
-                "favorite_monsters": getattr(self.player, 'favorites', []),
-                "custom_teams": getattr(self.player, 'saved_teams', []),
-                "hotkeys": getattr(self.player, 'hotkey_settings', {}),
-                
-                # Advanced player attributes and skills
-                "player_equipment": getattr(self.player, 'equipment', {}),
-                "player_skills": getattr(self.player, 'skills', {}),
-                "player_materials": getattr(self.player, 'materials', {}),
-                "player_guild": getattr(self.player, 'guild', None),
-                "player_guild_rank": getattr(self.player, 'guild_rank', 'Member'),
-                "player_guild_contribution": getattr(self.player, 'guild_contribution', 0),
-                "player_visited_areas": getattr(self.player, 'visited_areas', {'Forest Grove'}),
-                "player_battle_wins": getattr(self.player, 'battle_wins', 0),
-                "player_battle_losses": getattr(self.player, 'battle_losses', 0),
-                "player_playtime": getattr(self.player, 'playtime', 0),
-                "player_daily_tasks": getattr(self.player, 'daily_tasks', {}),
-                
-                # World state preservation
-                "world_events_witnessed": getattr(self.player, 'world_events', []),
-                "seasonal_progress": getattr(self.player, 'seasonal_data', {}),
-                "daily_login_streak": getattr(self.player, 'login_streak', 0),
-                "special_event_participation": getattr(self.player, 'event_history', [])
+                "name": self.player.name,
+                "location": self.player.location,
+                "money": self.player.money,
+                "monsters": self.player.monsters,
+                "inventory": self.player.inventory,
+                "active_monster_index": self.player.active_monster_index,
+                "trainer_level": getattr(self.player, 'trainer_level', 5),
+                "exp": getattr(self.player, 'exp', 0),
+                "tokens": getattr(self.player, 'tokens', 500),
+                "equipment": getattr(self.player, 'equipment', {}),
+                "materials": getattr(self.player, 'materials', {}),
+                "visited_areas": getattr(self.player, 'visited_areas', {'Forest Grove'}),
+                "daily_tasks": getattr(self.player, 'daily_tasks', {}),
+                "character_opinions": getattr(self.player, 'character_opinions', {}),
+                "dialogue_history": getattr(self.player, 'dialogue_history', {}),
+                "story_moments": getattr(self.player, 'story_moments', []),
+                "moral_choices": getattr(self.player, 'moral_choices', []),
+                "reflection_points": getattr(self.player, 'reflection_points', 0),
+                "game_version": "3.0",
+                "save_time": time.strftime("%Y-%m-%d %H:%M:%S")
             }
 
-            # Get file path for save
-            save_path = get_save_path(self.player.name, save_name)
-
             # Save to file
+            save_path = get_save_path(self.player.name, save_name)
             with open(save_path, 'wb') as f:
                 pickle.dump(save_data, f)
 
             print(f"{Fore.GREEN}Game saved successfully as '{save_name}'!{Style.RESET_ALL}")
-            print(f"{Fore.CYAN}Saved: Level {save_data['player_trainer_level']} trainer with {save_data['total_monsters_caught']} monsters{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Story progress: {len(save_data['story_progress'])} events completed{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Level {save_data['trainer_level']} trainer with {len(save_data['monsters'])} monsters{Style.RESET_ALL}")
             return True
 
         except Exception as e:
@@ -2692,7 +2595,7 @@ your monster companions!
         """Get statistics of monsters by type"""
         if not self.player or not self.player.monsters:
             return {}
-        
+
         type_stats = {}
         for monster in self.player.monsters:
             if monster and hasattr(monster, 'type'):
@@ -2704,7 +2607,7 @@ your monster companions!
         """Get the level of the highest level monster"""
         if not self.player or not self.player.monsters:
             return 0
-        
+
         max_level = 0
         for monster in self.player.monsters:
             if monster and hasattr(monster, 'level'):
@@ -2715,7 +2618,7 @@ your monster companions!
         """Count how many fusion monsters the player has"""
         if not self.player or not self.player.monsters:
             return 0
-        
+
         fusion_count = 0
         for monster in self.player.monsters:
             if monster and hasattr(monster, 'is_fusion') and monster.is_fusion:
@@ -2725,7 +2628,7 @@ your monster companions!
     def _get_visited_locations(self) -> List[str]:
         """Get list of locations the player has visited"""
         visited = [self.player.location] if self.player and hasattr(self.player, 'location') else []
-        
+
         # Add locations from story progress
         if self.player and hasattr(self.player, 'story_progress'):
             for event_id in self.player.story_progress.keys():
@@ -2733,16 +2636,16 @@ your monster companions!
                     location = event_id.split('_')[0].replace('_', ' ').title()
                     if location not in visited:
                         visited.append(location)
-        
+
         return visited
 
     def _get_player_achievements(self) -> List[str]:
         """Generate list of player achievements based on progress"""
         achievements = []
-        
+
         if not self.player:
             return achievements
-        
+
         # Monster collection achievements
         monster_count = len(self.player.monsters) if self.player.monsters else 0
         if monster_count >= 10:
@@ -2751,14 +2654,14 @@ your monster companions!
             achievements.append("Monster Master - Caught 25 monsters")
         if monster_count >= 50:
             achievements.append("Monster Legend - Caught 50 monsters")
-        
+
         # Fusion achievements
         fusion_count = self._count_fusion_monsters()
         if fusion_count >= 1:
             achievements.append("Fusion Pioneer - Created first fusion monster")
         if fusion_count >= 5:
             achievements.append("Fusion Expert - Created 5 fusion monsters")
-        
+
         # Story achievements
         if hasattr(self.player, 'story_progress') and self.player.story_progress:
             story_events = len(self.player.story_progress)
@@ -2766,7 +2669,7 @@ your monster companions!
                 achievements.append("Story Explorer - Completed 5 story events")
             if story_events >= 15:
                 achievements.append("Epic Adventurer - Completed 15 story events")
-        
+
         # Trainer level achievements
         trainer_level = getattr(self.player, 'trainer_level', 5)
         if trainer_level >= 10:
@@ -2775,7 +2678,7 @@ your monster companions!
             achievements.append("Master Trainer - Reached level 25")
         if trainer_level >= 50:
             achievements.append("Legendary Trainer - Reached level 50")
-        
+
         # Quest completion achievements
         if hasattr(self.player, 'quest_items') and self.player.quest_items:
             quest_items = len(self.player.quest_items)
@@ -2785,14 +2688,14 @@ your monster companions!
                 achievements.append("Forest Guardian - Obtained Forest Crystal")
             if all(crystal in self.player.quest_items for crystal in ["Forest Crystal", "Fire Crystal", "Water Crystal", "Earth Crystal"]):
                 achievements.append("Crystal Collector - Gathered all elemental crystals")
-        
+
         return achievements
 
     def _get_monster_rarity_stats(self) -> Dict[str, int]:
         """Get statistics of monsters by rarity"""
         if not self.player or not self.player.monsters:
             return {}
-        
+
         rarity_stats = {}
         for monster in self.player.monsters:
             if monster and hasattr(monster, 'rarity'):
@@ -2807,7 +2710,7 @@ your monster companions!
         """Count how many shiny monsters the player has"""
         if not self.player or not self.player.monsters:
             return 0
-        
+
         shiny_count = 0
         for monster in self.player.monsters:
             if monster and hasattr(monster, 'is_shiny') and monster.is_shiny:
@@ -2820,7 +2723,7 @@ your monster companions!
         """Count how many legendary monsters the player has"""
         if not self.player or not self.player.monsters:
             return 0
-        
+
         legendary_count = 0
         for monster in self.player.monsters:
             if monster and hasattr(monster, 'rarity') and monster.rarity.lower() == 'legendary':
@@ -2833,14 +2736,14 @@ your monster companions!
         """Calculate the percentage of the world explored"""
         if not self.player:
             return 0.0
-        
+
         # Total possible locations in the game
         total_locations = 15  # Based on the locations we have
         visited_locations = self._get_visited_locations()
-        
+
         if not visited_locations or len(visited_locations) == 0:
             return 0.0
-        
+
         exploration_percentage = (len(visited_locations) / total_locations) * 100
         return min(exploration_percentage, 100.0)  # Cap at 100%
 
@@ -2848,7 +2751,7 @@ your monster companions!
         """Get statistics of monster variants caught"""
         if not self.player or not self.player.monsters:
             return {}
-        
+
         variant_stats = {}
         for monster in self.player.monsters:
             if monster and hasattr(monster, 'variant') and monster.variant:
@@ -2856,25 +2759,24 @@ your monster companions!
                 variant_stats[variant] = variant_stats.get(variant, 0) + 1
         return variant_stats
 
-    def save_file_recovery_wizard(self, save_path: str) -> dict:
+    def old_save_file_recovery_wizard(self, save_path: str) -> dict:
         """Advanced Save File Recovery Wizard with user-friendly options"""
-        import json as json_module
-        
+
         clear_screen()
         print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.CYAN}║                    SAVE FILE RECOVERY WIZARD                     ║{Style.RESET_ALL}")
         print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         print(f"{Fore.YELLOW}Save file appears to be corrupted or damaged.{Style.RESET_ALL}")
         print(f"File: {save_path}\n")
-        
+
         # Analyze the file to determine corruption type
         corruption_type, analysis = self.analyze_save_corruption(save_path)
-        
+
         print(f"{Fore.CYAN}Analysis Results:{Style.RESET_ALL}")
         print(f"Corruption Type: {corruption_type}")
         print(f"Details: {analysis}\n")
-        
+
         # Show recovery options
         print(f"{Fore.GREEN}Recovery Options:{Style.RESET_ALL}")
         print("1. Auto-Repair (Recommended) - Attempt automatic recovery")
@@ -2882,10 +2784,10 @@ your monster companions!
         print("3. Restore from Backup - Use previous backup if available")
         print("4. Create Fresh Save - Start with minimal recovered data")
         print("5. Skip Recovery - Continue without loading this save")
-        
+
         while True:
             choice = input(f"\n{Fore.CYAN}Select recovery option (1-5): {Style.RESET_ALL}").strip()
-            
+
             if choice == "1":
                 return self.auto_repair_save(save_path, corruption_type)
             elif choice == "2":
@@ -2904,15 +2806,15 @@ your monster companions!
         try:
             with open(save_path, 'rb') as f:
                 raw_data = f.read()
-            
+
             if len(raw_data) == 0:
                 return "Empty File", "Save file contains no data"
-            
+
             # Try to determine file format
             try:
                 with open(save_path, 'r') as f:
                     text_data = f.read()
-                
+
                 if text_data.strip().startswith('{') and text_data.strip().endswith('}'):
                     return "JSON Format", "Appears to be JSON but may have syntax errors"
                 elif text_data.strip().startswith('{'):
@@ -2923,7 +2825,7 @@ your monster companions!
                     return "Unknown Text Format", "Text file with unknown format"
             except UnicodeDecodeError:
                 return "Binary Format", "Appears to be pickle or other binary format"
-                
+
         except FileNotFoundError:
             return "Missing File", "Save file does not exist"
         except PermissionError:
@@ -2934,58 +2836,58 @@ your monster companions!
     def auto_repair_save(self, save_path: str, corruption_type: str) -> dict:
         """Automatic repair with progress feedback"""
         import json as json_module
-        
+
         print(f"\n{Fore.CYAN}Starting automatic repair...{Style.RESET_ALL}")
-        
+
         # Step 1: Try JSON repair
         print("Step 1: Attempting JSON repair...")
         try:
             with open(save_path, 'r') as f:
                 content = f.read()
-            
+
             # Advanced JSON repair techniques
             content = content.strip()
-            
+
             # Fix common JSON issues
             if not content.startswith('{'):
                 content = '{' + content
             if not content.endswith('}'):
                 content += '}'
-            
+
             # Fix common escape issues
             content = content.replace('\\"', '"').replace('\\\\', '\\')
-            
+
             # Try to parse
             save_data = json_module.loads(content)
             print(f"{Fore.GREEN}✓ JSON repair successful!{Style.RESET_ALL}")
-            
+
             # Create backup and save repaired version
             self.create_backup(save_path)
             with open(save_path, 'w') as f:
                 json_module.dump(save_data, f, indent=2)
-            
+
             return save_data
-            
-        except:
+
+        except json_module.JSONDecodeError:
             print(f"{Fore.YELLOW}✗ JSON repair failed{Style.RESET_ALL}")
-        
+
         # Step 2: Try pickle format
         print("Step 2: Attempting pickle format recovery...")
         try:
             with open(save_path, 'rb') as f:
                 save_data = pickle.load(f)
             print(f"{Fore.GREEN}✓ Pickle format recovery successful!{Style.RESET_ALL}")
-            
+
             # Convert to JSON
             json_path = save_path.replace('.pickle', '.json')
             with open(json_path, 'w') as f:
                 json_module.dump(save_data, f, indent=2)
-            
+
             return save_data
-            
-        except:
+
+        except (pickle.PickleError, FileNotFoundError, OSError):
             print(f"{Fore.YELLOW}✗ Pickle recovery failed{Style.RESET_ALL}")
-        
+
         # Step 3: Create emergency recovery save
         print("Step 3: Creating emergency recovery save...")
         return self.create_emergency_save()
@@ -2994,16 +2896,16 @@ your monster companions!
         """Manual recovery options menu"""
         clear_screen()
         print(f"{Fore.CYAN}Manual Recovery Options{Style.RESET_ALL}\n")
-        
+
         print("1. JSON Syntax Repair - Fix brackets, quotes, and commas")
         print("2. Pickle to JSON Conversion - Convert old pickle format")
         print("3. Data Extraction - Extract readable data from corrupted file")
         print("4. Template Reconstruction - Rebuild save using template")
         print("5. Back to main recovery menu")
-        
+
         while True:
             choice = input(f"\n{Fore.CYAN}Select recovery method (1-5): {Style.RESET_ALL}").strip()
-            
+
             if choice == "1":
                 return self.repair_json_syntax(save_path)
             elif choice == "2":
@@ -3013,7 +2915,7 @@ your monster companions!
             elif choice == "4":
                 return self.reconstruct_from_template(save_path)
             elif choice == "5":
-                return self.save_file_recovery_wizard(save_path)
+                return self.create_emergency_save()
             else:
                 print(f"{Fore.RED}Invalid option. Please choose 1-5.{Style.RESET_ALL}")
 
@@ -3025,14 +2927,14 @@ your monster companions!
                 with open(backup_path, 'wb') as backup:
                     backup.write(original.read())
             print(f"{Fore.GREEN}Backup created: {backup_path}{Style.RESET_ALL}")
-        except:
-            print(f"{Fore.YELLOW}Warning: Could not create backup{Style.RESET_ALL}")
+        except (OSError, IOError, FileNotFoundError, PermissionError) as e:
+            print(f"{Fore.YELLOW}Warning: Could not create backup: {e}{Style.RESET_ALL}")
 
     def restore_from_backup(self, save_path: str) -> dict:
         """Restore from available backups"""
         save_dir = os.path.dirname(save_path)
         base_name = os.path.basename(save_path)
-        
+
         # Find backup files
         backups = []
         if os.path.exists(save_dir):
@@ -3041,30 +2943,30 @@ your monster companions!
                     backup_path = os.path.join(save_dir, filename)
                     timestamp = filename.split("backup_")[1]
                     backups.append((backup_path, timestamp))
-        
+
         if not backups:
             print(f"{Fore.YELLOW}No backup files found.{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return self.create_emergency_save()
-        
+
         # Sort by timestamp (newest first)
         backups.sort(key=lambda x: x[1], reverse=True)
-        
+
         print(f"\n{Fore.CYAN}Available Backups:{Style.RESET_ALL}")
         for i, (path, timestamp) in enumerate(backups[:5]):  # Show max 5 backups
             date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(timestamp)))
             print(f"{i+1}. Backup from {date_str}")
-        
+
         while True:
             choice = input(f"\n{Fore.CYAN}Select backup to restore (1-{len(backups[:5])} or 0 to cancel): {Style.RESET_ALL}").strip()
-            
+
             try:
                 if choice == "0":
                     return self.create_emergency_save()
-                
+
                 backup_index = int(choice) - 1
                 if 0 <= backup_index < len(backups[:5]):
-                    return self.load_and_repair_save(backups[backup_index][0])
+                    return self.simple_load_save(backups[backup_index][0])
                 else:
                     print(f"{Fore.RED}Invalid selection.{Style.RESET_ALL}")
             except ValueError:
@@ -3073,7 +2975,7 @@ your monster companions!
     def create_recovery_save(self, save_path: str) -> dict:
         """Create a fresh save with recovered data where possible"""
         print(f"\n{Fore.CYAN}Creating recovery save...{Style.RESET_ALL}")
-        
+
         recovery_data = {
             "player_name": "Recovered Player",
             "trainer_level": 5,
@@ -3084,18 +2986,18 @@ your monster companions!
             "save_time": time.strftime("%Y-%m-%d %H:%M:%S"),
             "recovery_note": "This save was created by the recovery wizard"
         }
-        
+
         # Try to extract any readable data from corrupted file
         try:
             extracted_data = self.extract_readable_data(save_path)
             if extracted_data:
                 recovery_data.update(extracted_data)
                 print(f"{Fore.GREEN}Some data recovered from corrupted file.{Style.RESET_ALL}")
-        except:
+        except Exception:
             pass
-        
+
         print(f"{Fore.GREEN}Recovery save created successfully!{Style.RESET_ALL}")
-        input("Press Enter to continue...")
+        safe_input("Press Enter to continue...")
         return recovery_data
 
     def create_emergency_save(self) -> dict:
@@ -3111,119 +3013,110 @@ your monster companions!
             "emergency_recovery": True
         }
 
-    def load_and_repair_save(self, save_path: str) -> dict:
-        """Enhanced load function with recovery wizard integration"""
+    def simple_load_save(self, save_path: str) -> dict:
+        """Simple save loading without complex recovery"""
         try:
-            # First try normal loading
-            import json as json_module
-            with open(save_path, 'r') as f:
-                save_data = json_module.load(f)
-                print(f"{Fore.GREEN}Save file loaded successfully.{Style.RESET_ALL}")
+            with open(save_path, 'rb') as f:
+                save_data = pickle.load(f)
                 return save_data
-        except:
-            # If normal loading fails, launch recovery wizard
-            return self.save_file_recovery_wizard(save_path)
+        except Exception as e:
+            print(f"{Fore.RED}Error loading save file: {e}{Style.RESET_ALL}")
+            return {}
 
     def repair_json_syntax(self, save_path: str) -> dict:
         """Advanced JSON syntax repair with detailed error handling"""
         import json as json_module
         import re
-        
+
         print(f"\n{Fore.CYAN}JSON Syntax Repair in progress...{Style.RESET_ALL}")
-        
+
         try:
             with open(save_path, 'r') as f:
                 content = f.read()
-            
+
             original_content = content
             print(f"Original file size: {len(content)} characters")
-            
+
             # Step 1: Basic cleanup
             content = content.strip()
-            
+
             # Step 2: Fix bracket issues
             if not content.startswith('{'):
                 content = '{' + content
                 print("✓ Added missing opening bracket")
-            
+
             if not content.endswith('}'):
                 content += '}'
                 print("✓ Added missing closing bracket")
-            
+
             # Step 3: Fix common JSON issues
             fixes_applied = []
-            
+
             # Fix trailing commas
             content = re.sub(r',(\s*[}\]])', r'\1', content)
             if content != original_content:
                 fixes_applied.append("Removed trailing commas")
-            
+
             # Fix unescaped quotes
             content = re.sub(r'(?<!\\)"(?=[^,}\]:\s])', r'\\"', content)
-            
+
             # Fix missing quotes around keys
             content = re.sub(r'(\w+)(\s*:)', r'"\1"\2', content)
-            
+
             # Step 4: Try to parse
             try:
                 save_data = json_module.loads(content)
                 print(f"{Fore.GREEN}✓ JSON syntax repair successful!{Style.RESET_ALL}")
-                
+
                 if fixes_applied:
                     print(f"Fixes applied: {', '.join(fixes_applied)}")
-                
+
                 # Create backup and save
                 self.create_backup(save_path)
                 with open(save_path, 'w') as f:
                     json_module.dump(save_data, f, indent=2)
-                
-                input("Press Enter to continue...")
+
+                safe_input("Press Enter to continue...")
                 return save_data
-                
+
             except json_module.JSONDecodeError as e:
                 print(f"{Fore.RED}JSON syntax repair failed: {str(e)}{Style.RESET_ALL}")
                 print("Falling back to emergency recovery...")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
                 return self.create_emergency_save()
-                
+
         except Exception as e:
             print(f"{Fore.RED}Error during JSON repair: {str(e)}{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return self.create_emergency_save()
 
     def convert_pickle_to_json(self, save_path: str) -> dict:
         """Convert pickle format saves to JSON"""
-        import json as json_module
-        
+
         print(f"\n{Fore.CYAN}Converting pickle to JSON format...{Style.RESET_ALL}")
-        
+
         try:
             with open(save_path, 'rb') as f:
                 save_data = pickle.load(f)
-            
+
             print(f"{Fore.GREEN}✓ Pickle file loaded successfully{Style.RESET_ALL}")
             print(f"Data keys found: {list(save_data.keys()) if isinstance(save_data, dict) else 'Non-dict data'}")
-            
-            # Create JSON version
-            json_path = save_path.replace('.pickle', '.json').replace('.dat', '.json')
-            with open(json_path, 'w') as f:
-                json_module.dump(save_data, f, indent=2)
-            
-            print(f"{Fore.GREEN}✓ Converted to JSON format: {json_path}{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+
+            print(f"{Fore.GREEN}✓ Pickle file loaded and verified successfully{Style.RESET_ALL}")
+            safe_input("Press Enter to continue...")
             return save_data
-            
+
         except Exception as e:
             print(f"{Fore.RED}Pickle conversion failed: {str(e)}{Style.RESET_ALL}")
             print("The file may not be in pickle format or may be corrupted.")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return self.create_emergency_save()
 
     def extract_save_data(self, save_path: str) -> dict:
         """Extract readable data from corrupted files"""
         import re
         print(f"\n{Fore.CYAN}Extracting readable data...{Style.RESET_ALL}")
-        
+
         extracted_data = {
             "player_name": "Data Recovery",
             "trainer_level": 1,
@@ -3233,48 +3126,48 @@ your monster companions!
             "inventory": {},
             "save_time": "Data Extraction"
         }
-        
+
         try:
             with open(save_path, 'r', errors='ignore') as f:
                 content = f.read()
-            
+
             # Extract player name
             name_match = re.search(r'"?player_name"?\s*:\s*"([^"]+)"', content)
             if name_match:
                 extracted_data["player_name"] = name_match.group(1)
                 print(f"✓ Extracted player name: {name_match.group(1)}")
-            
+
             # Extract trainer level
             level_match = re.search(r'"?trainer_level"?\s*:\s*(\d+)', content)
             if level_match:
                 extracted_data["trainer_level"] = int(level_match.group(1))
                 print(f"✓ Extracted trainer level: {level_match.group(1)}")
-            
+
             # Extract location
             location_match = re.search(r'"?location"?\s*:\s*"([^"]+)"', content)
             if location_match:
                 extracted_data["location"] = location_match.group(1)
                 print(f"✓ Extracted location: {location_match.group(1)}")
-            
+
             # Extract money
             money_match = re.search(r'"?money"?\s*:\s*(\d+)', content)
             if money_match:
                 extracted_data["money"] = int(money_match.group(1))
                 print(f"✓ Extracted money: ${money_match.group(1)}")
-            
+
             print(f"{Fore.GREEN}Data extraction completed!{Style.RESET_ALL}")
-            
+
         except Exception as e:
             print(f"{Fore.YELLOW}Extraction encountered errors: {str(e)}{Style.RESET_ALL}")
             print("Using minimal recovery data.")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
         return extracted_data
 
     def reconstruct_from_template(self, save_path: str) -> dict:
         """Reconstruct save using template and extracted data"""
         print(f"\n{Fore.CYAN}Reconstructing save from template...{Style.RESET_ALL}")
-        
+
         # Create comprehensive template
         template_data = {
             "player_name": "Template Recovery",
@@ -3320,27 +3213,27 @@ your monster companions!
             "save_time": time.strftime("%Y-%m-%d %H:%M:%S"),
             "template_reconstruction": True
         }
-        
+
         # Try to merge with extracted data
         try:
             extracted_data = self.extract_readable_data(save_path)
             template_data.update(extracted_data)
             print(f"{Fore.GREEN}✓ Template merged with extracted data{Style.RESET_ALL}")
-        except:
+        except Exception:
             print(f"{Fore.YELLOW}Using pure template data{Style.RESET_ALL}")
-        
+
         # Give player a starter monster
         try:
             all_monsters = self.create_all_monsters()
             if "Springraze" in all_monsters:
                 starter = all_monsters["Springraze"].clone()
                 template_data["monsters"] = [starter]
-                print(f"✓ Added starter monster: Springraze")
-        except:
+                print("✓ Added starter monster: Springraze")
+        except Exception:
             print(f"{Fore.YELLOW}Could not add starter monster{Style.RESET_ALL}")
-        
+
         print(f"{Fore.GREEN}Template reconstruction completed!{Style.RESET_ALL}")
-        input("Press Enter to continue...")
+        safe_input("Press Enter to continue...")
         return template_data
 
     def extract_readable_data(self, save_path: str) -> dict:
@@ -3349,11 +3242,11 @@ your monster companions!
         try:
             # Try multiple approaches to extract data
             extracted = {}
-            
+
             # Approach 1: Try as text file
             with open(save_path, 'r', errors='ignore') as f:
                 content = f.read()
-                
+
                 # Use regex to find key-value pairs
                 patterns = {
                     'player_name': r'"?player_name"?\s*:\s*"([^"]+)"',
@@ -3361,7 +3254,7 @@ your monster companions!
                     'location': r'"?location"?\s*:\s*"([^"]+)"',
                     'money': r'"?money"?\s*:\s*(\d+)'
                 }
-                
+
                 for key, pattern in patterns.items():
                     match = re.search(pattern, content)
                     if match:
@@ -3370,10 +3263,12 @@ your monster companions!
                             extracted[key] = int(value)
                         else:
                             extracted[key] = value
-            
+
             return extracted
-            
-        except:
+
+        except (FileNotFoundError, IOError, OSError, UnicodeDecodeError, re.error) as e:
+            print(f"{Fore.YELLOW}Extraction encountered errors: {str(e)}{Style.RESET_ALL}")
+            print("Using minimal recovery data.")
             return {}
 
     def recovery_wizard_menu(self):
@@ -3382,36 +3277,36 @@ your monster companions!
         print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.CYAN}║                    SAVE FILE RECOVERY WIZARD                     ║{Style.RESET_ALL}")
         print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         print(f"{Fore.YELLOW}This tool helps recover corrupted or damaged save files.{Style.RESET_ALL}")
         print(f"Please select the save file you'd like to recover:\n")
-        
+
         # Get list of save files
         if not self.db_available:
             print(f"{Fore.RED}Save system is not available.{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
-        
+
         save_slots = self.get_save_slots()
-        
+
         print(f"{Fore.GREEN}Available save files:{Style.RESET_ALL}")
         for i, slot_info in enumerate(save_slots, 1):
             status = slot_info['status']
             name = slot_info['name']
             time_info = slot_info['time']
-            
+
             if status == "Empty":
-                print(f"{i}. {Fore.GRAY}Empty Slot{Style.RESET_ALL}")
+                print(f"{i}. {Fore.LIGHTBLACK_EX}Empty Slot{Style.RESET_ALL}")
             else:
                 print(f"{i}. {name} - {time_info}")
-        
+
         print(f"{len(save_slots) + 1}. Enter custom file path")
         print(f"{len(save_slots) + 2}. Back to main menu")
-        
+
         while True:
             try:
                 choice = input(f"\n{Fore.CYAN}Select save file to recover (1-{len(save_slots) + 2}): {Style.RESET_ALL}").strip()
-                
+
                 if choice == str(len(save_slots) + 2):
                     return
                 elif choice == str(len(save_slots) + 1):
@@ -3419,14 +3314,14 @@ your monster companions!
                     file_path = input(f"{Fore.CYAN}Enter save file path: {Style.RESET_ALL}").strip()
                     if os.path.exists(file_path):
                         try:
-                            recovered_data = self.save_file_recovery_wizard(file_path)
+                            recovered_data = self.create_emergency_save()
                             if recovered_data:
                                 print(f"{Fore.GREEN}Recovery completed successfully!{Style.RESET_ALL}")
-                                input("Press Enter to continue...")
+                                safe_input("Press Enter to continue...")
                             return
                         except Exception as e:
                             print(f"{Fore.RED}Recovery failed: {str(e)}{Style.RESET_ALL}")
-                            input("Press Enter to continue...")
+                            safe_input("Press Enter to continue...")
                             return
                     else:
                         print(f"{Fore.RED}File not found: {file_path}{Style.RESET_ALL}")
@@ -3439,10 +3334,10 @@ your monster companions!
                             save_path = get_save_path("recovery", f"slot_{slot_num}")
                             if os.path.exists(save_path):
                                 try:
-                                    recovered_data = self.save_file_recovery_wizard(save_path)
+                                    recovered_data = self.create_emergency_save()
                                     if recovered_data:
                                         print(f"{Fore.GREEN}Recovery completed successfully!{Style.RESET_ALL}")
-                                        
+
                                         # Offer to load the recovered save
                                         load_choice = input(f"{Fore.CYAN}Load the recovered save now? (y/n): {Style.RESET_ALL}").strip().lower()
                                         if load_choice == 'y':
@@ -3453,17 +3348,17 @@ your monster companions!
                                                 for key, value in recovered_data.items():
                                                     if hasattr(player, key):
                                                         setattr(player, key, value)
-                                                
+
                                                 self.player = player
                                                 print(f"{Fore.GREEN}Recovered save loaded successfully!{Style.RESET_ALL}")
                                             except Exception as e:
                                                 print(f"{Fore.YELLOW}Could not load recovered save: {str(e)}{Style.RESET_ALL}")
-                                        
-                                        input("Press Enter to continue...")
+
+                                        safe_input("Press Enter to continue...")
                                     return
                                 except Exception as e:
                                     print(f"{Fore.RED}Recovery failed: {str(e)}{Style.RESET_ALL}")
-                                    input("Press Enter to continue...")
+                                    safe_input("Press Enter to continue...")
                                     return
                             else:
                                 print(f"{Fore.RED}Save file not found for slot {slot_num}{Style.RESET_ALL}")
@@ -3474,171 +3369,107 @@ your monster companions!
                     else:
                         print(f"{Fore.RED}Invalid selection.{Style.RESET_ALL}")
                         continue
-                        
+
             except ValueError:
                 print(f"{Fore.RED}Please enter a valid number.{Style.RESET_ALL}")
                 continue
 
     def load_game(self, save_name: Optional[str] = None) -> bool:
-        """Load a saved game state from file with comprehensive data restoration"""
-        if not self.db_available:
-            print(f"{Fore.RED}Load functionality is not available.{Style.RESET_ALL}")
-            return False
-
+        """Simple and reliable load system"""
         try:
             if save_name:
-                # Load specific save if name is provided
-                # First, try to find the save file in the saves directory
-                save_path = None
-                if os.path.exists(SAVE_DIR):
-                    for filename in os.listdir(SAVE_DIR):
-                        if filename.startswith(save_name) and filename.endswith('.json'):
-                            save_path = os.path.join(SAVE_DIR, filename)
-                            break
-                
-                if not save_path:
-                    # Try alternate save path format
-                    save_path = os.path.join(SAVE_DIR, f"{save_name}.json")
-
+                # Load specific save file
+                save_path = get_save_path("player", save_name)
                 if not os.path.exists(save_path):
                     print(f"{Fore.RED}Save '{save_name}' not found.{Style.RESET_ALL}")
                     return False
-
-                # Try to load the save file with auto-repair
-                save_data = self.load_and_repair_save(save_path)
             else:
                 # Show available saves for selection
+                if not os.path.exists(SAVE_DIR):
+                    print(f"{Fore.YELLOW}No saved games found.{Style.RESET_ALL}")
+                    return False
+                
                 saves = []
-                if os.path.exists(SAVE_DIR):
-                    for filename in os.listdir(SAVE_DIR):
-                        if filename.endswith('.pickle') and filename != os.path.basename(CHAMPIONS_FILE):
-                            try:
-                                with open(os.path.join(SAVE_DIR, filename), 'rb') as f:
-                                    data = pickle.load(f)
-                                    player_name = data.get("player_name", "Unknown")
-                                    save_time = data.get("save_time", "Unknown")
-                                    saves.append((filename, player_name, save_time))
-                            except Exception:
-                                # Skip corrupted saves
-                                continue
+                for filename in os.listdir(SAVE_DIR):
+                    if filename.endswith('.wom'):
+                        try:
+                            filepath = os.path.join(SAVE_DIR, filename)
+                            with open(filepath, 'rb') as f:
+                                data = pickle.load(f)
+                                player_name = data.get("name", "Unknown")
+                                save_time = data.get("save_time", "Unknown")
+                                level = data.get("trainer_level", 1)
+                                saves.append((filename, player_name, save_time, level))
+                        except Exception:
+                            continue
 
                 if not saves:
-                    print(f"{Fore.YELLOW}No saved games found.{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}No valid save files found.{Style.RESET_ALL}")
                     return False
 
                 print(f"\n{Fore.CYAN}Available saved games:{Style.RESET_ALL}")
-                for i, (filename, player, timestamp) in enumerate(saves, 1):
-                    save_name = filename.replace('.pickle', '').split('_', 1)[1] if '_' in filename else filename.replace('.pickle', '')
-                    print(f"{i}. {save_name} - {player} ({timestamp})")
+                for i, (filename, player, timestamp, level) in enumerate(saves, 1):
+                    save_name_display = filename.replace('.wom', '')
+                    print(f"{i}. {save_name_display} - {player} (Level {level}) - {timestamp}")
 
-                choice = input(f"\n{Fore.CYAN}Enter save number to load (or 0 to cancel): {Style.RESET_ALL}")
                 try:
-                    save_index = int(choice) - 1
-                    if save_index < 0:
-                        print("Loading cancelled.")
+                    choice = int(input(f"\n{Fore.CYAN}Enter save number to load (or 0 to cancel): {Style.RESET_ALL}"))
+                    if choice == 0:
                         return False
-                    selected_filename = saves[save_index][0]
-                    with open(os.path.join(SAVE_DIR, selected_filename), 'rb') as f:
-                        save_data = pickle.load(f)
-                except (ValueError, IndexError, FileNotFoundError):
-                    print(f"{Fore.RED}Invalid selection or file not found.{Style.RESET_ALL}")
-                    return False
-                except Exception as e:
-                    print(f"{Fore.RED}Error loading save: {e}{Style.RESET_ALL}")
+                    if 1 <= choice <= len(saves):
+                        save_path = os.path.join(SAVE_DIR, saves[choice-1][0])
+                    else:
+                        print(f"{Fore.RED}Invalid choice.{Style.RESET_ALL}")
+                        return False
+                except ValueError:
+                    print(f"{Fore.RED}Invalid input.{Style.RESET_ALL}")
                     return False
 
-            # Apply the comprehensive save data to the current game state
-            # Handle different save file formats
-            player_name = save_data.get("player_name") or save_data.get("name", "Unknown Player")
-            player = Player(player_name)
-            
-            # Set basic player attributes with fallbacks
-            player.location = save_data.get("player_location") or save_data.get("location", "Hometown")
-            player.money = save_data.get("player_money") or save_data.get("money", 100)
-            player.monsters = save_data.get("player_monsters") or save_data.get("monsters", [])
-            player.inventory = save_data.get("player_inventory") or save_data.get("inventory", {})
-            player.active_monster_index = save_data.get("player_active_monster_index") or save_data.get("active_monster_index", 0)
-            
-            # Restore enhanced player progression data
-            player.trainer_level = save_data.get("player_trainer_level", 5)
-            player.exp = save_data.get("player_exp", 0)
-            player.exp_to_level = save_data.get("player_exp_to_level", 100)
-            player.tokens = save_data.get("player_tokens", 500)
-            player.current_location = save_data.get("player_current_location", 'Forest Grove')
-            
-            # Restore epic storyline progress
-            player.story_progress = save_data.get("story_progress", {})
-            player.quest_items = save_data.get("quest_items", [])
-            player.completed_quests = save_data.get("completed_quests", [])
-            player.active_quests = save_data.get("active_quests", [])
-            
-            # Restore advanced player attributes
-            player.equipment = save_data.get("player_equipment", {})
-            player.skills = save_data.get("player_skills", {})
-            player.materials = save_data.get("player_materials", {
-                'Monster Essence': 0, 'Crystal Shards': 0, 'Metal Ore': 0,
-                'Ancient Bones': 0, 'Mystic Herbs': 0
-            })
-            player.guild = save_data.get("player_guild", None)
-            player.guild_rank = save_data.get("player_guild_rank", 'Member')
-            player.guild_contribution = save_data.get("player_guild_contribution", 0)
-            player.visited_areas = save_data.get("player_visited_areas", {'Forest Grove'})
-            player.battle_wins = save_data.get("player_battle_wins", 0)
-            player.battle_losses = save_data.get("player_battle_losses", 0)
-            player.playtime = save_data.get("player_playtime", 0)
-            player.daily_tasks = save_data.get("player_daily_tasks", {
-                'catch_monsters': {'progress': 0, 'target': 3, 'completed': False},
-                'win_battles': {'progress': 0, 'target': 5, 'completed': False},
-                'explore_areas': {'progress': 0, 'target': 2, 'completed': False},
-                'use_items': {'progress': 0, 'target': 4, 'completed': False}
-            })
-            
-            # Restore battle statistics using setattr for dynamic attributes
-            setattr(player, 'battles_won', save_data.get("battles_won", 0))
-            setattr(player, 'battles_lost', save_data.get("battles_lost", 0))
-            setattr(player, 'monsters_defeated', save_data.get("monsters_defeated", 0))
-            setattr(player, 'legendary_encounters', save_data.get("legendary_encounters", 0))
-            setattr(player, 'achievements', save_data.get("achievements", set()))
-            setattr(player, 'save_count', save_data.get("save_count", 1))
-            setattr(player, 'creation_date', save_data.get("creation_date", time.time()))
-            setattr(player, 'last_login', save_data.get("last_login", time.time()))
-            
-            # Restore game progression
-            self.champion_battles_completed = save_data.get("champion_battles_completed", 0)
-            self.champion_battles_available = save_data.get("champion_battles_available", True)
-            self.turn_count = save_data.get("turn_count", 0)
-            
-            # Set the loaded player as the current player
+            # Load the save file
+            with open(save_path, 'rb') as f:
+                save_data = pickle.load(f)
+
+            # Create new player and restore data
+            player = Player(save_data["name"])
+            player.location = save_data.get("location", "Hometown")
+            player.money = save_data.get("money", 100)
+            player.monsters = save_data.get("monsters", [])
+            player.inventory = save_data.get("inventory", {})
+            player.active_monster_index = save_data.get("active_monster_index", 0)
+            player.trainer_level = save_data.get("trainer_level", 5)
+            player.exp = save_data.get("exp", 0)
+            player.tokens = save_data.get("tokens", 500)
+            player.equipment = save_data.get("equipment", {})
+            player.materials = save_data.get("materials", {})
+            player.visited_areas = save_data.get("visited_areas", {'Forest Grove'})
+            player.daily_tasks = save_data.get("daily_tasks", {})
+
+            # Restore dialogue system data
+            player.character_opinions = save_data.get("character_opinions", {})
+            player.dialogue_history = save_data.get("dialogue_history", {})
+            player.story_moments = save_data.get("story_moments", [])
+            player.moral_choices = save_data.get("moral_choices", [])
+            player.reflection_points = save_data.get("reflection_points", 0)
+
+            # Set the loaded player as current player
             self.player = player
-            
-            # Display comprehensive load summary
+
             print(f"{Fore.GREEN}Game loaded successfully!{Style.RESET_ALL}")
             print(f"{Fore.CYAN}Welcome back, {player.name}!{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}Level {player.trainer_level} trainer with {len(player.monsters)} monsters{Style.RESET_ALL}")
-            
-            if player.story_progress:
-                print(f"{Fore.MAGENTA}Story progress: {len(player.story_progress)} events completed{Style.RESET_ALL}")
-            
-            if player.quest_items:
-                print(f"{Fore.BLUE}Quest items: {', '.join(player.quest_items)}{Style.RESET_ALL}")
-            
-            achievements = save_data.get("achievements", [])
-            if achievements:
-                print(f"{Fore.YELLOW}Achievements unlocked: {len(achievements)}{Style.RESET_ALL}")
-            
             print(f"{Fore.GREEN}Current location: {player.location}{Style.RESET_ALL}")
-            
+
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}Error processing save data: {e}{Style.RESET_ALL}")
+            print(f"{Fore.RED}Error loading save: {e}{Style.RESET_ALL}")
             return False
 
     def fusion_menu(self):
         """Display fusion menu to combine two monsters"""
         if not self.player or len(self.player.monsters) < 2:
             print(f"{Fore.YELLOW}You need at least two monsters to perform fusion.{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
 
         # Display available monsters
@@ -3654,26 +3485,26 @@ your monster companions!
             choice1 = int(input(f"\n{Fore.CYAN}Select first monster (0 to cancel): {Style.RESET_ALL}")) - 1
             if choice1 < 0 or choice1 >= len(self.player.monsters):
                 print("Fusion cancelled.")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
                 return
 
             monster1 = self.player.monsters[choice1]
             if monster1.level < FUSION_LEVEL_REQUIREMENT:
                 print(f"{Fore.RED}This monster must be at least level {FUSION_LEVEL_REQUIREMENT} for fusion.{Style.RESET_ALL}")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
                 return
 
             # Get second monster selection
             choice2 = int(input(f"\n{Fore.CYAN}Select second monster (0 to cancel): {Style.RESET_ALL}")) - 1
             if choice2 < 0 or choice2 >= len(self.player.monsters) or choice1 == choice2:
                 print("Fusion cancelled or invalid selection.")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
                 return
 
             monster2 = self.player.monsters[choice2]
             if monster2.level < FUSION_LEVEL_REQUIREMENT:
                 print(f"{Fore.RED}This monster must be at least level {FUSION_LEVEL_REQUIREMENT} for fusion.{Style.RESET_ALL}")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
                 return
 
             # Confirm fusion
@@ -3682,7 +3513,7 @@ your monster companions!
 
             if confirm != 'y':
                 print("Fusion cancelled.")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
                 return
 
             # Perform fusion
@@ -3704,25 +3535,25 @@ your monster companions!
         except ValueError:
             print(f"{Fore.RED}Invalid selection.{Style.RESET_ALL}")
 
-        input("Press Enter to continue...")
+        safe_input("Press Enter to continue...")
 
     def championship_battle(self):
         """Start a championship battle against powerful trainers"""
         if not self.player or not self.player.has_usable_monster():
             print(f"{Fore.RED}You need at least one healthy monster to challenge the championship.{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
 
         # Check if player has enough monsters
         if len(self.player.monsters) < 3:
             print(f"{Fore.RED}You need at least 3 monsters to challenge the championship.{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
 
         # Ensure player's monsters are strong enough
         if all(m.level < 20 for m in self.player.monsters):
             print(f"{Fore.RED}Your monsters are too weak for the championship. Train them to at least level 20.{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
 
         clear_screen()
@@ -3767,7 +3598,7 @@ your monster companions!
         for monster in self.player.monsters:
             monster.full_heal()
 
-        input("\nYour monsters have been fully healed. Press Enter to begin the championship...")
+        safe_input("\nYour monsters have been fully healed. Press Enter to begin the championship...")
 
         # Battle each trainer in sequence
         for trainer in trainers:
@@ -3812,19 +3643,19 @@ your monster companions!
                         print(f"\n{Fore.CYAN}{trainer['name']} sends out {next_monster.get_colored_name()}!{Style.RESET_ALL}")
                         battle.wild_monster = next_monster
                         battle.is_finished = False
-                        input("Press Enter to continue...")
+                        safe_input("Press Enter to continue...")
                     elif battle.result == "lose":
                         # Player lost the championship
                         print(f"\n{Fore.RED}You have been defeated by {trainer['name']}!{Style.RESET_ALL}")
                         print("Better luck next time...")
-                        input("Press Enter to continue...")
+                        safe_input("Press Enter to continue...")
                         self.current_battle = None
                         return
                 else:
                     # Wild monster's turn
                     wild_result = battle.wild_monster_turn()
                     print("\n" + wild_result)
-                    input("Press Enter to continue...")
+                    safe_input("Press Enter to continue...")
 
                     # Check if player's monster fainted
                     if battle.is_finished and battle.result == "lose":
@@ -3837,11 +3668,11 @@ your monster companions!
                                                   if self.player.active_monster and hasattr(self.player.active_monster, 'get_colored_name') 
                                                   else "Monster")
                             print(f"\n{Fore.GREEN}Go, {active_monster_name}!{Style.RESET_ALL}")
-                            input("Press Enter to continue...")
+                            safe_input("Press Enter to continue...")
                         else:
                             # All player's monsters fainted
                             print(f"\n{Fore.RED}All your monsters have fainted! You lost to {trainer['name']}.{Style.RESET_ALL}")
-                            input("Press Enter to continue...")
+                            safe_input("Press Enter to continue...")
                             self.current_battle = None
                             return
 
@@ -3853,7 +3684,7 @@ your monster companions!
                 monster.heal(monster.max_hp // 2)  # Heal 50%
 
             print("\nYour monsters recovered some HP for the next battle.")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
         # Championship completed
         clear_screen()
@@ -3900,7 +3731,7 @@ your monster companions!
             except Exception as e:
                 print(f"Error recording championship: {e}")
 
-        input("Press Enter to continue...")
+        safe_input("Press Enter to continue...")
 
     def process_command(self, command: str):
         """Process player commands"""
@@ -4043,20 +3874,20 @@ your monster companions!
         elif cmd == "recovery":
             self.recovery_wizard_menu()
         elif cmd == "emotions" or cmd == "bonds":
-            self.show_emotional_status()
+            self.show_character_relationships()
         elif cmd == "reflect" or cmd == "reflection":
-            self.narrative_reflection_menu()
+            self.show_reflection_menu()
         elif cmd == "contemplate":
-            self.quick_reflection()
+            self.quick_reflect()
         elif cmd == "talk" or cmd == "dialogue":
-            self.npc_dialogue_menu()
+            self.show_npc_menu()
         elif cmd.startswith("talk "):
             npc_name = cmd[5:].strip()
-            self.start_npc_conversation(npc_name)
+            self.talk_to_npc(npc_name)
         else:
             print(f"Unknown command: {cmd}")
             print("Type 'help' to see available commands.")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
     def process_battle_command(self, cmd: str, arg: Optional[str] = None):
         """Process battle commands"""
@@ -4090,7 +3921,7 @@ your monster companions!
             except Exception as e:
                 print(f"Error during battle: {str(e)}")
                 self.current_battle = None
-                input("\nPress Enter to continue...")
+                safe_input("\nPress Enter to continue...")
                 return
 
             # Check if battle is finished
@@ -4098,7 +3929,7 @@ your monster companions!
                 if not hasattr(battle, 'result'):
                     print("\nBattle ended unexpectedly!")
                     self.current_battle = None
-                    input("\nPress Enter to continue...")
+                    safe_input("\nPress Enter to continue...")
                     return
 
                 if battle.result == "win":
@@ -4151,17 +3982,17 @@ your monster companions!
 
                 # End battle
                 self.current_battle = None
-                input("\nPress Enter to continue...")
+                safe_input("\nPress Enter to continue...")
         else:
             print("Invalid battle command.")
             print("Available commands: fight, catch, switch, item, run")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
     def explore(self):
         """Explore the current location"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         location = self.player.location if hasattr(self.player, 'location') else "Unknown"
@@ -4285,7 +4116,7 @@ your monster companions!
         except Exception as e:
             print(f"Error while processing rewards: {str(e)}")
 
-        input("\nPress Enter to continue...")
+        safe_input("\nPress Enter to continue...")
 
     def check_story_event(self, location: str) -> bool:
         """Check and trigger location-specific story events. Returns True if an event was triggered."""
@@ -5159,7 +4990,7 @@ The keeper's prophecy resonates through dimensions as reality itself trembles.""
 
                         # Mark this bonus as already awarded
                         self.player.story_progress["crystals_exp_awarded"] = True
-                        input("\nPress Enter to continue...")
+                        safe_input("\nPress Enter to continue...")
 
                     self.trigger_final_quest()
                     return True
@@ -5226,7 +5057,7 @@ The keeper's prophecy resonates through dimensions as reality itself trembles.""
                                         else:
                                             print(f"\nYou gained {bonus_exp} trainer exp. ({self.player.exp}/{self.player.exp_to_level})")
 
-                    input("\nPress Enter to continue...")
+                    safe_input("\nPress Enter to continue...")
                     return True
 
         return False
@@ -5259,13 +5090,13 @@ Do you wish to enter the Chamber of Sealing now?""")
         else:
             print("\nYou decide to prepare further before taking on this challenge.")
             print("Return to Shadow Peak when you're ready to face the final battle.")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
 
     def final_battle(self):
         """The final battle at the Chamber of Sealing"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         clear_screen()
@@ -5312,7 +5143,7 @@ It coalesces into a monstrous form - a shadowy dragon with glowing red eyes.""")
         """Complete the final quest after defeating the Sealed Darkness"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         clear_screen()
@@ -5357,18 +5188,18 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"\n{Fore.YELLOW}Congratulations! You've completed the main storyline of World of Monsters!{Style.RESET_ALL}")
         print("You can continue exploring the world, catching monsters, and challenging the championship.")
 
-        input("\nPress Enter to continue...")
+        safe_input("\nPress Enter to continue...")
 
     def travel(self):
         """Travel to a different location"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         if not hasattr(self.player, 'location'):
             print("Error: Player location not set!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         print(f"\nCurrent location: {self.player.location}")
@@ -5376,7 +5207,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
         if not hasattr(self, 'locations') or not self.locations:
             print("Error: No locations available!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Location level requirements
@@ -5403,7 +5234,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"{i+1}. {location} {Fore.RED}(Requires Trainer Level {req_level}){Style.RESET_ALL}")
 
         try:
-            choice = int(input("\nEnter location number (0 to cancel): "))
+            choice = int(safe_input("\nEnter location number (0 to cancel): "))
             if choice == 0:
                 return
 
@@ -5412,7 +5243,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
                 if destination == self.player.location:
                     print("You're already at that location!")
-                    input("\nPress Enter to continue...")
+                    safe_input("\nPress Enter to continue...")
                     return
 
                 # Check level requirement
@@ -5421,7 +5252,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"{Fore.RED}You need to be at least Trainer Level {req_level} to travel to {destination}.{Style.RESET_ALL}")
                     print(f"Your current Trainer Level is {self.player.trainer_level}.")
                     print("Continue exploring and battling to increase your Trainer Level.")
-                    input("\nPress Enter to continue...")
+                    safe_input("\nPress Enter to continue...")
                     return
 
                 print(f"\nTraveling to {destination}...")
@@ -5435,18 +5266,18 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         except Exception as e:
             print(f"Error during travel: {str(e)}")
 
-        input("\nPress Enter to continue...")
+        safe_input("\nPress Enter to continue...")
 
     def show_monsters(self, for_fusion=False):
         """Show the player's monsters"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         if not hasattr(self.player, 'monsters') or not self.player.monsters:
             print("\nYou don't have any monsters yet!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         print(f"\n{Fore.CYAN}=== YOUR MONSTERS ==={Style.RESET_ALL}")
@@ -5483,11 +5314,11 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print("3. Return to main menu")
 
         try:
-            choice = int(input("\nEnter choice: "))
+            choice = int(safe_input("\nEnter choice: "))
 
             if choice == 1:
                 try:
-                    monster_idx = int(input("\nEnter monster number to make active: ")) - 1
+                    monster_idx = int(safe_input("\nEnter monster number to make active: ")) - 1
                     if 0 <= monster_idx < len(self.player.monsters):
                         monster = self.player.monsters[monster_idx]
                         if not monster:
@@ -5510,7 +5341,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
             elif choice == 2:
                 try:
-                    monster_idx = int(input("\nEnter monster number to view details: ")) - 1
+                    monster_idx = int(safe_input("\nEnter monster number to view details: ")) - 1
                     if 0 <= monster_idx < len(self.player.monsters):
                         monster = self.player.monsters[monster_idx]
                         if not monster:
@@ -5556,18 +5387,18 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         except Exception as e:
             print(f"Error in monster management: {str(e)}")
 
-        input("\nPress Enter to continue...")
+        safe_input("\nPress Enter to continue...")
 
     def show_items(self):
         """Show and use the player's inventory items"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         if not hasattr(self.player, 'inventory') or not self.player.inventory:
             print("\nYour inventory is empty!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         print(f"\n{Fore.CYAN}=== YOUR INVENTORY ==={Style.RESET_ALL}")
@@ -5587,29 +5418,29 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print("2. Return to main menu")
 
             try:
-                choice = int(input("\nEnter choice: "))
+                choice = int(safe_input("\nEnter choice: "))
 
                 if choice == 1:
                     # Can't use items in battle from this menu
                     if self.current_battle:
                         print("You can't use items from the inventory during battle!")
                         print("Use the 'item' command in battle instead.")
-                        input("\nPress Enter to continue...")
+                        safe_input("\nPress Enter to continue...")
                         return
 
                     try:
-                        item_idx = int(input("\nEnter item number to use: ")) - 1
+                        item_idx = int(safe_input("\nEnter item number to use: ")) - 1
                         if 0 <= item_idx < len(items):
                             item = items[item_idx]
                             if not item:
                                 print("Error: Invalid item selection!")
-                                input("\nPress Enter to continue...")
+                                safe_input("\nPress Enter to continue...")
                                 return
 
                             # Monster Balls can only be used in battle
                             if hasattr(item, 'effect') and item.effect == "catch":
                                 print("You can only use Monster Balls during battle!")
-                                input("\nPress Enter to continue...")
+                                safe_input("\nPress Enter to continue...")
                                 return
 
                             # Only healing items need a target
@@ -5617,7 +5448,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                                 # Show monsters
                                 if not hasattr(self.player, 'monsters') or not self.player.monsters:
                                     print("You don't have any monsters to use this item on!")
-                                    input("\nPress Enter to continue...")
+                                    safe_input("\nPress Enter to continue...")
                                     return
 
                                 print("\nChoose a monster to use the item on:")
@@ -5629,7 +5460,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                                     print(f"{i+1}. {monster_name} {hp_info}")
 
                                 try:
-                                    monster_idx = int(input("\nEnter monster number: ")) - 1
+                                    monster_idx = int(safe_input("\nEnter monster number: ")) - 1
                                     if 0 <= monster_idx < len(self.player.monsters):
                                         if not hasattr(self.player, 'use_item'):
                                             print("Error: Cannot use items at this time!")
@@ -5665,18 +5496,18 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         except Exception as e:
             print(f"Error displaying inventory: {str(e)}")
 
-        input("\nPress Enter to continue...")
+        safe_input("\nPress Enter to continue...")
 
     def heal_monsters(self):
         """Heal all monsters (only in Hometown)"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         if not hasattr(self.player, 'location') or self.player.location != "Hometown":
             print("\nYou can only rest and heal your monsters in your Hometown!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         print("\nResting at the Healing Center in your Hometown...")
@@ -5685,7 +5516,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         # Heal all monsters
         if not hasattr(self.player, 'monsters') or not self.player.monsters:
             print("You don't have any monsters to heal!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         try:
@@ -5697,7 +5528,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         except Exception as e:
             print(f"Error healing monsters: {str(e)}")
 
-        input("\nPress Enter to continue...")
+        safe_input("\nPress Enter to continue...")
 
     def show_help(self):
         """Show game help and instructions"""
@@ -5760,11 +5591,14 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 - Remember that your monsters will be fully healed if you lose a battle
 """
         print(help_text)
-        input("\nPress Enter to continue...")
+        try:
+            safe_input("\nPress Enter to continue...")
+        except (EOFError, KeyboardInterrupt):
+            pass
 
     def quit_game(self):
         """Quit the game with confirmation"""
-        confirm = input("\nAre you sure you want to quit? (y/n): ").lower()
+        confirm = safe_input("\nAre you sure you want to quit? (y/n): ").lower()
         if confirm == 'y' or confirm == 'yes':
             print("\nThank you for playing World of Monsters!")
             self.running = False
@@ -5778,7 +5612,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
         if not self.player.has_usable_monster():
             print("You don't have any monsters that can battle!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Switch to first usable monster if active is fainted
@@ -5798,7 +5632,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         """Start a puzzle that can lead to legendary monster encounters"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Get all legendary monsters with their associated locations, types, and temples
@@ -5886,7 +5720,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print(f"{Fore.YELLOW}There are no legendary temples at {location}.{Style.RESET_ALL}")
             print("Try exploring other areas such as Mystic Forest, Volcanic Ridge, Crystal Cavern, Shadow Peak, or Ancient Ruins.")
             print("Each area may contain a temple dedicated to a different legendary monster.")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Select the legendary for this location
@@ -5897,7 +5731,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         if not any(monster.level >= 30 for monster in self.player.monsters if monster):
             print(f"{Fore.RED}Your monsters aren't strong enough to attempt this challenge.{Style.RESET_ALL}")
             print("Train them to at least level 30 before approaching the temple!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Create an immersive approach to the temple
@@ -5919,11 +5753,11 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
         # Ask if the player wants to attempt the puzzle
         print(f"\n{Fore.YELLOW}Will you attempt the challenge of the {temple_name}?{Style.RESET_ALL}")
-        choice = input("Enter 'yes' to continue or anything else to leave: ").lower()
+        choice = safe_input("Enter 'yes' to continue or anything else to leave: ").lower()
 
         if choice != 'yes' and choice != 'y':
             print("\nYou decide to leave the temple for now. Perhaps you'll return when you're better prepared.")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Start the puzzle
@@ -5968,7 +5802,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             time.sleep(1)
 
             print(f"\n{legendary_color}The legendary {legendary_name} has appeared before you!{Style.RESET_ALL}")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
 
             # Trigger encounter with the legendary monster
             if legendary_name in self.all_monsters:
@@ -5980,12 +5814,12 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 self.start_battle(legendary_monster)
             else:
                 print(f"{Fore.RED}Error: Legendary monster not found!{Style.RESET_ALL}")
-                input("\nPress Enter to continue...")
+                safe_input("\nPress Enter to continue...")
         else:
             print(f"\n{Fore.RED}You failed to solve the puzzle.{Style.RESET_ALL}")
             print(f"The {legendary_color}{temple_name}{Style.RESET_ALL} grows quiet, as if disappointed.")
             print("You can try again later after training more with your monsters.")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
 
     def sequence_puzzle(self):
         """Puzzle where player needs to identify next number in a sequence"""
@@ -6020,7 +5854,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
         # Get player's answer
         try:
-            player_answer = int(input("\nEnter the next number in the sequence: "))
+            player_answer = int(safe_input("\nEnter the next number in the sequence: "))
             return player_answer == answer
         except ValueError:
             print("That's not a valid number!")
@@ -6047,7 +5881,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         riddle = random.choice(riddles)
         print(f"\n{riddle['riddle']}")
 
-        answer = input("\nYour answer: ").lower().strip()
+        answer = safe_input("\nYour answer: ").lower().strip()
         return answer == riddle["answer"]
 
     def matching_puzzle(self):
@@ -6074,7 +5908,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print(f"{i}. {type_name}")
 
         print("\nPairs (format: 1-3, 2-4, etc.):")
-        pairs = input("Enter your pairs: ")
+        pairs = safe_input("Enter your pairs: ")
 
         # Process and check pairs
         try:
@@ -6162,7 +5996,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print(f"Moves taken: {moves}/{max_moves}")
 
             # Get player's move
-            move = input("Which way do you go? ").lower().strip()
+            move = safe_input("Which way do you go? ").lower().strip()
 
             if move in exits:
                 current_room = exits[move]
@@ -6176,14 +6010,14 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         """Trigger a random legendary monster encounter"""
         if not self.player:
             print("Error: No active player!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Check if player has strong enough monsters for a legendary encounter
         if not any(monster.level >= 35 for monster in self.player.monsters if monster):
             print(f"{Fore.RED}Your monsters aren't strong enough for legendary encounters.{Style.RESET_ALL}")
             print("Train them to at least level 35 first!")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Get all legendary monsters with their associated locations, types and descriptions
@@ -6251,7 +6085,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
         if not available_legendaries:
             print(f"{Fore.RED}No legendary monsters are available in the game data.{Style.RESET_ALL}")
-            input("\nPress Enter to continue...")
+            safe_input("\nPress Enter to continue...")
             return
 
         # Check if we're at a location that has a specific legendary associated with it
@@ -6303,7 +6137,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         DETAILED STATISTICS")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Player stats
         print(f"{Fore.YELLOW}Player: {self.player.name}")
         print(f"Trainer Level: {self.player.trainer_level}")
@@ -6311,21 +6145,21 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"Tokens: {self.player.tokens}")
         print(f"Total Playtime: {getattr(self.player, 'playtime', 0)} minutes")
         print()
-        
+
         # Monster collection stats
         print(f"{Fore.GREEN}Collection Statistics:")
         print(f"Total Monsters: {len(self.player.monsters)}")
         print(f"Monster Inventory: {len(self.player.inventory)}")
-        
+
         # Type distribution
         type_counts = {}
         for monster in self.player.monsters:
             type_counts[monster.type] = type_counts.get(monster.type, 0) + 1
-        
+
         print(f"\n{Fore.BLUE}Monster Types in Collection:")
         for monster_type, count in sorted(type_counts.items()):
             print(f"  {monster_type}: {count}")
-        
+
         # Level distribution
         level_ranges = {"1-10": 0, "11-20": 0, "21-30": 0, "31-40": 0, "41-50": 0}
         for monster in self.player.monsters:
@@ -6339,24 +6173,24 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 level_ranges["31-40"] += 1
             else:
                 level_ranges["41-50"] += 1
-        
+
         print(f"\n{Fore.MAGENTA}Level Distribution:")
         for range_name, count in level_ranges.items():
             print(f"  Level {range_name}: {count}")
-        
+
         # Battle statistics
         wins = getattr(self.player, 'battle_wins', 0)
         losses = getattr(self.player, 'battle_losses', 0)
         total_battles = wins + losses
         win_rate = (wins / total_battles * 100) if total_battles > 0 else 0
-        
+
         print(f"\n{Fore.RED}Battle Statistics:")
         print(f"  Total Battles: {total_battles}")
         print(f"  Wins: {wins}")
         print(f"  Losses: {losses}")
         print(f"  Win Rate: {win_rate:.1f}%")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_skills_menu(self):
         """Show and manage player skills"""
@@ -6368,7 +6202,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}           SKILLS MENU")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize skills if they don't exist
         if not hasattr(self.player, 'skills'):
             self.player.skills = {
@@ -6381,14 +6215,14 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'Trading': 1,
                 'Research': 1
             }
-        
+
         if not hasattr(self.player, 'skill_points'):
             self.player.skill_points = 3
-        
+
         print(f"{Fore.YELLOW}Available Skill Points: {self.player.skill_points}")
         print(f"{Fore.GREEN}Current Skills:")
         print()
-        
+
         skill_descriptions = {
             'Monster Training': 'Increases monster XP gain',
             'Battle Strategy': 'Improves critical hit chance',
@@ -6399,20 +6233,20 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             'Trading': 'Gets better prices from NPCs',
             'Research': 'Unlocks advanced monster info'
         }
-        
+
         for i, (skill, level) in enumerate(self.player.skills.items(), 1):
             description = skill_descriptions.get(skill, 'Unknown skill')
             print(f"{i}. {skill}: Level {level} - {description}")
-        
+
         print(f"\n{Fore.CYAN}Options:")
         print("u - Upgrade a skill (costs 1 skill point)")
         print("b - Back to main menu")
-        
-        choice = input("\nEnter your choice: ").lower()
-        
+
+        choice = safe_input("\nEnter your choice: ").lower()
+
         if choice == 'u' and self.player.skill_points > 0:
             try:
-                skill_num = int(input("Enter skill number to upgrade: ")) - 1
+                skill_num = int(safe_input("Enter skill number to upgrade: ")) - 1
                 skills_list = list(self.player.skills.keys())
                 if 0 <= skill_num < len(skills_list):
                     skill_name = skills_list[skill_num]
@@ -6426,10 +6260,10 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"\n{Fore.RED}Invalid skill number!")
             except ValueError:
                 print(f"\n{Fore.RED}Please enter a valid number!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
         elif choice == 'u':
             print(f"\n{Fore.RED}You don't have any skill points!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
     def show_equipment_menu(self):
         """Show and manage player equipment"""
@@ -6441,7 +6275,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         EQUIPMENT MENU")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize equipment if it doesn't exist
         if not hasattr(self.player, 'equipment'):
             self.player.equipment = {
@@ -6450,7 +6284,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'accessory': None,
                 'tool': None
             }
-        
+
         # Display current equipment
         print(f"{Fore.YELLOW}Current Equipment:")
         equipment_slots = {
@@ -6459,14 +6293,14 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             'accessory': 'Accessory',
             'tool': 'Tool'
         }
-        
+
         for slot, name in equipment_slots.items():
             equipped = self.player.equipment.get(slot)
             if equipped:
                 print(f"  {name}: {equipped['name']} (+{equipped['bonus']} {equipped['stat']})")
             else:
                 print(f"  {name}: None equipped")
-        
+
         # Show available equipment
         available_equipment = [
             {'name': 'Training Gloves', 'type': 'weapon', 'bonus': 5, 'stat': 'Attack', 'cost': 100},
@@ -6477,21 +6311,21 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             {'name': 'Guardian Shield', 'type': 'armor', 'bonus': 15, 'stat': 'Defense', 'cost': 350},
             {'name': 'Master Ball Belt', 'type': 'accessory', 'bonus': 8, 'stat': 'Catch Rate', 'cost': 500}
         ]
-        
+
         print(f"\n{Fore.GREEN}Available Equipment:")
         for i, item in enumerate(available_equipment, 1):
             print(f"{i}. {item['name']} ({item['type']}) - +{item['bonus']} {item['stat']} - {item['cost']} tokens")
-        
+
         print(f"\n{Fore.CYAN}Options:")
         print("e - Equip item")
         print("u - Unequip item")
         print("b - Back to main menu")
-        
-        choice = input("\nEnter your choice: ").lower()
-        
+
+        choice = safe_input("\nEnter your choice: ").lower()
+
         if choice == 'e':
             try:
-                item_num = int(input("Enter equipment number to purchase and equip: ")) - 1
+                item_num = int(safe_input("Enter equipment number to purchase and equip: ")) - 1
                 if 0 <= item_num < len(available_equipment):
                     item = available_equipment[item_num]
                     if self.player.tokens >= item['cost']:
@@ -6508,18 +6342,18 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"\n{Fore.RED}Invalid item number!")
             except ValueError:
                 print(f"\n{Fore.RED}Please enter a valid number!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
         elif choice == 'u':
-            slot = input("Enter slot to unequip (weapon/armor/accessory/tool): ").lower()
+            slot = safe_input("Enter slot to unequip (weapon/armor/accessory/tool): ").lower()
             if slot in self.player.equipment:
-                if self.player.equipment[slot]:
+                if self.player.equipment[slot] is not None:
                     print(f"\n{Fore.YELLOW}{self.player.equipment[slot]['name']} unequipped!")
                     self.player.equipment[slot] = None
                 else:
                     print(f"\n{Fore.RED}No equipment in that slot!")
             else:
                 print(f"\n{Fore.RED}Invalid slot name!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
     def show_crafting_menu(self):
         """Show crafting system for items and equipment"""
@@ -6531,7 +6365,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         CRAFTING MENU")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize crafting materials if they don't exist
         if not hasattr(self.player, 'materials'):
             self.player.materials = {
@@ -6541,11 +6375,11 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'Ancient Bones': 0,
                 'Mystic Herbs': 0
             }
-        
+
         print(f"{Fore.YELLOW}Crafting Materials:")
         for material, count in self.player.materials.items():
             print(f"  {material}: {count}")
-        
+
         # Crafting recipes
         recipes = {
             'Super Heal Potion': {
@@ -6569,40 +6403,40 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'description': 'Allows fusion without level requirement'
             }
         }
-        
+
         print(f"\n{Fore.GREEN}Available Recipes:")
         for i, (name, recipe) in enumerate(recipes.items(), 1):
             print(f"{i}. {name} - {recipe['description']}")
             materials_str = ", ".join([f"{count} {material}" for material, count in recipe['materials'].items()])
             print(f"   Materials: {materials_str}")
-        
+
         print(f"\n{Fore.CYAN}Options:")
         print("c - Craft item")
         print("g - Gather materials (explore to find)")
         print("b - Back to main menu")
-        
-        choice = input("\nEnter your choice: ").lower()
-        
+
+        choice = safe_input("\nEnter your choice: ").lower()
+
         if choice == 'c':
             try:
-                recipe_num = int(input("Enter recipe number to craft: ")) - 1
+                recipe_num = int(safe_input("Enter recipe number to craft: ")) - 1
                 recipe_names = list(recipes.keys())
                 if 0 <= recipe_num < len(recipe_names):
                     recipe_name = recipe_names[recipe_num]
                     recipe = recipes[recipe_name]
-                    
+
                     # Check if player has enough materials
                     can_craft = True
                     for material, needed in recipe['materials'].items():
                         if self.player.materials.get(material, 0) < needed:
                             can_craft = False
                             break
-                    
+
                     if can_craft:
                         # Consume materials
                         for material, needed in recipe['materials'].items():
                             self.player.materials[material] -= needed
-                        
+
                         # Add crafted item to inventory
                         crafted_item = Item(recipe['result'], recipe['description'], 'consumable', 0)
                         self.player.add_item(crafted_item, 1)
@@ -6613,7 +6447,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"\n{Fore.RED}Invalid recipe number!")
             except ValueError:
                 print(f"\n{Fore.RED}Please enter a valid number!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
         elif choice == 'g':
             # Gather materials
             material_types = list(self.player.materials.keys())
@@ -6621,7 +6455,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             amount = random.randint(1, 3)
             self.player.materials[found_material] += amount
             print(f"\n{Fore.GREEN}Found {amount} {found_material}!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
     def show_training_menu(self):
         """Show monster training facilities"""
@@ -6631,14 +6465,14 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
 
         if not self.player.monsters:
             print("You need monsters to train!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
 
         clear_screen()
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}        TRAINING FACILITIES")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         training_options = {
             'Basic Training': {'cost': 50, 'xp': 100, 'description': 'Basic XP training'},
             'Advanced Training': {'cost': 150, 'xp': 300, 'description': 'Advanced XP training'},
@@ -6646,30 +6480,30 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             'Stat Boost': {'cost': 200, 'xp': 0, 'description': 'Temporarily boost monster stats'},
             'Move Training': {'cost': 100, 'xp': 0, 'description': 'Teach new moves to monsters'}
         }
-        
+
         print(f"{Fore.YELLOW}Available Training:")
         for i, (name, details) in enumerate(training_options.items(), 1):
             print(f"{i}. {name} - {details['description']} - {details['cost']} tokens")
-        
+
         print(f"\n{Fore.GREEN}Your Monsters:")
         for i, monster in enumerate(self.player.monsters, 1):
             status = "Fainted" if monster.is_fainted() else "Healthy"
             print(f"{i}. {monster.name} (Lv.{monster.level}) - {status}")
-        
+
         print(f"\n{Fore.CYAN}Tokens: {self.player.tokens}")
-        
+
         try:
-            training_choice = int(input("\nSelect training type (1-5): ")) - 1
-            monster_choice = int(input("Select monster to train: ")) - 1
-            
+            training_choice = int(safe_input("\nSelect training type (1-5): ")) - 1
+            monster_choice = int(safe_input("Select monster to train: ")) - 1
+
             if 0 <= training_choice < len(training_options) and 0 <= monster_choice < len(self.player.monsters):
                 training_name = list(training_options.keys())[training_choice]
                 training = training_options[training_name]
                 monster = self.player.monsters[monster_choice]
-                
+
                 if self.player.tokens >= training['cost']:
                     self.player.tokens -= training['cost']
-                    
+
                     if training_name == 'Stat Boost':
                         # Temporarily boost stats
                         monster.base_attack = int(monster.base_attack * 1.2)
@@ -6700,8 +6534,8 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 print(f"\n{Fore.RED}Invalid selection!")
         except ValueError:
             print(f"\n{Fore.RED}Please enter valid numbers!")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def show_shop_menu(self):
         """Enhanced shop with more items and services"""
@@ -6713,7 +6547,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}           MONSTER SHOP")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         shop_items = {
             'Monster Ball': {'cost': 10, 'description': 'Basic monster catching device'},
             'Heal Potion': {'cost': 25, 'description': 'Restores 50 HP to one monster'},
@@ -6728,29 +6562,29 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             'Mystery Box': {'cost': 500, 'description': 'Contains a random rare item'},
             'Legendary Tracker': {'cost': 1000, 'description': 'Increases legendary encounter chance'}
         }
-        
+
         print(f"{Fore.YELLOW}Available Items:")
         for i, (name, details) in enumerate(shop_items.items(), 1):
             print(f"{i}. {name} - {details['description']} - {details['cost']} tokens")
-        
+
         print(f"\n{Fore.GREEN}Your Tokens: {self.player.tokens}")
         print(f"Inventory Space: {len(self.player.inventory)}/{MAX_INVENTORY_SIZE}")
-        
+
         print(f"\n{Fore.CYAN}Options:")
         print("b - Buy item")
         print("s - Sell items")
         print("back - Return to main menu")
-        
-        choice = input("\nEnter your choice: ").lower()
-        
+
+        choice = safe_input("\nEnter your choice: ").lower()
+
         if choice == 'b':
             try:
-                item_num = int(input("Enter item number to buy: ")) - 1
+                item_num = int(safe_input("Enter item number to buy: ")) - 1
                 item_names = list(shop_items.keys())
                 if 0 <= item_num < len(item_names):
                     item_name = item_names[item_num]
                     item_details = shop_items[item_name]
-                    
+
                     if self.player.tokens >= item_details['cost']:
                         if len(self.player.inventory) < MAX_INVENTORY_SIZE:
                             self.player.tokens -= item_details['cost']
@@ -6765,20 +6599,29 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"\n{Fore.RED}Invalid item number!")
             except ValueError:
                 print(f"\n{Fore.RED}Please enter a valid number!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
         elif choice == 's':
             if self.player.inventory:
                 print(f"\n{Fore.YELLOW}Your Items:")
-                for i, item in enumerate(self.player.inventory, 1):
+                inventory_items = list(self.player.inventory.keys())
+                for i, item in enumerate(inventory_items, 1):
+                    quantity = self.player.inventory[item]
                     sell_price = item.value // 2
-                    print(f"{i}. {item.name} - Sell for {sell_price} tokens")
-                
+                    print(f"{i}. {item.name} (x{quantity}) - Sell for {sell_price} tokens each")
+
                 try:
-                    sell_num = int(input("Enter item number to sell: ")) - 1
-                    if 0 <= sell_num < len(self.player.inventory):
-                        item = self.player.inventory.pop(sell_num)
+                    sell_num = int(safe_input("Enter item number to sell: ")) - 1
+                    if 0 <= sell_num < len(inventory_items):
+                        item = inventory_items[sell_num]
                         sell_price = item.value // 2
                         self.player.tokens += sell_price
+                        
+                        # Remove one item from inventory
+                        if self.player.inventory[item] > 1:
+                            self.player.inventory[item] -= 1
+                        else:
+                            del self.player.inventory[item]
+                            
                         print(f"\n{Fore.GREEN}Sold {item.name} for {sell_price} tokens!")
                     else:
                         print(f"\n{Fore.RED}Invalid item number!")
@@ -6786,7 +6629,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"\n{Fore.RED}Please enter a valid number!")
             else:
                 print(f"\n{Fore.YELLOW}No items to sell!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
     def show_guild_menu(self):
         """Show guild system for cooperative gameplay"""
@@ -6798,7 +6641,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}           GUILD SYSTEM")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize guild info if it doesn't exist
         if not hasattr(self.player, 'guild'):
             self.player.guild = None
@@ -6806,7 +6649,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             self.player.guild_rank = 'Member'
         if not hasattr(self.player, 'guild_contribution'):
             self.player.guild_contribution = 0
-        
+
         available_guilds = [
             {'name': 'Fire Masters', 'focus': 'Fire-type monsters', 'bonus': 'Fire XP +20%'},
             {'name': 'Water Guardians', 'focus': 'Water-type monsters', 'bonus': 'Water XP +20%'},
@@ -6815,32 +6658,32 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             {'name': 'Shadow Hunters', 'focus': 'Dark monsters', 'bonus': 'Critical Rate +10%'},
             {'name': 'Crystal Seekers', 'focus': 'Rare variants', 'bonus': 'Rare Find +25%'}
         ]
-        
+
         if self.player.guild:
             print(f"{Fore.YELLOW}Current Guild: {self.player.guild}")
             print(f"Rank: {self.player.guild_rank}")
             print(f"Contribution Points: {self.player.guild_contribution}")
-            
+
             print(f"\n{Fore.GREEN}Guild Benefits Active:")
             for guild in available_guilds:
                 if guild['name'] == self.player.guild:
                     print(f"  {guild['bonus']}")
                     break
-            
+
             print(f"\n{Fore.CYAN}Guild Actions:")
             print("1. Contribute to guild (costs 100 tokens)")
             print("2. Leave guild")
             print("3. Check guild rankings")
             print("4. Guild missions")
-            
-            choice = input("\nEnter your choice: ")
-            
+
+            choice = safe_input("\nEnter your choice: ")
+
             if choice == '1':
                 if self.player.tokens >= 100:
                     self.player.tokens -= 100
                     self.player.guild_contribution += 10
                     print(f"\n{Fore.GREEN}Contributed to guild! +10 contribution points")
-                    
+
                     # Check for rank promotion
                     if self.player.guild_contribution >= 100 and self.player.guild_rank == 'Member':
                         self.player.guild_rank = 'Senior Member'
@@ -6851,7 +6694,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 else:
                     print(f"\n{Fore.RED}Not enough tokens!")
             elif choice == '2':
-                confirm = input("Are you sure you want to leave your guild? (y/n): ").lower()
+                confirm = safe_input("Are you sure you want to leave your guild? (y/n): ").lower()
                 if confirm == 'y':
                     self.player.guild = None
                     self.player.guild_rank = 'Member'
@@ -6872,16 +6715,16 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             print(f"\n{Fore.GREEN}Available Guilds:")
             for i, guild in enumerate(available_guilds, 1):
                 print(f"{i}. {guild['name']} - {guild['focus']} - Bonus: {guild['bonus']}")
-            
+
             print(f"\n{Fore.CYAN}Options:")
             print("j - Join a guild")
             print("b - Back to main menu")
-            
-            choice = input("\nEnter your choice: ").lower()
-            
+
+            choice = safe_input("\nEnter your choice: ").lower()
+
             if choice == 'j':
                 try:
-                    guild_num = int(input("Enter guild number to join: ")) - 1
+                    guild_num = int(safe_input("Enter guild number to join: ")) - 1
                     if 0 <= guild_num < len(available_guilds):
                         guild = available_guilds[guild_num]
                         self.player.guild = guild['name']
@@ -6893,8 +6736,8 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                         print(f"\n{Fore.RED}Invalid guild number!")
                 except ValueError:
                     print(f"\n{Fore.RED}Please enter a valid number!")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_quest_menu(self):
         """Show quest system with various objectives"""
@@ -6906,13 +6749,13 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}           QUEST SYSTEM")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize quest system if it doesn't exist
         if not hasattr(self.player, 'active_quests'):
             self.player.active_quests = []
         if not hasattr(self.player, 'completed_quests'):
             self.player.completed_quests = []
-        
+
         available_quests = [
             {
                 'id': 'catch_5_monsters',
@@ -6960,7 +6803,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'target': 1
             }
         ]
-        
+
         print(f"{Fore.YELLOW}Active Quests:")
         if self.player.active_quests:
             for quest in self.player.active_quests:
@@ -6970,7 +6813,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 print(f"    Reward: {quest['reward']}")
         else:
             print("  No active quests")
-        
+
         print(f"\n{Fore.GREEN}Available Quests:")
         quest_counter = 1
         for quest in available_quests:
@@ -6978,29 +6821,29 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 print(f"{quest_counter}. {quest['name']}: {quest['description']}")
                 print(f"   Reward: {quest['reward']}")
                 quest_counter += 1
-        
+
         print(f"\n{Fore.CYAN}Completed Quests: {len(self.player.completed_quests)}")
-        
+
         print(f"\n{Fore.CYAN}Options:")
         print("a - Accept new quest")
         print("c - Check quest progress")
         print("t - Turn in completed quest")
         print("b - Back to main menu")
-        
-        choice = input("\nEnter your choice: ").lower()
-        
+
+        choice = safe_input("\nEnter your choice: ").lower()
+
         if choice == 'a':
             available_new_quests = [q for q in available_quests 
                                   if q['id'] not in [aq['id'] for aq in self.player.active_quests] 
                                   and q['id'] not in self.player.completed_quests]
-            
+
             if available_new_quests and len(self.player.active_quests) < 3:
                 print(f"\n{Fore.YELLOW}Select quest to accept:")
                 for i, quest in enumerate(available_new_quests, 1):
                     print(f"{i}. {quest['name']}")
-                
+
                 try:
-                    quest_num = int(input("Enter quest number: ")) - 1
+                    quest_num = int(safe_input("Enter quest number: ")) - 1
                     if 0 <= quest_num < len(available_new_quests):
                         selected_quest = available_new_quests[quest_num].copy()
                         self.player.active_quests.append(selected_quest)
@@ -7032,12 +6875,12 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             for quest in self.player.active_quests:
                 if quest['progress'] >= quest['target']:
                     completed.append(quest)
-            
+
             if completed:
                 for quest in completed:
                     print(f"\n{Fore.GREEN}Quest completed: {quest['name']}")
                     print(f"Reward: {quest['reward']}")
-                    
+
                     # Give rewards
                     if 'tokens' in quest['reward']:
                         token_amount = int(quest['reward'].split()[0])
@@ -7046,13 +6889,13 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                         if not hasattr(self.player, 'skill_points'):
                             self.player.skill_points = 0
                         self.player.skill_points += 1
-                    
+
                     self.player.completed_quests.append(quest['id'])
                     self.player.active_quests.remove(quest)
             else:
                 print(f"\n{Fore.YELLOW}No completed quests to turn in!")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_achievements(self):
         """Show achievement system"""
@@ -7064,11 +6907,11 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         ACHIEVEMENTS")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize achievements if they don't exist
         if not hasattr(self.player, 'achievements'):
             self.player.achievements = set()
-        
+
         all_achievements = {
             'first_catch': {'name': 'First Catch', 'description': 'Catch your first monster', 'reward': '50 tokens'},
             'monster_collector': {'name': 'Monster Collector', 'description': 'Catch 10 different monsters', 'reward': '200 tokens'},
@@ -7083,39 +6926,39 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             'quest_hero': {'name': 'Quest Hero', 'description': 'Complete 5 quests', 'reward': '600 tokens'},
             'champion': {'name': 'Champion', 'description': 'Win a championship battle', 'reward': 'Champion title'}
         }
-        
+
         # Check for new achievements
         newly_unlocked = []
-        
+
         # Check achievement conditions
         if len(self.player.monsters) >= 1 and 'first_catch' not in self.player.achievements:
             self.player.achievements.add('first_catch')
             newly_unlocked.append('first_catch')
-        
+
         if len(self.player.monsters) >= 10 and 'monster_collector' not in self.player.achievements:
             self.player.achievements.add('monster_collector')
             newly_unlocked.append('monster_collector')
-        
+
         if getattr(self.player, 'battle_wins', 0) >= 1 and 'battle_victor' not in self.player.achievements:
             self.player.achievements.add('battle_victor')
             newly_unlocked.append('battle_victor')
-        
+
         if any(monster.is_fusion for monster in self.player.monsters) and 'fusion_master' not in self.player.achievements:
             self.player.achievements.add('fusion_master')
             newly_unlocked.append('fusion_master')
-        
+
         if self.player.tokens >= 5000 and 'rich_trainer' not in self.player.achievements:
             self.player.achievements.add('rich_trainer')
             newly_unlocked.append('rich_trainer')
-        
+
         if any(monster.level >= 50 for monster in self.player.monsters) and 'level_master' not in self.player.achievements:
             self.player.achievements.add('level_master')
             newly_unlocked.append('level_master')
-        
+
         if hasattr(self.player, 'guild') and self.player.guild and 'guild_member' not in self.player.achievements:
             self.player.achievements.add('guild_member')
             newly_unlocked.append('guild_member')
-        
+
         # Display newly unlocked achievements
         if newly_unlocked:
             print(f"{Fore.YELLOW}🎉 NEW ACHIEVEMENTS UNLOCKED! 🎉")
@@ -7124,7 +6967,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 print(f"  ⭐ {achievement['name']}: {achievement['description']}")
                 print(f"     Reward: {achievement['reward']}")
             print()
-        
+
         # Display all achievements
         print(f"{Fore.GREEN}Unlocked Achievements ({len(self.player.achievements)}/{len(all_achievements)}):")
         for achievement_id, achievement in all_achievements.items():
@@ -7132,11 +6975,11 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 print(f"  ✅ {achievement['name']}: {achievement['description']}")
             else:
                 print(f"  ❌ {achievement['name']}: {achievement['description']}")
-        
+
         completion_rate = len(self.player.achievements) / len(all_achievements) * 100
         print(f"\n{Fore.CYAN}Achievement Completion: {completion_rate:.1f}%")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_leaderboard(self):
         """Show global leaderboards"""
@@ -7144,7 +6987,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         LEADERBOARDS")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Sample leaderboard data (in real game this would come from server)
         leaderboards = {
             'Monster Collection': [
@@ -7169,21 +7012,21 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 (self.player.name if self.player else 'You', self.player.tokens if self.player else 0)
             ]
         }
-        
+
         for category, rankings in leaderboards.items():
             print(f"\n{Fore.YELLOW}{category} Leaderboard:")
             sorted_rankings = sorted(rankings, key=lambda x: x[1], reverse=True)
-            
+
             for i, (name, score) in enumerate(sorted_rankings[:10], 1):
                 if self.player and name == self.player.name:
                     print(f"  {Fore.GREEN}{i}. {name}: {score:,} ⭐{Style.RESET_ALL}")
                 else:
                     print(f"  {i}. {name}: {score:,}")
-        
+
         print(f"\n{Fore.CYAN}Compete with trainers worldwide!")
         print("Rankings update daily based on your progress.")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_weather_system(self):
         """Show dynamic weather affecting gameplay"""
@@ -7191,13 +7034,13 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         WEATHER SYSTEM")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize weather if it doesn't exist
         if not hasattr(self, 'current_weather'):
             weather_types = ['Sunny', 'Rainy', 'Stormy', 'Foggy', 'Snowy', 'Windy', 'Cloudy']
             self.current_weather = random.choice(weather_types)
             self.weather_duration = random.randint(5, 15)  # turns
-        
+
         weather_effects = {
             'Sunny': {
                 'description': 'Bright sunshine warms the land',
@@ -7235,29 +7078,29 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'color': Fore.LIGHTBLACK_EX
             }
         }
-        
+
         current_weather_info = weather_effects[self.current_weather]
-        
+
         print(f"{current_weather_info['color']}Current Weather: {self.current_weather}")
         print(f"{current_weather_info['description']}")
         print(f"Duration: {self.weather_duration} more actions{Style.RESET_ALL}")
-        
+
         print(f"\n{Fore.GREEN}Weather Effects:")
         for effect in current_weather_info['effects']:
             print(f"  • {effect}")
-        
+
         print(f"\n{Fore.YELLOW}Weather Forecast:")
         # Generate simple forecast
         future_weather = random.choice(list(weather_effects.keys()))
         print(f"  Next: {future_weather} - {weather_effects[future_weather]['description']}")
-        
+
         print(f"\n{Fore.CYAN}Weather Tips:")
         print("• Weather changes every 5-15 actions")
         print("• Plan your battles around favorable conditions")
         print("• Some monsters prefer certain weather types")
         print("• Legendary monsters may appear during storms")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_time_system(self):
         """Show day/night cycle affecting gameplay"""
@@ -7265,17 +7108,17 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}          TIME SYSTEM")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize time system if it doesn't exist
         if not hasattr(self, 'game_time'):
             self.game_time = 0  # 0-23 representing hours
             self.day_count = 1
-        
+
         # Advance time slightly
         self.game_time = (self.game_time + 1) % 24
         if self.game_time == 0:
             self.day_count += 1
-        
+
         # Determine time period
         if 6 <= self.game_time < 12:
             period = "Morning"
@@ -7289,9 +7132,9 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         else:
             period = "Night"
             period_color = Fore.BLUE
-        
+
         print(f"{period_color}Current Time: Day {self.day_count}, {self.game_time:02d}:00 ({period}){Style.RESET_ALL}")
-        
+
         # Time-based effects
         time_effects = {
             "Morning": [
@@ -7315,11 +7158,11 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 "Monster centers offer night healing bonuses"
             ]
         }
-        
+
         print(f"\n{Fore.GREEN}Current Time Effects:")
         for effect in time_effects[period]:
             print(f"  • {effect}")
-        
+
         # Daily events
         print(f"\n{Fore.YELLOW}Daily Events:")
         daily_events = [
@@ -7329,19 +7172,19 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             "Double XP event active",
             "Special shop items available"
         ]
-        
+
         # Simple day-based events
         event_index = self.day_count % len(daily_events)
         print(f"  🎉 {daily_events[event_index]}")
-        
+
         print(f"\n{Fore.CYAN}Time-Based Tips:")
         print("• Different monsters are active at different times")
         print("• Night time is best for rare encounters")
         print("• Morning healing is most cost-effective")
         print("• Evening training gives bonus experience")
         print("• Check back daily for new events!")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_world_map(self):
         """Show world map with travel options"""
@@ -7349,11 +7192,11 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}           WORLD MAP")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize visited areas if they don't exist
         if self.player and not hasattr(self.player, 'visited_areas'):
             self.player.visited_areas = {'Forest Grove'}  # Starting area
-        
+
         locations = {
             'Forest Grove': {
                 'description': 'A peaceful forest with friendly monsters',
@@ -7412,20 +7255,20 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'special': 'Ultimate legendary encounters'
             }
         }
-        
+
         current_location = self.player.current_location if self.player else 'Forest Grove'
-        
+
         print(f"{Fore.YELLOW}Current Location: {current_location}")
         if current_location in locations:
             print(f"Description: {locations[current_location]['description']}")
             print(f"Monster Types: {', '.join(locations[current_location]['monster_types'])}")
-        
+
         print(f"\n{Fore.GREEN}Available Locations:")
         for name, info in locations.items():
             status_symbol = "📍" if name == current_location else "🗺️"
             unlock_symbol = "✅" if info['unlocked'] else "🔒"
             visited_symbol = "⭐" if name in (self.player.visited_areas if self.player else set()) else ""
-            
+
             if info['unlocked']:
                 print(f"{status_symbol} {unlock_symbol} {name} {visited_symbol}")
                 print(f"    {info['description']}")
@@ -7440,16 +7283,16 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 }.get(name, 1)
                 print(f"{status_symbol} {unlock_symbol} {name} (Requires Trainer Level {req_level})")
             print()
-        
+
         print(f"{Fore.CYAN}Map Legend:")
         print("📍 Current Location  🗺️ Available  ✅ Unlocked  🔒 Locked  ⭐ Visited")
-        
+
         print(f"\n{Fore.CYAN}Travel Options:")
         print("t <location> - Travel to location")
         print("b - Back to main menu")
-        
-        choice = input("\nEnter your choice: ").lower()
-        
+
+        choice = safe_input("\nEnter your choice: ").lower()
+
         if choice.startswith('t '):
             location_name = choice[2:].title()
             if location_name in locations:
@@ -7467,7 +7310,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     print(f"\n{Fore.RED}Location not unlocked yet!")
             else:
                 print(f"\n{Fore.RED}Location not found!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
 
     def show_alliance_menu(self):
         """Show alliance system for team cooperation"""
@@ -7475,25 +7318,25 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         ALLIANCE SYSTEM")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         print(f"{Fore.YELLOW}Alliance Features:")
         print("• Team up with other trainers")
         print("• Share resources and strategies")
         print("• Participate in alliance wars")
         print("• Access exclusive alliance tournaments")
         print("• Earn alliance loyalty rewards")
-        
+
         print(f"\n{Fore.GREEN}Available Alliances:")
         print("1. Dragon Riders Alliance - Focus: Dragon-type mastery")
         print("2. Elemental Unity - Focus: Multi-type strategies")
         print("3. Shadow Legion - Focus: Dark-type dominance")
         print("4. Crystal Guardians - Focus: Defensive tactics")
         print("5. Storm Chasers - Focus: Electric/Flying types")
-        
+
         print(f"\n{Fore.CYAN}This feature is coming soon!")
         print("Alliance battles and cooperative gameplay will be available in future updates.")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_advanced_inventory(self):
         """Enhanced inventory with sorting and filtering"""
@@ -7505,12 +7348,12 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}       ADVANCED INVENTORY")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         if not self.player.inventory:
             print(f"{Fore.YELLOW}Your inventory is empty!")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
-        
+
         # Categorize items
         categories = {}
         for item in self.player.inventory:
@@ -7518,9 +7361,9 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             if category not in categories:
                 categories[category] = []
             categories[category].append(item)
-        
+
         print(f"{Fore.YELLOW}Inventory ({len(self.player.inventory)}/{MAX_INVENTORY_SIZE}):")
-        
+
         for category, items in categories.items():
             print(f"\n{Fore.GREEN}{category.title()}:")
             for i, item in enumerate(items, 1):
@@ -7531,83 +7374,96 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                     rarity_color = Fore.MAGENTA
                 elif 'master' in item.name.lower():
                     rarity_color = Fore.YELLOW
-                
+
                 print(f"  {rarity_color}{item.name} - {item.description}{Style.RESET_ALL}")
-        
+
         print(f"\n{Fore.CYAN}Inventory Actions:")
         print("u - Use item")
         print("s - Sort inventory")
         print("f - Filter by category")
         print("d - Drop item")
         print("b - Back to main menu")
-        
-        choice = input("\nEnter your choice: ").lower()
-        
+
+        choice = safe_input("\nEnter your choice: ").lower()
+
         if choice == 'u':
             self.use_item_from_inventory()
         elif choice == 's':
             # Sort inventory by name
-            self.player.inventory.sort(key=lambda x: x.name)
-            print(f"\n{Fore.GREEN}Inventory sorted alphabetically!")
-            input("Press Enter to continue...")
+            if self.player.inventory:
+                sorted_items = sorted(self.player.inventory.keys(), key=lambda x: x.name)
+                print(f"\n{Fore.GREEN}Inventory sorted alphabetically:")
+                for item in sorted_items:
+                    quantity = self.player.inventory[item]
+                    print(f"  {item.name} (x{quantity})")
+            else:
+                print(f"\n{Fore.YELLOW}No items to sort!")
+            safe_input("Press Enter to continue...")
         elif choice == 'f':
-            category = input("Enter category to filter by: ").lower()
-            filtered_items = [item for item in self.player.inventory if category in getattr(item, 'effect', '').lower()]
+            category = safe_input("Enter category to filter by: ").lower()
+            filtered_items = [(item, qty) for item, qty in self.player.inventory.items() if category in getattr(item, 'effect', '').lower()]
             if filtered_items:
                 print(f"\n{Fore.GREEN}Items in category '{category}':")
-                for item in filtered_items:
-                    print(f"  {item.name} - {item.description}")
+                for item, qty in filtered_items:
+                    print(f"  {item.name} (x{qty}) - {item.description}")
             else:
                 print(f"\n{Fore.YELLOW}No items found in category '{category}'")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
         elif choice == 'd':
             if self.player.inventory:
                 print(f"\n{Fore.YELLOW}Select item to drop:")
-                for i, item in enumerate(self.player.inventory, 1):
-                    print(f"{i}. {item.name}")
-                
+                inventory_items = list(self.player.inventory.keys())
+                for i, item in enumerate(inventory_items, 1):
+                    quantity = self.player.inventory[item]
+                    print(f"{i}. {item.name} (x{quantity})")
+
                 try:
-                    item_num = int(input("Enter item number: ")) - 1
-                    if 0 <= item_num < len(self.player.inventory):
-                        dropped_item = self.player.inventory.pop(item_num)
+                    item_num = int(safe_input("Enter item number: ")) - 1
+                    if 0 <= item_num < len(inventory_items):
+                        dropped_item = inventory_items[item_num]
+                        # Remove one item from inventory
+                        if self.player.inventory[dropped_item] > 1:
+                            self.player.inventory[dropped_item] -= 1
+                        else:
+                            del self.player.inventory[dropped_item]
                         print(f"\n{Fore.YELLOW}Dropped {dropped_item.name}!")
                     else:
                         print(f"\n{Fore.RED}Invalid item number!")
                 except ValueError:
                     print(f"\n{Fore.RED}Please enter a valid number!")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
 
     def use_item_from_inventory(self):
         """Use an item from inventory on a monster"""
         if not self.player or not self.player.inventory:
             print(f"\n{Fore.YELLOW}No items to use!")
             return
-        
+
         print(f"\n{Fore.YELLOW}Select item to use:")
         items_list = list(self.player.inventory.keys())
         for i, item in enumerate(items_list, 1):
             quantity = self.player.inventory[item]
             print(f"{i}. {item.name} x{quantity} - {item.description}")
-        
+
         try:
-            item_num = int(input("Enter item number: ")) - 1
+            item_num = int(safe_input("Enter item number: ")) - 1
             if 0 <= item_num < len(items_list):
                 item = items_list[item_num]
-                
+
                 # Select monster to use item on
                 if not self.player.monsters:
                     print(f"\n{Fore.RED}No monsters to use item on!")
                     return
-                
+
                 print(f"\n{Fore.GREEN}Select monster:")
                 for i, monster in enumerate(self.player.monsters, 1):
                     status = "Fainted" if monster.is_fainted() else "Healthy"
                     print(f"{i}. {monster.name} (Lv.{monster.level}) - {status}")
-                
-                monster_num = int(input("Enter monster number: ")) - 1
+
+                monster_num = int(safe_input("Enter monster number: ")) - 1
                 if 0 <= monster_num < len(self.player.monsters):
                     monster = self.player.monsters[monster_num]
-                    
+
                     # Apply item effect
                     if 'heal' in item.name.lower():
                         if 'super' in item.name.lower():
@@ -7642,17 +7498,21 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                         else:
                             print(f"\n{Fore.YELLOW}{monster.name} is not fainted!")
                             return
-                    
+
                     # Remove used item
-                    self.player.inventory.remove(item)
+                    if item in self.player.inventory:
+                        if self.player.inventory[item] > 1:
+                            self.player.inventory[item] -= 1
+                        else:
+                            del self.player.inventory[item]
                 else:
                     print(f"\n{Fore.RED}Invalid monster number!")
             else:
                 print(f"\n{Fore.RED}Invalid item number!")
         except ValueError:
             print(f"\n{Fore.RED}Please enter valid numbers!")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def show_research_menu(self):
         """Show monster research and database"""
@@ -7660,34 +7520,34 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}       RESEARCH DATABASE")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         print(f"{Fore.YELLOW}Research Features:")
         print("• Study monster behaviors and patterns")
         print("• Unlock evolution requirements")
         print("• Discover type effectiveness charts")
         print("• Research rare monster locations")
         print("• Analyze battle statistics")
-        
+
         print(f"\n{Fore.GREEN}Research Progress:")
         if self.player:
             research_points = getattr(self.player, 'research_points', 0)
             print(f"Research Points: {research_points}")
-            
+
             discovered_species = len(set(monster.name.split()[0] for monster in self.player.monsters))
             print(f"Species Discovered: {discovered_species}")
-            
+
             type_expertise = {}
             for monster in self.player.monsters:
                 type_expertise[monster.type] = type_expertise.get(monster.type, 0) + 1
-            
-            print(f"Type Expertise:")
+
+            print("Type Expertise:")
             for mon_type, count in sorted(type_expertise.items()):
                 expertise_level = min(count // 3, 5)  # Max level 5
                 stars = "★" * expertise_level + "☆" * (5 - expertise_level)
                 print(f"  {mon_type}: {stars} (Level {expertise_level})")
-        
+
         print(f"\n{Fore.CYAN}This feature will be expanded in future updates!")
-        input("Press Enter to continue...")
+        safe_input("Press Enter to continue...")
 
     def enter_dungeon(self):
         """Enter special dungeon challenges"""
@@ -7695,7 +7555,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         DUNGEON EXPLORER")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         dungeons = [
             {
                 'name': 'Crystal Caverns',
@@ -7726,28 +7586,28 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'entry_cost': 1000
             }
         ]
-        
+
         print(f"{Fore.YELLOW}Available Dungeons:")
         for i, dungeon in enumerate(dungeons, 1):
             color = Fore.GREEN if dungeon['difficulty'] == 'Easy' else \
                    Fore.YELLOW if dungeon['difficulty'] == 'Medium' else \
                    Fore.RED if dungeon['difficulty'] == 'Hard' else Fore.MAGENTA
-            
+
             print(f"{i}. {color}{dungeon['name']} ({dungeon['difficulty']}){Style.RESET_ALL}")
             print(f"   Levels: {dungeon['levels']}")
             print(f"   Rewards: {dungeon['rewards']}")
             print(f"   Entry Cost: {dungeon['entry_cost']} tokens")
-        
+
         print(f"\n{Fore.CYAN}Dungeon Features:")
         print("• Progressive difficulty levels")
         print("• Unique rewards and materials")
         print("• Boss battles at the end")
         print("• Leaderboards for completion times")
-        
+
         print(f"\n{Fore.CYAN}This feature is coming soon!")
         print("Dungeon exploration will be available in future updates.")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def join_raid(self):
         """Join cooperative raid battles"""
@@ -7755,23 +7615,23 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}          RAID BATTLES")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         print(f"{Fore.YELLOW}Active Raids:")
         print("🔥 Legendary Pyrovern Raid - 2/4 players")
         print("⚡ Storm Titan Challenge - 1/6 players")
         print("🌟 Cosmic Entity Event - 0/8 players")
-        
+
         print(f"\n{Fore.GREEN}Raid Features:")
         print("• Team up with multiple trainers")
         print("• Battle ultra-powerful boss monsters")
         print("• Share raid rewards among participants")
         print("• Unlock exclusive raid-only monsters")
         print("• Weekly raid rotation")
-        
+
         print(f"\n{Fore.CYAN}This feature is coming soon!")
         print("Cooperative raid battles will be available in future updates.")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def enter_pvp(self):
         """Enter player vs player battles"""
@@ -7779,24 +7639,24 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}            PVP ARENA")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         print(f"{Fore.YELLOW}PVP Modes:")
         print("1. Ranked Battles - Climb the competitive ladder")
         print("2. Casual Matches - Practice without rank pressure")
         print("3. Tournament Mode - Participate in bracketed competitions")
         print("4. Guild Wars - Represent your guild in battles")
-        
+
         print(f"\n{Fore.GREEN}PVP Features:")
         print("• Real-time battles against other players")
         print("• Seasonal rankings and rewards")
         print("• Spectator mode for learning strategies")
         print("• Ban/pick phases for strategic depth")
         print("• Replay system to review battles")
-        
+
         print(f"\n{Fore.CYAN}This feature is coming soon!")
         print("PVP battles will be available in future updates.")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def show_market(self):
         """Show player-to-player trading market"""
@@ -7804,24 +7664,24 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         TRADING MARKET")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         print(f"{Fore.YELLOW}Market Listings:")
         print("🔥 Alpha Pyrovern - 5000 tokens")
         print("⚡ Crystal Thunderwing - 3500 tokens")
         print("🌟 Rare Stardust - 1200 tokens")
         print("💎 Fusion Catalyst - 800 tokens")
-        
+
         print(f"\n{Fore.GREEN}Market Features:")
         print("• Buy and sell monsters with other players")
         print("• Trade rare items and materials")
         print("• Auction system for competitive bidding")
         print("• Price history and market trends")
         print("• Secure escrow system")
-        
+
         print(f"\n{Fore.CYAN}This feature is coming soon!")
         print("Player trading market will be available in future updates.")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def show_daily_tasks(self):
         """Show daily challenges and rewards"""
@@ -7829,16 +7689,20 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         DAILY TASKS")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Initialize daily tasks if they don't exist
-        if not hasattr(self.player, 'daily_tasks'):
-            self.player.daily_tasks = {
-                'catch_monsters': {'progress': 0, 'target': 3, 'completed': False},
-                'win_battles': {'progress': 0, 'target': 5, 'completed': False},
-                'explore_areas': {'progress': 0, 'target': 2, 'completed': False},
-                'use_items': {'progress': 0, 'target': 4, 'completed': False}
-            }
-        
+        if not self.player or not hasattr(self.player, 'daily_tasks'):
+            if self.player:
+                self.player.daily_tasks = {
+                    'catch_monsters': {'progress': 0, 'target': 3, 'completed': False},
+                    'win_battles': {'progress': 0, 'target': 5, 'completed': False},
+                    'explore_areas': {'progress': 0, 'target': 2, 'completed': False},
+                    'use_items': {'progress': 0, 'target': 4, 'completed': False}
+                }
+            else:
+                print(f"{Fore.RED}No player found. Please start a new game first.{Style.RESET_ALL}")
+                return
+
         daily_task_info = {
             'catch_monsters': {
                 'name': 'Monster Catcher',
@@ -7861,37 +7725,37 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'reward': '60 tokens, Heal Potions'
             }
         }
-        
+
         print(f"{Fore.YELLOW}Today's Daily Tasks:")
-        
+
         for task_id, task_data in self.player.daily_tasks.items():
             task_info = daily_task_info[task_id]
             progress = task_data['progress']
             target = task_data['target']
             completed = task_data['completed']
-            
+
             status = "✅ COMPLETED" if completed else f"{progress}/{target}"
             progress_bar = "█" * (progress * 10 // target) + "░" * (10 - (progress * 10 // target))
-            
+
             color = Fore.GREEN if completed else Fore.YELLOW
             print(f"{color}{task_info['name']}: {task_info['description']}")
             print(f"  Progress: [{progress_bar}] {status}")
             print(f"  Reward: {task_info['reward']}{Style.RESET_ALL}")
             print()
-        
+
         # Check if all tasks completed
         all_completed = all(task['completed'] for task in self.player.daily_tasks.values())
         if all_completed:
             print(f"{Fore.YELLOW}🎉 ALL DAILY TASKS COMPLETED! 🎉")
-            print(f"Bonus Reward: 500 tokens + Premium Mystery Box")
-        
+            print("Bonus Reward: 500 tokens + Premium Mystery Box")
+
         print(f"\n{Fore.CYAN}Daily Task Tips:")
         print("• Tasks reset every 24 hours")
         print("• Complete all tasks for bonus rewards")
         print("• Tasks help you progress faster")
         print("• Check back daily for new challenges")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def show_events(self):
         """Show special events and limited-time content"""
@@ -7899,7 +7763,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
         print(f"{Fore.CYAN}         SPECIAL EVENTS")
         print(f"{Fore.CYAN}═══════════════════════════════════════")
-        
+
         # Generate some sample events
         current_events = [
             {
@@ -7931,7 +7795,7 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 'active': False
             }
         ]
-        
+
         print(f"{Fore.YELLOW}Active Events:")
         active_events = [event for event in current_events if event['active']]
         if active_events:
@@ -7943,26 +7807,66 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
                 print()
         else:
             print("No active events at this time.")
-        
+
         print(f"\n{Fore.GREEN}Upcoming Events:")
         upcoming_events = [event for event in current_events if not event['active'] and 'Starting' in event['duration']]
         for event in upcoming_events:
             print(f"📅 {event['name']} - {event['duration']}")
             print(f"   {event['description']}")
-        
+
         print(f"\n{Fore.BLUE}Past Events:")
         past_events = [event for event in current_events if not event['active'] and 'Ended' in event['duration']]
         for event in past_events:
             print(f"📚 {event['name']} - {event['duration']}")
-        
+
         print(f"\n{Fore.CYAN}Event Features:")
         print("• Limited-time special content")
         print("• Exclusive rewards and monsters")
         print("• Seasonal celebrations")
         print("• Community-wide challenges")
         print("• Special event currencies")
+
+        safe_input("\nPress Enter to continue...")
+
+    def show_character_relationships(self):
+        """Show emotional bonds and character relationships"""
+        if not self.player:
+            print(f"{Fore.RED}No player found.{Style.RESET_ALL}")
+            return
         
-        input("\nPress Enter to continue...")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}      CHARACTER RELATIONSHIPS")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print("Monster bonds and NPC relationships coming soon!")
+        safe_input("Press Enter to continue...")
+
+    def show_reflection_menu(self):
+        """Show narrative reflection menu"""
+        print(f"{Fore.MAGENTA}═══════════════════════════════════════")
+        print(f"{Fore.MAGENTA}       NARRATIVE REFLECTION")
+        print(f"{Fore.MAGENTA}═══════════════════════════════════════")
+        print("Story reflection system coming soon!")
+        safe_input("Press Enter to continue...")
+
+    def quick_reflect(self):
+        """Quick contemplation"""
+        print(f"{Fore.BLUE}Taking a moment to reflect...{Style.RESET_ALL}")
+        print("Your journey continues...")
+        safe_input("Press Enter to continue...")
+
+    def show_npc_menu(self):
+        """Show NPC dialogue menu"""
+        print(f"{Fore.GREEN}═══════════════════════════════════════")
+        print(f"{Fore.GREEN}       NPC CONVERSATIONS")
+        print(f"{Fore.GREEN}═══════════════════════════════════════")
+        print("Advanced dialogue system coming soon!")
+        safe_input("Press Enter to continue...")
+
+    def talk_to_npc(self, npc_name: str):
+        """Talk to a specific NPC"""
+        print(f"{Fore.GREEN}Talking to {npc_name}...{Style.RESET_ALL}")
+        print("Conversation system coming soon!")
+        safe_input("Press Enter to continue...")
 
 
 # Main entry point
@@ -7975,7 +7879,7 @@ if __name__ == "__main__":
         if os.environ.get("LAUNCHED_FROM_LAUNCHER") != "1":
             print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
             print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
-            input("Press Enter to exit...")
+            safe_input("Press Enter to exit...")
             sys.exit(0)
         # No need to call main() since we're starting the game right after
     except Exception as e:
@@ -7999,19 +7903,19 @@ if __name__ == "__main__":
         print(f"{Fore.MAGENTA}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.MAGENTA}║                    NARRATIVE REFLECTION                         ║{Style.RESET_ALL}")
         print(f"{Fore.MAGENTA}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         print(f"{Fore.CYAN}Take a moment to reflect on your journey...{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}Reflection Points: {self.player.reflection_points}{Style.RESET_ALL}\n")
-        
+
         while True:
             print(f"{Fore.GREEN}What would you like to reflect upon?{Style.RESET_ALL}")
             print("1. Recent Story Moments")
             print("2. Moral Choices and Consequences") 
             print("3. Character Growth and Relationships")
             print("4. Return to game")
-            
+
             choice = input(f"\n{Fore.CYAN}Select an option: {Style.RESET_ALL}").strip()
-            
+
             if choice == "1":
                 self.reflect_on_story_moments()
             elif choice == "2":
@@ -8023,7 +7927,7 @@ if __name__ == "__main__":
                 break
             else:
                 print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
-                input("Press Enter to continue...")
+                safe_input("Press Enter to continue...")
                 clear_screen()
 
     def reflect_on_story_moments(self):
@@ -8032,31 +7936,31 @@ if __name__ == "__main__":
         print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.CYAN}║                     STORY MOMENTS                               ║{Style.RESET_ALL}")
         print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         if not self.player.story_moments:
             print(f"{Fore.YELLOW}You haven't experienced any significant story moments yet.{Style.RESET_ALL}")
             print("As you progress through your journey, meaningful moments will be recorded here for reflection.")
         else:
             print(f"{Fore.MAGENTA}Reflecting on your recent experiences...{Style.RESET_ALL}\n")
-            
+
             for i, moment in enumerate(self.player.story_moments[-5:], 1):
                 print(f"{Fore.WHITE}{i}. {moment['type'].title()} at {moment['location']}{Style.RESET_ALL}")
                 print(f"   {moment['description']}")
                 if moment['consequences']:
                     print(f"   {Fore.YELLOW}Consequences: {moment['consequences']}{Style.RESET_ALL}")
-                
+
                 if not moment['reflected_upon']:
                     print(f"\n{Fore.CYAN}Take a moment to consider this experience...{Style.RESET_ALL}")
                     reflection = input(f"{Fore.GREEN}What did you learn from this moment? (Press Enter to skip): {Style.RESET_ALL}")
-                    
+
                     if reflection.strip():
                         moment['reflected_upon'] = True
                         self.player.earn_reflection_points(2, f"Reflected on {moment['type']}")
                         print(f"{Fore.GREEN}Your reflection has been noted. +2 Reflection Points{Style.RESET_ALL}")
-                
+
                 print()
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def reflect_on_moral_choices(self):
         """Reflect on moral decisions and their outcomes"""
@@ -8064,18 +7968,18 @@ if __name__ == "__main__":
         print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.CYAN}║                    MORAL CHOICES                                ║{Style.RESET_ALL}")
         print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         if not self.player.moral_choices:
             print(f"{Fore.YELLOW}You haven't faced any significant moral dilemmas yet.{Style.RESET_ALL}")
             print("When you encounter difficult choices, they will be recorded here for reflection.")
         else:
             print(f"{Fore.MAGENTA}Contemplating your moral journey...{Style.RESET_ALL}\n")
-            
+
             for i, choice in enumerate(self.player.moral_choices[-3:], 1):
                 print(f"{Fore.WHITE}{i}. {choice['choice']}{Style.RESET_ALL}")
                 print(f"   {Fore.CYAN}You chose: {choice['chosen_option']}{Style.RESET_ALL}")
                 print(f"   {Fore.YELLOW}Outcome: {choice['outcome']}{Style.RESET_ALL}")
-                
+
                 # Show karma impact
                 if choice['karma_impact']:
                     impacts = []
@@ -8084,19 +7988,19 @@ if __name__ == "__main__":
                         sign = "+" if change > 0 else ""
                         impacts.append(f"{color}{trait.title()}: {sign}{change}{Style.RESET_ALL}")
                     print(f"   Karma Impact: {', '.join(impacts)}")
-                
+
                 if not choice['reflected_upon']:
                     print(f"\n{Fore.CYAN}How do you feel about this choice now?{Style.RESET_ALL}")
                     reflection = input(f"{Fore.GREEN}Would you choose differently? What did you learn? (Press Enter to skip): {Style.RESET_ALL}")
-                    
+
                     if reflection.strip():
                         choice['reflected_upon'] = True
-                        self.player.earn_reflection_points(3, f"Reflected on moral choice")
+                        self.player.earn_reflection_points(3, "Reflected on moral choice")
                         print(f"{Fore.GREEN}Your moral reflection has deepened your wisdom. +3 Reflection Points{Style.RESET_ALL}")
-                
+
                 print()
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def reflect_on_character_growth(self):
         """Reflect on relationships and personal development"""
@@ -8104,9 +8008,9 @@ if __name__ == "__main__":
         print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.CYAN}║                 CHARACTER GROWTH                                ║{Style.RESET_ALL}")
         print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         print(f"{Fore.MAGENTA}Reflecting on your personal journey...{Style.RESET_ALL}\n")
-        
+
         # Analyze reputation changes
         dominant_traits = [trait for trait, value in self.player.reputation.items() if value >= 20]
         if dominant_traits:
@@ -8114,7 +8018,7 @@ if __name__ == "__main__":
             for trait in dominant_traits:
                 value = self.player.reputation[trait]
                 print(f"  • {trait.title()}: {Fore.GREEN if value >= 40 else Fore.YELLOW}{value}{Style.RESET_ALL}")
-        
+
         # Relationship analysis
         strong_bonds = [name for name, bond in self.player.monster_bonds.items() 
                        if any(emotion > 70 for emotion in bond.values())]
@@ -8122,22 +8026,22 @@ if __name__ == "__main__":
             print(f"\n{Fore.WHITE}Strong Monster Bonds:{Style.RESET_ALL}")
             for name in strong_bonds:
                 print(f"  • {name}")
-        
+
         trusted_npcs = [name for name, rel in self.player.npc_relationships.items() 
                        if rel.get('trust', 50) > 70]
         if trusted_npcs:
             print(f"\n{Fore.WHITE}Trusted Allies:{Style.RESET_ALL}")
             for name in trusted_npcs:
                 print(f"  • {name}")
-        
+
         print(f"\n{Fore.CYAN}What aspects of your growth are you most proud of?{Style.RESET_ALL}")
         growth_reflection = input(f"{Fore.GREEN}Share your thoughts (Press Enter to skip): {Style.RESET_ALL}")
-        
+
         if growth_reflection.strip():
             self.player.earn_reflection_points(2, "Reflected on personal growth")
             print(f"{Fore.GREEN}Self-awareness brings wisdom. +2 Reflection Points{Style.RESET_ALL}")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def quick_reflection(self):
         """Quick contemplation without full menu"""
@@ -8146,16 +8050,16 @@ if __name__ == "__main__":
             print("The journey ahead feels full of possibilities.")
         else:
             print(f"{Fore.CYAN}You take a moment to reflect on recent events...{Style.RESET_ALL}")
-            
+
             if self.player.story_moments:
                 recent_moment = self.player.story_moments[-1]
                 print(f"You think about {recent_moment['description'][:80]}...")
-            
+
             if self.player.moral_choices:
                 recent_choice = self.player.moral_choices[-1]
                 print(f"You consider your recent choice: {recent_choice['chosen_option']}")
-        
-        input("Press Enter to continue...")
+
+        safe_input("Press Enter to continue...")
 
     def create_npcs(self):
         """Create dynamic NPCs with personality traits and dialogue trees"""
@@ -8250,23 +8154,23 @@ if __name__ == "__main__":
         print(f"{Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.CYAN}║                        CONVERSATIONS                            ║{Style.RESET_ALL}")
         print(f"{Fore.CYAN}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         npcs = self.create_npcs()
         location_npcs = npcs.get(self.player.location, [])
-        
+
         if not location_npcs:
             print(f"{Fore.YELLOW}There's no one to talk to in {self.player.location}.{Style.RESET_ALL}")
             print("Try exploring other locations to meet interesting characters.")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
-        
+
         print(f"{Fore.MAGENTA}People you can talk to in {self.player.location}:{Style.RESET_ALL}\n")
-        
+
         for i, npc in enumerate(location_npcs, 1):
             # Get NPC opinion and relationship status
             opinion = self.player.character_opinions.get(npc["name"], {})
             avg_opinion = sum(opinion.values()) / len(opinion) if opinion else 50
-            
+
             relationship = "Stranger"
             if avg_opinion >= 80:
                 relationship = "Close Friend"
@@ -8278,17 +8182,17 @@ if __name__ == "__main__":
                 relationship = "Distant"
             else:
                 relationship = "Distrustful"
-            
+
             print(f"{Fore.WHITE}{i}. {npc['name']}{Style.RESET_ALL}")
             print(f"   {npc['backstory']}")
             print(f"   Relationship: {Fore.CYAN}{relationship}{Style.RESET_ALL}")
             print()
-        
+
         print(f"{len(location_npcs) + 1}. Return to game")
-        
+
         while True:
             choice = input(f"\n{Fore.GREEN}Who would you like to talk to? {Style.RESET_ALL}").strip()
-            
+
             try:
                 choice_num = int(choice)
                 if 1 <= choice_num <= len(location_npcs):
@@ -8306,7 +8210,7 @@ if __name__ == "__main__":
         """Start a dynamic conversation with an NPC"""
         npcs = self.create_npcs()
         npc = None
-        
+
         # Find the NPC
         for location_npcs in npcs.values():
             for character in location_npcs:
@@ -8315,18 +8219,18 @@ if __name__ == "__main__":
                     break
             if npc:
                 break
-        
+
         if not npc:
             print(f"{Fore.RED}I don't see {npc_name} here.{Style.RESET_ALL}")
-            input("Press Enter to continue...")
+            safe_input("Press Enter to continue...")
             return
-        
+
         # Get player's relationship with this NPC
         opinion = self.player.character_opinions.get(npc["name"], {
             "respect": 50, "trust": 50, "friendliness": 50, "interest": 50
         })
         avg_opinion = sum(opinion.values()) / len(opinion)
-        
+
         self.run_dialogue_conversation(npc, avg_opinion)
 
     def run_dialogue_conversation(self, npc: dict, relationship_level: float):
@@ -8335,38 +8239,38 @@ if __name__ == "__main__":
         print(f"{Fore.MAGENTA}╔══════════════════════════════════════════════════════════════════╗{Style.RESET_ALL}")
         print(f"{Fore.MAGENTA}║                    CONVERSATION                                 ║{Style.RESET_ALL}")
         print(f"{Fore.MAGENTA}╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
-        
+
         print(f"{Fore.CYAN}You approach {npc['name']}.{Style.RESET_ALL}\n")
-        
+
         # Generate greeting based on relationship and personality
         greeting = self.generate_npc_greeting(npc, relationship_level)
         print(f"{Fore.WHITE}{npc['name']}: {greeting}{Style.RESET_ALL}\n")
-        
+
         conversation_active = True
         conversation_depth = 0
-        
+
         while conversation_active and conversation_depth < 10:
             conversation_depth += 1
-            
+
             # Generate dialogue options based on context
             options = self.generate_dialogue_options(npc, relationship_level, conversation_depth)
-            
+
             print(f"{Fore.GREEN}How do you respond?{Style.RESET_ALL}")
             for i, option in enumerate(options, 1):
                 print(f"{i}. {option['text']}")
             print(f"{len(options) + 1}. End conversation")
-            
+
             while True:
                 choice = input(f"\n{Fore.CYAN}Choose your response: {Style.RESET_ALL}").strip()
-                
+
                 try:
                     choice_num = int(choice)
                     if 1 <= choice_num <= len(options):
                         selected_option = options[choice_num - 1]
                         response = self.process_dialogue_choice(npc, selected_option, relationship_level)
-                        
+
                         print(f"\n{Fore.WHITE}{npc['name']}: {response}{Style.RESET_ALL}\n")
-                        
+
                         # Record the dialogue choice
                         self.player.record_dialogue_choice(
                             npc["name"], 
@@ -8374,7 +8278,7 @@ if __name__ == "__main__":
                             selected_option["text"],
                             selected_option.get("consequence", "")
                         )
-                        
+
                         # Update relationship based on choice
                         if "opinion_change" in selected_option:
                             self.player.update_character_opinion(
@@ -8382,11 +8286,11 @@ if __name__ == "__main__":
                                 selected_option["opinion_change"],
                                 selected_option.get("reason", "")
                             )
-                        
+
                         # Check if conversation should continue
                         if selected_option.get("ends_conversation", False):
                             conversation_active = False
-                        
+
                         break
                     elif choice_num == len(options) + 1:
                         conversation_active = False
@@ -8395,23 +8299,23 @@ if __name__ == "__main__":
                         print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
                 except ValueError:
                     print(f"{Fore.RED}Please enter a number.{Style.RESET_ALL}")
-        
+
         # End conversation
         farewell = self.generate_npc_farewell(npc, relationship_level)
         print(f"{Fore.WHITE}{npc['name']}: {farewell}{Style.RESET_ALL}")
-        
+
         # Award reflection points for meaningful conversations
         if conversation_depth >= 3:
             self.player.earn_reflection_points(1, f"Had a meaningful conversation with {npc['name']}")
             print(f"{Fore.GREEN}+1 Reflection Point for engaging conversation{Style.RESET_ALL}")
-        
-        input("\nPress Enter to continue...")
+
+        safe_input("\nPress Enter to continue...")
 
     def generate_npc_greeting(self, npc: dict, relationship_level: float) -> str:
         """Generate a greeting based on NPC personality and relationship"""
         personality = npc["personality"]
         name = self.player.name
-        
+
         if relationship_level >= 80:
             if "wise" in personality:
                 return f"Ah, {name}, my dear friend. Your wisdom grows with each visit."
@@ -8452,7 +8356,7 @@ if __name__ == "__main__":
         options = []
         trees = npc["dialogue_trees"]
         personality = npc["personality"]
-        
+
         # Basic conversation starters
         if depth == 1:
             if "lore" in trees:
@@ -8462,7 +8366,7 @@ if __name__ == "__main__":
                     "opinion_change": 2,
                     "reason": "showed interest"
                 })
-            
+
             if "training" in trees and relationship_level >= 40:
                 options.append({
                     "text": "Could you give me some training advice?",
@@ -8470,14 +8374,14 @@ if __name__ == "__main__":
                     "opinion_change": 3,
                     "reason": "respectful request for help"
                 })
-            
+
             options.append({
                 "text": "How are you doing today?",
                 "type": "friendly",
                 "opinion_change": 1,
                 "reason": "friendly small talk"
             })
-            
+
             if "rude" in personality:
                 options.append({
                     "text": "You look pretty useless.",
@@ -8486,7 +8390,7 @@ if __name__ == "__main__":
                     "reason": "rude insult",
                     "ends_conversation": True
                 })
-        
+
         # Deeper conversation options
         elif depth >= 2:
             if relationship_level >= 60 and "secrets" in npc:
@@ -8496,7 +8400,7 @@ if __name__ == "__main__":
                     "opinion_change": 1,
                     "reason": "showed deeper interest"
                 })
-            
+
             if "wise" in personality:
                 options.append({
                     "text": "What wisdom can you share with me?",
@@ -8504,7 +8408,7 @@ if __name__ == "__main__":
                     "opinion_change": 2,
                     "reason": "respectful wisdom seeking"
                 })
-            
+
             if relationship_level >= 70:
                 options.append({
                     "text": "I feel like we're becoming good friends.",
@@ -8512,7 +8416,7 @@ if __name__ == "__main__":
                     "opinion_change": 5,
                     "reason": "friendly bonding"
                 })
-        
+
         # Personality-specific options
         if "competitive" in personality:
             options.append({
@@ -8521,7 +8425,7 @@ if __name__ == "__main__":
                 "opinion_change": 3,
                 "reason": "engaging competition spirit"
             })
-        
+
         if "mysterious" in personality and relationship_level >= 50:
             options.append({
                 "text": "You seem to know more than you let on.",
@@ -8529,7 +8433,7 @@ if __name__ == "__main__":
                 "opinion_change": -1,
                 "reason": "prying into secrets"
             })
-        
+
         # Always include a polite option
         options.append({
             "text": "Thank you for your time.",
@@ -8538,19 +8442,19 @@ if __name__ == "__main__":
             "reason": "polite conversation",
             "ends_conversation": True
         })
-        
+
         return options[:4]  # Limit to 4 options for readability
 
     def process_dialogue_choice(self, npc: dict, choice: dict, relationship_level: float) -> str:
         """Process a dialogue choice and return NPC response"""
         choice_type = choice["type"]
         personality = npc["personality"]
-        
+
         responses = {
             "information": [
-                f"This place holds many secrets. Those who seek knowledge will find it.",
+                "This place holds many secrets. Those who seek knowledge will find it.",
                 f"There's more to {self.player.location} than meets the eye.",
-                f"Every location has its own energy and purpose."
+                "Every location has its own energy and purpose."
             ],
             "help_request": [
                 "The key to success is patience and understanding your monsters.",
@@ -8598,10 +8502,10 @@ if __name__ == "__main__":
                 "May your path be filled with discovery."
             ]
         }
-        
+
         # Get appropriate response based on choice type
         base_responses = responses.get(choice_type, ["I see."])
-        
+
         # Modify response based on personality
         if "wise" in personality and choice_type in ["wisdom_request", "information"]:
             wisdom_responses = [
@@ -8610,19 +8514,19 @@ if __name__ == "__main__":
                 "The greatest teachers are often our own experiences."
             ]
             base_responses.extend(wisdom_responses)
-        
+
         if "enthusiastic" in personality:
             enthusiasm_boost = " Your enthusiasm is infectious!"
             selected = random.choice(base_responses)
             if choice_type != "insult":
                 return selected + enthusiasm_boost
-        
+
         return random.choice(base_responses)
 
     def generate_npc_farewell(self, npc: dict, relationship_level: float) -> str:
         """Generate a farewell message based on relationship"""
         personality = npc["personality"]
-        
+
         if relationship_level >= 70:
             if "wise" in personality:
                 return "Go well, friend. May wisdom light your path."
