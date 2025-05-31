@@ -9,16 +9,6 @@ from colorama import Fore, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-# Check if script is being run directly or through the launcher
-if __name__ == "__main__":
-    launcher_env = os.environ.get("LAUNCHER_ACTIVE")
-    if not launcher_env:
-        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
-        input("Press Enter to exit...")
-        print(f"{Fore.BLUE}Made by andy64lol{Style.RESET_ALL}")
-        sys.exit(0)
-
 # Add GOLD color for trophy/medal display
 if not hasattr(Fore, 'GOLD'):
     setattr(Fore, 'GOLD', Fore.YELLOW)
@@ -405,9 +395,11 @@ class Player:
         self.name = name
         self.monsters: List[Monster] = []
         self.active_monster_index = 0
-        self.inventory: Dict[Item, int] = {}  # Item -> quantity
+        self.inventory: Dict[Item, int] = {}  # Dictionary to store items and quantities
         self.money = 500
+        self.tokens = 500  # Add tokens attribute
         self.location = "Hometown"
+        self.current_location = "Forest Grove"  # Add current_location
         self.trainer_level = 5  # Starting level
         self.exp = 0
         self.exp_to_level = 100  # Initial exp needed to level up
@@ -417,6 +409,48 @@ class Player:
 
         # Initialize quest items
         self.quest_items = []
+        
+        # New RPG attributes
+        self.skills = {
+            'Monster Training': 1,
+            'Battle Strategy': 1,
+            'Monster Care': 1,
+            'Exploration': 1,
+            'Monster Catching': 1,
+            'Item Crafting': 1,
+            'Trading': 1,
+            'Research': 1
+        }
+        self.skill_points = 3
+        self.equipment = {
+            'weapon': None,
+            'armor': None,
+            'accessory': None,
+            'tool': None
+        }
+        self.materials = {
+            'Monster Essence': 0,
+            'Crystal Shards': 0,
+            'Metal Ore': 0,
+            'Ancient Bones': 0,
+            'Mystic Herbs': 0
+        }
+        self.guild: Optional[str] = None
+        self.guild_rank = 'Member'
+        self.guild_contribution = 0
+        self.active_quests = []
+        self.completed_quests = []
+        self.achievements = set()
+        self.visited_areas = {'Forest Grove'}
+        self.battle_wins = 0
+        self.battle_losses = 0
+        self.playtime = 0
+        self.daily_tasks = {
+            'catch_monsters': {'progress': 0, 'target': 3, 'completed': False},
+            'win_battles': {'progress': 0, 'target': 5, 'completed': False},
+            'explore_areas': {'progress': 0, 'target': 2, 'completed': False},
+            'use_items': {'progress': 0, 'target': 4, 'completed': False}
+        }
 
     @property
     def active_monster(self) -> Optional[Monster]:
@@ -2052,6 +2086,8 @@ your monster companions!
                 "player_badges": getattr(self.player, 'badges', []),
                 "player_titles": getattr(self.player, 'titles', []),
                 "player_active_title": getattr(self.player, 'active_title', None),
+                "player_tokens": getattr(self.player, 'tokens', 500),
+                "player_current_location": getattr(self.player, 'current_location', 'Forest Grove'),
                 
                 # Epic storyline progress with detailed tracking
                 "story_progress": getattr(self.player, 'story_progress', {}),
@@ -2132,6 +2168,19 @@ your monster companions!
                 "favorite_monsters": getattr(self.player, 'favorites', []),
                 "custom_teams": getattr(self.player, 'saved_teams', []),
                 "hotkeys": getattr(self.player, 'hotkey_settings', {}),
+                
+                # Advanced player attributes and skills
+                "player_equipment": getattr(self.player, 'equipment', {}),
+                "player_skills": getattr(self.player, 'skills', {}),
+                "player_materials": getattr(self.player, 'materials', {}),
+                "player_guild": getattr(self.player, 'guild', None),
+                "player_guild_rank": getattr(self.player, 'guild_rank', 'Member'),
+                "player_guild_contribution": getattr(self.player, 'guild_contribution', 0),
+                "player_visited_areas": getattr(self.player, 'visited_areas', {'Forest Grove'}),
+                "player_battle_wins": getattr(self.player, 'battle_wins', 0),
+                "player_battle_losses": getattr(self.player, 'battle_losses', 0),
+                "player_playtime": getattr(self.player, 'playtime', 0),
+                "player_daily_tasks": getattr(self.player, 'daily_tasks', {}),
                 
                 # World state preservation
                 "world_events_witnessed": getattr(self.player, 'world_events', []),
@@ -2398,16 +2447,45 @@ your monster companions!
             player.trainer_level = save_data.get("player_trainer_level", 5)
             player.exp = save_data.get("player_exp", 0)
             player.exp_to_level = save_data.get("player_exp_to_level", 100)
+            player.tokens = save_data.get("player_tokens", 500)
+            player.current_location = save_data.get("player_current_location", 'Forest Grove')
             
             # Restore epic storyline progress
             player.story_progress = save_data.get("story_progress", {})
             player.quest_items = save_data.get("quest_items", [])
+            player.completed_quests = save_data.get("completed_quests", [])
+            player.active_quests = save_data.get("active_quests", [])
+            
+            # Restore advanced player attributes
+            player.equipment = save_data.get("player_equipment", {})
+            player.skills = save_data.get("player_skills", {})
+            player.materials = save_data.get("player_materials", {
+                'Monster Essence': 0, 'Crystal Shards': 0, 'Metal Ore': 0,
+                'Ancient Bones': 0, 'Mystic Herbs': 0
+            })
+            player.guild = save_data.get("player_guild", None)
+            player.guild_rank = save_data.get("player_guild_rank", 'Member')
+            player.guild_contribution = save_data.get("player_guild_contribution", 0)
+            player.visited_areas = save_data.get("player_visited_areas", {'Forest Grove'})
+            player.battle_wins = save_data.get("player_battle_wins", 0)
+            player.battle_losses = save_data.get("player_battle_losses", 0)
+            player.playtime = save_data.get("player_playtime", 0)
+            player.daily_tasks = save_data.get("player_daily_tasks", {
+                'catch_monsters': {'progress': 0, 'target': 3, 'completed': False},
+                'win_battles': {'progress': 0, 'target': 5, 'completed': False},
+                'explore_areas': {'progress': 0, 'target': 2, 'completed': False},
+                'use_items': {'progress': 0, 'target': 4, 'completed': False}
+            })
             
             # Restore battle statistics using setattr for dynamic attributes
             setattr(player, 'battles_won', save_data.get("battles_won", 0))
             setattr(player, 'battles_lost', save_data.get("battles_lost", 0))
             setattr(player, 'monsters_defeated', save_data.get("monsters_defeated", 0))
             setattr(player, 'legendary_encounters', save_data.get("legendary_encounters", 0))
+            setattr(player, 'achievements', save_data.get("achievements", set()))
+            setattr(player, 'save_count', save_data.get("save_count", 1))
+            setattr(player, 'creation_date', save_data.get("creation_date", time.time()))
+            setattr(player, 'last_login', save_data.get("last_login", time.time()))
             
             # Restore game progression
             self.champion_battles_completed = save_data.get("champion_battles_completed", 0)
@@ -2739,6 +2817,34 @@ your monster companions!
             cmd = "championship"
         elif cmd == "q":
             cmd = "quit"
+        elif cmd == "st":
+            cmd = "stats"
+        elif cmd == "sk":
+            cmd = "skills"
+        elif cmd == "eq":
+            cmd = "equipment"
+        elif cmd == "cr":
+            cmd = "craft"
+        elif cmd == "tr":
+            cmd = "train"
+        elif cmd == "sh":
+            cmd = "shop"
+        elif cmd == "gu":
+            cmd = "guild"
+        elif cmd == "qu":
+            cmd = "quests"
+        elif cmd == "ac":
+            cmd = "achievements"
+        elif cmd == "le":
+            cmd = "leaderboard"
+        elif cmd == "we":
+            cmd = "weather"
+        elif cmd == "ti":
+            cmd = "time"
+        elif cmd == "ma":
+            cmd = "map"
+        elif cmd == "al":
+            cmd = "alliance"
 
         # In battle, handle battle commands
         if self.current_battle:
@@ -2773,6 +2879,51 @@ your monster companions!
             self.start_puzzle()
         elif cmd == "legendary":
             self.legendary_encounter()
+        # New RPG commands
+        elif cmd == "stats":
+            self.show_detailed_stats()
+        elif cmd == "skills":
+            self.show_skills_menu()
+        elif cmd == "equipment":
+            self.show_equipment_menu()
+        elif cmd == "craft":
+            self.show_crafting_menu()
+        elif cmd == "train":
+            self.show_training_menu()
+        elif cmd == "shop":
+            self.show_shop_menu()
+        elif cmd == "guild":
+            self.show_guild_menu()
+        elif cmd == "quests":
+            self.show_quest_menu()
+        elif cmd == "achievements":
+            self.show_achievements()
+        elif cmd == "leaderboard":
+            self.show_leaderboard()
+        elif cmd == "weather":
+            self.show_weather_system()
+        elif cmd == "time":
+            self.show_time_system()
+        elif cmd == "map":
+            self.show_world_map()
+        elif cmd == "alliance":
+            self.show_alliance_menu()
+        elif cmd == "inventory":
+            self.show_advanced_inventory()
+        elif cmd == "research":
+            self.show_research_menu()
+        elif cmd == "dungeon":
+            self.enter_dungeon()
+        elif cmd == "raid":
+            self.join_raid()
+        elif cmd == "pvp":
+            self.enter_pvp()
+        elif cmd == "market":
+            self.show_market()
+        elif cmd == "dailies":
+            self.show_daily_tasks()
+        elif cmd == "events":
+            self.show_events()
         else:
             print(f"Unknown command: {cmd}")
             print("Type 'help' to see available commands.")
@@ -4691,49 +4842,1678 @@ You also earned {Fore.GREEN}$5000{Style.RESET_ALL} for saving the world!""")
             "Psychic": "Your mind fills with whispers and your vision blurs momentarily..."
         }
 
-        # Show type-specific environmental effect
-        env_message = type_environment.get(legendary_type, "The atmosphere changes dramatically...")
-        print(f"{Fore.CYAN}{env_message}{Style.RESET_ALL}")
-        time.sleep(2)
+    # ==================== NEW RPG ENHANCEMENT METHODS ====================
 
-        # Describe the temple if it exists
-        if legendary_temple:
-            print(f"\n{Fore.CYAN}You stand within {legendary_temple}, an ancient place of power...{Style.RESET_ALL}")
-            time.sleep(1.5)
+    def show_detailed_stats(self):
+        """Show detailed player and game statistics"""
+        if not self.player:
+            print("No active player found!")
+            return
 
-        # Build tension
-        print("\nA powerful presence approaches... reality itself seems to bend in its wake...")
-        time.sleep(1.5)
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         DETAILED STATISTICS")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Player stats
+        print(f"{Fore.YELLOW}Player: {self.player.name}")
+        print(f"Trainer Level: {self.player.trainer_level}")
+        print(f"Current Location: {self.player.current_location}")
+        print(f"Tokens: {self.player.tokens}")
+        print(f"Total Playtime: {getattr(self.player, 'playtime', 0)} minutes")
+        print()
+        
+        # Monster collection stats
+        print(f"{Fore.GREEN}Collection Statistics:")
+        print(f"Total Monsters: {len(self.player.monsters)}")
+        print(f"Monster Inventory: {len(self.player.inventory)}")
+        
+        # Type distribution
+        type_counts = {}
+        for monster in self.player.monsters:
+            type_counts[monster.type] = type_counts.get(monster.type, 0) + 1
+        
+        print(f"\n{Fore.BLUE}Monster Types in Collection:")
+        for monster_type, count in sorted(type_counts.items()):
+            print(f"  {monster_type}: {count}")
+        
+        # Level distribution
+        level_ranges = {"1-10": 0, "11-20": 0, "21-30": 0, "31-40": 0, "41-50": 0}
+        for monster in self.player.monsters:
+            if monster.level <= 10:
+                level_ranges["1-10"] += 1
+            elif monster.level <= 20:
+                level_ranges["11-20"] += 1
+            elif monster.level <= 30:
+                level_ranges["21-30"] += 1
+            elif monster.level <= 40:
+                level_ranges["31-40"] += 1
+            else:
+                level_ranges["41-50"] += 1
+        
+        print(f"\n{Fore.MAGENTA}Level Distribution:")
+        for range_name, count in level_ranges.items():
+            print(f"  Level {range_name}: {count}")
+        
+        # Battle statistics
+        wins = getattr(self.player, 'battle_wins', 0)
+        losses = getattr(self.player, 'battle_losses', 0)
+        total_battles = wins + losses
+        win_rate = (wins / total_battles * 100) if total_battles > 0 else 0
+        
+        print(f"\n{Fore.RED}Battle Statistics:")
+        print(f"  Total Battles: {total_battles}")
+        print(f"  Wins: {wins}")
+        print(f"  Losses: {losses}")
+        print(f"  Win Rate: {win_rate:.1f}%")
+        
+        input("\nPress Enter to continue...")
 
-        # Describe the legendary's appearance
-        legendary_description = legendary_info_data.get("description", "A magnificent legendary monster")
+    def show_skills_menu(self):
+        """Show and manage player skills"""
+        if not self.player:
+            print("No active player found!")
+            return
 
-        print(f"\n{legendary_color}{legendary_name}{Style.RESET_ALL} appears before you!")
-        time.sleep(1)
-        print(f"{Fore.CYAN}{legendary_description}{Style.RESET_ALL}")
-        time.sleep(2)
-
-        # Epic encounter message based on monster type
-        encounter_messages = {
-            "Dragon": f"The legendary {legendary_name} regards you with ancient eyes that have witnessed the passing of eons...",
-            "Fairy": f"The very air sparkles around {legendary_name}, as if reality is being rewritten by its presence...",
-            "Fire": f"Waves of intense heat roll off {legendary_name}'s body, scorching the ground where it stands...",
-            "Rock": f"The earth itself seems to bow to {legendary_name}, gems and crystals forming in its footsteps...",
-            "Dark": f"An aura of infinite darkness surrounds {legendary_name}, pulling at the edges of your vision...",
-            "Electric": f"Bolts of lightning dance across {legendary_name}'s form, striking the ground in a display of raw power...",
-            "Ground": f"The very earth rises to form a pedestal beneath {legendary_name}, acknowledging its mastery...",
-            "Psychic": f"Your thoughts feel exposed as {legendary_name}'s mental power washes over you like waves..."
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}           SKILLS MENU")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize skills if they don't exist
+        if not hasattr(self.player, 'skills'):
+            self.player.skills = {
+                'Monster Training': 1,
+                'Battle Strategy': 1,
+                'Monster Care': 1,
+                'Exploration': 1,
+                'Monster Catching': 1,
+                'Item Crafting': 1,
+                'Trading': 1,
+                'Research': 1
+            }
+        
+        if not hasattr(self.player, 'skill_points'):
+            self.player.skill_points = 3
+        
+        print(f"{Fore.YELLOW}Available Skill Points: {self.player.skill_points}")
+        print(f"{Fore.GREEN}Current Skills:")
+        print()
+        
+        skill_descriptions = {
+            'Monster Training': 'Increases monster XP gain',
+            'Battle Strategy': 'Improves critical hit chance',
+            'Monster Care': 'Reduces monster healing costs',
+            'Exploration': 'Increases rare encounter chance',
+            'Monster Catching': 'Improves catch rate',
+            'Item Crafting': 'Unlocks better item recipes',
+            'Trading': 'Gets better prices from NPCs',
+            'Research': 'Unlocks advanced monster info'
         }
+        
+        for i, (skill, level) in enumerate(self.player.skills.items(), 1):
+            description = skill_descriptions.get(skill, 'Unknown skill')
+            print(f"{i}. {skill}: Level {level} - {description}")
+        
+        print(f"\n{Fore.CYAN}Options:")
+        print("u - Upgrade a skill (costs 1 skill point)")
+        print("b - Back to main menu")
+        
+        choice = input("\nEnter your choice: ").lower()
+        
+        if choice == 'u' and self.player.skill_points > 0:
+            try:
+                skill_num = int(input("Enter skill number to upgrade: ")) - 1
+                skills_list = list(self.player.skills.keys())
+                if 0 <= skill_num < len(skills_list):
+                    skill_name = skills_list[skill_num]
+                    if self.player.skills[skill_name] < 10:
+                        self.player.skills[skill_name] += 1
+                        self.player.skill_points -= 1
+                        print(f"\n{Fore.GREEN}{skill_name} upgraded to level {self.player.skills[skill_name]}!")
+                    else:
+                        print(f"\n{Fore.RED}{skill_name} is already at maximum level!")
+                else:
+                    print(f"\n{Fore.RED}Invalid skill number!")
+            except ValueError:
+                print(f"\n{Fore.RED}Please enter a valid number!")
+            input("Press Enter to continue...")
+        elif choice == 'u':
+            print(f"\n{Fore.RED}You don't have any skill points!")
+            input("Press Enter to continue...")
 
-        type_message = encounter_messages.get(legendary_type, f"The legendary {legendary_name} exudes an aura of immense power...")
-        print(f"\n{legendary_color}{type_message}{Style.RESET_ALL}")
-        time.sleep(2)
+    def show_equipment_menu(self):
+        """Show and manage player equipment"""
+        if not self.player:
+            print("No active player found!")
+            return
 
-        print(f"\n{Fore.YELLOW}This will be your greatest challenge yet. Are you ready to face this legendary creature?{Style.RESET_ALL}")
-        input("\nPress Enter to begin the battle...")
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         EQUIPMENT MENU")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize equipment if it doesn't exist
+        if not hasattr(self.player, 'equipment'):
+            self.player.equipment = {
+                'weapon': None,
+                'armor': None,
+                'accessory': None,
+                'tool': None
+            }
+        
+        # Display current equipment
+        print(f"{Fore.YELLOW}Current Equipment:")
+        equipment_slots = {
+            'weapon': 'Weapon',
+            'armor': 'Armor',
+            'accessory': 'Accessory',
+            'tool': 'Tool'
+        }
+        
+        for slot, name in equipment_slots.items():
+            equipped = self.player.equipment.get(slot)
+            if equipped:
+                print(f"  {name}: {equipped['name']} (+{equipped['bonus']} {equipped['stat']})")
+            else:
+                print(f"  {name}: None equipped")
+        
+        # Show available equipment
+        available_equipment = [
+            {'name': 'Training Gloves', 'type': 'weapon', 'bonus': 5, 'stat': 'Attack', 'cost': 100},
+            {'name': 'Monster Vest', 'type': 'armor', 'bonus': 10, 'stat': 'Defense', 'cost': 150},
+            {'name': 'Lucky Charm', 'type': 'accessory', 'bonus': 3, 'stat': 'Catch Rate', 'cost': 200},
+            {'name': 'Explorer Kit', 'type': 'tool', 'bonus': 5, 'stat': 'Exploration', 'cost': 120},
+            {'name': 'Power Gauntlets', 'type': 'weapon', 'bonus': 10, 'stat': 'Attack', 'cost': 300},
+            {'name': 'Guardian Shield', 'type': 'armor', 'bonus': 15, 'stat': 'Defense', 'cost': 350},
+            {'name': 'Master Ball Belt', 'type': 'accessory', 'bonus': 8, 'stat': 'Catch Rate', 'cost': 500}
+        ]
+        
+        print(f"\n{Fore.GREEN}Available Equipment:")
+        for i, item in enumerate(available_equipment, 1):
+            print(f"{i}. {item['name']} ({item['type']}) - +{item['bonus']} {item['stat']} - {item['cost']} tokens")
+        
+        print(f"\n{Fore.CYAN}Options:")
+        print("e - Equip item")
+        print("u - Unequip item")
+        print("b - Back to main menu")
+        
+        choice = input("\nEnter your choice: ").lower()
+        
+        if choice == 'e':
+            try:
+                item_num = int(input("Enter equipment number to purchase and equip: ")) - 1
+                if 0 <= item_num < len(available_equipment):
+                    item = available_equipment[item_num]
+                    if self.player.tokens >= item['cost']:
+                        self.player.tokens -= item['cost']
+                        self.player.equipment[item['type']] = {
+                            'name': item['name'],
+                            'bonus': item['bonus'],
+                            'stat': item['stat']
+                        }
+                        print(f"\n{Fore.GREEN}{item['name']} equipped!")
+                    else:
+                        print(f"\n{Fore.RED}Not enough tokens! Need {item['cost']}, have {self.player.tokens}")
+                else:
+                    print(f"\n{Fore.RED}Invalid item number!")
+            except ValueError:
+                print(f"\n{Fore.RED}Please enter a valid number!")
+            input("Press Enter to continue...")
+        elif choice == 'u':
+            slot = input("Enter slot to unequip (weapon/armor/accessory/tool): ").lower()
+            if slot in self.player.equipment:
+                if self.player.equipment[slot]:
+                    print(f"\n{Fore.YELLOW}{self.player.equipment[slot]['name']} unequipped!")
+                    self.player.equipment[slot] = None
+                else:
+                    print(f"\n{Fore.RED}No equipment in that slot!")
+            else:
+                print(f"\n{Fore.RED}Invalid slot name!")
+            input("Press Enter to continue...")
 
-        # Start the battle
-        self.start_battle(legendary_monster)
+    def show_crafting_menu(self):
+        """Show crafting system for items and equipment"""
+        if not self.player:
+            print("No active player found!")
+            return
+
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         CRAFTING MENU")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize crafting materials if they don't exist
+        if not hasattr(self.player, 'materials'):
+            self.player.materials = {
+                'Monster Essence': 0,
+                'Crystal Shards': 0,
+                'Metal Ore': 0,
+                'Ancient Bones': 0,
+                'Mystic Herbs': 0
+            }
+        
+        print(f"{Fore.YELLOW}Crafting Materials:")
+        for material, count in self.player.materials.items():
+            print(f"  {material}: {count}")
+        
+        # Crafting recipes
+        recipes = {
+            'Super Heal Potion': {
+                'materials': {'Mystic Herbs': 3, 'Crystal Shards': 1},
+                'result': 'Super Heal Potion',
+                'description': 'Fully heals one monster'
+            },
+            'Monster Ball Plus': {
+                'materials': {'Metal Ore': 2, 'Crystal Shards': 2},
+                'result': 'Monster Ball Plus',
+                'description': 'Higher catch rate than normal balls'
+            },
+            'Experience Booster': {
+                'materials': {'Monster Essence': 5, 'Ancient Bones': 1},
+                'result': 'Experience Booster',
+                'description': 'Doubles XP gain for next battle'
+            },
+            'Fusion Catalyst': {
+                'materials': {'Monster Essence': 10, 'Crystal Shards': 5, 'Ancient Bones': 2},
+                'result': 'Fusion Catalyst',
+                'description': 'Allows fusion without level requirement'
+            }
+        }
+        
+        print(f"\n{Fore.GREEN}Available Recipes:")
+        for i, (name, recipe) in enumerate(recipes.items(), 1):
+            print(f"{i}. {name} - {recipe['description']}")
+            materials_str = ", ".join([f"{count} {material}" for material, count in recipe['materials'].items()])
+            print(f"   Materials: {materials_str}")
+        
+        print(f"\n{Fore.CYAN}Options:")
+        print("c - Craft item")
+        print("g - Gather materials (explore to find)")
+        print("b - Back to main menu")
+        
+        choice = input("\nEnter your choice: ").lower()
+        
+        if choice == 'c':
+            try:
+                recipe_num = int(input("Enter recipe number to craft: ")) - 1
+                recipe_names = list(recipes.keys())
+                if 0 <= recipe_num < len(recipe_names):
+                    recipe_name = recipe_names[recipe_num]
+                    recipe = recipes[recipe_name]
+                    
+                    # Check if player has enough materials
+                    can_craft = True
+                    for material, needed in recipe['materials'].items():
+                        if self.player.materials.get(material, 0) < needed:
+                            can_craft = False
+                            break
+                    
+                    if can_craft:
+                        # Consume materials
+                        for material, needed in recipe['materials'].items():
+                            self.player.materials[material] -= needed
+                        
+                        # Add crafted item to inventory
+                        crafted_item = Item(recipe['result'], recipe['description'], 'consumable', 0)
+                        self.player.add_item(crafted_item, 1)
+                        print(f"\n{Fore.GREEN}{recipe['result']} crafted successfully!")
+                    else:
+                        print(f"\n{Fore.RED}Not enough materials!")
+                else:
+                    print(f"\n{Fore.RED}Invalid recipe number!")
+            except ValueError:
+                print(f"\n{Fore.RED}Please enter a valid number!")
+            input("Press Enter to continue...")
+        elif choice == 'g':
+            # Gather materials
+            material_types = list(self.player.materials.keys())
+            found_material = random.choice(material_types)
+            amount = random.randint(1, 3)
+            self.player.materials[found_material] += amount
+            print(f"\n{Fore.GREEN}Found {amount} {found_material}!")
+            input("Press Enter to continue...")
+
+    def show_training_menu(self):
+        """Show monster training facilities"""
+        if not self.player:
+            print("No active player found!")
+            return
+
+        if not self.player.monsters:
+            print("You need monsters to train!")
+            input("Press Enter to continue...")
+            return
+
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}        TRAINING FACILITIES")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        training_options = {
+            'Basic Training': {'cost': 50, 'xp': 100, 'description': 'Basic XP training'},
+            'Advanced Training': {'cost': 150, 'xp': 300, 'description': 'Advanced XP training'},
+            'Elite Training': {'cost': 300, 'xp': 600, 'description': 'Elite XP training'},
+            'Stat Boost': {'cost': 200, 'xp': 0, 'description': 'Temporarily boost monster stats'},
+            'Move Training': {'cost': 100, 'xp': 0, 'description': 'Teach new moves to monsters'}
+        }
+        
+        print(f"{Fore.YELLOW}Available Training:")
+        for i, (name, details) in enumerate(training_options.items(), 1):
+            print(f"{i}. {name} - {details['description']} - {details['cost']} tokens")
+        
+        print(f"\n{Fore.GREEN}Your Monsters:")
+        for i, monster in enumerate(self.player.monsters, 1):
+            status = "Fainted" if monster.is_fainted() else "Healthy"
+            print(f"{i}. {monster.name} (Lv.{monster.level}) - {status}")
+        
+        print(f"\n{Fore.CYAN}Tokens: {self.player.tokens}")
+        
+        try:
+            training_choice = int(input("\nSelect training type (1-5): ")) - 1
+            monster_choice = int(input("Select monster to train: ")) - 1
+            
+            if 0 <= training_choice < len(training_options) and 0 <= monster_choice < len(self.player.monsters):
+                training_name = list(training_options.keys())[training_choice]
+                training = training_options[training_name]
+                monster = self.player.monsters[monster_choice]
+                
+                if self.player.tokens >= training['cost']:
+                    self.player.tokens -= training['cost']
+                    
+                    if training_name == 'Stat Boost':
+                        # Temporarily boost stats
+                        monster.base_attack = int(monster.base_attack * 1.2)
+                        monster.base_defense = int(monster.base_defense * 1.2)
+                        monster.base_speed = int(monster.base_speed * 1.2)
+                        monster.calculate_stats()
+                        print(f"\n{Fore.GREEN}{monster.name}'s stats have been boosted!")
+                    elif training_name == 'Move Training':
+                        # Add a random powerful move
+                        new_moves = [
+                            Move("Power Strike", "Normal", 120, 0.9, "A devastating physical attack"),
+                            Move("Elemental Burst", "Fire", 110, 0.85, "Unleashes elemental energy"),
+                            Move("Mystic Shield", "Psychic", 0, 1.0, "Protects from next attack")
+                        ]
+                        new_move = random.choice(new_moves)
+                        if len(monster.moves) < 6:
+                            monster.moves.append(new_move)
+                            print(f"\n{Fore.GREEN}{monster.name} learned {new_move.name}!")
+                        else:
+                            print(f"\n{Fore.YELLOW}{monster.name} already knows too many moves!")
+                    else:
+                        # XP training
+                        monster.gain_exp(training['xp'])
+                        print(f"\n{Fore.GREEN}{monster.name} gained {training['xp']} XP!")
+                else:
+                    print(f"\n{Fore.RED}Not enough tokens! Need {training['cost']}, have {self.player.tokens}")
+            else:
+                print(f"\n{Fore.RED}Invalid selection!")
+        except ValueError:
+            print(f"\n{Fore.RED}Please enter valid numbers!")
+        
+        input("Press Enter to continue...")
+
+    def show_shop_menu(self):
+        """Enhanced shop with more items and services"""
+        if not self.player:
+            print("No active player found!")
+            return
+
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}           MONSTER SHOP")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        shop_items = {
+            'Monster Ball': {'cost': 10, 'description': 'Basic monster catching device'},
+            'Heal Potion': {'cost': 25, 'description': 'Restores 50 HP to one monster'},
+            'Super Heal Potion': {'cost': 60, 'description': 'Fully heals one monster'},
+            'Experience Candy': {'cost': 100, 'description': 'Gives 200 XP to one monster'},
+            'Rare Candy': {'cost': 300, 'description': 'Instantly levels up one monster'},
+            'Monster Ball Plus': {'cost': 35, 'description': 'Enhanced catching device'},
+            'Revival Herb': {'cost': 150, 'description': 'Revives a fainted monster'},
+            'Power Boost': {'cost': 200, 'description': 'Permanently increases attack by 5'},
+            'Defense Boost': {'cost': 200, 'description': 'Permanently increases defense by 5'},
+            'Speed Boost': {'cost': 200, 'description': 'Permanently increases speed by 5'},
+            'Mystery Box': {'cost': 500, 'description': 'Contains a random rare item'},
+            'Legendary Tracker': {'cost': 1000, 'description': 'Increases legendary encounter chance'}
+        }
+        
+        print(f"{Fore.YELLOW}Available Items:")
+        for i, (name, details) in enumerate(shop_items.items(), 1):
+            print(f"{i}. {name} - {details['description']} - {details['cost']} tokens")
+        
+        print(f"\n{Fore.GREEN}Your Tokens: {self.player.tokens}")
+        print(f"Inventory Space: {len(self.player.inventory)}/{MAX_INVENTORY_SIZE}")
+        
+        print(f"\n{Fore.CYAN}Options:")
+        print("b - Buy item")
+        print("s - Sell items")
+        print("back - Return to main menu")
+        
+        choice = input("\nEnter your choice: ").lower()
+        
+        if choice == 'b':
+            try:
+                item_num = int(input("Enter item number to buy: ")) - 1
+                item_names = list(shop_items.keys())
+                if 0 <= item_num < len(item_names):
+                    item_name = item_names[item_num]
+                    item_details = shop_items[item_name]
+                    
+                    if self.player.tokens >= item_details['cost']:
+                        if len(self.player.inventory) < MAX_INVENTORY_SIZE:
+                            self.player.tokens -= item_details['cost']
+                            new_item = Item(item_name, item_details['description'], 'consumable', item_details['cost'])
+                            self.player.add_item(new_item, 1)
+                            print(f"\n{Fore.GREEN}Purchased {item_name}!")
+                        else:
+                            print(f"\n{Fore.RED}Inventory is full!")
+                    else:
+                        print(f"\n{Fore.RED}Not enough tokens! Need {item_details['cost']}, have {self.player.tokens}")
+                else:
+                    print(f"\n{Fore.RED}Invalid item number!")
+            except ValueError:
+                print(f"\n{Fore.RED}Please enter a valid number!")
+            input("Press Enter to continue...")
+        elif choice == 's':
+            if self.player.inventory:
+                print(f"\n{Fore.YELLOW}Your Items:")
+                for i, item in enumerate(self.player.inventory, 1):
+                    sell_price = item.value // 2
+                    print(f"{i}. {item.name} - Sell for {sell_price} tokens")
+                
+                try:
+                    sell_num = int(input("Enter item number to sell: ")) - 1
+                    if 0 <= sell_num < len(self.player.inventory):
+                        item = self.player.inventory.pop(sell_num)
+                        sell_price = item.value // 2
+                        self.player.tokens += sell_price
+                        print(f"\n{Fore.GREEN}Sold {item.name} for {sell_price} tokens!")
+                    else:
+                        print(f"\n{Fore.RED}Invalid item number!")
+                except ValueError:
+                    print(f"\n{Fore.RED}Please enter a valid number!")
+            else:
+                print(f"\n{Fore.YELLOW}No items to sell!")
+            input("Press Enter to continue...")
+
+    def show_guild_menu(self):
+        """Show guild system for cooperative gameplay"""
+        if not self.player:
+            print("No active player found!")
+            return
+
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}           GUILD SYSTEM")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize guild info if it doesn't exist
+        if not hasattr(self.player, 'guild'):
+            self.player.guild = None
+        if not hasattr(self.player, 'guild_rank'):
+            self.player.guild_rank = 'Member'
+        if not hasattr(self.player, 'guild_contribution'):
+            self.player.guild_contribution = 0
+        
+        available_guilds = [
+            {'name': 'Fire Masters', 'focus': 'Fire-type monsters', 'bonus': 'Fire XP +20%'},
+            {'name': 'Water Guardians', 'focus': 'Water-type monsters', 'bonus': 'Water XP +20%'},
+            {'name': 'Earth Defenders', 'focus': 'Ground/Rock monsters', 'bonus': 'Defense +10%'},
+            {'name': 'Sky Riders', 'focus': 'Flying monsters', 'bonus': 'Speed +15%'},
+            {'name': 'Shadow Hunters', 'focus': 'Dark monsters', 'bonus': 'Critical Rate +10%'},
+            {'name': 'Crystal Seekers', 'focus': 'Rare variants', 'bonus': 'Rare Find +25%'}
+        ]
+        
+        if self.player.guild:
+            print(f"{Fore.YELLOW}Current Guild: {self.player.guild}")
+            print(f"Rank: {self.player.guild_rank}")
+            print(f"Contribution Points: {self.player.guild_contribution}")
+            
+            print(f"\n{Fore.GREEN}Guild Benefits Active:")
+            for guild in available_guilds:
+                if guild['name'] == self.player.guild:
+                    print(f"  {guild['bonus']}")
+                    break
+            
+            print(f"\n{Fore.CYAN}Guild Actions:")
+            print("1. Contribute to guild (costs 100 tokens)")
+            print("2. Leave guild")
+            print("3. Check guild rankings")
+            print("4. Guild missions")
+            
+            choice = input("\nEnter your choice: ")
+            
+            if choice == '1':
+                if self.player.tokens >= 100:
+                    self.player.tokens -= 100
+                    self.player.guild_contribution += 10
+                    print(f"\n{Fore.GREEN}Contributed to guild! +10 contribution points")
+                    
+                    # Check for rank promotion
+                    if self.player.guild_contribution >= 100 and self.player.guild_rank == 'Member':
+                        self.player.guild_rank = 'Senior Member'
+                        print(f"{Fore.YELLOW}Promoted to Senior Member!")
+                    elif self.player.guild_contribution >= 250 and self.player.guild_rank == 'Senior Member':
+                        self.player.guild_rank = 'Guild Officer'
+                        print(f"{Fore.YELLOW}Promoted to Guild Officer!")
+                else:
+                    print(f"\n{Fore.RED}Not enough tokens!")
+            elif choice == '2':
+                confirm = input("Are you sure you want to leave your guild? (y/n): ").lower()
+                if confirm == 'y':
+                    self.player.guild = None
+                    self.player.guild_rank = 'Member'
+                    self.player.guild_contribution = 0
+                    print(f"\n{Fore.YELLOW}Left guild!")
+            elif choice == '3':
+                print(f"\n{Fore.CYAN}Guild Rankings:")
+                print("1. Your Guild - 15,420 total contribution")
+                print("2. Rival Guild - 14,890 total contribution")
+                print("3. Other Guild - 12,350 total contribution")
+            elif choice == '4':
+                print(f"\n{Fore.YELLOW}Daily Guild Missions:")
+                print("1. Catch 5 monsters - Reward: 50 tokens")
+                print("2. Win 3 battles - Reward: Guild XP boost")
+                print("3. Explore new areas - Reward: Rare materials")
+        else:
+            print(f"{Fore.YELLOW}You are not in a guild.")
+            print(f"\n{Fore.GREEN}Available Guilds:")
+            for i, guild in enumerate(available_guilds, 1):
+                print(f"{i}. {guild['name']} - {guild['focus']} - Bonus: {guild['bonus']}")
+            
+            print(f"\n{Fore.CYAN}Options:")
+            print("j - Join a guild")
+            print("b - Back to main menu")
+            
+            choice = input("\nEnter your choice: ").lower()
+            
+            if choice == 'j':
+                try:
+                    guild_num = int(input("Enter guild number to join: ")) - 1
+                    if 0 <= guild_num < len(available_guilds):
+                        guild = available_guilds[guild_num]
+                        self.player.guild = guild['name']
+                        self.player.guild_rank = 'Member'
+                        self.player.guild_contribution = 0
+                        print(f"\n{Fore.GREEN}Joined {guild['name']}!")
+                        print(f"You now have the bonus: {guild['bonus']}")
+                    else:
+                        print(f"\n{Fore.RED}Invalid guild number!")
+                except ValueError:
+                    print(f"\n{Fore.RED}Please enter a valid number!")
+        
+        input("\nPress Enter to continue...")
+
+    def show_quest_menu(self):
+        """Show quest system with various objectives"""
+        if not self.player:
+            print("No active player found!")
+            return
+
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}           QUEST SYSTEM")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize quest system if it doesn't exist
+        if not hasattr(self.player, 'active_quests'):
+            self.player.active_quests = []
+        if not hasattr(self.player, 'completed_quests'):
+            self.player.completed_quests = []
+        
+        available_quests = [
+            {
+                'id': 'catch_5_monsters',
+                'name': 'Monster Collector',
+                'description': 'Catch 5 different types of monsters',
+                'objective': 'Catch 5 monsters',
+                'reward': '200 tokens, 1 skill point',
+                'progress': 0,
+                'target': 5
+            },
+            {
+                'id': 'win_10_battles',
+                'name': 'Battle Master',
+                'description': 'Win 10 battles against wild monsters',
+                'objective': 'Win 10 battles',
+                'reward': '300 tokens, Experience Booster',
+                'progress': 0,
+                'target': 10
+            },
+            {
+                'id': 'fuse_monster',
+                'name': 'Fusion Expert',
+                'description': 'Successfully fuse two monsters',
+                'objective': 'Fuse 1 monster',
+                'reward': '500 tokens, Fusion materials',
+                'progress': 0,
+                'target': 1
+            },
+            {
+                'id': 'explore_all_areas',
+                'name': 'World Explorer',
+                'description': 'Visit all available locations',
+                'objective': 'Explore all areas',
+                'reward': '1000 tokens, Legendary encounter',
+                'progress': 0,
+                'target': 8
+            },
+            {
+                'id': 'legendary_encounter',
+                'name': 'Legend Hunter',
+                'description': 'Encounter a legendary monster',
+                'objective': 'Find legendary monster',
+                'reward': '2000 tokens, Master Ball',
+                'progress': 0,
+                'target': 1
+            }
+        ]
+        
+        print(f"{Fore.YELLOW}Active Quests:")
+        if self.player.active_quests:
+            for quest in self.player.active_quests:
+                progress_bar = "█" * (quest['progress'] * 10 // quest['target']) + "░" * (10 - (quest['progress'] * 10 // quest['target']))
+                print(f"  {quest['name']}: {quest['description']}")
+                print(f"    Progress: [{progress_bar}] {quest['progress']}/{quest['target']}")
+                print(f"    Reward: {quest['reward']}")
+        else:
+            print("  No active quests")
+        
+        print(f"\n{Fore.GREEN}Available Quests:")
+        quest_counter = 1
+        for quest in available_quests:
+            if quest['id'] not in [q['id'] for q in self.player.active_quests] and quest['id'] not in self.player.completed_quests:
+                print(f"{quest_counter}. {quest['name']}: {quest['description']}")
+                print(f"   Reward: {quest['reward']}")
+                quest_counter += 1
+        
+        print(f"\n{Fore.CYAN}Completed Quests: {len(self.player.completed_quests)}")
+        
+        print(f"\n{Fore.CYAN}Options:")
+        print("a - Accept new quest")
+        print("c - Check quest progress")
+        print("t - Turn in completed quest")
+        print("b - Back to main menu")
+        
+        choice = input("\nEnter your choice: ").lower()
+        
+        if choice == 'a':
+            available_new_quests = [q for q in available_quests 
+                                  if q['id'] not in [aq['id'] for aq in self.player.active_quests] 
+                                  and q['id'] not in self.player.completed_quests]
+            
+            if available_new_quests and len(self.player.active_quests) < 3:
+                print(f"\n{Fore.YELLOW}Select quest to accept:")
+                for i, quest in enumerate(available_new_quests, 1):
+                    print(f"{i}. {quest['name']}")
+                
+                try:
+                    quest_num = int(input("Enter quest number: ")) - 1
+                    if 0 <= quest_num < len(available_new_quests):
+                        selected_quest = available_new_quests[quest_num].copy()
+                        self.player.active_quests.append(selected_quest)
+                        print(f"\n{Fore.GREEN}Accepted quest: {selected_quest['name']}")
+                    else:
+                        print(f"\n{Fore.RED}Invalid quest number!")
+                except ValueError:
+                    print(f"\n{Fore.RED}Please enter a valid number!")
+            elif len(self.player.active_quests) >= 3:
+                print(f"\n{Fore.RED}You can only have 3 active quests at once!")
+            else:
+                print(f"\n{Fore.YELLOW}No new quests available!")
+        elif choice == 'c':
+            # Update quest progress based on player stats
+            for quest in self.player.active_quests:
+                if quest['id'] == 'catch_5_monsters':
+                    quest['progress'] = min(len(self.player.monsters), quest['target'])
+                elif quest['id'] == 'win_10_battles':
+                    quest['progress'] = min(getattr(self.player, 'battle_wins', 0), quest['target'])
+                elif quest['id'] == 'fuse_monster':
+                    fusion_count = sum(1 for monster in self.player.monsters if monster.is_fusion)
+                    quest['progress'] = min(fusion_count, quest['target'])
+                elif quest['id'] == 'explore_all_areas':
+                    visited_areas = getattr(self.player, 'visited_areas', set())
+                    quest['progress'] = min(len(visited_areas), quest['target'])
+            print(f"\n{Fore.GREEN}Quest progress updated!")
+        elif choice == 't':
+            completed = []
+            for quest in self.player.active_quests:
+                if quest['progress'] >= quest['target']:
+                    completed.append(quest)
+            
+            if completed:
+                for quest in completed:
+                    print(f"\n{Fore.GREEN}Quest completed: {quest['name']}")
+                    print(f"Reward: {quest['reward']}")
+                    
+                    # Give rewards
+                    if 'tokens' in quest['reward']:
+                        token_amount = int(quest['reward'].split()[0])
+                        self.player.tokens += token_amount
+                    if 'skill point' in quest['reward']:
+                        if not hasattr(self.player, 'skill_points'):
+                            self.player.skill_points = 0
+                        self.player.skill_points += 1
+                    
+                    self.player.completed_quests.append(quest['id'])
+                    self.player.active_quests.remove(quest)
+            else:
+                print(f"\n{Fore.YELLOW}No completed quests to turn in!")
+        
+        input("\nPress Enter to continue...")
+
+    def show_achievements(self):
+        """Show achievement system"""
+        if not self.player:
+            print("No active player found!")
+            return
+
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         ACHIEVEMENTS")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize achievements if they don't exist
+        if not hasattr(self.player, 'achievements'):
+            self.player.achievements = set()
+        
+        all_achievements = {
+            'first_catch': {'name': 'First Catch', 'description': 'Catch your first monster', 'reward': '50 tokens'},
+            'monster_collector': {'name': 'Monster Collector', 'description': 'Catch 10 different monsters', 'reward': '200 tokens'},
+            'battle_victor': {'name': 'Battle Victor', 'description': 'Win your first battle', 'reward': '100 tokens'},
+            'fusion_master': {'name': 'Fusion Master', 'description': 'Create your first fusion monster', 'reward': '300 tokens'},
+            'legendary_tamer': {'name': 'Legendary Tamer', 'description': 'Catch a legendary monster', 'reward': '1000 tokens'},
+            'world_explorer': {'name': 'World Explorer', 'description': 'Visit all locations', 'reward': '500 tokens'},
+            'rich_trainer': {'name': 'Rich Trainer', 'description': 'Accumulate 5000 tokens', 'reward': 'Special item'},
+            'level_master': {'name': 'Level Master', 'description': 'Have a monster reach level 50', 'reward': '750 tokens'},
+            'type_specialist': {'name': 'Type Specialist', 'description': 'Have 5 monsters of the same type', 'reward': '400 tokens'},
+            'guild_member': {'name': 'Guild Member', 'description': 'Join a guild', 'reward': 'Guild benefits'},
+            'quest_hero': {'name': 'Quest Hero', 'description': 'Complete 5 quests', 'reward': '600 tokens'},
+            'champion': {'name': 'Champion', 'description': 'Win a championship battle', 'reward': 'Champion title'}
+        }
+        
+        # Check for new achievements
+        newly_unlocked = []
+        
+        # Check achievement conditions
+        if len(self.player.monsters) >= 1 and 'first_catch' not in self.player.achievements:
+            self.player.achievements.add('first_catch')
+            newly_unlocked.append('first_catch')
+        
+        if len(self.player.monsters) >= 10 and 'monster_collector' not in self.player.achievements:
+            self.player.achievements.add('monster_collector')
+            newly_unlocked.append('monster_collector')
+        
+        if getattr(self.player, 'battle_wins', 0) >= 1 and 'battle_victor' not in self.player.achievements:
+            self.player.achievements.add('battle_victor')
+            newly_unlocked.append('battle_victor')
+        
+        if any(monster.is_fusion for monster in self.player.monsters) and 'fusion_master' not in self.player.achievements:
+            self.player.achievements.add('fusion_master')
+            newly_unlocked.append('fusion_master')
+        
+        if self.player.tokens >= 5000 and 'rich_trainer' not in self.player.achievements:
+            self.player.achievements.add('rich_trainer')
+            newly_unlocked.append('rich_trainer')
+        
+        if any(monster.level >= 50 for monster in self.player.monsters) and 'level_master' not in self.player.achievements:
+            self.player.achievements.add('level_master')
+            newly_unlocked.append('level_master')
+        
+        if hasattr(self.player, 'guild') and self.player.guild and 'guild_member' not in self.player.achievements:
+            self.player.achievements.add('guild_member')
+            newly_unlocked.append('guild_member')
+        
+        # Display newly unlocked achievements
+        if newly_unlocked:
+            print(f"{Fore.YELLOW}🎉 NEW ACHIEVEMENTS UNLOCKED! 🎉")
+            for achievement_id in newly_unlocked:
+                achievement = all_achievements[achievement_id]
+                print(f"  ⭐ {achievement['name']}: {achievement['description']}")
+                print(f"     Reward: {achievement['reward']}")
+            print()
+        
+        # Display all achievements
+        print(f"{Fore.GREEN}Unlocked Achievements ({len(self.player.achievements)}/{len(all_achievements)}):")
+        for achievement_id, achievement in all_achievements.items():
+            if achievement_id in self.player.achievements:
+                print(f"  ✅ {achievement['name']}: {achievement['description']}")
+            else:
+                print(f"  ❌ {achievement['name']}: {achievement['description']}")
+        
+        completion_rate = len(self.player.achievements) / len(all_achievements) * 100
+        print(f"\n{Fore.CYAN}Achievement Completion: {completion_rate:.1f}%")
+        
+        input("\nPress Enter to continue...")
+
+    def show_leaderboard(self):
+        """Show global leaderboards"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         LEADERBOARDS")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Sample leaderboard data (in real game this would come from server)
+        leaderboards = {
+            'Monster Collection': [
+                ('DragonMaster', 847),
+                ('BeastTamer', 712),
+                ('PokéPro', 689),
+                ('MonsterKing', 654),
+                (self.player.name if self.player else 'You', len(self.player.monsters) if self.player else 0)
+            ],
+            'Battle Wins': [
+                ('BattleQueen', 2341),
+                ('FightMaster', 1987),
+                ('WarriorX', 1654),
+                ('Champion99', 1432),
+                (self.player.name if self.player else 'You', getattr(self.player, 'battle_wins', 0) if self.player else 0)
+            ],
+            'Tokens Earned': [
+                ('RichTrainer', 50000),
+                ('GoldDigger', 42000),
+                ('TokenKing', 38500),
+                ('Millionaire', 35000),
+                (self.player.name if self.player else 'You', self.player.tokens if self.player else 0)
+            ]
+        }
+        
+        for category, rankings in leaderboards.items():
+            print(f"\n{Fore.YELLOW}{category} Leaderboard:")
+            sorted_rankings = sorted(rankings, key=lambda x: x[1], reverse=True)
+            
+            for i, (name, score) in enumerate(sorted_rankings[:10], 1):
+                if self.player and name == self.player.name:
+                    print(f"  {Fore.GREEN}{i}. {name}: {score:,} ⭐{Style.RESET_ALL}")
+                else:
+                    print(f"  {i}. {name}: {score:,}")
+        
+        print(f"\n{Fore.CYAN}Compete with trainers worldwide!")
+        print("Rankings update daily based on your progress.")
+        
+        input("\nPress Enter to continue...")
+
+    def show_weather_system(self):
+        """Show dynamic weather affecting gameplay"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         WEATHER SYSTEM")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize weather if it doesn't exist
+        if not hasattr(self, 'current_weather'):
+            weather_types = ['Sunny', 'Rainy', 'Stormy', 'Foggy', 'Snowy', 'Windy', 'Cloudy']
+            self.current_weather = random.choice(weather_types)
+            self.weather_duration = random.randint(5, 15)  # turns
+        
+        weather_effects = {
+            'Sunny': {
+                'description': 'Bright sunshine warms the land',
+                'effects': ['Fire-type moves +20% power', 'Water-type moves -10% power', 'Higher catch rates'],
+                'color': Fore.YELLOW
+            },
+            'Rainy': {
+                'description': 'Gentle rain falls from gray clouds',
+                'effects': ['Water-type moves +20% power', 'Fire-type moves -10% power', 'Electric moves +15% power'],
+                'color': Fore.BLUE
+            },
+            'Stormy': {
+                'description': 'Lightning flashes across dark skies',
+                'effects': ['Electric-type moves +30% power', 'Flying-type spawn rate decreased', 'Legendary encounters +5%'],
+                'color': Fore.MAGENTA
+            },
+            'Foggy': {
+                'description': 'Thick fog reduces visibility',
+                'effects': ['All accuracy -15%', 'Ghost-type spawn rate increased', 'Mysterious encounters +10%'],
+                'color': Fore.WHITE
+            },
+            'Snowy': {
+                'description': 'Snow blankets the landscape',
+                'effects': ['Ice-type moves +20% power', 'Grass-type moves -15% power', 'Monster movement speed -10%'],
+                'color': Fore.LIGHTCYAN_EX
+            },
+            'Windy': {
+                'description': 'Strong winds blow across the region',
+                'effects': ['Flying-type moves +25% power', 'Flying-type spawn rate increased', 'Items blow away chance +5%'],
+                'color': Fore.LIGHTBLUE_EX
+            },
+            'Cloudy': {
+                'description': 'Overcast skies block the sun',
+                'effects': ['Normal weather conditions', 'Balanced monster spawns', 'Standard battle mechanics'],
+                'color': Fore.LIGHTBLACK_EX
+            }
+        }
+        
+        current_weather_info = weather_effects[self.current_weather]
+        
+        print(f"{current_weather_info['color']}Current Weather: {self.current_weather}")
+        print(f"{current_weather_info['description']}")
+        print(f"Duration: {self.weather_duration} more actions{Style.RESET_ALL}")
+        
+        print(f"\n{Fore.GREEN}Weather Effects:")
+        for effect in current_weather_info['effects']:
+            print(f"  • {effect}")
+        
+        print(f"\n{Fore.YELLOW}Weather Forecast:")
+        # Generate simple forecast
+        future_weather = random.choice(list(weather_effects.keys()))
+        print(f"  Next: {future_weather} - {weather_effects[future_weather]['description']}")
+        
+        print(f"\n{Fore.CYAN}Weather Tips:")
+        print("• Weather changes every 5-15 actions")
+        print("• Plan your battles around favorable conditions")
+        print("• Some monsters prefer certain weather types")
+        print("• Legendary monsters may appear during storms")
+        
+        input("\nPress Enter to continue...")
+
+    def show_time_system(self):
+        """Show day/night cycle affecting gameplay"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}          TIME SYSTEM")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize time system if it doesn't exist
+        if not hasattr(self, 'game_time'):
+            self.game_time = 0  # 0-23 representing hours
+            self.day_count = 1
+        
+        # Advance time slightly
+        self.game_time = (self.game_time + 1) % 24
+        if self.game_time == 0:
+            self.day_count += 1
+        
+        # Determine time period
+        if 6 <= self.game_time < 12:
+            period = "Morning"
+            period_color = Fore.YELLOW
+        elif 12 <= self.game_time < 18:
+            period = "Afternoon"
+            period_color = Fore.LIGHTYELLOW_EX
+        elif 18 <= self.game_time < 22:
+            period = "Evening"
+            period_color = Fore.MAGENTA
+        else:
+            period = "Night"
+            period_color = Fore.BLUE
+        
+        print(f"{period_color}Current Time: Day {self.day_count}, {self.game_time:02d}:00 ({period}){Style.RESET_ALL}")
+        
+        # Time-based effects
+        time_effects = {
+            "Morning": [
+                "Monster healing is 25% more effective",
+                "Grass and Normal types are more active",
+                "Shops offer morning discounts (10% off)"
+            ],
+            "Afternoon": [
+                "Standard monster activity levels",
+                "All monster types equally active",
+                "Training facilities are busy (+20% XP)"
+            ],
+            "Evening": [
+                "Fire and Electric types are more active",
+                "Sunset creates beautiful battle backgrounds",
+                "Experience gains are increased by 15%"
+            ],
+            "Night": [
+                "Dark, Ghost, and Psychic types appear more",
+                "Rare and legendary encounters increased",
+                "Monster centers offer night healing bonuses"
+            ]
+        }
+        
+        print(f"\n{Fore.GREEN}Current Time Effects:")
+        for effect in time_effects[period]:
+            print(f"  • {effect}")
+        
+        # Daily events
+        print(f"\n{Fore.YELLOW}Daily Events:")
+        daily_events = [
+            "Daily login bonus available",
+            "Monster tournament registration open",
+            "Rare monster migration in progress",
+            "Double XP event active",
+            "Special shop items available"
+        ]
+        
+        # Simple day-based events
+        event_index = self.day_count % len(daily_events)
+        print(f"  🎉 {daily_events[event_index]}")
+        
+        print(f"\n{Fore.CYAN}Time-Based Tips:")
+        print("• Different monsters are active at different times")
+        print("• Night time is best for rare encounters")
+        print("• Morning healing is most cost-effective")
+        print("• Evening training gives bonus experience")
+        print("• Check back daily for new events!")
+        
+        input("\nPress Enter to continue...")
+
+    def show_world_map(self):
+        """Show world map with travel options"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}           WORLD MAP")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize visited areas if they don't exist
+        if self.player and not hasattr(self.player, 'visited_areas'):
+            self.player.visited_areas = {'Forest Grove'}  # Starting area
+        
+        locations = {
+            'Forest Grove': {
+                'description': 'A peaceful forest with friendly monsters',
+                'monster_types': ['Grass', 'Normal', 'Flying'],
+                'travel_cost': 0,
+                'unlocked': True,
+                'special': 'Starting area'
+            },
+            'Crystal Caves': {
+                'description': 'Sparkling caves filled with crystal monsters',
+                'monster_types': ['Rock', 'Ice', 'Psychic'],
+                'travel_cost': 50,
+                'unlocked': self.player.trainer_level >= 5 if self.player else False,
+                'special': 'Rare crystals found here'
+            },
+            'Volcanic Peak': {
+                'description': 'A dangerous mountain with fire monsters',
+                'monster_types': ['Fire', 'Ground', 'Rock'],
+                'travel_cost': 100,
+                'unlocked': self.player.trainer_level >= 10 if self.player else False,
+                'special': 'Fire-type paradise'
+            },
+            'Ocean Depths': {
+                'description': 'Deep waters home to powerful water monsters',
+                'monster_types': ['Water', 'Electric', 'Ice'],
+                'travel_cost': 150,
+                'unlocked': self.player.trainer_level >= 15 if self.player else False,
+                'special': 'Legendary sea monsters'
+            },
+            'Sky Islands': {
+                'description': 'Floating islands in the clouds',
+                'monster_types': ['Flying', 'Electric', 'Dragon'],
+                'travel_cost': 200,
+                'unlocked': self.player.trainer_level >= 20 if self.player else False,
+                'special': 'Ancient flying monsters'
+            },
+            'Shadow Realm': {
+                'description': 'A dark dimension between worlds',
+                'monster_types': ['Dark', 'Ghost', 'Psychic'],
+                'travel_cost': 300,
+                'unlocked': self.player.trainer_level >= 25 if self.player else False,
+                'special': 'Corrupted variants common'
+            },
+            'Cosmic Observatory': {
+                'description': 'A space station monitoring the universe',
+                'monster_types': ['Cosmic', 'Psychic', 'Electric'],
+                'travel_cost': 500,
+                'unlocked': self.player.trainer_level >= 30 if self.player else False,
+                'special': 'Legendary cosmic monsters'
+            },
+            'Temporal Nexus': {
+                'description': 'Where time and space converge',
+                'monster_types': ['Time', 'Space', 'Cosmic'],
+                'travel_cost': 1000,
+                'unlocked': self.player.trainer_level >= 40 if self.player else False,
+                'special': 'Ultimate legendary encounters'
+            }
+        }
+        
+        current_location = self.player.current_location if self.player else 'Forest Grove'
+        
+        print(f"{Fore.YELLOW}Current Location: {current_location}")
+        if current_location in locations:
+            print(f"Description: {locations[current_location]['description']}")
+            print(f"Monster Types: {', '.join(locations[current_location]['monster_types'])}")
+        
+        print(f"\n{Fore.GREEN}Available Locations:")
+        for name, info in locations.items():
+            status_symbol = "📍" if name == current_location else "🗺️"
+            unlock_symbol = "✅" if info['unlocked'] else "🔒"
+            visited_symbol = "⭐" if name in (self.player.visited_areas if self.player else set()) else ""
+            
+            if info['unlocked']:
+                print(f"{status_symbol} {unlock_symbol} {name} {visited_symbol}")
+                print(f"    {info['description']}")
+                print(f"    Types: {', '.join(info['monster_types'])}")
+                print(f"    Travel Cost: {info['travel_cost']} tokens")
+                print(f"    Special: {info['special']}")
+            else:
+                req_level = {
+                    'Crystal Caves': 5, 'Volcanic Peak': 10, 'Ocean Depths': 15,
+                    'Sky Islands': 20, 'Shadow Realm': 25, 'Cosmic Observatory': 30,
+                    'Temporal Nexus': 40
+                }.get(name, 1)
+                print(f"{status_symbol} {unlock_symbol} {name} (Requires Trainer Level {req_level})")
+            print()
+        
+        print(f"{Fore.CYAN}Map Legend:")
+        print("📍 Current Location  🗺️ Available  ✅ Unlocked  🔒 Locked  ⭐ Visited")
+        
+        print(f"\n{Fore.CYAN}Travel Options:")
+        print("t <location> - Travel to location")
+        print("b - Back to main menu")
+        
+        choice = input("\nEnter your choice: ").lower()
+        
+        if choice.startswith('t '):
+            location_name = choice[2:].title()
+            if location_name in locations:
+                location = locations[location_name]
+                if location['unlocked']:
+                    if self.player and self.player.tokens >= location['travel_cost']:
+                        self.player.tokens -= location['travel_cost']
+                        self.player.current_location = location_name
+                        self.player.visited_areas.add(location_name)
+                        print(f"\n{Fore.GREEN}Traveled to {location_name}!")
+                        print(f"You are now in: {location['description']}")
+                    else:
+                        print(f"\n{Fore.RED}Not enough tokens! Need {location['travel_cost']}")
+                else:
+                    print(f"\n{Fore.RED}Location not unlocked yet!")
+            else:
+                print(f"\n{Fore.RED}Location not found!")
+            input("Press Enter to continue...")
+
+    def show_alliance_menu(self):
+        """Show alliance system for team cooperation"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         ALLIANCE SYSTEM")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        print(f"{Fore.YELLOW}Alliance Features:")
+        print("• Team up with other trainers")
+        print("• Share resources and strategies")
+        print("• Participate in alliance wars")
+        print("• Access exclusive alliance tournaments")
+        print("• Earn alliance loyalty rewards")
+        
+        print(f"\n{Fore.GREEN}Available Alliances:")
+        print("1. Dragon Riders Alliance - Focus: Dragon-type mastery")
+        print("2. Elemental Unity - Focus: Multi-type strategies")
+        print("3. Shadow Legion - Focus: Dark-type dominance")
+        print("4. Crystal Guardians - Focus: Defensive tactics")
+        print("5. Storm Chasers - Focus: Electric/Flying types")
+        
+        print(f"\n{Fore.CYAN}This feature is coming soon!")
+        print("Alliance battles and cooperative gameplay will be available in future updates.")
+        
+        input("\nPress Enter to continue...")
+
+    def show_advanced_inventory(self):
+        """Enhanced inventory with sorting and filtering"""
+        if not self.player:
+            print("No active player found!")
+            return
+
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}       ADVANCED INVENTORY")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        if not self.player.inventory:
+            print(f"{Fore.YELLOW}Your inventory is empty!")
+            input("Press Enter to continue...")
+            return
+        
+        # Categorize items
+        categories = {}
+        for item in self.player.inventory:
+            category = getattr(item, 'effect', 'Other')
+            if category not in categories:
+                categories[category] = []
+            categories[category].append(item)
+        
+        print(f"{Fore.YELLOW}Inventory ({len(self.player.inventory)}/{MAX_INVENTORY_SIZE}):")
+        
+        for category, items in categories.items():
+            print(f"\n{Fore.GREEN}{category.title()}:")
+            for i, item in enumerate(items, 1):
+                rarity_color = Fore.WHITE
+                if 'rare' in item.name.lower():
+                    rarity_color = Fore.BLUE
+                elif 'super' in item.name.lower():
+                    rarity_color = Fore.MAGENTA
+                elif 'master' in item.name.lower():
+                    rarity_color = Fore.YELLOW
+                
+                print(f"  {rarity_color}{item.name} - {item.description}{Style.RESET_ALL}")
+        
+        print(f"\n{Fore.CYAN}Inventory Actions:")
+        print("u - Use item")
+        print("s - Sort inventory")
+        print("f - Filter by category")
+        print("d - Drop item")
+        print("b - Back to main menu")
+        
+        choice = input("\nEnter your choice: ").lower()
+        
+        if choice == 'u':
+            self.use_item_from_inventory()
+        elif choice == 's':
+            # Sort inventory by name
+            self.player.inventory.sort(key=lambda x: x.name)
+            print(f"\n{Fore.GREEN}Inventory sorted alphabetically!")
+            input("Press Enter to continue...")
+        elif choice == 'f':
+            category = input("Enter category to filter by: ").lower()
+            filtered_items = [item for item in self.player.inventory if category in getattr(item, 'effect', '').lower()]
+            if filtered_items:
+                print(f"\n{Fore.GREEN}Items in category '{category}':")
+                for item in filtered_items:
+                    print(f"  {item.name} - {item.description}")
+            else:
+                print(f"\n{Fore.YELLOW}No items found in category '{category}'")
+            input("Press Enter to continue...")
+        elif choice == 'd':
+            if self.player.inventory:
+                print(f"\n{Fore.YELLOW}Select item to drop:")
+                for i, item in enumerate(self.player.inventory, 1):
+                    print(f"{i}. {item.name}")
+                
+                try:
+                    item_num = int(input("Enter item number: ")) - 1
+                    if 0 <= item_num < len(self.player.inventory):
+                        dropped_item = self.player.inventory.pop(item_num)
+                        print(f"\n{Fore.YELLOW}Dropped {dropped_item.name}!")
+                    else:
+                        print(f"\n{Fore.RED}Invalid item number!")
+                except ValueError:
+                    print(f"\n{Fore.RED}Please enter a valid number!")
+                input("Press Enter to continue...")
+
+    def use_item_from_inventory(self):
+        """Use an item from inventory on a monster"""
+        if not self.player or not self.player.inventory:
+            print(f"\n{Fore.YELLOW}No items to use!")
+            return
+        
+        print(f"\n{Fore.YELLOW}Select item to use:")
+        items_list = list(self.player.inventory.keys())
+        for i, item in enumerate(items_list, 1):
+            quantity = self.player.inventory[item]
+            print(f"{i}. {item.name} x{quantity} - {item.description}")
+        
+        try:
+            item_num = int(input("Enter item number: ")) - 1
+            if 0 <= item_num < len(items_list):
+                item = items_list[item_num]
+                
+                # Select monster to use item on
+                if not self.player.monsters:
+                    print(f"\n{Fore.RED}No monsters to use item on!")
+                    return
+                
+                print(f"\n{Fore.GREEN}Select monster:")
+                for i, monster in enumerate(self.player.monsters, 1):
+                    status = "Fainted" if monster.is_fainted() else "Healthy"
+                    print(f"{i}. {monster.name} (Lv.{monster.level}) - {status}")
+                
+                monster_num = int(input("Enter monster number: ")) - 1
+                if 0 <= monster_num < len(self.player.monsters):
+                    monster = self.player.monsters[monster_num]
+                    
+                    # Apply item effect
+                    if 'heal' in item.name.lower():
+                        if 'super' in item.name.lower():
+                            monster.full_heal()
+                            print(f"\n{Fore.GREEN}{monster.name} fully healed!")
+                        else:
+                            monster.heal(50)
+                            print(f"\n{Fore.GREEN}{monster.name} healed for 50 HP!")
+                    elif 'experience' in item.name.lower():
+                        if 'candy' in item.name.lower():
+                            monster.level += 1
+                            monster.calculate_stats()
+                            print(f"\n{Fore.GREEN}{monster.name} leveled up!")
+                        else:
+                            monster.gain_exp(200)
+                            print(f"\n{Fore.GREEN}{monster.name} gained experience!")
+                    elif 'boost' in item.name.lower():
+                        if 'power' in item.name.lower():
+                            monster.base_attack += 5
+                            print(f"\n{Fore.GREEN}{monster.name}'s attack increased!")
+                        elif 'defense' in item.name.lower():
+                            monster.base_defense += 5
+                            print(f"\n{Fore.GREEN}{monster.name}'s defense increased!")
+                        elif 'speed' in item.name.lower():
+                            monster.base_speed += 5
+                            print(f"\n{Fore.GREEN}{monster.name}'s speed increased!")
+                        monster.calculate_stats()
+                    elif 'revival' in item.name.lower():
+                        if monster.is_fainted():
+                            monster.current_hp = monster.max_hp // 2
+                            print(f"\n{Fore.GREEN}{monster.name} was revived!")
+                        else:
+                            print(f"\n{Fore.YELLOW}{monster.name} is not fainted!")
+                            return
+                    
+                    # Remove used item
+                    self.player.inventory.remove(item)
+                else:
+                    print(f"\n{Fore.RED}Invalid monster number!")
+            else:
+                print(f"\n{Fore.RED}Invalid item number!")
+        except ValueError:
+            print(f"\n{Fore.RED}Please enter valid numbers!")
+        
+        input("Press Enter to continue...")
+
+    def show_research_menu(self):
+        """Show monster research and database"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}       RESEARCH DATABASE")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        print(f"{Fore.YELLOW}Research Features:")
+        print("• Study monster behaviors and patterns")
+        print("• Unlock evolution requirements")
+        print("• Discover type effectiveness charts")
+        print("• Research rare monster locations")
+        print("• Analyze battle statistics")
+        
+        print(f"\n{Fore.GREEN}Research Progress:")
+        if self.player:
+            research_points = getattr(self.player, 'research_points', 0)
+            print(f"Research Points: {research_points}")
+            
+            discovered_species = len(set(monster.name.split()[0] for monster in self.player.monsters))
+            print(f"Species Discovered: {discovered_species}")
+            
+            type_expertise = {}
+            for monster in self.player.monsters:
+                type_expertise[monster.type] = type_expertise.get(monster.type, 0) + 1
+            
+            print(f"Type Expertise:")
+            for mon_type, count in sorted(type_expertise.items()):
+                expertise_level = min(count // 3, 5)  # Max level 5
+                stars = "★" * expertise_level + "☆" * (5 - expertise_level)
+                print(f"  {mon_type}: {stars} (Level {expertise_level})")
+        
+        print(f"\n{Fore.CYAN}This feature will be expanded in future updates!")
+        input("Press Enter to continue...")
+
+    def enter_dungeon(self):
+        """Enter special dungeon challenges"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         DUNGEON EXPLORER")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        dungeons = [
+            {
+                'name': 'Crystal Caverns',
+                'difficulty': 'Easy',
+                'levels': 5,
+                'rewards': 'Crystal materials, Rock-type monsters',
+                'entry_cost': 100
+            },
+            {
+                'name': 'Shadow Temple',
+                'difficulty': 'Medium',
+                'levels': 10,
+                'rewards': 'Dark materials, Ghost-type monsters',
+                'entry_cost': 250
+            },
+            {
+                'name': 'Dragon\'s Lair',
+                'difficulty': 'Hard',
+                'levels': 15,
+                'rewards': 'Dragon materials, Legendary encounters',
+                'entry_cost': 500
+            },
+            {
+                'name': 'Void Nexus',
+                'difficulty': 'Extreme',
+                'levels': 20,
+                'rewards': 'Ultimate materials, Cosmic monsters',
+                'entry_cost': 1000
+            }
+        ]
+        
+        print(f"{Fore.YELLOW}Available Dungeons:")
+        for i, dungeon in enumerate(dungeons, 1):
+            color = Fore.GREEN if dungeon['difficulty'] == 'Easy' else \
+                   Fore.YELLOW if dungeon['difficulty'] == 'Medium' else \
+                   Fore.RED if dungeon['difficulty'] == 'Hard' else Fore.MAGENTA
+            
+            print(f"{i}. {color}{dungeon['name']} ({dungeon['difficulty']}){Style.RESET_ALL}")
+            print(f"   Levels: {dungeon['levels']}")
+            print(f"   Rewards: {dungeon['rewards']}")
+            print(f"   Entry Cost: {dungeon['entry_cost']} tokens")
+        
+        print(f"\n{Fore.CYAN}Dungeon Features:")
+        print("• Progressive difficulty levels")
+        print("• Unique rewards and materials")
+        print("• Boss battles at the end")
+        print("• Leaderboards for completion times")
+        
+        print(f"\n{Fore.CYAN}This feature is coming soon!")
+        print("Dungeon exploration will be available in future updates.")
+        
+        input("Press Enter to continue...")
+
+    def join_raid(self):
+        """Join cooperative raid battles"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}          RAID BATTLES")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        print(f"{Fore.YELLOW}Active Raids:")
+        print("🔥 Legendary Pyrovern Raid - 2/4 players")
+        print("⚡ Storm Titan Challenge - 1/6 players")
+        print("🌟 Cosmic Entity Event - 0/8 players")
+        
+        print(f"\n{Fore.GREEN}Raid Features:")
+        print("• Team up with multiple trainers")
+        print("• Battle ultra-powerful boss monsters")
+        print("• Share raid rewards among participants")
+        print("• Unlock exclusive raid-only monsters")
+        print("• Weekly raid rotation")
+        
+        print(f"\n{Fore.CYAN}This feature is coming soon!")
+        print("Cooperative raid battles will be available in future updates.")
+        
+        input("Press Enter to continue...")
+
+    def enter_pvp(self):
+        """Enter player vs player battles"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}            PVP ARENA")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        print(f"{Fore.YELLOW}PVP Modes:")
+        print("1. Ranked Battles - Climb the competitive ladder")
+        print("2. Casual Matches - Practice without rank pressure")
+        print("3. Tournament Mode - Participate in bracketed competitions")
+        print("4. Guild Wars - Represent your guild in battles")
+        
+        print(f"\n{Fore.GREEN}PVP Features:")
+        print("• Real-time battles against other players")
+        print("• Seasonal rankings and rewards")
+        print("• Spectator mode for learning strategies")
+        print("• Ban/pick phases for strategic depth")
+        print("• Replay system to review battles")
+        
+        print(f"\n{Fore.CYAN}This feature is coming soon!")
+        print("PVP battles will be available in future updates.")
+        
+        input("Press Enter to continue...")
+
+    def show_market(self):
+        """Show player-to-player trading market"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         TRADING MARKET")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        print(f"{Fore.YELLOW}Market Listings:")
+        print("🔥 Alpha Pyrovern - 5000 tokens")
+        print("⚡ Crystal Thunderwing - 3500 tokens")
+        print("🌟 Rare Stardust - 1200 tokens")
+        print("💎 Fusion Catalyst - 800 tokens")
+        
+        print(f"\n{Fore.GREEN}Market Features:")
+        print("• Buy and sell monsters with other players")
+        print("• Trade rare items and materials")
+        print("• Auction system for competitive bidding")
+        print("• Price history and market trends")
+        print("• Secure escrow system")
+        
+        print(f"\n{Fore.CYAN}This feature is coming soon!")
+        print("Player trading market will be available in future updates.")
+        
+        input("Press Enter to continue...")
+
+    def show_daily_tasks(self):
+        """Show daily challenges and rewards"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         DAILY TASKS")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Initialize daily tasks if they don't exist
+        if not hasattr(self.player, 'daily_tasks'):
+            self.player.daily_tasks = {
+                'catch_monsters': {'progress': 0, 'target': 3, 'completed': False},
+                'win_battles': {'progress': 0, 'target': 5, 'completed': False},
+                'explore_areas': {'progress': 0, 'target': 2, 'completed': False},
+                'use_items': {'progress': 0, 'target': 4, 'completed': False}
+            }
+        
+        daily_task_info = {
+            'catch_monsters': {
+                'name': 'Monster Catcher',
+                'description': 'Catch 3 wild monsters',
+                'reward': '100 tokens, 1 Monster Ball Plus'
+            },
+            'win_battles': {
+                'name': 'Battle Winner',
+                'description': 'Win 5 battles',
+                'reward': '150 tokens, Experience Candy'
+            },
+            'explore_areas': {
+                'name': 'Explorer',
+                'description': 'Visit 2 different areas',
+                'reward': '80 tokens, Rare materials'
+            },
+            'use_items': {
+                'name': 'Item User',
+                'description': 'Use 4 items on monsters',
+                'reward': '60 tokens, Heal Potions'
+            }
+        }
+        
+        print(f"{Fore.YELLOW}Today's Daily Tasks:")
+        
+        for task_id, task_data in self.player.daily_tasks.items():
+            task_info = daily_task_info[task_id]
+            progress = task_data['progress']
+            target = task_data['target']
+            completed = task_data['completed']
+            
+            status = "✅ COMPLETED" if completed else f"{progress}/{target}"
+            progress_bar = "█" * (progress * 10 // target) + "░" * (10 - (progress * 10 // target))
+            
+            color = Fore.GREEN if completed else Fore.YELLOW
+            print(f"{color}{task_info['name']}: {task_info['description']}")
+            print(f"  Progress: [{progress_bar}] {status}")
+            print(f"  Reward: {task_info['reward']}{Style.RESET_ALL}")
+            print()
+        
+        # Check if all tasks completed
+        all_completed = all(task['completed'] for task in self.player.daily_tasks.values())
+        if all_completed:
+            print(f"{Fore.YELLOW}🎉 ALL DAILY TASKS COMPLETED! 🎉")
+            print(f"Bonus Reward: 500 tokens + Premium Mystery Box")
+        
+        print(f"\n{Fore.CYAN}Daily Task Tips:")
+        print("• Tasks reset every 24 hours")
+        print("• Complete all tasks for bonus rewards")
+        print("• Tasks help you progress faster")
+        print("• Check back daily for new challenges")
+        
+        input("\nPress Enter to continue...")
+
+    def show_events(self):
+        """Show special events and limited-time content"""
+        clear_screen()
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        print(f"{Fore.CYAN}         SPECIAL EVENTS")
+        print(f"{Fore.CYAN}═══════════════════════════════════════")
+        
+        # Generate some sample events
+        current_events = [
+            {
+                'name': 'Legendary Weekend',
+                'description': 'Increased legendary monster spawn rates',
+                'duration': '2 days remaining',
+                'rewards': 'Legendary encounters +300%',
+                'active': True
+            },
+            {
+                'name': 'Double XP Week',
+                'description': 'All monsters gain double experience',
+                'duration': '5 days remaining',
+                'rewards': 'XP gains +100%',
+                'active': True
+            },
+            {
+                'name': 'Crystal Festival',
+                'description': 'Crystal-type monsters everywhere',
+                'duration': 'Ended',
+                'rewards': 'Crystal materials, Rare crystals',
+                'active': False
+            },
+            {
+                'name': 'Fusion Celebration',
+                'description': 'Fusion costs reduced by 50%',
+                'duration': 'Starting in 3 days',
+                'rewards': 'Discounted fusions, Free catalysts',
+                'active': False
+            }
+        ]
+        
+        print(f"{Fore.YELLOW}Active Events:")
+        active_events = [event for event in current_events if event['active']]
+        if active_events:
+            for event in active_events:
+                print(f"🎉 {event['name']}")
+                print(f"   {event['description']}")
+                print(f"   Duration: {event['duration']}")
+                print(f"   Special: {event['rewards']}")
+                print()
+        else:
+            print("No active events at this time.")
+        
+        print(f"\n{Fore.GREEN}Upcoming Events:")
+        upcoming_events = [event for event in current_events if not event['active'] and 'Starting' in event['duration']]
+        for event in upcoming_events:
+            print(f"📅 {event['name']} - {event['duration']}")
+            print(f"   {event['description']}")
+        
+        print(f"\n{Fore.BLUE}Past Events:")
+        past_events = [event for event in current_events if not event['active'] and 'Ended' in event['duration']]
+        for event in past_events:
+            print(f"📚 {event['name']} - {event['duration']}")
+        
+        print(f"\n{Fore.CYAN}Event Features:")
+        print("• Limited-time special content")
+        print("• Exclusive rewards and monsters")
+        print("• Seasonal celebrations")
+        print("• Community-wide challenges")
+        print("• Special event currencies")
+        
+        input("\nPress Enter to continue...")
 
 
 # Main entry point
