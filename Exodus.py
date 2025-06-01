@@ -5,6 +5,7 @@ import sys
 import pickle
 import re
 from colorama import Fore, Back, Style, init
+from typing import Dict, List, Any, Optional, Union, Tuple
 
 # Initialize colorama
 init(autoreset=True, strip=True if os.name != 'nt' else None)
@@ -192,7 +193,7 @@ class Font:
         return box_output
 
 # Save game functionality
-def save_game(slot_number=1):
+def save_game(slot_number: int = 1) -> None:
     """Save current game state to a file with comprehensive data storage"""
     
     # Ensure essential game state elements exist
@@ -695,7 +696,7 @@ def fix_save_version(save_data):
     
     return save_data
 
-def load_game(slot_number=1):
+def load_game(slot_number: int = 1) -> bool:
     """Load game state from a save file with enhanced version compatibility and data validation"""
     # Declare global variable at the beginning of the function
     global game_state
@@ -1439,7 +1440,7 @@ def manage_save_slots():
     return manage_save_slots()  # Return to the save management menu
 
 # Text display effects
-def print_slow(text, delay=0.03, style=None):
+def print_slow(text: str, delay: float = 0.03, style: Optional[str] = None) -> None:
     """Print text with a slight delay for dramatic effect"""
     # Apply styling if specified
     styled_text = style(text) if style else text
@@ -1459,7 +1460,7 @@ def print_slow(text, delay=0.03, style=None):
             time.sleep(delay)
         print()
 
-def print_typed(text, delay=0.01, style=None):
+def print_typed(text: str, delay: float = 0.01, style: Optional[str] = None) -> None:
     """Print text with a typing effect, like a computer terminal"""
     # Apply styling if specified
     styled_text = style(text) if style else text
@@ -1502,10 +1503,10 @@ def print_glitch(text, style=Font.GLITCH):
     print()
 
 # Clear screen function for better UI
-def clear_screen():
+def clear_screen() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def initialize_game_state():
+def initialize_game_state() -> None:
     """Initialize the game state with all required keys"""
     global game_state
     
@@ -14549,7 +14550,7 @@ def display_character_status():
     current_chapter = game_state.get('current_chapter', 'Chapter 1: Earth Reclamation')
     print(f"\n{Font.STAGE('Current Chapter:')} {current_chapter}")
 
-def display_inventory():
+def display_inventory() -> None:
     """Display player inventory items and equipment"""
     clear_screen()
     
@@ -14916,7 +14917,7 @@ def continue_chapter_one():
     input(f"\n{Font.COMMAND('Press Enter to return to main menu...')}")
     return main_menu()
 
-def main_menu():
+def main_menu() -> None:
     """Display the enhanced main menu with character selection and improved save system"""
     while True:
         clear_screen()

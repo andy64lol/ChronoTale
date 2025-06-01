@@ -19,6 +19,7 @@ import sys
 import time
 from datetime import datetime
 from colorama import Fore, Style, init
+from typing import Dict, List, Any, Optional, Union
 
 # Launcher protection at the very beginning
 if __name__ == "__main__":
@@ -641,10 +642,10 @@ CHAMPIONSHIP_BRACKETS = [
     ["Beast Master", "Reality Architect"]
 ]
 
-def clear():
+def clear() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
-def save_game(slot):
+def save_game(slot: int) -> None:
     """Save current game state to specified slot.
     Args:
         slot (int): Save slot index (0-2)
@@ -653,7 +654,7 @@ def save_game(slot):
         json.dump(player, f)
     print(Fore.GREEN + f"💾 Game saved to Slot {slot+1}!")
 
-def load_game(slot):
+def load_game(slot: int) -> None:
     """Load game state from specified slot.
     Args:
         slot (int): Save slot index (0-2)
@@ -669,7 +670,7 @@ def load_game(slot):
 # ------------------------------
 # Achievements
 # ------------------------------
-def award_achievement(name):
+def award_achievement(name: str) -> None:
     if name not in player["achievements"]:
         print(Fore.CYAN + f"🏆 Achievement Unlocked: {name}")
         player["achievements"].append(name)
@@ -677,7 +678,7 @@ def award_achievement(name):
 # ------------------------------
 # Shop System
 # ------------------------------
-def shop():
+def shop() -> None:
     clear()
     print(Fore.LIGHTBLUE_EX + "🏪 Ticket Shop")
     print(f"Your Tickets: {player['tickets']}")
@@ -701,7 +702,7 @@ def shop():
     elif choice != "0":
         print(Fore.RED + "Invalid choice.")
 
-def shop_costumes():
+def shop_costumes() -> None:
     clear()
     print(Fore.LIGHTBLUE_EX + "👕 Costume Shop")
     print(f"Your Tickets: {player['tickets']}")
@@ -735,7 +736,7 @@ def shop_costumes():
     except (ValueError, IndexError):
         print(Fore.RED + "Invalid choice.")
 
-def shop_consumables():
+def shop_consumables() -> None:
     clear()
     print(Fore.LIGHTBLUE_EX + "🎫 Consumables Shop")
     print(f"Your Tickets: {player['tickets']}")
@@ -763,7 +764,7 @@ def shop_consumables():
     except (ValueError, IndexError):
         print(Fore.RED + "Invalid choice.")
 
-def equip_menu(item_name, item_type):
+def equip_menu(item_name: str, item_type: str) -> None:
     if input(f"Equip {item_name} now? (y/n): ").lower() == 'y':
         if item_type == "costume":
             player["equipped_costume"] = COSTUMES[item_name]["emoji"]
@@ -775,15 +776,15 @@ def equip_menu(item_name, item_type):
             else:
                 print(Fore.YELLOW + "Item already equipped!")
 
-def is_halloween():
+def is_halloween() -> bool:
     # Simple check - October
     return time.localtime().tm_mon == 10
 
-def is_easter():
+def is_easter() -> bool:
     # Simple check - April
     return time.localtime().tm_mon == 4
 
-def check_costume_achievements():
+def check_costume_achievements() -> None:
     costume_count = sum(1 for item in player["inventory"] if item in COSTUMES)
     if costume_count >= 5:
         award_achievement("Fashionista: Own 5 costumes")
@@ -792,7 +793,7 @@ def check_costume_achievements():
     if all(c in player["inventory"] for c in ["Bear 🐻", "Panda 🐼", "Polar Bear 🐻‍❄️"]):
         award_achievement("Bear Family: Collect all bears")
 
-def check_item_achievements():
+def check_item_achievements() -> None:
     consumable_count = sum(1 for item in player["inventory"] if item in CONSUMABLES)
     if consumable_count >= 3:
         award_achievement("Prepared: Own 3 consumable items")
@@ -803,14 +804,14 @@ def check_item_achievements():
 # Minigames
 # ------------------------------
 
-def pay_to_play(cost):
+def pay_to_play(cost: int) -> bool:
     if player["tickets"] < cost:
         print(Fore.RED + f"❌ Not enough tickets (need {cost})!")
         return False
     player["tickets"] -= cost
     return True
 
-def guess_the_number():
+def guess_the_number() -> None:
     if not pay_to_play(3): 
         return
     clear()
@@ -824,7 +825,7 @@ def guess_the_number():
     else:
         print(Fore.RED + f"Nope! It was {number}.")
 
-def quick_math():
+def quick_math() -> None:
     if not pay_to_play(2): 
         return
     clear()
@@ -838,7 +839,7 @@ def quick_math():
     else:
         print(Fore.RED + f"Wrong! It was {answer}.")
 
-def word_shuffle():
+def word_shuffle() -> None:
     if not pay_to_play(3): 
         return
     clear()
@@ -853,7 +854,7 @@ def word_shuffle():
     else:
         print(Fore.RED + f"It was '{word}'.")
 
-def lucky_spinner():
+def lucky_spinner() -> None:
     if not pay_to_play(1): 
         return
     clear()
@@ -862,7 +863,7 @@ def lucky_spinner():
     print(f"Result: {spin} tickets!")
     player["tickets"] = max(0, player["tickets"] + spin)
 
-def dart_throw():
+def dart_throw() -> None:
     if not pay_to_play(3): 
         return
     clear()
@@ -878,7 +879,7 @@ def dart_throw():
     else:
         print(Fore.RED + "No tickets.")
 
-def reaction_test():
+def reaction_test() -> None:
     if not pay_to_play(2): 
         return
     clear()
@@ -899,7 +900,7 @@ def reaction_test():
     else:
         print(Fore.RED + "Too slow!")
 
-def melody_memory():
+def melody_memory() -> None:
     if not pay_to_play(3): 
         return
     notes = ['A', 'B', 'C', 'D']
@@ -914,7 +915,7 @@ def melody_memory():
     else:
         print(Fore.RED + f"Wrong! Pattern: {' '.join(pattern)}")
 
-def show_tutorials():
+def show_tutorials() -> None:
     clear()
     print(Fore.LIGHTMAGENTA_EX + "📘 TUTORIAL MODE")
     print("These are practice versions of the games. No tickets used or rewarded.")
@@ -936,19 +937,19 @@ def show_tutorials():
         print("Invalid.")
 
 # Tutorial variants of existing games (no cost or reward)
-def guess_the_number_free():
+def guess_the_number_free() -> None:
     clear()
     number = random.randint(1, 5)
     guess = int(input("Guess a number between 1 and 5: "))
     print("Correct!" if guess == number else f"Wrong! It was {number}")
 
-def quick_math_free():
+def quick_math_free() -> None:
     clear()
     a, b = random.randint(1, 10), random.randint(1, 10)
     user = int(input(f"What is {a} + {b}? "))
     print("Correct!" if user == a + b else f"Wrong! Answer: {a + b}")
 
-def word_shuffle_free():
+def word_shuffle_free() -> None:
     clear()
     word = random.choice(["carnival", "magic", "popcorn"])
     shuffled = ''.join(random.sample(word, len(word)))
@@ -956,7 +957,7 @@ def word_shuffle_free():
     guess = input("Your guess: ")
     print("Correct!" if guess.lower() == word else f"It was '{word}'.")
 
-def reaction_test_free():
+def reaction_test_free() -> None:
     clear()
     print("Wait for GO!")
     time.sleep(random.uniform(2, 4))
@@ -966,7 +967,7 @@ def reaction_test_free():
     input()
     print(f"Your time: {time.time() - start:.3f}s")
 
-def guess_password():
+def guess_password() -> None:
     if not pay_to_play(4): 
         return
     code = ''.join(random.choices('ABCDEF', k=3))
@@ -983,7 +984,7 @@ def guess_password():
 # Menus
 # ------------------------------
 
-def minigame_menu():
+def minigame_menu() -> None:
     """Display and handle the minigame selection menu.
     Shows available games and their ticket costs.
     Games are grouped into free/cheap and regular categories.
@@ -1054,7 +1055,7 @@ def minigame_menu():
         else:
             print("Invalid.")
 
-def save_menu():
+def save_menu() -> None:
     print(Fore.GREEN + "\nSave Slots:")
     for i in range(3):
         if os.path.exists(SAVE_SLOTS[i]):
@@ -1074,7 +1075,7 @@ def save_menu():
         else:
             print(Fore.RED + "No current slot selected. Please save to a slot first.")
 
-def load_menu():
+def load_menu() -> None:
     print(Fore.YELLOW + "\nLoad Slots:")
     for i in range(3):
         print(f"[{i+1}] Load Slot {i+1}")
@@ -1082,7 +1083,7 @@ def load_menu():
     if slot in ["1", "2", "3"]:
         load_game(int(slot)-1)
 
-def tutorials():
+def tutorials() -> None:
     clear()
     print(Fore.YELLOW + "📖 Game Tutorials")
     print("""
@@ -1094,7 +1095,7 @@ def tutorials():
     """)
     input("Press Enter to continue...")
 
-def gambling_menu():
+def gambling_menu() -> None:
     """Display and handle the gambling games menu.
     Available games:
     - Double or Nothing: 50/50 chance to double bet
@@ -1131,7 +1132,7 @@ def gambling_menu():
     else:
         print("Invalid.")
 
-def lucky_dice():
+def lucky_dice() -> None:
     bet = int(input("Place your bet: "))
     if bet > player["tickets"] or bet <= 0:
         print("Invalid bet!")
@@ -1177,7 +1178,7 @@ def lucky_dice():
             print(Fore.RED + f"You lose! -{bet} tickets")
             player["tickets"] -= bet
 
-def race_track():
+def race_track() -> None:
     animals = ["🐎 Horse", "🐪 Camel", "🐢 Turtle", "🐰 Rabbit"]
     multipliers = [2, 3, 4, 2]
 
@@ -1208,7 +1209,7 @@ def race_track():
         print(Fore.RED + f"You lose! -{bet} tickets")
         player["tickets"] -= bet
 
-def lucky_slots():
+def lucky_slots() -> None:
     clear()
     print(Fore.MAGENTA + "🎰 LUCKY SLOTS")
     print("[1] Single Pull (2 tickets)")
@@ -1250,7 +1251,7 @@ def lucky_slots():
     else:
         print(Fore.RED + "Not enough tickets!")
 
-def double_or_nothing():
+def double_or_nothing() -> None:
     bet = int(input("Bet amount: "))
     if bet > player["tickets"] or bet <= 0:
         print("Invalid bet!")
@@ -1263,7 +1264,7 @@ def double_or_nothing():
         print(Fore.RED + "You lost it all!")
         player["tickets"] -= bet
 
-def card_draw():
+def card_draw() -> None:
     bet = int(input("Bet amount: "))
     if bet > player["tickets"] or bet <= 0:
         print("Invalid bet!")
@@ -1280,7 +1281,7 @@ def card_draw():
     else:
         print(Fore.YELLOW + "Draw. No change.")
 
-def wheel_of_fate():
+def wheel_of_fate() -> None:
     bet = int(input("Bet amount: "))
     if bet > player["tickets"] or bet <= 0:
         print("Invalid bet!")
@@ -1306,7 +1307,7 @@ REWARD_CODES = {
     "DRAGONFEST": {"tickets": 40, "card": "Space-Time Dragon", "active": True, "description": "Dragon card bonus!"}
 }
 
-def redeem_code():
+def redeem_code() -> None:
     clear()
     print(Fore.CYAN + "🎟️ Code Redemption")
     code = input("Enter your code: ").upper()
@@ -1337,7 +1338,7 @@ def redeem_code():
 
     input("\nPress Enter to continue...")
 
-def main_menu():
+def main_menu() -> None:
     """Enhanced main menu with dynamic NPC interactions and improved visual display"""
     init_player_attributes()
     check_daily_reward()
@@ -1806,7 +1807,7 @@ DAILY_CHALLENGES = {
 }
 
 # Initialize additional player attributes
-def init_player_attributes():
+def init_player_attributes() -> None:
     if "pets" not in player:
         player["pets"] = []
     if "active_pet" not in player:
@@ -1876,14 +1877,14 @@ def init_player_attributes():
             "tickets_earned": 0
         }
 
-def check_daily_reward():
+def check_daily_reward() -> None:
     today = datetime.now().date()
     if player["last_daily_reward"] is None or datetime.strptime(player["last_daily_reward"], "%Y-%m-%d").date() < today:
         player["tickets"] += 10
         player["last_daily_reward"] = today.strftime("%Y-%m-%d")
         print(Fore.GREEN + "🎁 Daily Reward: +10 tickets!")
 
-def pet_shop():
+def pet_shop() -> None:
     clear()
     print(Fore.CYAN + "🐾 Pet Shop")
     print(f"Your tickets: {player['tickets']}")
@@ -1907,7 +1908,7 @@ def pet_shop():
         else:
             print(Fore.RED + "Not enough tickets!")
 
-def equip_pet(pet=None):
+def equip_pet(pet: Optional[str] = None) -> None:
     if pet is None:
         clear()
         print(Fore.CYAN + "🐾 Your Pets")
@@ -1930,7 +1931,7 @@ def equip_pet(pet=None):
         player["active_pet"] = pet
         print(f"Equipped {pet}!")
 
-def check_daily_challenges():
+def check_daily_challenges() -> None:
     clear()
     print(Fore.YELLOW + "📅 Daily Challenges")
 
@@ -2044,7 +2045,7 @@ def check_daily_challenges():
 
     input("\nPress Enter to continue...")
 
-def update_leaderboard(score, game_type):
+def update_leaderboard(score: int, game_type: str) -> int:
     player_name = f"{player['equipped_costume']} {player['name']}"
     if player_name not in LEADERBOARD:
         LEADERBOARD[player_name] = {}
@@ -2052,7 +2053,7 @@ def update_leaderboard(score, game_type):
         LEADERBOARD[player_name][game_type] = 0
     LEADERBOARD[player_name][game_type] = max(LEADERBOARD[player_name][game_type], score)
 
-def show_leaderboard():
+def show_leaderboard() -> None:
     clear()
     print(Fore.CYAN + "🏆 Leaderboard")
 
@@ -2071,7 +2072,7 @@ def show_leaderboard():
 
 
 
-def start_game():
+def start_game() -> None:
     clear()
     colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN]
     carnival_art = f"""
@@ -2090,7 +2091,7 @@ def start_game():
     player["name"] = input("> ")
     main_menu()
 
-def paper_scissors_rock():
+def paper_scissors_rock() -> None:
     if not pay_to_play(1): 
         return
     choices = ["Rock 🪨", "Paper 📄", "Scissors ✂️"]
@@ -2111,7 +2112,7 @@ def paper_scissors_rock():
         print(Fore.RED + "You lose!")
         update_mission_progress("play_games")
 
-def coin_flip_game():
+def coin_flip_game() -> None:
     if not pay_to_play(1):
         return
     choice = input("Heads or Tails? ").lower()
@@ -2123,7 +2124,7 @@ def coin_flip_game():
         print(Fore.RED + f"You lose! It was {result}")
     update_mission_progress("play_games")
 
-def high_low():
+def high_low() -> None:
     if not pay_to_play(2):
         return
     number = random.randint(1, 100)
@@ -2140,7 +2141,7 @@ def high_low():
         print(Fore.RED + "Wrong!")
     update_mission_progress("play_games")
 
-def talk_to_npcs():
+def talk_to_npcs() -> None:
     """Interactive conversation system with NPCs, showing detailed information and enabling trading"""
     while True:
         clear()
@@ -2211,7 +2212,7 @@ def talk_to_npcs():
             print(Fore.RED + "Invalid choice!")
             time.sleep(1)
 
-def interact_with_npc(npc_name):
+def interact_with_npc(npc_name: str) -> None:
     """Detailed interaction with a specific NPC including dialogue, missions, and trading"""
     npc_data = NPCS[npc_name]
 
@@ -2486,7 +2487,7 @@ def interact_with_npc(npc_name):
                 print(Fore.RED + "Invalid option!")
                 time.sleep(1)
 
-def give_gift_to_npc(npc_name):
+def give_gift_to_npc(npc_name: str) -> None:
     """Give a gift to an NPC to improve relationship"""
     clear()
     print(Fore.CYAN + f"=== GIVE A GIFT TO {npc_name.upper()} ===")
@@ -2568,7 +2569,7 @@ def give_gift_to_npc(npc_name):
         print(Fore.RED + "Invalid choice!")
         time.sleep(1)
 
-def calculate_gift_value(npc_name, gift):
+def calculate_gift_value(npc_name: str, gift: str) -> int:
     """Calculate how much an NPC values a particular gift"""
     base_value = 5  # Default base value
 
@@ -2597,7 +2598,7 @@ def calculate_gift_value(npc_name, gift):
 
     return max(1, base_value + variation)  # Minimum value of 1
 
-def check_relationship_achievements():
+def check_relationship_achievements() -> None:
     """Check for achievements based on NPC relationships"""
     if "npc_relationships" not in player:
         return
@@ -2684,7 +2685,7 @@ def check_relationship_achievements():
     if friendship_loyalty > 0:
         add_loyalty_points(min(friendship_loyalty, 10))  # Cap at 10 points per check
 
-def relationship_progress(npc_name, action_type, points):
+def relationship_progress(npc_name: str, action_type: str, points: int) -> None:
     """Update relationship progress with an NPC"""
     if "npc_relationships" not in player:
         player["npc_relationships"] = {}
@@ -2771,7 +2772,7 @@ def relationship_progress(npc_name, action_type, points):
 
         time.sleep(2)
 
-def check_for_special_event(npc_name):
+def check_for_special_event(npc_name: str) -> bool:
     """Determine if a special event should trigger for this NPC interaction"""
     if "npc_relationships" not in player:
         return False
@@ -2798,7 +2799,7 @@ def check_for_special_event(npc_name):
 
     return random.random() < event_chance
 
-def special_event_dialogue(npc_name):
+def special_event_dialogue(npc_name: str) -> None:
     """Generate and display a special event with an NPC"""
     relationship_level = player["npc_relationships"][npc_name]["level"]
 
@@ -2936,7 +2937,7 @@ def special_event_dialogue(npc_name):
 
     input("\nPress Enter to continue...")
 
-def get_relationship_dialogue(npc_name, level):
+def get_relationship_dialogue(npc_name: str, level: int) -> str:
     """Get appropriate dialogue based on relationship level"""
     npc_data = NPCS[npc_name]
 
@@ -2949,7 +2950,7 @@ def get_relationship_dialogue(npc_name, level):
     # Otherwise use the standard dialogue
     return random.choice(npc_data["dialogue"])
 
-def handle_personal_request(npc_name, relationship_level):
+def handle_personal_request(npc_name: str, relationship_level: int) -> None:
     """Handle special requests that NPCs make to good friends"""
     clear()
     print(Fore.CYAN + f"=== {npc_name}'S PERSONAL REQUEST ===")
@@ -3075,7 +3076,7 @@ def handle_personal_request(npc_name, relationship_level):
 
     input("\nPress Enter to continue...")
 
-def start_mission(mission_id):
+def start_mission(mission_id: str) -> None:
     """Start a new mission"""
     mission = MISSIONS[mission_id]
     player["missions"][mission_id] = 0
@@ -3086,7 +3087,7 @@ def start_mission(mission_id):
 
     input("\nPress Enter to continue...")
 
-def start_quest(quest_id, npc_name=None):
+def start_quest(quest_id: str, npc_name: Optional[str] = None) -> None:
     """Start a new quest with enhanced NPC relationship integration
 
     Args:
@@ -3152,7 +3153,7 @@ def start_quest(quest_id, npc_name=None):
         print(f"{Fore.YELLOW}You're already working on this quest.")
         time.sleep(1.5)
 
-def trade_with_npc(npc_name):
+def trade_with_npc(npc_name: str) -> None:
     """Trade interface with an NPC"""
     npc_data = NPCS[npc_name]
 
@@ -3198,7 +3199,7 @@ def trade_with_npc(npc_name):
             print(Fore.RED + "Invalid choice!")
             time.sleep(1)
 
-def process_trade(npc_name, trade):
+def process_trade(npc_name: str, trade: Dict[str, Any]) -> None:
     """Process a trade with an NPC"""
     give_item = trade["give"]
     receive_item = trade["receive"]
@@ -3237,7 +3238,7 @@ def process_trade(npc_name, trade):
 
     time.sleep(1.5)
 
-def entertainment_plaza():
+def entertainment_plaza() -> None:
     """Main hub for accessing entertainment options like movies, music shows, and theatre"""
     # Track visits for achievement tracking
     player["entertainment_plaza_visits"] = player.get("entertainment_plaza_visits", 0) + 1
@@ -3291,7 +3292,7 @@ def entertainment_plaza():
         time.sleep(1)
         return entertainment_plaza()
 
-def cinema_menu():
+def cinema_menu() -> None:
     """Display available movies and allow player to watch them"""
     clear()
     print(Fore.YELLOW + "🎬 CINEMA 🎬")
@@ -3343,7 +3344,7 @@ def cinema_menu():
         time.sleep(1)
         return cinema_menu()
 
-def watch_movie(movie_idx):
+def watch_movie(movie_idx: int) -> None:
     """Play a movie and give rewards"""
     movie = MOVIES[movie_idx]
 
@@ -3431,7 +3432,7 @@ def watch_movie(movie_idx):
     input("\nPress Enter to continue...")
     return cinema_menu()
 
-def concert_hall_menu():
+def concert_hall_menu() -> None:
     """Display available concerts and allow player to attend them"""
     clear()
     print(Fore.YELLOW + "🎵 CONCERT HALL 🎵")
@@ -3483,7 +3484,7 @@ def concert_hall_menu():
         time.sleep(1)
         return concert_hall_menu()
 
-def attend_concert(concert_idx):
+def attend_concert(concert_idx: int) -> None:
     """Attend a concert and give rewards"""
     concert = MUSIC_SHOWS[concert_idx]
 
@@ -3571,7 +3572,7 @@ def attend_concert(concert_idx):
     input("\nPress Enter to continue...")
     return concert_hall_menu()
 
-def theatre_menu():
+def theatre_menu() -> None:
     """Display available theatre shows and allow player to see them"""
     clear()
     print(Fore.YELLOW + "🎭 THEATRE 🎭")
@@ -3623,7 +3624,7 @@ def theatre_menu():
         time.sleep(1)
         return theatre_menu()
 
-def see_theatre_show(show_idx):
+def see_theatre_show(show_idx: int) -> None:
     """See a theatre show and give rewards"""
     show = THEATRE_SHOWS[show_idx]
 
@@ -3711,7 +3712,7 @@ def see_theatre_show(show_idx):
     input("\nPress Enter to continue...")
     return theatre_menu()
 
-def view_entertainment_history():
+def view_entertainment_history() -> None:
     """Display player's entertainment history and collectibles"""
     clear()
     print(Fore.YELLOW + "📜 ENTERTAINMENT HISTORY 📜")
@@ -3770,7 +3771,7 @@ def view_entertainment_history():
     input("\nPress Enter to return to Entertainment Plaza...")
     return entertainment_plaza()
 
-def check_entertainment_achievements():
+def check_entertainment_achievements() -> None:
     """Check and award achievements related to entertainment"""
     # Initialize counters
     movies_count = len(player["entertainment_history"]["movies_watched"])
@@ -3938,7 +3939,7 @@ def check_entertainment_achievements():
         player["fast_passes"] = player.get("fast_passes", 0) + 5
         print(Fore.GREEN + "Season Pass Pro bonus: +5 Fast Passes!")
 
-def update_mission_progress(mission_type, amount=1):
+def update_mission_progress(mission_type: str, amount: int = 1) -> None:
     for mission_id, mission in MISSIONS.items():
         if mission.get("type") == mission_type and mission_id not in player["completed_missions"]:
             if mission_id not in player["missions"]:
@@ -3954,7 +3955,7 @@ def update_mission_progress(mission_type, amount=1):
                 add_loyalty_points(5)
                 check_loyalty_achievements()
 
-def add_loyalty_points(points):
+def add_loyalty_points(points: int) -> None:
     """Award loyalty points to the player and announce if they reach a new tier"""
     # Initialize loyalty points if not present
     if "loyalty_points" not in player:
@@ -3972,7 +3973,7 @@ def add_loyalty_points(points):
         print(f"Enjoy your new benefits: {LOYALTY_TIERS[new_tier]['discount']*100}% discount and {LOYALTY_TIERS[new_tier]['bonus']} bonus tickets per win!")
         award_achievement(f"Loyalty: Reached {new_tier}")
 
-def get_loyalty_tier():
+def get_loyalty_tier() -> str:
     """Determine the player's current loyalty tier based on points"""
     points = player.get("loyalty_points", 0)
     current_tier = "Bronze Member"
@@ -3983,17 +3984,17 @@ def get_loyalty_tier():
 
     return current_tier
 
-def get_loyalty_discount():
+def get_loyalty_discount() -> float:
     """Get the discount percentage based on loyalty tier"""
     tier = get_loyalty_tier()
     return LOYALTY_TIERS[tier]["discount"]
 
-def get_loyalty_bonus():
+def get_loyalty_bonus() -> int:
     """Get the bonus tickets based on loyalty tier"""
     tier = get_loyalty_tier()
     return LOYALTY_TIERS[tier]["bonus"]
 
-def check_loyalty_achievements():
+def check_loyalty_achievements() -> None:
     """Check for loyalty-related achievements"""
     points = player.get("loyalty_points", 0)
 
@@ -4004,7 +4005,7 @@ def check_loyalty_achievements():
     if points >= 500:
         award_achievement("Carnival Legend: Earn 500 loyalty points")
 
-def track_attraction_visit(attraction_name):
+def track_attraction_visit(attraction_name: str) -> None:
     """Track visits to attractions for loyalty rewards and rewards for repeat visits"""
     # Initialize visited attractions if needed
     if "visited_attractions" not in player:
@@ -4268,7 +4269,7 @@ QUESTS = {
     }
 }
 
-def championship_center():
+def championship_center() -> None:
     """Main hub for accessing and participating in championships"""
     clear()
     print(Fore.YELLOW + "🏆 CHAMPIONSHIP CENTER 🏆")
@@ -4406,7 +4407,7 @@ def championship_center():
         time.sleep(1)
         return championship_center()
 
-def minigame_championship():
+def minigame_championship() -> None:
     """Run the Minigame Master championship with 5 games"""
     clear()
     print(Fore.YELLOW + "🎮 MINIGAME MASTER CHAMPIONSHIP 🎮")
@@ -4567,7 +4568,7 @@ def minigame_championship():
 
     return total_score
 
-def tcg_championship():
+def tcg_championship() -> None:
     """Run the Trading Card Game Championship"""
     # Simplified implementation
     clear()
@@ -4623,7 +4624,7 @@ def tcg_championship():
     # Return score (opponents defeated, 0-4)
     return score
 
-def theme_park_championship():
+def theme_park_championship() -> None:
     """Run the Theme Park Challenge Championship"""
     clear()
     print(Fore.YELLOW + "🎢 THEME PARK CHALLENGE CHAMPIONSHIP 🎢")
@@ -4742,7 +4743,7 @@ def theme_park_championship():
     # Return normalized score (0-100)
     return int(percentage)
 
-def casino_championship():
+def casino_championship() -> None:
     """Run the Casino Royale Championship"""
     clear()
     print(Fore.YELLOW + "🎰 CASINO ROYALE CHAMPIONSHIP 🎰")
@@ -5107,7 +5108,7 @@ def casino_championship():
     # Return score based on final chips (0-300 range)
     return chips
 
-def quest_center():
+def quest_center() -> None:
     """Main hub for accessing and managing quests"""
     clear()
     print(Fore.YELLOW + "📜 QUEST CENTER 📜")
@@ -5223,7 +5224,7 @@ def quest_center():
         time.sleep(1)
         return quest_center()
 
-def loyalty_rewards_center():
+def loyalty_rewards_center() -> None:
     """Display loyalty status and available rewards"""
     clear()
     print(Fore.YELLOW + "🌟 LOYALTY REWARDS CENTER 🌟")
@@ -5378,7 +5379,7 @@ def loyalty_rewards_center():
         time.sleep(1)
         return loyalty_rewards_center()
 
-def hangman_game():
+def hangman_game() -> None:
     if not pay_to_play(3):
         return
     words = ["carnival", "ticket", "prize", "game", "fun", "play", "win"]
@@ -5403,7 +5404,7 @@ def hangman_game():
             tries -= 1
     print(Fore.RED + f"Game Over! The word was: {word}")
 
-def memory_match():
+def memory_match() -> None:
     if not pay_to_play(4):
         return
     emojis = ["🎪", "🎠", "🎡", "🎢", "🎨", "🎭"] * 2
@@ -5451,7 +5452,7 @@ def memory_match():
 # Theme Park Attractions
 # ------------------------------
 
-def get_current_season():
+def get_current_season() -> str:
     """Determine the current season for seasonal events"""
     from datetime import datetime
 
@@ -5472,7 +5473,7 @@ def get_current_season():
     else:
         return "normal"
 
-def check_special_holiday():
+def check_special_holiday() -> Optional[str]:
     """Check if today is a special holiday and return its name if it is"""
     from datetime import datetime
 
@@ -5509,7 +5510,7 @@ def check_special_holiday():
     # No holiday found
     return None
 
-def food_stand():
+def food_stand() -> None:
     """Visit a food stand to buy refreshments that restore hunger and energy"""
     clear()
     print(Fore.YELLOW + "🍦 CARNIVAL FOOD STANDS 🍕")
@@ -5601,7 +5602,7 @@ def food_stand():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def check_food_achievements():
+def check_food_achievements() -> None:
     """Check and award achievements related to food consumption"""
     unique_food_count = len(set(player.get("food_consumed", [])))
     total_items_consumed = sum(player.get("food_counts", {}).values())
@@ -5636,7 +5637,7 @@ def check_food_achievements():
         player["tickets"] += 20
         print(Fore.GREEN + "Achievement unlocked: Seasonal Taster! +20 tickets!")
 
-def carnival_games_menu():
+def carnival_games_menu() -> None:
     """Display and play traditional carnival games for prizes"""
     clear()
     print(Fore.CYAN + "🎯 CARNIVAL GAMES 🎮")
@@ -5716,7 +5717,7 @@ def carnival_games_menu():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def play_carnival_game(game):
+def play_carnival_game(game: str) -> None:
     """Play a carnival game and determine the outcome"""
     clear()
     game_name = game["name"]
@@ -5924,7 +5925,7 @@ def play_carnival_game(game):
 
     return {"success": success, "game": game_name}
 
-def check_carnival_game_achievements():
+def check_carnival_game_achievements() -> None:
     """Check and award achievements related to carnival games"""
     prize_count = len(player.get("carnival_prizes", []))
     unique_prizes = set(player.get("carnival_prizes", []))
@@ -5953,7 +5954,7 @@ def check_carnival_game_achievements():
         player["tickets"] += 50
         print(Fore.GREEN + "Achievement unlocked: Carnival Game Master! +50 tickets!")
 
-def seasonal_event():
+def seasonal_event() -> None:
     """Special seasonal events and activities"""
     clear()
     current_season = get_current_season()
@@ -6151,7 +6152,7 @@ def seasonal_event():
     input("\nPress Enter to return to the seasonal event menu...")
     return seasonal_event()
 
-def check_seasonal_achievements():
+def check_seasonal_achievements() -> None:
     """Check and award achievements related to seasonal events"""
     seasonal_attractions = player.get("seasonal_attractions_visited", [])
     seasonal_souvenirs = player.get("seasonal_souvenirs", [])
@@ -6186,7 +6187,7 @@ def check_seasonal_achievements():
             player["inventory"].append(special_item)
             print(Fore.GREEN + f"You received: {special_item}")
 
-def theme_park_menu():
+def theme_park_menu() -> None:
     """Display and handle the theme park attraction menu.
     Shows available rides and attractions with their ticket costs.
     """
@@ -6371,7 +6372,7 @@ def theme_park_menu():
         print(Fore.RED + "Invalid choice!")
 
 # Helper function for theme park attractions
-def purchase_season_pass():
+def purchase_season_pass() -> None:
     """Purchase a season pass for the theme park"""
     season_pass_cost = 200
     if player.get("season_pass", False):
@@ -6403,7 +6404,7 @@ def purchase_season_pass():
     input("Press Enter to continue...")
     return theme_park_menu()
 
-def purchase_fast_passes():
+def purchase_fast_passes() -> None:
     """Purchase fast passes to skip lines"""
     fast_pass_cost = 50
     fast_pass_count = 5
@@ -6425,7 +6426,7 @@ def purchase_fast_passes():
     input("Press Enter to continue...")
     return theme_park_menu()
 
-def vip_tour():
+def vip_tour() -> None:
     """Take a VIP behind-the-scenes tour of the theme park"""
     vip_tour_cost = 100
 
@@ -6507,7 +6508,7 @@ def vip_tour():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def thunder_mountain():
+def thunder_mountain() -> None:
     """Wild mine cart adventure through a mountain with special effects"""
     if not pay_to_play(6):
         return
@@ -6608,7 +6609,7 @@ def thunder_mountain():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def drop_tower():
+def drop_tower() -> None:
     """Thrilling drop tower experience with multiple drops"""
     if not pay_to_play(7):
         return
@@ -6715,7 +6716,7 @@ def drop_tower():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def spinning_teacups():
+def spinning_teacups() -> None:
     """Classic spinning teacup ride with varying speeds"""
     if not pay_to_play(3):
         return
@@ -6811,7 +6812,7 @@ def spinning_teacups():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def river_rapids():
+def river_rapids() -> None:
     """Navigate rushing waters in a circular raft with friends"""
     if not pay_to_play(5):
         return
@@ -6900,7 +6901,7 @@ def river_rapids():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def water_slides():
+def water_slides() -> None:
     """Experience multiple water slides of varying intensity"""
     if not pay_to_play(4):
         return
@@ -7040,7 +7041,7 @@ def water_slides():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def ghost_train():
+def ghost_train() -> None:
     """Spooky ghost train ride through a haunted forest"""
     if not pay_to_play(4):
         return
@@ -7151,7 +7152,7 @@ def ghost_train():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def carnival_carousel():
+def carnival_carousel() -> None:
     """Beautiful classic carousel ride with hand-carved animals"""
     if not pay_to_play(2):
         return
@@ -7256,7 +7257,7 @@ def carnival_carousel():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def bumper_cars():
+def bumper_cars() -> None:
     """Classic bumper car ride with electric cars"""
     if not pay_to_play(3):
         return
@@ -7431,7 +7432,7 @@ def bumper_cars():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def cinema_4d():
+def cinema_4d() -> None:
     """4D Cinema experience with sensory effects"""
     if not pay_to_play(5):
         return
@@ -7558,7 +7559,7 @@ def cinema_4d():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def dinosaur_safari():
+def dinosaur_safari() -> None:
     """Travel back in time to see prehistoric creatures"""
     if not pay_to_play(6):
         return
@@ -7700,7 +7701,7 @@ def dinosaur_safari():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def petting_zoo():
+def petting_zoo() -> None:
     """Meet and feed friendly farm animals"""
     if not pay_to_play(3):
         return
@@ -7849,7 +7850,7 @@ def petting_zoo():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def zombie_escape():
+def zombie_escape() -> None:
     """Interactive zombie apocalypse experience with choices"""
     if not pay_to_play(7):
         return
@@ -8086,7 +8087,7 @@ def zombie_escape():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def splash_mountain():
+def splash_mountain() -> None:
     """Thrilling log ride with a big splash finale"""
     if not pay_to_play(5):
         return
@@ -8195,7 +8196,7 @@ def splash_mountain():
     input("\nPress Enter to return to the theme park...")
     return theme_park_menu()
 
-def cosmic_coaster():
+def cosmic_coaster() -> None:
     """Cosmic Coaster ride simulation with multiple paths and outcomes"""
     if not pay_to_play(5):
         return
@@ -8254,7 +8255,7 @@ def cosmic_coaster():
     print("\nThe ride attendant helps you exit the coaster.")
     print("What an amazing experience!")
 
-def log_flume():
+def log_flume() -> None:
     """Log flume water ride with randomized splash outcomes"""
     if not pay_to_play(4):
         return
@@ -8301,7 +8302,7 @@ def log_flume():
         player["tickets"] += 5
         award_achievement("Rainbow Spotter: Witnessed the rare flume rainbow")
 
-def haunted_mansion():
+def haunted_mansion() -> None:
     """Interactive haunted house experience with jump scares and rewards"""
     if not pay_to_play(6):
         return
@@ -8389,7 +8390,7 @@ def haunted_mansion():
     print(f"\nTotal tickets earned: {rewards}")
     player["tickets"] += rewards
 
-def ferris_wheel():
+def ferris_wheel() -> None:
     """Peaceful Ferris wheel ride with random events and photo opportunities"""
     if not pay_to_play(3):
         return
@@ -8447,7 +8448,7 @@ def ferris_wheel():
         print("You earn 3 bonus tickets!")
         player["tickets"] += 3
 
-def vr_experience():
+def vr_experience() -> None:
     """Virtual reality experience with different scenarios and challenges"""
     if not pay_to_play(7):
         return
@@ -8569,7 +8570,7 @@ def vr_experience():
         print(Fore.GREEN + "\nFIRST-TIME BONUS: +3 tickets for trying VR!")
         player["tickets"] += 3
 
-def mirror_maze():
+def mirror_maze() -> None:
     """Navigate through a complex mirror maze with challenges and rewards"""
     if not pay_to_play(4):
         return
@@ -8680,7 +8681,7 @@ def mirror_maze():
     print(f"\nYou earned {reward} tickets!")
     player["tickets"] += reward
 
-def photo_booth():
+def photo_booth() -> None:
     """Take fun photos with props and filters in the photo booth"""
     if not pay_to_play(2):
         return
@@ -8778,7 +8779,7 @@ def photo_booth():
     print(f"\nYou earned {reward} tickets from your photo session!")
     player["tickets"] += reward
 
-def magic_show():
+def magic_show() -> None:
     """Interactive magic show where you can volunteer and win prizes"""
     if not pay_to_play(5):
         return
@@ -8907,7 +8908,7 @@ def magic_show():
         player["tickets"] += 15
         award_achievement("Magician's Apprentice: Received Zoltar's signed wand")
 
-def number_racing():
+def number_racing() -> None:
     if not pay_to_play(2):
         return
     player_num = random.randint(1, 10)
@@ -8940,7 +8941,7 @@ def number_racing():
 
 
 
-def balloon_pop():
+def balloon_pop() -> None:
     if not pay_to_play(2):
         return
     balloons = ["🎈", "💥"]
@@ -8963,7 +8964,7 @@ def balloon_pop():
     else:
         print(Fore.RED + f"You popped {popped}/{target} balloons!")
 
-def ring_toss():
+def ring_toss() -> None:
     if not pay_to_play(3):
         return
     targets = ["🎯", "⭕", "❌"]
@@ -8987,7 +8988,7 @@ def ring_toss():
         print(Fore.GREEN + f"You won {tickets} tickets!")
         player["tickets"] += tickets
 
-def duck_shooting():
+def duck_shooting() -> None:
     if not pay_to_play(3):
         return
     ducks = ["🦆", "🎯"]
@@ -9018,7 +9019,7 @@ def duck_shooting():
         print(Fore.RED + "Better luck next time!")
 
 
-def target_shooting():
+def target_shooting() -> None:
     if not pay_to_play(3):
         return
     clear()
@@ -9050,7 +9051,7 @@ def target_shooting():
         print(Fore.GREEN + f"You won {tickets} tickets!")
         player["tickets"] += tickets
 
-def whack_a_mole():
+def whack_a_mole() -> None:
     if not pay_to_play(2):
         return
     clear()
@@ -9083,7 +9084,7 @@ def whack_a_mole():
         print(Fore.GREEN + f"You whacked {score} moles! +{tickets} tickets")
         player["tickets"] += tickets
 
-def kingyo_sukui():
+def kingyo_sukui() -> None:
     """Japanese goldfish scooping game"""
     if not pay_to_play(3):
         return
@@ -9113,7 +9114,7 @@ def kingyo_sukui():
         print(Fore.GREEN + f"You won {tickets} tickets!")
         player["tickets"] += tickets
 
-def yo_yo_tsuri():
+def yo_yo_tsuri() -> None:
     """Japanese water balloon fishing game"""
     if not pay_to_play(2):
         return
@@ -9142,7 +9143,7 @@ def yo_yo_tsuri():
         print(Fore.GREEN + f"You won {tickets} tickets!")
         player["tickets"] += tickets
 
-def bottle_toss():
+def bottle_toss() -> None:
     if not pay_to_play(3):
         return
     clear()
@@ -9171,7 +9172,7 @@ def bottle_toss():
         print(Fore.GREEN + f"You knocked down {hits} bottles! +{tickets} tickets")
         player["tickets"] += tickets
 
-def treasure_hunt():
+def treasure_hunt() -> None:
     """VIP game where players search for hidden treasures on a grid"""
     if "VIP Pass 🌟" not in player["inventory"]:
         print(Fore.RED + "❌ This game requires a VIP Pass!")
@@ -9444,7 +9445,7 @@ if "completed_missions" not in player:
 
 # We have consolidated the buy_card_pack functions into one implementation below
 
-def manage_deck():
+def manage_deck() -> None:
     """Manage your TCG card deck"""
     if "card_collection" not in player:
         player["card_collection"] = []
@@ -9479,7 +9480,7 @@ def manage_deck():
             time.sleep(1)
 
 
-def view_collection():
+def view_collection() -> None:
     clear()
     print(Fore.YELLOW + "🎴 Your Collection:")
     collection = {}
@@ -9490,7 +9491,7 @@ def view_collection():
         print(f"{CARD_DATABASE[card]['emoji']} {card} x{count} (Power: {CARD_DATABASE[card]['power']})")
     input("\nPress Enter to continue...")
 
-def view_deck():
+def view_deck() -> None:
     clear()
     print(Fore.GREEN + "🎴 Current Deck:")
     deck_contents = {}
@@ -9501,7 +9502,7 @@ def view_deck():
         print(f"{CARD_DATABASE[card]['emoji']} {card} x{count}")
     input("\nPress Enter to continue...")
 
-def build_deck():
+def build_deck() -> None:
     clear()
     print(Fore.CYAN + "Build your deck (30-50 cards)")
     player["current_deck"] = []
@@ -9532,7 +9533,7 @@ def build_deck():
 
     print(Fore.GREEN + "Deck complete!")
 
-def show_card_tutorial():
+def show_card_tutorial() -> None:
     clear()
     print(Fore.CYAN + "🌌 ChronoSpace TCG Tutorial")
     print("""
@@ -9600,7 +9601,7 @@ Tips:
     """)
     input("\nPress Enter to continue...")
 
-def soccer_championship():
+def soccer_championship() -> None:
     if not pay_to_play(2):
         return
 
@@ -9630,7 +9631,7 @@ def soccer_championship():
         print(Fore.GREEN + "🏆 Soccer Championship Winner!")
         award_achievement("Soccer Champion")
 
-def golf_championship():
+def golf_championship() -> None:
     if not pay_to_play(2):
         return
 
@@ -9662,7 +9663,7 @@ def golf_championship():
         print(Fore.GREEN + "🏆 Golf Championship Winner!")
         award_achievement("Golf Champion")
 
-def championship_mode():
+def championship_mode() -> None:
     if not pay_to_play(2):
         return
 
@@ -9682,7 +9683,7 @@ def championship_mode():
     elif choice == "3":
         golf_championship()
 
-def card_championship():
+def card_championship() -> None:
 
     # Give access to all cards for championship
     temp_collection = player["card_collection"].copy()
@@ -9726,7 +9727,7 @@ def card_championship():
 
 # We have consolidated the card_battle functions into one implementation below
 
-def card_battle(opponent=None, championship=False):
+def card_battle(opponent: Optional[str] = None, championship: bool = False) -> None:
     """Card battle game using the player's card collection"""
     if "card_collection" not in player:
         player["card_collection"] = []
@@ -9844,7 +9845,7 @@ def card_battle(opponent=None, championship=False):
         player["tickets"] += tickets
         return True
 
-def buy_card_pack():
+def buy_card_pack() -> None:
     """Purchase a card pack containing random cards"""
     pack_cost = 15
 
@@ -9901,7 +9902,7 @@ def buy_card_pack():
 
     input("\nPress Enter to continue...")
 
-def view_card_collection():
+def view_card_collection() -> None:
     """View all cards owned by the player"""
     clear()
 
@@ -9952,7 +9953,7 @@ def view_card_collection():
     input("\nPress Enter to continue...")
 
 # Advanced Weather System for Seasonal Events
-def weather_effects():
+def weather_effects() -> None:
     """Dynamic weather system that affects carnival experiences"""
     weather_conditions = {
         "sunny": {
@@ -9995,7 +9996,7 @@ def weather_effects():
     return current_weather, weather_data
 
 # Expanded NPC Relationship System
-def advanced_npc_system():
+def advanced_npc_system() -> None:
     """Enhanced NPC interaction system with deep relationships"""
 
     # Extended NPC personalities
@@ -10029,7 +10030,7 @@ def advanced_npc_system():
     return npc_personalities
 
 # Multi-layered Achievement System
-def complex_achievement_system():
+def complex_achievement_system() -> None:
     """Comprehensive achievement tracking with multiple categories"""
 
     achievement_categories = {
@@ -10073,7 +10074,7 @@ def complex_achievement_system():
     return achievement_categories
 
 # Advanced Mini-Game Collection
-def premium_minigames():
+def premium_minigames() -> None:
     """Collection of sophisticated mini-games for enhanced gameplay"""
 
     def rhythm_carnival():
@@ -10149,7 +10150,7 @@ def premium_minigames():
     return {"rhythm_carnival": rhythm_carnival, "carnival_trivia": carnival_trivia}
 
 # Immersive Storytelling System
-def interactive_story_mode():
+def interactive_story_mode() -> None:
     """Branching narrative system for carnival adventures"""
 
     story_chapters = {
@@ -10177,7 +10178,7 @@ def interactive_story_mode():
     return story_chapters
 
 # Enhanced Economic System
-def carnival_economy():
+def carnival_economy() -> None:
     """Complex economic simulation for the carnival experience"""
 
     economic_factors = {
