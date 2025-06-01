@@ -2019,7 +2019,7 @@ def ship_encyclopedia() -> None:
     except ValueError:
         print(f"{RED}Please enter a number.{ENDC}")
 
-def clear_screen():
+def clear_screen() -> None:
     """Clear the terminal screen"""
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -4627,7 +4627,7 @@ AREAS = {
 }
 
 # Function to integrate new locations into the game world
-def integrate_new_locations():
+def integrate_new_locations() -> None:
     """Add the new literature-related locations to appropriate area connections in the game world"""
 
     # Add Village Library to Greenwood Village connections
@@ -5231,7 +5231,7 @@ ACHIEVEMENTS = {
 }
 
 # Track achievement progress
-def check_achievements():
+def check_achievements() -> None:
     """
     Enhanced achievement system with tiers, categories, and visual feedback
     """
@@ -5940,7 +5940,7 @@ def check_achievements():
                 reward_str = reward_str[:-2]
                 print_animated(f"  {reward_str}", delay=0.02)
 
-def update_achievement_progress():
+def update_achievement_progress() -> None:
     """Update and track progress towards achievements"""
 
     # Check literature-related achievements
@@ -6055,7 +6055,7 @@ def update_achievement_progress():
         # Initialize with current inventory
         user_data["all_collected_items"].extend(user_data.get("inventory", []))
 
-def grant_achievement_rewards(achievement):
+def grant_achievement_rewards(achievement: Dict[str, Any]) -> None:
     """Apply rewards from unlocking an achievement"""
     global user_data
 
@@ -6112,7 +6112,7 @@ def grant_achievement_rewards(achievement):
                 user_data[stat] += value
                 print_animated(f"  {LIGHTCYAN}+{value} {stat.capitalize()}{ENDC}", delay=0.02)
 
-def show_achievements():
+def show_achievements() -> None:
     """Display achievements screen with progress tracking"""
     if "achievements" not in user_data:
         user_data["achievements"] = {
@@ -6206,7 +6206,7 @@ def show_achievements():
     except ValueError:
         print(f"{RED}Invalid input. Please enter a number.{ENDC}")
 
-def show_category_achievements(category, achievements):
+def show_category_achievements(category: str, achievements: List[Dict[str, Any]]) -> None:
     """Show achievements for a specific category"""
     print_header(f"{category} Achievements")
 
@@ -6230,7 +6230,7 @@ def show_category_achievements(category, achievements):
 
     input(f"\n{YELLOW}Press Enter to continue...{ENDC}")
 
-def show_all_achievements(all_achievements):
+def show_all_achievements(all_achievements: Dict[str, List[Dict[str, Any]]]) -> None:
     """Show all achievements grouped by category"""
     print_header("All Achievements")
 
@@ -6249,7 +6249,7 @@ def show_all_achievements(all_achievements):
 
     input(f"\n{YELLOW}Press Enter to continue...{ENDC}")
 
-def display_achievement(achievement, short=False):
+def display_achievement(achievement: Dict[str, Any], short: bool = False) -> None:
     """Display a single achievement with its status and progress"""
     achievement_id = achievement["id"]
     is_unlocked = achievement_id in user_data["achievements"]["unlocked"]
@@ -6311,7 +6311,7 @@ def display_achievement(achievement, short=False):
         if reward_parts:
             print(f"  Rewards: {', '.join(reward_parts)}")
 
-def create_progress_bar(percentage, length=20):
+def create_progress_bar(percentage: float, length: int = 20) -> str:
     """Create a visual progress bar with gradients"""
     filled_length = int(length * percentage)
     empty_length = length - filled_length
@@ -6326,7 +6326,7 @@ def create_progress_bar(percentage, length=20):
     bar = f"{color}{'█' * filled_length}{LIGHTGRAY}{'▒' * empty_length}{ENDC}"
     return bar
 
-def get_completion_color(percentage):
+def get_completion_color(percentage: float) -> str:
     """Return a color based on completion percentage"""
     if percentage < 25:
         return RED
@@ -7112,7 +7112,7 @@ def enchant_item() -> None:
     except ValueError:
         print_animated(f"{RED}Invalid input. Please enter a number.{ENDC}", delay=0.03)
 
-def get_available_enchantments(item_type, player_level):
+def get_available_enchantments(item_type: str, player_level: int) -> List[Dict[str, Any]]:
     """Get available enchantments based on item type and player level"""
     all_enchantments = {
         # Weapon enchantments
@@ -10633,7 +10633,7 @@ def view_literature_collection() -> None:
 
         wait_for_input()
 
-def view_by_type(discovered, owned, read):
+def view_by_type(discovered: Dict[str, Any], owned: Dict[str, Any], read: Dict[str, Any]) -> None:
     """View literature collection sorted by type (Books, Scrolls, Notes)"""
     clear_screen()
     print_header("Literature by Type")
@@ -10672,7 +10672,7 @@ def view_by_type(discovered, owned, read):
             collection[item_type] = {}
 
         # Process all items
-        all_items = list(set(discovered + owned))
+        all_items = list(set(list(discovered.keys()) + list(owned.keys())))
         for item_id in all_items:
             try:
                 item_type, category, title = item_id.split(":", 2)
@@ -10768,7 +10768,7 @@ def view_by_type(discovered, owned, read):
     except ValueError:
         print_colored("Please enter a number.", RED)
 
-def view_by_rarity(discovered, owned, read):
+def view_by_rarity(discovered: Dict[str, Any], owned: Dict[str, Any], read: Dict[str, Any]) -> None:
     """View literature collection sorted by rarity"""
     clear_screen()
     print_header("Literature by Rarity")
@@ -10811,7 +10811,7 @@ def view_by_rarity(discovered, owned, read):
         items_by_rarity = {rarity: [] for rarity in rarities_to_show}
 
         # Process all items
-        all_items = list(set(discovered + owned))
+        all_items = list(set(list(discovered.keys()) + list(owned.keys())))
         for item_id in all_items:
             try:
                 item_type, category, title = item_id.split(":", 2)
@@ -10897,7 +10897,7 @@ def view_by_rarity(discovered, owned, read):
     except ValueError:
         print_colored("Please enter a number.", RED)
 
-def view_by_status(discovered, owned, read):
+def view_by_status(discovered: Dict[str, Any], owned: Dict[str, Any], read: Dict[str, Any]) -> None:
     """View literature collection by reading status"""
     clear_screen()
     print_header("Literature by Reading Status")
@@ -10919,7 +10919,7 @@ def view_by_status(discovered, owned, read):
         filtered_items = []
 
         # Process all items
-        all_items = list(set(discovered + owned))
+        all_items = list(set(list(discovered.keys()) + list(owned.keys())))
         for item_id in all_items:
             try:
                 item_type, category, title = item_id.split(":", 2)
@@ -11022,7 +11022,7 @@ def view_by_status(discovered, owned, read):
     except ValueError:
         print_colored("Please enter a number.", RED)
 
-def view_recent_acquisitions(discovered, owned, read):
+def view_recent_acquisitions(discovered: Dict[str, Any], owned: Dict[str, Any], read: Dict[str, Any]) -> None:
     """View recently acquired literature (placeholder - would need timestamp data)"""
     clear_screen()
     print_header("Recent Acquisitions")
@@ -11091,7 +11091,7 @@ def view_recent_acquisitions(discovered, owned, read):
     else:
         print_colored("You don't own any literature yet.", YELLOW)
 
-def search_collection(discovered, owned, read):
+def search_collection(discovered: Dict[str, Any], owned: Dict[str, Any], read: Dict[str, Any]) -> None:
     """Search for specific literature in your collection"""
     clear_screen()
     print_header("Search Literature Collection")
@@ -11105,7 +11105,7 @@ def search_collection(discovered, owned, read):
     # Search for items matching the term
     matches = []
 
-    all_items = list(set(discovered + owned))
+    all_items = list(set(list(discovered.keys()) + list(owned.keys())))
     for item_id in all_items:
         try:
             item_type, category, title = item_id.split(":", 2)
@@ -11226,7 +11226,7 @@ def search_collection(discovered, owned, read):
                     highlighted = snippet.replace(search_term, f"{CYAN}{search_term}{ENDC}")
                     print_colored(f"      \"{highlighted}\"", WHITE)
 
-def view_collection_stats(discovered, owned, read):
+def view_collection_stats(discovered: Dict[str, Any], owned: Dict[str, Any], read: Dict[str, Any]) -> None:
     """View detailed statistics about your literature collection"""
     clear_screen()
     print_header("Literature Collection Statistics")
@@ -11455,7 +11455,7 @@ def read_literature() -> None:
             print_colored("Please enter a valid number.", RED)
             wait_for_input()
 
-def get_readable_items(owned_items):
+def get_readable_items(owned_items: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Helper function to get all readable items with their data"""
     lit_data = user_data.get("literature", {})
     readable_items = []
@@ -11489,7 +11489,7 @@ def get_readable_items(owned_items):
     readable_items.sort(key=lambda x: (x["read"], x["type"], x["title"]))
     return readable_items
 
-def choose_and_read_item(items, lit_data):
+def choose_and_read_item(items: List[Dict[str, Any]], lit_data: Dict[str, Any]) -> None:
     """Helper function to choose and read a literary item"""
     print("\n" * 50)
     print_header("Choose an Item to Read")
@@ -14196,7 +14196,7 @@ def handle_command(cmd: str) -> None:
 # Define functions
 def start_guide() -> None:
     print_header("Starter Guide")
-    print("Welcome to Legacies of our Legends! Type /help for help!")
+    print("Welcome to TextRP CLI! Type /help for help!")
 
 def area_guides() -> None:
     print_header("Area Guides")
@@ -15175,11 +15175,143 @@ def save_game(slot: int = 1, auto: bool = False) -> None:
         # Convert any set objects to lists for JSON serialization
         prepared_user_data = prepare_user_data_for_save(user_data)
 
+        # Capture comprehensive game state
         save_data = {
+            # Core user data with all progression
             "user_data": prepared_user_data,
+            
+            # Game metadata and versioning
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": "1.1",  # Updated version for gacha system
-            "gacha_version": "1.0"  # Track gacha system versioning
+            "version": "2.0_ultimate",
+            "gacha_version": "2.0",
+            "save_format_version": "2.0",
+            
+            # Character progression and statistics
+            "character_stats": {
+                "level": user_data.get("level", 1),
+                "experience": user_data.get("experience", 0),
+                "skill_points": user_data.get("skill_points", 0),
+                "total_playtime": user_data.get("total_playtime", 0),
+                "creation_date": user_data.get("creation_date", datetime.now().isoformat()),
+                "last_login": user_data.get("last_login", datetime.now().isoformat()),
+                "login_streak": user_data.get("login_streak", 0),
+                "total_sessions": user_data.get("total_sessions", 0)
+            },
+            
+            # Story and quest progression
+            "story_progress": {
+                "current_chapter": user_data.get("current_chapter", 1),
+                "completed_quests": user_data.get("completed_quests", []),
+                "active_quests": user_data.get("active_quests", []),
+                "story_flags": user_data.get("story_flags", {}),
+                "dialogue_history": user_data.get("dialogue_history", []),
+                "choices_made": user_data.get("choices_made", {}),
+                "unlocked_content": user_data.get("unlocked_content", []),
+                "discovered_lore": user_data.get("discovered_lore", [])
+            },
+            
+            # Inventory and equipment comprehensive data
+            "inventory_data": {
+                "items": user_data.get("inventory", {}),
+                "equipment": user_data.get("equipment", {}),
+                "consumables": user_data.get("consumables", {}),
+                "materials": user_data.get("materials", {}),
+                "currency": user_data.get("currency", 0),
+                "bank_storage": user_data.get("bank_storage", {}),
+                "item_history": user_data.get("item_acquisition_history", []),
+                "crafting_recipes": user_data.get("known_recipes", []),
+                "upgrade_materials": user_data.get("upgrade_materials", {})
+            },
+            
+            # Gacha and collection system
+            "gacha_data": {
+                "pulls_total": user_data.get("gacha_pulls_total", 0),
+                "pulls_history": user_data.get("gacha_history", []),
+                "pity_counter": user_data.get("pity_counter", 0),
+                "guaranteed_counter": user_data.get("guaranteed_counter", 0),
+                "collection_book": user_data.get("collection_book", {}),
+                "rare_items_obtained": user_data.get("rare_collection", []),
+                "gacha_currency": user_data.get("gacha_currency", 0),
+                "banners_pulled": user_data.get("banners_history", {}),
+                "luck_statistics": user_data.get("gacha_luck_stats", {})
+            },
+            
+            # Achievement and milestone tracking
+            "achievements": {
+                "unlocked_achievements": user_data.get("achievements", []),
+                "achievement_progress": user_data.get("achievement_progress", {}),
+                "milestones_reached": user_data.get("milestones", []),
+                "records_set": user_data.get("personal_records", {}),
+                "badges_earned": user_data.get("badges", []),
+                "titles_unlocked": user_data.get("titles", []),
+                "active_title": user_data.get("active_title", None)
+            },
+            
+            # Settings and preferences
+            "user_settings": {
+                "game_preferences": user_data.get("settings", {}),
+                "display_options": user_data.get("display_settings", {}),
+                "audio_settings": user_data.get("audio_settings", {}),
+                "control_mappings": user_data.get("controls", {}),
+                "notification_preferences": user_data.get("notifications", {}),
+                "accessibility_options": user_data.get("accessibility", {}),
+                "language_preference": user_data.get("language", "en")
+            },
+            
+            # Social and multiplayer data
+            "social_data": {
+                "friends_list": user_data.get("friends", []),
+                "guild_membership": user_data.get("guild", {}),
+                "trading_history": user_data.get("trades", []),
+                "reputation": user_data.get("reputation", 0),
+                "social_interactions": user_data.get("social_log", []),
+                "blocked_players": user_data.get("blocked", []),
+                "favorite_players": user_data.get("favorites", [])
+            },
+            
+            # Game world state and exploration
+            "world_state": {
+                "visited_locations": user_data.get("visited_locations", []),
+                "unlocked_areas": user_data.get("unlocked_areas", []),
+                "discovered_secrets": user_data.get("secrets_found", []),
+                "world_events_witnessed": user_data.get("world_events", []),
+                "exploration_percentage": user_data.get("exploration_progress", 0),
+                "map_revelations": user_data.get("map_data", {}),
+                "environmental_interactions": user_data.get("environment_log", [])
+            },
+            
+            # Combat and battle statistics
+            "combat_data": {
+                "battles_fought": user_data.get("battles_total", 0),
+                "battles_won": user_data.get("battles_won", 0),
+                "battles_lost": user_data.get("battles_lost", 0),
+                "perfect_victories": user_data.get("perfect_wins", 0),
+                "damage_dealt": user_data.get("total_damage_dealt", 0),
+                "damage_taken": user_data.get("total_damage_taken", 0),
+                "abilities_used": user_data.get("ability_usage_stats", {}),
+                "strategies_employed": user_data.get("battle_strategies", {}),
+                "boss_defeats": user_data.get("bosses_defeated", [])
+            },
+            
+            # Seasonal and event data
+            "event_data": {
+                "seasonal_progress": user_data.get("seasonal_data", {}),
+                "event_participation": user_data.get("event_history", []),
+                "seasonal_rewards": user_data.get("seasonal_rewards", []),
+                "limited_content_accessed": user_data.get("limited_content", []),
+                "holiday_celebrations": user_data.get("holiday_data", {}),
+                "special_achievements": user_data.get("special_achievements", [])
+            },
+            
+            # Performance and analytics
+            "analytics": {
+                "session_durations": user_data.get("session_times", []),
+                "feature_usage": user_data.get("feature_stats", {}),
+                "error_encounters": user_data.get("error_log", []),
+                "performance_metrics": user_data.get("performance_data", {}),
+                "user_feedback": user_data.get("feedback_history", []),
+                "beta_participation": user_data.get("beta_features", [])
+            }
         }
 
         save_dir = get_save_directory()
@@ -15303,7 +15435,7 @@ def load_game(slot: int = 1) -> bool:
         return False
 
 
-def restore_sets_from_lists(data):
+def restore_sets_from_lists(data: Dict[str, Any]) -> None:
     """
     Restores sets from lists in the loaded data.
     Used for achievement sets and other set data structures that were converted to lists for saving.
@@ -15346,7 +15478,7 @@ def restore_sets_from_lists(data):
     return result
 
 
-def integrate_all_systems():
+def integrate_all_systems() -> None:
     """
     Creates deep connections between archaeology, literature, and gacha systems.
     This function implements synergies that allow each system to enhance the others.
@@ -15546,7 +15678,7 @@ def integrate_all_systems():
     # Return True if integration had effects to apply
     return systems_progress >= 2
 
-def ensure_archaeology_system_initialized(data):
+def ensure_archaeology_system_initialized(data: Dict[str, Any]) -> None:
     """
     Ensures all archaeology system components are properly initialized.
     Handles specific archaeology system structures not covered by the general ensure_user_data_keys.
@@ -15616,7 +15748,7 @@ def ensure_archaeology_system_initialized(data):
         calculate_archaeology_gacha_bonuses(data)
 
 
-def calculate_archaeology_gacha_bonuses(data):
+def calculate_archaeology_gacha_bonuses(data: Dict[str, Any]) -> Dict[str, float]:
     """
     Calculate gacha bonuses based on archaeological knowledge and artifacts.
     This creates synergy between the archaeology and gacha systems.
@@ -15849,7 +15981,7 @@ def calculate_archaeology_gacha_bonuses(data):
                     })
 
 
-def ensure_gacha_system_initialized(data):
+def ensure_gacha_system_initialized(data: Dict[str, Any]) -> None:
     """
     Ensures all gacha system components are properly initialized.
     This is more comprehensive than ensure_user_data_keys and focuses specifically on the gacha system.
@@ -15943,7 +16075,7 @@ def ensure_gacha_system_initialized(data):
             stats["gacha_pulls"] = 0
 
 
-def migrate_gacha_data(data):
+def migrate_gacha_data(data: Dict[str, Any]) -> None:
     """
     Apply migrations for gacha system data.
     This handles specific conversions needed when loading older save files.
@@ -15975,7 +16107,7 @@ def migrate_gacha_data(data):
                 gacha["character_levels"][char_name] = max_level
 
 
-def check_daily_login_reward():
+def check_daily_login_reward() -> None:
     """
     Check and update daily login rewards when loading a save file.
     Gives rewards if the player logs in on a new day.
@@ -16016,7 +16148,7 @@ def check_daily_login_reward():
         give_daily_login_reward(daily_login["login_streak"])
 
 
-def give_daily_login_reward(streak, silent=False):
+def give_daily_login_reward(streak: int, silent: bool = False) -> None:
     """
     Give daily login rewards based on the login streak.
 
@@ -16129,7 +16261,7 @@ def delete_save(slot: int) -> None:
     except FileNotFoundError:
         print(f"No save found in slot {slot}.")
 
-def _display_and_select_quests(quest_entries, has_hylit):
+def _display_and_select_quests(quest_entries: List[Dict[str, Any]], has_hylit: bool) -> Optional[str]:
     """Helper function to display and select from a list of quest entries.
 
     Args:
@@ -17019,7 +17151,7 @@ def loot(monster: Dict) -> None:
         except ValueError:
             print(f"{YELLOW}Invalid input, please enter a number, 'all', or press Enter to skip.{ENDC}")
 
-def process_loot_item(item):
+def process_loot_item(item: Dict[str, Any]) -> None:
     """Process a single loot item based on its type"""
     global user_data
 
@@ -17062,7 +17194,7 @@ def process_loot_item(item):
         user_data["inventory"].append(item_name)
         print_animated(f"{pet_prefix}Added {get_rarity_color(item.get('rarity', 'Common'))}{item_name}{ENDC} to inventory!", delay=0.02)
 
-def get_rarity_color(rarity):
+def get_rarity_color(rarity: str) -> str:
     """Returns the appropriate color code for an item rarity"""
     rarity_colors = {
         "Common": WHITE,
@@ -17269,7 +17401,7 @@ def show_support() -> None:
     print_animated("For support, visit our Discord server or check the wiki.", CYAN, 0.01)
 
 # Guild management commands
-def get_next_rank(current_rank):
+def get_next_rank(current_rank: str) -> Optional[str]:
     ranks = [
         {"name": "Novice", "level_req": 1, "quest_req": 0, "boss_req": 0},
         {"name": "Apprentice", "level_req": 5, "quest_req": 10, "boss_req": 1},
@@ -17289,7 +17421,7 @@ def get_next_rank(current_rank):
             return ranks[i + 1]
     return None
 
-def get_adventurer_level_rewards(level):
+def get_adventurer_level_rewards(level: int) -> Dict[str, Any]:
     rewards = {
         1: {"description": "Access to basic quests", "bonuses": {}},
         2: {"description": "+5% Gold from monsters", "bonuses": {"gold_bonus": 0.05}},
@@ -17311,7 +17443,7 @@ def get_adventurer_level_rewards(level):
 
     return rewards.get(level, None)
 
-def add_adventurer_exp(amount):
+def add_adventurer_exp(amount: int) -> None:
     """Add experience to the adventurer and check for level up
 
     Args:
@@ -17353,7 +17485,7 @@ def add_adventurer_exp(amount):
         # Check if new rank is available
         check_rank_advancement()
 
-def check_rank_advancement():
+def check_rank_advancement() -> None:
     """Check if adventurer qualifies for a rank advancement"""
     adv = user_data["adventurer"]
     next_rank = get_next_rank(adv["rank"])
@@ -24242,7 +24374,7 @@ def show_postgame_content() -> None:
 
 
 # Define the main game function
-def main_game():
+def main_game() -> None:
     """Main game function that runs the game loop."""
     print("\n")  # Add a blank line for spacing
 
@@ -24253,7 +24385,7 @@ def main_game():
     sys.stdout.write(f"{BOLD}{CYAN}{' '*14}Welcome to Legacies of our Legends RPG!{' '*14}\n")
     sys.stdout.write(f"{BOLD}{CYAN}{'='*60}\n")
     sys.stdout.write(f"{GREEN}{'-'*68}\n")
-    sys.stdout.write(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character or /load to load game.\n")
+    sys.stdout.write(f"{BOLD}{GREEN}Type '/help' for commands or '/new' to create a character.\n")
     sys.stdout.write(f"{GREEN}{'-'*68}\n")
     sys.stdout.write(ENDC)  # Reset colors at the end
     sys.stdout.flush()
@@ -24286,7 +24418,7 @@ def main_game():
 
 # New system implementations
 
-def process_skills_command(command_parts):
+def process_skills_command(command_parts: List[str]) -> None:
     """Process the /skills command"""
     clear_screen()
     print_header("Character Skills")
@@ -24314,7 +24446,7 @@ def process_skills_command(command_parts):
 
     input("\nPress Enter to continue...")
 
-def display_constructs():
+def display_constructs() -> None:
     """Display all mechanical constructs owned by the player"""
     clear_screen()
     print_header("Mechanical Constructs")
@@ -24342,7 +24474,7 @@ def display_constructs():
 
     input("\nPress Enter to continue...")
 
-def display_blueprints():
+def display_blueprints() -> None:
     """Display all known mechanical construct blueprints"""
     clear_screen()
     print_header("Construct Blueprints")
@@ -24392,7 +24524,7 @@ def display_blueprints():
 
     input("\nPress Enter to continue...")
 
-def handle_construct_command(command_parts):
+def handle_construct_command(command_parts: List[str]) -> None:
     """Process the craft construct command"""
     if len(command_parts) < 2:
         print_colored("Usage: /craft_construct [construct_id]", RED)
@@ -24474,7 +24606,7 @@ def handle_construct_command(command_parts):
 
     input("\nPress Enter to continue...")
 
-def process_ability_command(command_parts):
+def process_ability_command(command_parts: List[str]) -> None:
     """Process the /ability command"""
     clear_screen()
     print_header("Special Abilities")
@@ -24502,7 +24634,7 @@ def process_ability_command(command_parts):
 
     input("\nPress Enter to continue...")
 
-def show_knowledge():
+def show_knowledge() -> None:
     """Display player's knowledge levels"""
     clear_screen()
     print_header("Knowledge Levels")
@@ -24538,7 +24670,7 @@ def show_knowledge():
 
     print_colored("\nIncrease your knowledge by reading books or studying artifacts.", YELLOW)
 
-def show_active_buffs():
+def show_active_buffs() -> None:
     """Display active buffs and their effects"""
     clear_screen()
     print_header("Active Buffs")
@@ -24564,7 +24696,7 @@ def show_active_buffs():
 
     print_colored("\nBuffs gradually wear off after battles.", YELLOW)
 
-def show_elemental_resistance():
+def show_elemental_resistance() -> None:
     """Display elemental resistances"""
     clear_screen()
     print_header("Elemental Resistances")
@@ -24589,7 +24721,7 @@ def show_elemental_resistance():
 
     print_colored("\nIncrease resistances through equipment, skills, and knowledge.", YELLOW)
 
-def show_one_time_spells():
+def show_one_time_spells() -> None:
     """Display one-time spells available for use"""
     clear_screen()
     print_header("Spell Scrolls & Consumables")
@@ -24626,7 +24758,7 @@ def show_one_time_spells():
     print(f"\n{YELLOW}Use scrolls during battle with '/use [scroll name]' command.{ENDC}")
 
 # Mechanical Constructs System Functions
-def show_constructs():
+def show_constructs() -> None:
     """Display all constructs owned by the player"""
     clear_screen()
     print_header("Mechanical Constructs")
@@ -24643,7 +24775,7 @@ def show_constructs():
 
     input("\nPress Enter to continue...")
 
-def show_blueprints():
+def show_blueprints() -> None:
     """Display all known construct blueprints"""
     clear_screen()
     print_header("Known Blueprints")
@@ -24660,7 +24792,7 @@ def show_blueprints():
 
     input("\nPress Enter to continue...")
 
-def craft_construct_command(command_parts):
+def craft_construct_command(command_parts: List[str]) -> None:
     """Process the command to craft a construct"""
     clear_screen()
     print_header("Craft Mechanical Construct")
@@ -24690,7 +24822,7 @@ def craft_construct_command(command_parts):
 
     input("\nPress Enter to continue...")
 
-def read_mechanical_manual(book_data):
+def read_mechanical_manual(book_data: Dict[str, Any]) -> None:
     """
     Display mechanical manual information and call the feature integration
     module to process the effect.
@@ -25247,7 +25379,7 @@ class LegendaryCharacter:
         self.special_abilities = []
         self.mastered_elements = []
         
-    def develop_character_arc(self, choice, consequences):
+    def develop_character_arc(self, choice: str, consequences: Dict[str, Any]) -> None:
         """Advanced character development based on player choices"""
         development_entry = {
             "choice": choice,
@@ -25260,7 +25392,7 @@ class LegendaryCharacter:
         # Update personality traits based on choices
         self.update_personality_from_choice(choice)
         
-    def analyze_choice_impact(self, choice):
+    def analyze_choice_impact(self, choice: str) -> Dict[str, Any]:
         """Analyze how a choice affects character development"""
         choice_lower = choice.lower()
         
@@ -25283,7 +25415,7 @@ class LegendaryCharacter:
             
         return impacts
         
-    def update_personality_from_choice(self, choice):
+    def update_personality_from_choice(self, choice: str) -> None:
         """Update personality traits based on consistent choices"""
         # Track personality development over time
         total_choices = len(self.character_development)

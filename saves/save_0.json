@@ -1,0 +1,66 @@
+{
+  "user_data": {
+    "name": "andy",
+    "class": "Archer",
+    "profession": null,
+    "has_chosen_profession": false,
+    "level": 1,
+    "inventory": [
+      "Frozen Heart"
+    ],
+    "equipped": {
+      "weapon": null,
+      "armor": null
+    },
+    "gold": 600,
+    "coolness": 0,
+    "guild": null,
+    "pets": [],
+    "progress": "starter",
+    "exp": 1000,
+    "health": 90,
+    "max_health": 90,
+    "attack": 30,
+    "defense": 5,
+    "speed": 8,
+    "skills": [
+      "Quick Shot",
+      "Rain of Arrows",
+      "Eagle Eye"
+    ],
+    "active_quests": [],
+    "completed_quests": [],
+    "materials": {},
+    "tools": [
+      "Axe",
+      "Pickaxe",
+      "Flask",
+      "Hunting Knife"
+    ],
+    "current_area": "Greenwood Village",
+    "monsters_killed": 0,
+    "dungeons_completed": [
+      "Troll's Den"
+    ],
+    "current_dimension": "Overworld",
+    "dimensions_discovered": [
+      "Overworld"
+    ],
+    "dimension_keys": [],
+    "home_structures": {
+      "Tent": {
+        "built": true,
+        "position": [
+          0,
+          0
+        ],
+        "health": 100
+      }
+    },
+    "home_location": "Camp",
+    "new_systems_initialized": true
+  },
+  "timestamp": "2025-05-31 17:53:32",
+  "version": "1.1",
+  "gacha_version": "1.0"
+}
