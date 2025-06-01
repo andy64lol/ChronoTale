@@ -6064,6 +6064,8 @@ class Player:
         if vulnerability not in self.known_vulnerabilities:
             self.known_vulnerabilities.append(vulnerability)
 
+            return True
+
     def add_mission(self, mission):
         """Add a mission to active missions"""
         self.active_missions.append(mission)
@@ -7039,6 +7041,8 @@ class GameState:
         # Log the detection decrease if significant
         if amount >= 0.1:
             self.session_log.append(f"Detection level decreased by {amount:.2f} to {self.detection_level:.2f}")
+
+            return True
 
     def process_counter_hack_event(self):
         """Process a potential counter-hack attempt from white hat or black hat hackers"""
