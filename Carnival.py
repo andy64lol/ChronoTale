@@ -19,7 +19,7 @@ import sys
 import time
 from datetime import datetime
 from colorama import Fore, Style, init
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional, Union, Tuple
 
 # Launcher protection at the very beginning
 if __name__ == "__main__":
@@ -1226,7 +1226,7 @@ def lucky_slots() -> None:
         "⭐⭐⭐": 20
     }
 
-    def single_pull():
+    def single_pull() -> None:
         result = [random.choice(symbols) for _ in range(3)]
         print(" ".join(result))
         result_str = "".join(result)
@@ -5037,7 +5037,7 @@ def casino_championship() -> None:
     dealer_hand = [random.randint(2, 14) for _ in range(5)]
 
     # Convert numerical values to card names for display
-    def card_name(value):
+    def card_name(value: int) -> str:
         if value == 14:
             return "A"
         elif value == 13:
@@ -9953,7 +9953,7 @@ def view_card_collection() -> None:
     input("\nPress Enter to continue...")
 
 # Advanced Weather System for Seasonal Events
-def weather_effects() -> None:
+def weather_effects() -> Dict[str, Any]:
     """Dynamic weather system that affects carnival experiences"""
     weather_conditions = {
         "sunny": {
@@ -9996,7 +9996,7 @@ def weather_effects() -> None:
     return current_weather, weather_data
 
 # Expanded NPC Relationship System
-def advanced_npc_system() -> None:
+def advanced_npc_system() -> Dict[str, Any]:
     """Enhanced NPC interaction system with deep relationships"""
 
     # Extended NPC personalities
@@ -10030,7 +10030,7 @@ def advanced_npc_system() -> None:
     return npc_personalities
 
 # Multi-layered Achievement System
-def complex_achievement_system() -> None:
+def complex_achievement_system() -> Dict[str, Any]:
     """Comprehensive achievement tracking with multiple categories"""
 
     achievement_categories = {
@@ -10074,10 +10074,10 @@ def complex_achievement_system() -> None:
     return achievement_categories
 
 # Advanced Mini-Game Collection
-def premium_minigames() -> None:
+def premium_minigames() -> Dict[str, Any]:
     """Collection of sophisticated mini-games for enhanced gameplay"""
 
-    def rhythm_carnival():
+    def rhythm_carnival() -> None:
         """Musical rhythm game with carnival themes"""
         print(f"\n{Fore.MAGENTA}🎵 RHYTHM CARNIVAL 🎵{Style.RESET_ALL}")
         print("Match the beat of the carnival music!")
@@ -10105,7 +10105,7 @@ def premium_minigames() -> None:
             print(f"{Fore.RED}Keep practicing! You scored {score}/{len(sequence)}")
             return 25
 
-    def carnival_trivia():
+    def carnival_trivia() -> None:
         """Advanced trivia game about carnival history and fun facts"""
         questions = [
             {
@@ -10150,7 +10150,7 @@ def premium_minigames() -> None:
     return {"rhythm_carnival": rhythm_carnival, "carnival_trivia": carnival_trivia}
 
 # Immersive Storytelling System
-def interactive_story_mode() -> None:
+def interactive_story_mode() -> Tuple[str, Dict[str, Any]]:
     """Branching narrative system for carnival adventures"""
 
     story_chapters = {
@@ -10178,7 +10178,7 @@ def interactive_story_mode() -> None:
     return story_chapters
 
 # Enhanced Economic System
-def carnival_economy() -> None:
+def carnival_economy() -> Dict[str, Any]:
     """Complex economic simulation for the carnival experience"""
 
     economic_factors = {

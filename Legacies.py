@@ -25336,7 +25336,7 @@ LEGENDARY_BOSSES = {
 
 # Epic Character Development System
 class LegendaryCharacter:
-    def __init__(self, name, character_class, origin_story):
+    def __init__(self, name, character_class, origin_story) -> None:
         self.name = name
         self.character_class = character_class
         self.level = 1

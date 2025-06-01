@@ -1,4 +1,5 @@
 import random
+from typing import Dict, List, Any, Optional, Union, Tuple
 import time
 import json
 import os
@@ -99,7 +100,7 @@ club_presidents = [
 ]
 
 # Function to manage game settings
-def settings_menu():
+def settings_menu() -> Any:
     while True:
         print(f"\n{Fore.CYAN}===== GAME SETTINGS ====={Style.RESET_ALL}")
         print(f"{Fore.YELLOW}1. Content Settings{Style.RESET_ALL}")
@@ -137,7 +138,7 @@ def settings_menu():
             print("Invalid choice. Please enter a number between 1 and 8.")
 
 
-def content_settings_menu():
+def content_settings_menu() -> Any:
     # No need for global statement since we're only modifying dictionary contents
     # not reassigning game_settings itself
     while True:
@@ -255,7 +256,7 @@ def content_settings_menu():
             print("Invalid choice. Please enter a number between 1 and 6.")
 
 
-def toggle_setting(setting_name, options):
+def toggle_setting(setting_name: Any, options: Any) -> Any:
     # No need for global statement since we're only modifying dictionary values
     current_index = options.index(game_settings[setting_name])
     next_index = (current_index + 1) % len(options)
@@ -267,7 +268,7 @@ def toggle_setting(setting_name, options):
     )
 
 
-def save_settings():
+def save_settings() -> Any:
     try:
         with open("game_settings.json", "w") as file:
             json.dump(game_settings, file)
@@ -275,7 +276,7 @@ def save_settings():
         print("Error saving settings: {0}".format(e))
 
 
-def load_settings():
+def load_settings() -> Any:
     # Need global here because we're updating the game_settings dictionary object
     try:
         if os.path.exists("game_settings.json"):
@@ -286,7 +287,7 @@ def load_settings():
         print("Error loading settings: {0}".format(e))
 
 
-def reset_settings():
+def reset_settings() -> Any:
     # Need global because we're reassigning the game_settings variable
     global game_settings
     game_settings = {
@@ -307,7 +308,7 @@ def reset_settings():
 load_settings()
 
 # Tutorial system
-def show_tutorial(topic, force=False):
+def show_tutorial(topic: Any, force: bool = False) -> None:
     """
     Display tutorial messages to help new players
     Only shows if tutorial setting is enabled
@@ -346,7 +347,7 @@ def show_tutorial(topic, force=False):
 
 
 # Helper functions for content filtering
-def is_content_allowed(content_type):
+def is_content_allowed(content_type: Any) -> bool:
     """
     Check if specific content type is allowed in the game settings
     """
@@ -375,7 +376,7 @@ def is_content_allowed(content_type):
     return allowed
 
 
-def filter_text(text, content_types=None):
+def filter_text(text: Any, content_types: Optional[Any] = None) -> Any:
     """
     Filter text based on game settings
     If any content type in the list is not allowed, a censored version is returned
@@ -455,7 +456,7 @@ def filter_text(text, content_types=None):
     return text
 
 
-def check_relationship_compatibility(person1, person2):
+def check_relationship_compatibility(person1: Any, person2: Any) -> bool:
     """
     Check if a relationship is allowed based on settings
 
@@ -1096,7 +1097,7 @@ CHANGING_LOCATIONS = [
 ]
 
 # Change clothing function
-def change_clothing(new_clothing_name):
+def change_clothing(new_clothing_name: Any) -> Any:
     """
     Change the player's current clothing
 
@@ -1145,9 +1146,7 @@ def change_clothing(new_clothing_name):
 
 
 # Function to check if clothing is appropriate for the current location/situation
-def is_clothing_appropriate(
-    clothing_name, location, is_school_day=True, is_festival=False
-):
+def is_clothing_appropriate(clothing_name: Any, location: Any, is_school_day: bool = True, is_festival: bool = False) -> bool:
     """
     Check if the current clothing is appropriate for the location and time
 
@@ -1205,7 +1204,7 @@ def is_clothing_appropriate(
 
 
 # Apply clothing effects (charisma, other stats)
-def apply_clothing_effects(clothing_name, apply=True):
+def apply_clothing_effects(clothing_name: Any, apply: bool = True) -> Any:
     """
     Apply or remove effects from clothing
 
@@ -1812,7 +1811,7 @@ cafeteria_menu = {
 }
 
 # Health/Stress System - Visual indicators
-def get_health_indicator():
+def get_health_indicator() -> Any:
     """Get a visual indicator of player's health"""
     health = player["health"]
     if health >= 90:
@@ -1827,7 +1826,7 @@ def get_health_indicator():
         return f"{Back.RED}{Fore.WHITE}Critical{Style.RESET_ALL}"
 
 
-def get_stress_indicator():
+def get_stress_indicator() -> Any:
     """Get a visual indicator of player's stress level"""
     stress = player["stress"]
     if stress < 20:
@@ -1842,9 +1841,7 @@ def get_stress_indicator():
         return f"{Back.RED}{Fore.WHITE}Burnout Risk{Style.RESET_ALL}"
 
 
-def handle_rumor_interaction(
-    choice, name, personality, relationship_gain_mult=1.0, relationship_loss_mult=1.0
-):
+def handle_rumor_interaction(choice: Any, name: Any, personality: Any, relationship_gain_mult: float = 1.0, relationship_loss_mult: float = 1.0) -> Any:
     """
     Handle rumor-related interaction options
 
@@ -2293,7 +2290,7 @@ def handle_rumor_interaction(
     return points_gain
 
 
-def update_mental_health():
+def update_mental_health() -> None:
     """Update mental health stats based on various factors"""
     mental_health = player["mental_health"]
 
@@ -2355,7 +2352,7 @@ def update_mental_health():
         increase_stress(5)  # Moderate anxiety affects stress
 
 
-def attend_therapy():
+def attend_therapy() -> Any:
     """Attend therapy session to improve mental health"""
     mental_health = player["mental_health"]
 
@@ -2396,7 +2393,7 @@ def attend_therapy():
     return True
 
 
-def build_support_network():
+def build_support_network() -> Any:
     """Strengthen your support network through social connections"""
     mental_health = player["mental_health"]
 
@@ -2425,7 +2422,7 @@ def build_support_network():
     return mental_health["support_network"]
 
 
-def process_bullying_event(severity):
+def process_bullying_event(severity: Any) -> Any:
     """Process a bullying event and its effects on mental health"""
     mental_health = player["mental_health"]
     mental_health["bullying_incidents"] += 1
@@ -2470,7 +2467,7 @@ def process_bullying_event(severity):
     update_mental_health()
 
 
-def update_health():
+def update_health() -> None:
     """Update overall health based on stress, hunger, energy and mental health"""
     global ticks
     stress_factor = (100 - player["stress"]) * 0.4  # Higher stress means lower health
@@ -2741,7 +2738,7 @@ CURFEW_HOUR = 22  # 10:00 PM
 curfew_violations = 0
 
 
-def assign_random_roommate():
+def assign_random_roommate() -> Any:
     global roommate
 
     # Check if player has a twin sibling who can be their roommate
@@ -2781,7 +2778,7 @@ assign_random_roommate()
 player["current_location"] = "Student Room 364"
 
 
-def improve_relationship(name, points):
+def improve_relationship(name: Any, points: Any) -> Any:
     # No need for global since we're just modifying a dictionary, not reassigning it
     if name not in relationship:
         relationship[name] = 0
@@ -2821,7 +2818,7 @@ def improve_relationship(name, points):
 
 
 # Modify random_friendship_event to improve roommate relationship faster
-def random_friendship_event():
+def random_friendship_event() -> Any:
     student = random.choice(students)
     name = student["name"]
     if (
@@ -2846,7 +2843,7 @@ def random_friendship_event():
                 player["charisma"]["social"] += 2
 
 
-def eat_food(food_name):
+def eat_food(food_name: Any) -> Any:
     if food_name not in cafeteria_menu:
         print("That food is not available.")
         return
@@ -2868,7 +2865,7 @@ def eat_food(food_name):
 
 
 # Add /eat command handler
-def eat_command(args):
+def eat_command(args: Any) -> Any:
     if not args:
         print("Usage: /eat [food item]")
         print("Available food items:")
@@ -3011,7 +3008,7 @@ all_subjects = {
 }
 
 # Current active subjects based on player's year
-def get_subjects_for_year(year):
+def get_subjects_for_year(year: Any) -> Any:
     """Get a dictionary of subjects with properties for a specific school year"""
     year_subjects = {}
     for subject_name, subject_data in all_subjects.items():
@@ -3020,7 +3017,7 @@ def get_subjects_for_year(year):
     return year_subjects
 
 
-def get_current_subjects():
+def get_current_subjects() -> Any:
     """Get subjects relevant to player's current school year"""
     # Get the relevant subject data for the current school year
     subjects_data = get_subjects_for_year(player["school_year"])
@@ -3847,7 +3844,7 @@ ranks = {
 }
 
 
-def slow_print(text, delay=None, color=Fore.WHITE, style=None, highlight=None):
+def slow_print(text: Any, delay: Optional[Any] = None, color: Any = Fore.WHITE, style: Optional[Any] = None, highlight: Optional[Any] = None) -> Any:
     """
     Print text with a typing effect and customizable colors using colorama
 
@@ -3901,7 +3898,7 @@ def slow_print(text, delay=None, color=Fore.WHITE, style=None, highlight=None):
             time.sleep(min(len(filtered_text) * delay * 0.2, 0.5))
 
 
-def update_ranks():
+def update_ranks() -> None:
     for category in ["students", "teachers"]:
         points = player["reputation"][category]
         current_rank = "Nobody" if category == "students" else "Unknown"
@@ -3911,11 +3908,11 @@ def update_ranks():
         player["rank"][category] = current_rank
 
 
-def is_weekend():
+def is_weekend() -> bool:
     return current_date.weekday() >= 5
 
 
-def check_weekend_activities():
+def check_weekend_activities() -> bool:
     """Check for special weekend activities"""
     if not is_weekend():
         return
@@ -3954,7 +3951,7 @@ def check_weekend_activities():
         weekend_study_session()
 
 
-def handle_weekend_location(location):
+def handle_weekend_location(location: Any) -> Any:
     """Handle special weekend locations"""
     global ticks
     if location == "Movie Theater":
@@ -5439,7 +5436,7 @@ def handle_weekend_location(location):
         ticks += 20  # About 2 hours
 
 
-def weekend_rest_options():
+def weekend_rest_options() -> Any:
     """Special rest options for weekends when in bedroom/dorm"""
     global ticks
     slow_print(f"\n{Fore.YELLOW}=== Weekend Relaxation ==={Style.RESET_ALL}")
@@ -5494,7 +5491,7 @@ def weekend_rest_options():
         print("Invalid choice.")
 
 
-def weekend_study_session():
+def weekend_study_session() -> Any:
     """Special weekend study options in the library"""
     global ticks
     slow_print(f"\n{Fore.YELLOW}=== Weekend Study Session ==={Style.RESET_ALL}")
@@ -5589,7 +5586,7 @@ def weekend_study_session():
         print("Invalid choice.")
 
 
-def improve_family_relationships():
+def improve_family_relationships() -> Any:
     """Improve relationships with family members through a call"""
     if not player["family"]["parents"] and not player["family"]["siblings"]:
         slow_print("You have no family members to call.")
@@ -5612,7 +5609,7 @@ def improve_family_relationships():
         slow_print(f"Your relationship with {name} improved.")
 
 
-def complete_random_homework():
+def complete_random_homework() -> Any:
     """Complete homework for random subjects during weekend study"""
     current_subjects = get_current_subjects()
 
@@ -5628,7 +5625,7 @@ def complete_random_homework():
         slow_print(f"You completed your {subject} homework!")
 
 
-def romantic_date_event():
+def romantic_date_event() -> Any:
     """Special romantic event during weekend activities"""
     if not player.get("romantic_interest"):
         return
@@ -5754,7 +5751,7 @@ def romantic_date_event():
             # No regression but no advancement either
 
 
-def random_friend_encounter():
+def random_friend_encounter() -> Any:
     """Random encounter with a friend or potential friend during weekend activities"""
     # Select a random student who isn't a romantic interest
     available_students = [
@@ -5859,7 +5856,7 @@ def random_friend_encounter():
             slow_print(f"Your grade in {subject} slightly improved.")
 
 
-def find_study_partner():
+def find_study_partner() -> Any:
     """Find a study partner during weekend library session"""
     # Select a random student with "serious" or "kuudere" personality
     studious_students = [
@@ -5949,7 +5946,7 @@ def find_study_partner():
         slow_print("You decide to continue studying on your own.")
 
 
-def clothes_shopping():
+def clothes_shopping() -> Any:
     """Shopping for clothes at the mall"""
     slow_print(f"\n{Fore.CYAN}=== Clothing Store ==={Style.RESET_ALL}")
 
@@ -6089,7 +6086,7 @@ def clothes_shopping():
     ticks += 5  # About 30 minutes
 
 
-def bookstore_shopping():
+def bookstore_shopping() -> Any:
     """Shopping at the bookstore"""
     slow_print(f"\n{Fore.CYAN}=== Bookstore ==={Style.RESET_ALL}")
 
@@ -6187,7 +6184,7 @@ def bookstore_shopping():
     ticks += 4  # About 25 minutes
 
 
-def electronics_shopping():
+def electronics_shopping() -> Any:
     """Shopping at the electronics store"""
     slow_print(f"\n{Fore.CYAN}=== Electronics Store ==={Style.RESET_ALL}")
 
@@ -6275,7 +6272,7 @@ def electronics_shopping():
     ticks += 6  # About 35-40 minutes
 
 
-def food_court_meal():
+def food_court_meal() -> Any:
     """Having a meal at the food court"""
     slow_print(f"\n{Fore.CYAN}=== Food Court ==={Style.RESET_ALL}")
 
@@ -6379,7 +6376,7 @@ holiday_events_shown = {
 }
 
 
-def is_holiday():
+def is_holiday() -> bool:
     # Regular holidays
     holidays = [
         (1, 1),  # New Year's Day
@@ -6741,7 +6738,7 @@ def is_holiday():
     )
 
 
-def check_curfew():
+def check_curfew() -> bool:
     """Check if player is violating curfew and handle consequences"""
     global curfew_violations
 
@@ -6816,7 +6813,7 @@ def check_curfew():
 
     return False  # No curfew violation
 
-def update_year_progress():
+def update_year_progress() -> None:
     """Update the player's progress through the current school year"""
     # No need for global current_date as we're only reading its value, not modifying it
 
@@ -6849,7 +6846,7 @@ def update_year_progress():
         handle_year_end()
 
 
-def handle_year_end():
+def handle_year_end() -> Any:
     """Handle the end of a school year and transition to the next"""
     global subjects, homework
 
@@ -6910,7 +6907,7 @@ def handle_year_end():
         slow_print("Your new courses have been set up. Good luck with your studies!")
 
 
-def calculate_final_grades():
+def calculate_final_grades() -> Any:
     """Calculate final grades and GPA for the current school year"""
     # Convert letter grades to GPA points
     grade_points = {
@@ -6967,7 +6964,7 @@ def calculate_final_grades():
         player["gpa"] = 0.0
 
 
-def show_year_end_summary():
+def show_year_end_summary() -> None:
     """Display a summary of the player's achievements for the current school year"""
     slow_print(
         f"\n{Fore.YELLOW}=== Year {player['school_year']} Summary ==={Style.RESET_ALL}"
@@ -7031,7 +7028,7 @@ def show_year_end_summary():
         print(f"{Fore.RED}Error: {str(e)}. Continuing...{Style.RESET_ALL}")
 
 
-def choose_new_electives():
+def choose_new_electives() -> Any:
     """Allow player to choose new electives for the new school year"""
     # Get available electives for the current year
     available_electives = []
@@ -7102,7 +7099,7 @@ def choose_new_electives():
     )
 
 
-def offer_internship_opportunities():
+def offer_internship_opportunities() -> Any:
     """Offer internship opportunities for third-year students"""
     slow_print(f"\n{Fore.YELLOW}=== Internship Opportunities ==={Style.RESET_ALL}")
     slow_print(
@@ -7222,7 +7219,7 @@ def offer_internship_opportunities():
         )
 
 
-def begin_career_planning():
+def begin_career_planning() -> Any:
     """Start career planning for fourth-year students"""
     slow_print(f"\n{Fore.YELLOW}=== Career Planning ==={Style.RESET_ALL}")
     slow_print(
@@ -7308,7 +7305,7 @@ def begin_career_planning():
         slow_print("Work hard to maintain your GPA and build relevant skills!")
 
 
-def handle_graduation():
+def handle_graduation() -> Any:
     """Handle the player's graduation from school with career paths and epilogue"""
     slow_print(
         f"\n{Fore.CYAN}================================================{Style.RESET_ALL}"
@@ -7705,7 +7702,7 @@ def handle_graduation():
     show_main_menu()
 
 
-def advance_day():
+def advance_day() -> Any:
     global current_date, ticks
     # Need globals for current_date and ticks as we're reassigning them
     # No need for homework global as we're not reassigning it
@@ -7802,7 +7799,7 @@ def advance_day():
         )
 
 
-def random_school_event():
+def random_school_event() -> Any:
     # Regular school events
     regular_events = [
         "You forgot your homework!",
@@ -8031,7 +8028,7 @@ def random_school_event():
     update_ranks()
 
 
-def show_me():
+def show_me() -> None:
     print(f"\n{Fore.CYAN}=== {player['name']}'s Profile ==={Style.RESET_ALL}")
     print(
         f"Current Date: {current_date.strftime('%Y-%m-%d')} ({'Weekend' if is_weekend() else 'Holiday' if is_holiday() else 'Weekday'})"
@@ -8196,7 +8193,7 @@ def show_me():
             print(f"  {subject}: {status}")
 
 
-def work_part_time(job_name):
+def work_part_time(job_name: Any) -> Any:
     global ticks
     if job_name in jobs:
         job = jobs[job_name]
@@ -8216,7 +8213,7 @@ def work_part_time(job_name):
 
 
 # Family member generation
-def generate_family_members():
+def generate_family_members() -> Any:
     """Generate randomized family members for the player"""
     family = {"parents": [], "siblings": []}
 
@@ -8474,7 +8471,7 @@ EX_PARTNER_STATUSES = {
 }
 
 # Modified setup_game function
-def setup_game(non_interactive=False):
+def setup_game(non_interactive: bool = False) -> Any:
     # Only need global for _non_interactive as we're reassigning it
     # No need for player, subjects, homework, birthdays globals as we're only modifying their contents
     global _non_interactive
@@ -8661,7 +8658,7 @@ PLAYER_TRAITS = {
 }
 
 # Function to randomly assign starting traits to the player
-def assign_random_traits(count=3):
+def assign_random_traits(count: int = 3) -> Any:
     """
     Assign random traits to the player
 
@@ -8705,7 +8702,7 @@ def assign_random_traits(count=3):
 
     return selected_traits
 
-def reset_player():
+def reset_player() -> Any:
     """Reset player to starting state with default values"""
     global player
     
@@ -9351,7 +9348,7 @@ def reset_player():
 
 
 # Handle holiday accommodation switching
-def handle_holiday_accommodation():
+def handle_holiday_accommodation() -> Any:
     """
     Handle accommodation changes during holidays
     Temporarily switch dorm students to home during holidays
@@ -9429,7 +9426,7 @@ def handle_holiday_accommodation():
 
 
 # Commands
-def show_academic_year():
+def show_academic_year() -> None:
     """Display information about the current academic year"""
     year_names = {1: "Freshman", 2: "Sophomore", 3: "Junior", 4: "Senior"}
     year_name = year_names.get(player["school_year"], f"Year {player['school_year']}")
@@ -9495,7 +9492,7 @@ def show_academic_year():
         )
 
 
-def generate_full_student_list():
+def generate_full_student_list() -> Any:
     """Generate a large list of students for the school (500-600 students)"""
     full_student_list = []
 
@@ -9583,7 +9580,7 @@ def generate_full_student_list():
 
     return full_student_list
 
-def show_help():
+def show_help() -> None:
     help_text = """
 {0}=== AVAILABLE COMMANDS ==={1}
 
@@ -9642,7 +9639,7 @@ def show_help():
     print(help_text.format(Fore.CYAN, Style.RESET_ALL, Fore.YELLOW))
 
 
-def go_location(args):
+def go_location(args: Any) -> Any:
     if not args:
         print(f"\n{Fore.CYAN}Available Locations:{Style.RESET_ALL}")
         for loc in locations:
@@ -9773,7 +9770,7 @@ def go_location(args):
         print("Unknown location.")
 
 
-def sleep_command(args=None):
+def sleep_command(args: Optional[Any] = None) -> Any:
     global ticks
     # Only need global for ticks as it's being reassigned on line 9586
     # No need for current_date, homework, player globals as we're only modifying their contents
@@ -9951,12 +9948,12 @@ def sleep_command(args=None):
         )
 
 
-def dinner_command():
+def dinner_command() -> Any:
     """Have dinner at appropriate locations (Kitchen at home or Cafeteria at school)"""
     have_dinner()
 
 
-def have_dinner():
+def have_dinner() -> Any:
     """Have dinner at home or at cafeteria"""
     global ticks
 
@@ -10170,7 +10167,7 @@ def have_dinner():
         ticks += 7  # 40 minutes for family dinner
 
 
-def have_family_breakfast():
+def have_family_breakfast() -> Any:
     """Have breakfast with family members (only when living at home)"""
     if player["accommodation_type"] != "home" or not player["family"]["parents"]:
         return
@@ -10290,7 +10287,7 @@ def have_family_breakfast():
     slow_print("Having breakfast satisfies your hunger for now.")
 
 
-def analyze_student_response(student, target=None):
+def analyze_student_response(student: Any, target: Optional[Any] = None) -> Any:
     personality = student.get("personality", "kind")
     response_types = {
         # Original personality types
@@ -10665,14 +10662,14 @@ def analyze_student_response(student, target=None):
     return base_response
 
 
-def get_relationship_status(points):
+def get_relationship_status(points: Any) -> Any:
     for threshold, status in sorted(RELATIONSHIP_LEVELS.items(), reverse=True):
         if points >= threshold:
             return status
     return "Stranger"
 
 
-def interact_student(args):
+def interact_student(args: Any) -> Any:
     if not args:
         print("Usage: /interact [student name]")
         return
@@ -11514,7 +11511,7 @@ def interact_student(args):
         print("No student with that name.")
 
 
-def show_relationship():
+def show_relationship() -> None:
     print("\n--- Relationships ---")
     if not relationship:
         print("No relationships established yet.")
@@ -11532,7 +11529,7 @@ def show_relationship():
             print(f"{student['name']} ({student['gender']}) - Points: {points}")
 
 
-def study_subject(args):
+def study_subject(args: Any) -> Any:
     if not args:
         print("Usage: /study [subject]")
         return
@@ -11545,7 +11542,7 @@ def study_subject(args):
         print("Unknown subject.")
 
 
-def show_status():
+def show_status() -> None:
     print(f"\n--- {player['name']}'s Status ---")
     print("Homework Completed:")
     for subj, done in homework.items():
@@ -11560,20 +11557,20 @@ def show_status():
     show_me()
 
 
-def show_homework():
+def show_homework() -> None:
     print("\n--- Homework ---")
     for subj, done in homework.items():
         status = "Done" if done else "Not Done"
         print(f"{subj}: {status}")
 
 
-def show_teachers():
+def show_teachers() -> None:
     print("\n--- Teachers ---")
     for teacher in teachers:
         print(f"{teacher['name']} - {teacher['subject']} ({teacher['personality']})")
 
 
-def show_full_student_list():
+def show_full_student_list() -> None:
     """Display the full list of 500-600 students in the school"""
     # Check if we have already generated the full student list
     if "full_student_list" not in player:
@@ -11724,7 +11721,7 @@ def show_full_student_list():
         else:
             print("Invalid choice. Please enter a number between 1 and 5.")
 
-def show_npc_list(args):
+def show_npc_list(args: Any) -> None:
     """Display NPCs filtered by tag"""
     # Check if we have already generated the full student list
     if "full_student_list" not in player:
@@ -11842,7 +11839,7 @@ def show_npc_list(args):
             tag_count = len([npc for npc in npcs if tag in npc.get("tags", [])])
             print(f"- {tag} ({tag_count} NPCs)")
 
-def show_students():
+def show_students() -> None:
     print(f"\n{Fore.CYAN}=== YOUR CLASSMATES ==={Style.RESET_ALL}")
 
     # Filter students for player's year
@@ -11880,7 +11877,7 @@ def show_students():
                 print(f"  Compatibility: {compatibility}%")
 
 
-def show_quests():
+def show_quests() -> None:
     print("\n--- Quests ---")
     if not quests:
         print("No active quests.")
@@ -11890,7 +11887,7 @@ def show_quests():
         print(f"{quest['description']} - {quest['objective']} ({status})")
 
 
-def complete_quest(args):
+def complete_quest(args: Any) -> Any:
     if not args:
         print("Usage: /complete_quest [quest_id]")
         return
@@ -11911,7 +11908,7 @@ def complete_quest(args):
 
 
 # Function to handle club mechanics
-def handle_club_location(club_name):
+def handle_club_location(club_name: Any) -> Any:
     """Handle interactions when visiting a club location"""
     if club_name in player["clubs"]:
         # Already a member
@@ -12034,7 +12031,7 @@ def handle_club_location(club_name):
 
 
 # Function for PE class challenges
-def pe_class_challenge():
+def pe_class_challenge() -> Any:
     """Handle PE class challenges in the gym with enhanced narrative"""
     if "PE" not in player["electives"] and random.random() < 0.7:
         # Less likely to have PE challenges if not taking PE as elective
@@ -12495,7 +12492,7 @@ def pe_class_challenge():
 
 
 # Function for romance opportunities
-def romance_opportunity():
+def romance_opportunity() -> Any:
     """Create opportunities for romantic interactions"""
     # Skip if player already has a romantic interest and relationship is strong
     if (
@@ -12712,7 +12709,7 @@ def romance_opportunity():
 
 # Function to check for special events and festivals
 # Festival minigames function
-def play_festival_minigame(minigame_type):
+def play_festival_minigame(minigame_type: Any) -> Any:
     """Play a festival-specific minigame"""
     slow_print(
         "\n{0}=== Festival Minigame: {1} ==={2}".format(
@@ -13414,7 +13411,7 @@ def play_festival_minigame(minigame_type):
     return True
 
 
-def interact_ex_partner(ex_partner):
+def interact_ex_partner(ex_partner: Any) -> Any:
     """
     Handle interactions with ex-partners, including yandere therapy
 
@@ -14002,7 +13999,7 @@ def interact_ex_partner(ex_partner):
     update_mental_health()
 
 
-def create_custom_rumor(content, rumor_type="social", target=None):
+def create_custom_rumor(content: Any, rumor_type: str = "social", target: Optional[Any] = None) -> Any:
     """
     Create a custom rumor initiated by the player
 
@@ -14035,7 +14032,7 @@ def create_custom_rumor(content, rumor_type="social", target=None):
 
 
 # Handle mundane and strange occurrences on campus
-def check_for_strange_occurrences():
+def check_for_strange_occurrences() -> bool:
     """Randomly trigger strange or mundane occurrences as the player explores campus"""
     # Only check occasionally 
     # 15% chance for any occurrence (10% mundane, 5% strange)
@@ -14232,7 +14229,7 @@ def check_for_strange_occurrences():
                 elif effect_type == "stress":
                     player["stress"] = max(0, player["stress"] - random.randint(1, 2))
 
-def generate_random_rumor(force_type=None):
+def generate_random_rumor(force_type: Optional[Any] = None) -> Any:
     """Generate a random rumor to add to the rumor mill
     
     Args:
@@ -14327,7 +14324,7 @@ def generate_random_rumor(force_type=None):
     return len(player["rumors"]) > 0
 
 
-def update_rumors():
+def update_rumors() -> None:
     """Update rumors: spread them and potentially create consequences"""
     if "rumors" not in player or not player["rumors"]:
         return
@@ -14390,7 +14387,7 @@ def update_rumors():
     player["rumors"] = [r for r in player["rumors"] if "to_remove" not in r]
 
 
-def process_ex_partner_event():
+def process_ex_partner_event() -> Any:
     """Process a random event with an ex partner"""
     if not player["ex_partners"]:
         return  # No ex partners to have events with
@@ -14649,7 +14646,7 @@ def process_ex_partner_event():
 birthdays = {}
 
 # Generate birthdays for NPCs
-def generate_birthdays():
+def generate_birthdays() -> Any:
     """Generate random birthdays for all students and family members"""
     # No need for global declarations as we're only modifying the contents of these variables, not reassigning them
 
@@ -14710,7 +14707,7 @@ def generate_birthdays():
 
     return birthday_dict
 
-def generate_weekly_quests():
+def generate_weekly_quests() -> Any:
     """Generate new quests at the beginning of each week"""
     # Only need global for quests if we're assigning new quests via add_random_quests
     # No need for player and current_date as we're only reading their values
@@ -14742,7 +14739,7 @@ def generate_weekly_quests():
         slow_print(f"\n{Fore.YELLOW}You have {len(new_quests)} new quests available!{Style.RESET_ALL}")
         slow_print("Type /quests to view them.")
 
-def check_for_special_events():
+def check_for_special_events() -> bool:
     """Check if today is a special event, festival day or birthday"""
     global birthdays
     # Only need global birthdays because we're reassigning it on line 14252
@@ -15054,7 +15051,7 @@ def check_for_special_events():
 
 
 # Function to check for club meetings
-def check_club_meetings():
+def check_club_meetings() -> bool:
     """Check if there are club meetings today"""
     if not player["clubs"]:
         return  # Not a member of any club
@@ -15100,7 +15097,7 @@ def check_club_meetings():
 
 
 # Function to check and award achievements
-def check_achievements():
+def check_achievements() -> bool:
     """Check if any achievements should be unlocked"""
     # First day achievement
     if "First Day" not in player["achievements"]:
@@ -15143,7 +15140,7 @@ def check_achievements():
 quest_counter = 1000
 
 # Quest generation functions
-def generate_new_quest(quest_type=None, difficulty=None):
+def generate_new_quest(quest_type: Optional[Any] = None, difficulty: Optional[Any] = None) -> Any:
     """
     Generate a new random quest based on type and difficulty
 
@@ -15435,7 +15432,7 @@ def generate_new_quest(quest_type=None, difficulty=None):
     return quest
 
 # Get time of day based on game ticks
-def get_time_of_day():
+def get_time_of_day() -> Any:
     """
     Get the current time of day based on game ticks
 
@@ -15461,7 +15458,7 @@ def get_time_of_day():
         return "night"
 
 # Get the current season based on date
-def get_current_season():
+def get_current_season() -> Any:
     """
     Determine the current season based on date
 
@@ -15486,7 +15483,7 @@ def get_current_season():
         return "winter"
 
 # Apply trait effects to exam performance
-def apply_trait_effects_to_exam(subject, base_score):
+def apply_trait_effects_to_exam(subject: Any, base_score: Any) -> Any:
     """
     Apply trait effects to exam performance
 
@@ -15544,7 +15541,7 @@ def apply_trait_effects_to_exam(subject, base_score):
 
     return max(0, min(100, modified_score))  # Clamp between 0-100
 
-def add_random_quests(count=1, types=None):
+def add_random_quests(count: int = 1, types: Optional[Any] = None) -> None:
     """
     Add random quests to the quest log
 
@@ -15575,7 +15572,7 @@ def add_random_quests(count=1, types=None):
 
     return new_quests
 
-def check_quest_objectives(location):
+def check_quest_objectives(location: Any) -> bool:
     """Check if being at this location completes any quest objectives"""
     # No need for global declarations here since we're only modifying contents of
     # player, quests, and relationship dictionaries/lists, not reassigning them
@@ -15717,7 +15714,7 @@ def check_quest_objectives(location):
 
 
 # Function for showing available clubs
-def show_clubs():
+def show_clubs() -> None:
     print(f"\n{Fore.CYAN}=== Available Clubs ==={Style.RESET_ALL}")
     for club_name, club_info in clubs.items():
         president = club_info["president"]
@@ -15753,7 +15750,7 @@ def show_clubs():
 
 
 # Function for joining a club
-def join_club(args):
+def join_club(args: Any) -> Any:
     if not args:
         print("Usage: /join_club [club name]")
         return
@@ -15802,7 +15799,7 @@ def join_club(args):
 
 
 # Function for leaving a club
-def leave_club(args):
+def leave_club(args: Any) -> Any:
     if not args:
         print("Usage: /leave_club [club name]")
         return
@@ -15832,7 +15829,7 @@ def leave_club(args):
 
 
 # Function to check romance status
-def switch_active_partner(args):
+def switch_active_partner(args: Any) -> Any:
     """Switch your active romantic partner in a harem playthrough
 
     Arguments:
@@ -15898,7 +15895,7 @@ def switch_active_partner(args):
             slow_print(f"- {partner}")
 
 
-def show_romance():
+def show_romance() -> None:
     """Display your romantic relationship status and options"""
     print(f"\n{Fore.MAGENTA}=== Your Romance Status ==={Style.RESET_ALL}")
 
@@ -16028,7 +16025,7 @@ def show_romance():
 
 
 # Dating System Functions
-def go_on_date(args):
+def go_on_date(args: Any) -> Any:
     """
     Take your romantic partner on a date
 
@@ -16138,7 +16135,7 @@ def go_on_date(args):
         slow_print("Use '/date' without arguments to see available options.")
 
 
-def process_date(date_name, date_info, partner_name):
+def process_date(date_name: Any, date_info: Any, partner_name: Any) -> Any:
     """
     Process a date with romantic partner
 
@@ -16250,7 +16247,7 @@ def process_date(date_name, date_info, partner_name):
         player["charisma"]["social"] += 3
 
 
-def date_narratives(date_type, partner_name, personality):
+def date_narratives(date_type: Any, partner_name: Any, personality: Any) -> Any:
     """Generate narrative for a date based on date type and partner personality"""
 
     # Common narratives by date type with extended story elements
@@ -16508,7 +16505,7 @@ def date_narratives(date_type, partner_name, personality):
         )
 
 
-def check_romance_stage_advancement(partner_name):
+def check_romance_stage_advancement(partner_name: Any) -> bool:
     """Check and process romance stage advancement"""
     global player  # Need global declaration to modify player dictionary
     # Check if we can advance to next romance stage
@@ -16623,7 +16620,7 @@ def check_romance_stage_advancement(partner_name):
 
 
 # Function to relax and reduce stress
-def relax_command():
+def relax_command() -> Any:
     global ticks, player, relationship
     current_location = player.get("current_location", "")
 
@@ -16709,7 +16706,7 @@ def relax_command():
 
 
 # Function to show achievements
-def show_achievements():
+def show_achievements() -> None:
     print(f"\n{Fore.YELLOW}=== Achievements ==={Style.RESET_ALL}")
 
     if not player["achievements"]:
@@ -16742,7 +16739,7 @@ def show_achievements():
             print(f"? {details['description']}")
             
 # Display player's collectibles
-def show_collectibles():
+def show_collectibles() -> None:
     """Display the player's collection of campus souvenirs and collectibles"""
     if "collectibles" not in player or not player["collectibles"]:
         slow_print("You haven't found any collectibles yet. Explore the campus to find items!")
@@ -16816,7 +16813,7 @@ def show_collectibles():
         slow_print("\nHint: Continue exploring different campus locations to find more collectibles!")
 
 
-def show_rumors():
+def show_rumors() -> None:
     """Display current rumors in the game"""
     if "rumors" not in player or not player["rumors"]:
         print(
@@ -16873,7 +16870,7 @@ def show_rumors():
         )
 
 
-def change_clothes_command(args=None):
+def change_clothes_command(args: Optional[Any] = None) -> Any:
     """
     Command to change the player's clothes
 
@@ -16946,7 +16943,7 @@ def change_clothes_command(args=None):
 
 
 # Function for random events based on location
-def random_location_event(location):
+def random_location_event(location: Any) -> Any:
     """Trigger random events specific to the current location"""
     # Decide what type of event happens (standard, lost item, or collectible)
     event_roll = random.random()
@@ -16964,7 +16961,7 @@ def random_location_event(location):
     else:
         return
 
-def trigger_standard_event(location):
+def trigger_standard_event(location: Any) -> Any:
     """Handle original event system"""
     # Generic events for all locations
     generic_events = [
@@ -17056,7 +17053,7 @@ def trigger_standard_event(location):
     slow_print(f"\n{Fore.CYAN}Event: {event['description']}{Style.RESET_ALL}")
     event["effect"]()
     
-def check_for_lost_items(location):
+def check_for_lost_items(location: Any) -> bool:
     """Check if player finds a lost item in current location"""
     # List of possible lost items that can be found in different locations
     lost_items = [
@@ -17149,7 +17146,7 @@ def check_for_lost_items(location):
             slow_print(f"You leave the {found_item['item']} where you found it.")
             slow_print("Maybe the owner will come back for it.")
     
-def check_for_collectibles(location):
+def check_for_collectibles(location: Any) -> bool:
     """Check if player finds a collectible item in the current location"""
     # List of possible collectibles at different locations
     collectibles = [
@@ -17230,38 +17227,38 @@ def check_for_collectibles(location):
 
 
 # Helper functions for player stats
-def increase_money(amount):
+def increase_money(amount: Any) -> Any:
     """Helper function to increase player money"""
     player["money"] += amount
 
 
-def decrease_energy(amount):
+def decrease_energy(amount: Any) -> Any:
     """Helper function to decrease player energy"""
     player["energy"] = max(0, player["energy"] - amount)
 
 
-def decrease_stress(amount):
+def decrease_stress(amount: Any) -> Any:
     """Helper function to decrease player stress"""
     player["stress"] = max(0, player["stress"] - amount)
 
 
-def increase_stress(amount):
+def increase_stress(amount: Any) -> Any:
     """Helper function to increase player stress"""
     player["stress"] = min(100, player["stress"] + amount)
 
 
-def increase_hunger(amount):
+def increase_hunger(amount: Any) -> Any:
     """Helper function to increase player hunger"""
     player["hunger"] = min(100, player["hunger"] + amount)
 
 
-def decrease_hunger(amount):
+def decrease_hunger(amount: Any) -> Any:
     """Helper function to decrease player hunger"""
     player["hunger"] = max(0, player["hunger"] - amount)
 
 
 # Helper function to increase reputation
-def increase_reputation(category, amount):
+def increase_reputation(category: Any, amount: Any) -> Any:
     """Helper function to increase reputation in a category"""
     player["reputation"][category] += amount
     update_ranks()
@@ -17271,7 +17268,7 @@ def increase_reputation(category, amount):
 core_subjects = ["Math", "Literature", "English", "Science", "History"]
 
 
-def random_event(location):
+def random_event(location: Any) -> Any:
     event_chance = random.randint(
         1, 6
     )  # Increased possibilities with ex-partner events
@@ -17554,7 +17551,7 @@ def random_event(location):
     advance_day()
 
 
-def save_game(slot_name):
+def save_game(slot_name: Any) -> Any:
     """
     Save the current game state to a file
 
@@ -17590,7 +17587,7 @@ def save_game(slot_name):
         slow_print(f"{Fore.RED}Error saving game: {str(e)}{Style.RESET_ALL}")
 
 
-def load_game(slot_name):
+def load_game(slot_name: Any) -> Any:
     """
     Load a saved game from a file
 
@@ -17645,7 +17642,7 @@ def load_game(slot_name):
         slow_print(f"{Fore.RED}Error loading game: {str(e)}{Style.RESET_ALL}")
 
 
-def list_saves():
+def list_saves() -> Any:
     files = [f for f in os.listdir() if f.endswith(".json")]
     if not files:
         print("No save files found.")
@@ -17656,7 +17653,7 @@ def list_saves():
 
 
 # Main Loop
-def display_save_slots():
+def display_save_slots() -> None:
     """Display and manage save slots for the game"""
     # Get only save game files (those starting with save_ and ending with .json)
     saves = [f for f in os.listdir() if f.startswith("save_") and f.endswith(".json")]
@@ -17989,7 +17986,7 @@ student_templates = {
 }
 
 
-def apply_template(template_name):
+def apply_template(template_name: Any) -> Any:
     """Apply selected template to the player"""
     global homework
 
@@ -18107,7 +18104,7 @@ def apply_template(template_name):
     return True
 
 
-def show_templates():
+def show_templates() -> None:
     """Display available student templates"""
     print(f"\n{Fore.CYAN}=== Student Templates ==={Style.RESET_ALL}")
     for name, template in student_templates.items():
@@ -18144,7 +18141,7 @@ def show_templates():
 
 
 # Function to test colors
-def test_color_display():
+def test_color_display() -> Any:
     """Test function to check if colors are displaying correctly"""
     print("\n=== COLOR TEST MODE ===")
     print("This is normal text (no color)")
@@ -18234,7 +18231,7 @@ def test_color_display():
     return show_main_menu()
 
 
-def show_main_menu():
+def show_main_menu() -> None:
     print("\n{0}1. New game{1}".format(Fore.YELLOW, Style.RESET_ALL))
     print("{0}2. Continue game{1}".format(Fore.GREEN, Style.RESET_ALL))
     print("{0}3. Settings{1}".format(Fore.CYAN, Style.RESET_ALL))
@@ -18307,13 +18304,13 @@ def show_main_menu():
         return False
 
 
-def show_schedule():
+def show_schedule() -> None:
     print("\n--- School Schedule ---")
     for day, events in school_events.items():
         print("{0}: {1}".format(day, ", ".join(events)))
 
 
-def main(non_interactive=False):
+def main(non_interactive: bool = False) -> Any:
     """Main game function that initializes and runs the game
 
     Arguments:
@@ -18969,7 +18966,7 @@ class_schedule = {
 wake_up_time = 8 * 10  # 08:00 in ticks
 
 
-def random_after_class_event():
+def random_after_class_event() -> Any:
     """Generate a random event that happens after class"""
 
     events = [
@@ -19064,7 +19061,7 @@ def random_after_class_event():
                 relationship[student_name] += 10
                 slow_print(f"{Fore.MAGENTA}The note was from {student_name}! Your relationship improved.{Style.RESET_ALL}")
 
-def check_class_time():
+def check_class_time() -> bool:
     global ticks
     if ticks < wake_up_time:
         slow_print("You are sleeping. Wake up at 08:00.")
@@ -19092,7 +19089,7 @@ def check_class_time():
 
 
 # Sanctions for missing classes or other infractions
-def apply_sanction(reason):
+def apply_sanction(reason: Any) -> Any:
     if reason == "missed_class":
         slow_print(
             "{0}You missed a class! Your teacher is disappointed.{1}".format(
@@ -19174,7 +19171,7 @@ def apply_sanction(reason):
 # Modify main loop or relevant command handlers to call check_class_time and enforce class attendance
 
 
-def take_exam(subject):
+def take_exam(subject: str) -> None:
     print("\n{0}=== {1} Exam ==={2}".format(Fore.YELLOW, subject, Style.RESET_ALL))
 
     # Check if this is a PE exam to apply seasonal effects
@@ -19261,7 +19258,7 @@ def take_exam(subject):
     return modified_score
 
 
-def check_monthly_exam():
+def check_monthly_exam() -> bool:
     global current_date
     if current_date.day == 28:  # End of month exam
         print("\n{0}=== Monthly Exams ==={1}".format(Fore.YELLOW, Style.RESET_ALL))
@@ -19527,7 +19524,7 @@ graduate_templates = {
 }
 
 
-def show_graduate_templates():
+def show_graduate_templates() -> None:
     """Display special graduate templates unlocked after completing the game"""
     print(
         "\n{0}=== Graduate Templates (Special) ==={1}".format(
@@ -19597,7 +19594,7 @@ def show_graduate_templates():
         return False
 
 
-def apply_graduate_template(template_name):
+def apply_graduate_template(template_name: Any) -> Any:
     """Apply selected graduate template to the player with special bonuses"""
     global homework
 

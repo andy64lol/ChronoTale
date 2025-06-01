@@ -71,88 +71,88 @@ UPDATE_NOTES = [
 class Font:
     # Standard text styles with enhanced color variety
     @staticmethod
-    def TITLE(text):
+    def TITLE(text: Any) -> Any:
         return f"{Fore.MAGENTA}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def SUBTITLE(text):
+    def SUBTITLE(text: Any) -> Any:
         return f"{Fore.CYAN}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def HEADER(text):
+    def HEADER(text: Any) -> Any:
         return f"{Fore.BLUE}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def IMPORTANT(text):
+    def IMPORTANT(text: Any) -> Any:
         return f"{Fore.YELLOW}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def WARNING(text):
+    def WARNING(text: Any) -> Any:
         return f"{Fore.RED}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def SUCCESS(text):
+    def SUCCESS(text: Any) -> Any:
         return f"{Fore.GREEN}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def INFO(text):
+    def INFO(text: Any) -> Any:
         return f"{Fore.WHITE}{text}{Style.RESET_ALL}"
 
     # Game-specific styles
     @staticmethod
-    def SYSTEM(text):
+    def SYSTEM(text: Any) -> Any:
         return f"{Fore.GREEN}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def ENEMY(text):
+    def ENEMY(text: Any) -> Any:
         return f"{Fore.RED}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def PLAYER(text):
+    def PLAYER(text: Any) -> Any:
         return f"{Fore.CYAN}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def ITEM(text):
+    def ITEM(text: Any) -> Any:
         return f"{Fore.YELLOW}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def MENU(text):
+    def MENU(text: Any) -> Any:
         return f"{Fore.WHITE}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def HEALTH(text):
+    def HEALTH(text: Any) -> Any:
         return f"{Fore.RED}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def SHIELD(text):
+    def SHIELD(text: Any) -> Any:
         return f"{Fore.BLUE}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def STAGE(text):
+    def STAGE(text: Any) -> Any:
         return f"{Fore.MAGENTA}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def COMMAND(text):
+    def COMMAND(text: Any) -> Any:
         return f"{Fore.GREEN}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def LORE(text):
+    def LORE(text: Any) -> Any:
         return f"{Fore.WHITE}{Style.DIM}{text}{Style.RESET_ALL}"
 
     @staticmethod
-    def GLITCH(text):
+    def GLITCH(text: Any) -> Any:
         return f"{Fore.WHITE}{Back.RED}{text}{Style.RESET_ALL}"
         
     @staticmethod
-    def ERROR(text):
+    def ERROR(text: Any) -> Any:
         return f"{Fore.RED}{Style.BRIGHT}{text}{Style.RESET_ALL}"
         
     @staticmethod
-    def NPC(text):
+    def NPC(text: Any) -> Any:
         return f"{Fore.GREEN}{text}{Style.RESET_ALL}"
         
     @staticmethod
-    def WEAPON(text):
+    def WEAPON(text: Any) -> Any:
         return f"{Fore.MAGENTA}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
     # Companion colors by tier
@@ -173,7 +173,7 @@ class Font:
     BOX_SIDE = f"{Fore.BLUE}{Style.DIM}│{Style.RESET_ALL}"
 
     @staticmethod
-    def box(text, width=50, color=Fore.CYAN):
+    def box(text: Any, width: int = 50, color: Any = Fore.CYAN) -> Any:
         """Create a box around text with specified color"""
         lines = text.split('\n')
         box_output = f"{Fore.BLUE}{Style.DIM}┌{'─' * (width-2)}┐{Style.RESET_ALL}\n"
@@ -316,7 +316,7 @@ def save_game(slot_number: int = 1) -> None:
         print(Font.WARNING(f"\nError saving game: {e}"))
         return False
 
-def attempt_save_recovery(save_file):
+def attempt_save_recovery(save_file: Any) -> Any:
     """
     Advanced save file recovery system that tries to extract partial data from corrupted files
     
@@ -421,7 +421,7 @@ def attempt_save_recovery(save_file):
     except Exception as e:
         return False, None, f"Recovery failed: {str(e)}"
 
-def verify_save_integrity(save_file):
+def verify_save_integrity(save_file: Any) -> Any:
     """
     Verify the integrity of a save file and attempt repairs if possible
     
@@ -491,7 +491,7 @@ def verify_save_integrity(save_file):
         # Other unexpected errors
         return False, None, f"Unknown error: {str(e)}"
 
-def fix_save_version(save_data):
+def fix_save_version(save_data: Any) -> Any:
     """
     Update save data format to the latest version with intelligent protagonist detection
     
@@ -1091,7 +1091,7 @@ def load_game(slot_number: int = 1) -> bool:
             
         return False
 
-def repair_save_file(slot_number=1):
+def repair_save_file(slot_number: int = 1) -> Any:
     """
     Attempt to repair a corrupted save file
     
@@ -1324,7 +1324,7 @@ def repair_save_file(slot_number=1):
         print(Font.ERROR(f"Unexpected error during repair: {e}"))
         return False
 
-def manage_save_slots():
+def manage_save_slots() -> Any:
     """Enhanced interface for managing save game slots with character information"""
     clear_screen()
     print(Font.BOX_TOP)
@@ -1485,7 +1485,7 @@ def print_typed(text: str, delay: float = 0.01, style: Optional[str] = None) -> 
                 time.sleep(delay)
         print()
 
-def print_glitch(text, style=Font.GLITCH):
+def print_glitch(text: Any, style: Any = Font.GLITCH) -> None:
     """Print text with a glitchy effect"""
     glitch_chars = "!@#$%^&*()_+-=<>?/\\|"
 
@@ -3480,7 +3480,7 @@ chapter_two_items = {
 }
 
 class Character:
-    def __init__(self, name, health, attack, defense, is_player=False):
+    def __init__(self, name: Any, health: Any, attack: Any, defense: Any, is_player: bool = False) -> None:
         self.name = name
         self.max_health = health
         self.health = health
@@ -3528,10 +3528,10 @@ class Character:
                 self.resistances["physical"] = 0.5  # 50% resistance to physical
                 self.resistances["emp"] = -0.3  # 30% weakness to EMP
 
-    def is_alive(self):
+    def is_alive(self) -> bool:
         return self.health > 0
 
-    def take_damage(self, damage, damage_type="physical"):
+    def take_damage(self, damage: Any, damage_type: str = "physical") -> Any:
         """Take damage with different damage types (physical, energy, emp, thermal, quantum, phase, bio)"""
         # Check for phase shift status effect (50% chance to avoid damage)
         if "phase_shift" in self.status_effects and random.random() < 0.5:
@@ -3589,7 +3589,7 @@ class Character:
 
         return damage_taken
 
-    def use_med_kit(self):
+    def use_med_kit(self) -> Any:
         """Use med kit to heal"""
         if self.inventory.get("med_kit", 0) > 0:
             # Enhanced healing with random bonus and visual feedback
@@ -3624,7 +3624,7 @@ class Character:
             return actual_heal
         return 0
 
-    def use_emp_grenade(self):
+    def use_emp_grenade(self) -> Any:
         """Use EMP grenade against electronic enemies"""
         if self.inventory.get("emp_grenade", 0) > 0:
             # Enhanced EMP grenade with scaling damage based on level
@@ -3640,7 +3640,7 @@ class Character:
             return emp_damage
         return 0
 
-    def use_shield_matrix(self):
+    def use_shield_matrix(self) -> Any:
         """Activate shield matrix for temporary defense boost"""
         if self.inventory.get("shield_matrix", 0) > 0:
             # Enhanced shield with level-based scaling
@@ -3671,7 +3671,7 @@ class Character:
             return shield_points
         return 0
         
-    def process_status_effects(self):
+    def process_status_effects(self) -> Any:
         """Process all status effects at the start of turn and return info about effects"""
         if not self.status_effects:
             return False
@@ -3751,7 +3751,7 @@ class Character:
         
         return effect_results if effect_results else False
 
-    def use_ability(self, ability_name, target):
+    def use_ability(self, ability_name: Any, target: Any) -> Any:
         """Use a special ability"""
         if ability_name == "Hack":
             if "neural_chip" in self.implants:
@@ -3769,7 +3769,7 @@ class Character:
                 return False
         return False
 
-    def gain_experience(self, amount):
+    def gain_experience(self, amount: Any) -> Any:
         """Gain experience points with improved feedback and tracking
         
         Args:
@@ -3817,7 +3817,7 @@ class Character:
             return True
         return False
 
-    def level_up(self):
+    def level_up(self) -> Any:
         """Level up with enhanced rewards and feedback"""
         # Increase level and stats with scaling benefits
         current_level = self.level
@@ -4050,7 +4050,7 @@ class Character:
 
 
 # Helper functions for companions and characters
-def get_companion_bonuses():
+def get_companion_bonuses() -> Any:
     """Calculate attack and defense bonuses from active companions"""
     attack_bonus = 0
     defense_bonus = 0
@@ -4063,7 +4063,7 @@ def get_companion_bonuses():
 
     return attack_bonus, defense_bonus
 
-def use_character_ability(player, enemy, combat_state):
+def use_character_ability(player: Any, enemy: Any, combat_state: Any) -> Any:
     """Use an ally character's special ability during combat"""
     # Check if player has characters
     if not game_state.get("character_collection"):
@@ -4141,7 +4141,7 @@ def use_character_ability(player, enemy, combat_state):
         time.sleep(1)
         return use_character_ability(player, enemy, combat_state)
 
-def solve_musical_puzzle(game_state, puzzle_type):
+def solve_musical_puzzle(game_state: Any, puzzle_type: Any) -> Any:
     """Interface for solving musical puzzles found in the White Hole reality
     
     Enhanced version with multiple difficulty levels, visual feedback, and
@@ -4403,7 +4403,7 @@ def solve_musical_puzzle(game_state, puzzle_type):
     return False
 
 
-def find_dimensional_chest(game_state, difficulty=1):
+def find_dimensional_chest(game_state: Any, difficulty: int = 1) -> Any:
     """Find and interact with dimensional chests containing valuable items
     
     Args:
@@ -4535,7 +4535,7 @@ def find_dimensional_chest(game_state, difficulty=1):
         return False
 
 
-def open_dimensional_chest(game_state, difficulty=1):
+def open_dimensional_chest(game_state: Any, difficulty: int = 1) -> Any:
     """Award loot from dimensional chests based on difficulty
     
     Enhanced version with animated opening sequence, tiered rewards,
@@ -4877,7 +4877,7 @@ def open_dimensional_chest(game_state, difficulty=1):
     input(f"\n{Font.MENU('Press Enter to continue...')}")
 
 
-def activate_character_ability(char_name, player, enemy, combat_state):
+def activate_character_ability(char_name: Any, player: Any, enemy: Any, combat_state: Any) -> Any:
     """Activate a specific character's ability"""
     char_data = characters[char_name]
     
@@ -4970,7 +4970,7 @@ def activate_character_ability(char_name, player, enemy, combat_state):
     time.sleep(2)
     return True
 
-def display_stats(player, enemy):
+def display_stats(player: Any, enemy: Any) -> None:
     """Display the current stats of the player and enemy with sci-fi flavor."""
     # Get companion bonuses for accurate display
     attack_bonus, defense_bonus = get_companion_bonuses()
@@ -5044,7 +5044,7 @@ def display_stats(player, enemy):
 
 
 # Functions for companion system
-def build_companion(player):
+def build_companion(player: Any) -> Any:
     """Interface for building and equipping companion drones/robots"""
     clear_screen()
     print(Font.BOX_TOP)
@@ -5141,7 +5141,7 @@ def build_companion(player):
     input()
 
 
-def side_quest_system(player, game_state):
+def side_quest_system(player: Any, game_state: Any) -> Any:
     """Interface for managing side quests and missions
     
     Args:
@@ -5352,7 +5352,7 @@ def side_quest_system(player, game_state):
         time.sleep(1)
         return side_quest_system(player, game_state)
 
-def get_available_quests(current_zone, chapter):
+def get_available_quests(current_zone: Any, chapter: Any) -> Any:
     """Get available side quests based on current zone and chapter
     
     Args:
@@ -5546,7 +5546,7 @@ def get_available_quests(current_zone, chapter):
     
     return available_quests
 
-def handle_special_reward(player, game_state, reward_id):
+def handle_special_reward(player: Any, game_state: Any, reward_id: Any) -> Any:
     """Handle special rewards from quests
     
     Args:
@@ -5571,7 +5571,7 @@ def handle_special_reward(player, game_state, reward_id):
     
     # Add other special rewards as needed
 
-def manage_companions(player):
+def manage_companions(player: Any) -> Any:
     """Manage and view active companions"""
     clear_screen()
     print(Font.BOX_TOP)
@@ -5627,7 +5627,7 @@ def manage_companions(player):
     input()
 
 
-def flee_battle():
+def flee_battle() -> Any:
     """Attempt to flee from battle"""
     # 70% base chance to successfully flee
     flee_chance = 0.7
@@ -5682,7 +5682,7 @@ def flee_battle():
         return False
 
 
-def show_game_stats():
+def show_game_stats() -> None:
     """Display game statistics in a sci-fi themed display"""
     clear_screen()
     print(Font.BOX_TOP)
@@ -5739,7 +5739,7 @@ def show_game_stats():
     input()
 
 
-def use_time_manipulation(player, enemy, combat_state):
+def use_time_manipulation(player: Any, enemy: Any, combat_state: Any) -> Any:
     """Use time fragments to manipulate time during combat
     
     Args:
@@ -5935,7 +5935,7 @@ def use_time_manipulation(player, enemy, combat_state):
     
     return False
 
-def get_branching_story_choices(zone_name, chapter, game_state):
+def get_branching_story_choices(zone_name: Any, chapter: Any, game_state: Any) -> Any:
     """Get available story branch choices based on current zone and story progression
     
     Args:
@@ -6132,7 +6132,7 @@ def get_branching_story_choices(zone_name, chapter, game_state):
     
     return choices
 
-def present_branching_choice(choice_data, game_state):
+def present_branching_choice(choice_data: Any, game_state: Any) -> Any:
     """Present a branching story choice to the player
     
     Args:
@@ -6189,7 +6189,7 @@ def present_branching_choice(choice_data, game_state):
     
     return selected_flag
 
-def check_and_process_branching_stories(player, game_state):
+def check_and_process_branching_stories(player: Any, game_state: Any) -> bool:
     """Check if any branching story points are available and process them
     
     Args:
@@ -6221,7 +6221,7 @@ def check_and_process_branching_stories(player, game_state):
     
     return False
 
-def process_branching_consequences(selected_flag, player, game_state):
+def process_branching_consequences(selected_flag: Any, player: Any, game_state: Any) -> Any:
     """Process the consequences of a branching story choice
     
     Args:
@@ -6325,7 +6325,7 @@ def process_branching_consequences(selected_flag, player, game_state):
     # Allow player to continue
     input("\nPress Enter to continue...")
 
-def chapter_eight_teaser():
+def chapter_eight_teaser() -> Any:
     """Display teaser for Chapter 8: Mitsurai D and Heliostadt III"""
     clear_screen()
     
@@ -6398,7 +6398,7 @@ def chapter_eight_teaser():
     input("\nPress Enter to return to the main menu...")
     return
 
-def player_turn(player, enemy):
+def player_turn(player: Any, enemy: Any) -> Any:
     """Handle player's turn with sci-fi themed actions and gender-specific feedback"""
     # Apply companion bonuses
     attack_bonus, defense_bonus = get_companion_bonuses()
@@ -7285,7 +7285,7 @@ Commands:
     return True  # A valid action was taken
 
 
-def enemy_turn(enemy, player, combat_state=None):
+def enemy_turn(enemy: Any, player: Any, combat_state: Optional[Any] = None) -> Any:
     """Handle enemy's turn with advanced AI behaviors
     
     Args:
@@ -7814,7 +7814,7 @@ def enemy_turn(enemy, player, combat_state=None):
     time.sleep(0.5)
 
 
-def generate_enemy(zone_name, wave=None):
+def generate_enemy(zone_name: Any, wave: Optional[Any] = None) -> Any:
     """Generate a random enemy from the current zone with sci-fi flavor
     Args:
         zone_name (str): The name of the current zone
@@ -7890,7 +7890,7 @@ def generate_enemy(zone_name, wave=None):
     return enemy
 
 
-def get_loot(player, enemy):
+def get_loot(player: Any, enemy: Any) -> Any:
     """Handle loot drops from defeated enemies with sci-fi flavor and player level integration"""
     # Get enemy data and default values
     enemy_data = enemies.get(enemy.name, {})
@@ -7994,7 +7994,7 @@ def get_loot(player, enemy):
     return found_items
 
 
-def update_quest_progress(player, enemy):
+def update_quest_progress(player: Any, enemy: Any) -> None:
     """Update quest progress based on game events"""
     current_quest = zones[game_state["current_zone"]]["quest"]
 
@@ -8079,7 +8079,7 @@ def update_quest_progress(player, enemy):
                 print(f"{Fore.YELLOW}{Back.BLUE}{'═' * 50}{Style.RESET_ALL}")
 
 
-def reveal_story_based_on_kills(kill_count):
+def reveal_story_based_on_kills(kill_count: Any) -> Any:
     """Reveal progressive story elements based on number of enemies defeated"""
     # Story thresholds that will trigger revelations
     story_thresholds = [5, 10, 15, 25, 35]
@@ -8163,7 +8163,7 @@ def reveal_story_based_on_kills(kill_count):
             input()
 
 
-def show_tutorial():
+def show_tutorial() -> None:
     """Display a basic tutorial for new players"""
     clear_screen()
 
@@ -8241,7 +8241,7 @@ def show_tutorial():
     input()
 
 
-def intro_sequence():
+def intro_sequence() -> Any:
     """Display the game's introduction with enhanced sci-fi flavor and more colors"""
     clear_screen()
 
@@ -8370,7 +8370,7 @@ def intro_sequence():
     input()
 
 
-def game_over(victory):
+def game_over(victory: Any) -> Any:
     """Display the game over screen with sci-fi flavor"""
     if victory:
         print_slow("\n" + "=" * 60)
@@ -8398,7 +8398,7 @@ def game_over(victory):
     return input().strip().lower() == 'y'
 
 
-def gacha_system():
+def gacha_system() -> Any:
     """Advanced sci-fi gacha system for pulling characters and weapons with immersive visuals and guaranteed character at 10 pulls"""
     clear_screen()
     
@@ -8519,7 +8519,7 @@ def gacha_system():
         time.sleep(1.5)
         gacha_system()
 
-def wish_menu(banner_name):
+def wish_menu(banner_name: Any) -> Any:
     """Menu for a specific banner with different pull options"""
     clear_screen()
     banner_data = banners[banner_name]
@@ -8586,7 +8586,7 @@ def wish_menu(banner_name):
         time.sleep(1.5)
         wish_menu(banner_name)
 
-def perform_wish(banner_name, wish_count):
+def perform_wish(banner_name: Any, wish_count: Any) -> Any:
     """Perform the actual gacha pulls with animations and results"""
     clear_screen()
     banner_data = banners[banner_name]
@@ -8701,7 +8701,7 @@ def perform_wish(banner_name, wish_count):
     input()
     wish_menu(banner_name)
 
-def select_character_pull(banner_name, rarity, is_featured):
+def select_character_pull(banner_name: Any, rarity: Any, is_featured: Any) -> Any:
     """Select a character based on banner, rarity, and featured status"""
     banner_data = banners[banner_name]
     
@@ -8724,7 +8724,7 @@ def select_character_pull(banner_name, rarity, is_featured):
     else:  # 3-star will be a weapon
         return select_weapon_pull(banner_name, rarity, is_featured)
 
-def select_weapon_pull(banner_name, rarity, is_featured):
+def select_weapon_pull(banner_name: Any, rarity: Any, is_featured: Any) -> Any:
     """Select a weapon based on banner, rarity, and featured status"""
     banner_data = banners[banner_name]
     
@@ -8748,7 +8748,7 @@ def select_weapon_pull(banner_name, rarity, is_featured):
     else:  # 3★
         return random.choice(all_3star_weapons)
 
-def claim_daily_reward():
+def claim_daily_reward() -> Any:
     """Claim daily reward of quantum crystals"""
     # Check if already claimed today
     today = time.strftime("%Y-%m-%d")
@@ -8779,7 +8779,7 @@ def claim_daily_reward():
     print(f"{Font.INFO('New balance:')} {Font.IMPORTANT(str(game_state['quantum_crystals']))}")
     time.sleep(2)
 
-def display_wish_results(results):
+def display_wish_results(results: Any) -> None:
     """Display gacha results with fancy animations"""
     clear_screen()
     
@@ -8839,7 +8839,7 @@ def display_wish_results(results):
     print(f"{Font.SYSTEM('★★★★:')} {rarities['4star']}")
     print(f"{Font.INFO('★★★:')} {rarities['3star']}")
 
-def view_collection():
+def view_collection() -> Any:
     """View all characters and weapons collected"""
     clear_screen()
     
@@ -8934,7 +8934,7 @@ def view_collection():
     print(f"\n{Font.MENU('Press Enter to return...')}")
     input()
 
-def get_constellation_level(count):
+def get_constellation_level(count: Any) -> Any:
     """Convert character dupes count to constellation notation"""
     if count == 1:
         return "C0"
@@ -8942,7 +8942,7 @@ def get_constellation_level(count):
         return f"C{min(count-1, 6)}"  # Max constellation C6
 
 # Cosmic Collision Side Quest Function (Legacy version)
-def enter_cosmic_collision_legacy(player, game_state, location=None):
+def enter_cosmic_collision_legacy(player: Any, game_state: Any, location: Optional[Any] = None) -> Any:
     """
     Begin the Cosmic Collision side quest, a comprehensive multi-system adventure 
     that explores a complex dimensional phenomenon.
@@ -9113,7 +9113,7 @@ def enter_cosmic_collision_legacy(player, game_state, location=None):
     # Otherwise, show quest status and available locations
     return show_cosmic_collision_quest_status(player, game_state)
 
-def handle_cosmic_collision_location(player, game_state, location):
+def handle_cosmic_collision_location(player: Any, game_state: Any, location: Any) -> Any:
     """
     Handle specific location quests within the Cosmic Collision side quest
     
@@ -9175,7 +9175,7 @@ cosmic_collision_zones = {
 }
 
 # Function to handle non-combat zones
-def explore_zone(zone_name, player):
+def explore_zone(zone_name: Any, player: Any) -> Any:
     """Explore a non-combat zone with enhanced narrative and interaction options"""
     clear_screen()
     
@@ -9224,7 +9224,7 @@ def explore_zone(zone_name, player):
     input("\nPress Enter to return to your ship...")
     return True
 
-def enter_cosmic_collision_quest(player, game_state, location=None):
+def enter_cosmic_collision_quest(player: Any, game_state: Any, location: Optional[Any] = None) -> Any:
     """
     Enter the Cosmic Collision quest, a complex side quest where the player deals with 
     a 4D phenomenon affecting multiple universes.
@@ -9323,7 +9323,7 @@ def enter_cosmic_collision_quest(player, game_state, location=None):
         # Show quest status if already started
         return show_cosmic_collision_quest_status(player, game_state)
 
-def show_cosmic_collision_quest_status(player, game_state):
+def show_cosmic_collision_quest_status(player: Any, game_state: Any) -> None:
     """
     Show the current status of the Cosmic Collision quest
     
@@ -9503,7 +9503,7 @@ def show_cosmic_collision_quest_status(player, game_state):
         return show_cosmic_collision_quest_status(player, game_state)
 
 # Travel System Function
-def travel_system(player, game_state):
+def travel_system(player: Any, game_state: Any) -> Any:
     """
     Allow player to travel to previously visited locations or zones where quests are available.
     
@@ -9691,7 +9691,7 @@ def travel_system(player, game_state):
     # Generic exploration for other locations
     return explore_zone(selected_location, player)
 
-def zone_menu(player):
+def zone_menu(player: Any) -> Any:
     """Display the zone selection menu with sci-fi flavor"""
     if len(game_state["zones_unlocked"]) <= 1:
         return game_state["current_zone"]  # No choice if only one zone is unlocked
@@ -9721,7 +9721,7 @@ def zone_menu(player):
             time.sleep(1)
 
 
-def handle_wave_combat(player, zone_name):
+def handle_wave_combat(player: Any, zone_name: Any) -> Any:
     """Handle wave-based combat for Cicrais IV content"""
     zone = zones[zone_name]
     
@@ -10057,7 +10057,7 @@ def handle_wave_combat(player, zone_name):
     
     # This line is unreachable, removing it
 
-def display_log_database():
+def display_log_database() -> None:
     """View all discovered logs in the database"""
     if not game_state["discovered_logs"]:
         print_typed("No data logs recovered yet.")
@@ -10122,7 +10122,7 @@ def display_log_database():
         pass
 
 
-def fight_prime_simulacra(player):
+def fight_prime_simulacra(player: Any) -> Any:
     """Special boss fight against the Prime Simulacra on Cicrais IV"""
     clear_screen()
     print_slow("=" * 60)
@@ -10247,7 +10247,7 @@ def fight_prime_simulacra(player):
         return False
 
 
-def fight_malware_server():
+def fight_malware_server() -> Any:
     """Special boss fight against the Malware Server"""
     clear_screen()
     print_slow("=" * 60)
@@ -10539,7 +10539,7 @@ def fight_malware_server():
     return True
 
 
-def white_hole_transition(game_state):
+def white_hole_transition(game_state: Any) -> Any:
     """Display a transition sequence when entering the white hole"""
     clear_screen()
     print_slow("=" * 60)
@@ -10604,7 +10604,7 @@ def white_hole_transition(game_state):
     clear_screen()
 
 
-def encounter_musical_puzzle(game_state, zone_name):
+def encounter_musical_puzzle(game_state: Any, zone_name: Any) -> Any:
     """Encounter a musical-themed puzzle in the White Hole reality
     
     Args:
@@ -10721,7 +10721,7 @@ def encounter_musical_puzzle(game_state, zone_name):
         return False
 
 
-def equip_ignite_module(player, game_state):
+def equip_ignite_module(player: Any, game_state: Any) -> Any:
     """Equip the Ignite weapon module obtained in Primor Aetherium
     
     Args:
@@ -10787,7 +10787,7 @@ def equip_ignite_module(player, game_state):
     input("\nPress Enter to continue...")
     return True
 
-def manage_weapon_modules(player, game_state):
+def manage_weapon_modules(player: Any, game_state: Any) -> Any:
     """Interface for managing weapon modules and changing active modules
     
     Args:
@@ -10858,7 +10858,7 @@ def manage_weapon_modules(player, game_state):
         return manage_weapon_modules(player, game_state)
 
 
-def explore_underwater_research_base(player, game_state):
+def explore_underwater_research_base(player: Any, game_state: Any) -> Any:
     """Explore the abandoned underwater research base on Thalassia 1
     
     Enhanced version with dynamic environmental effects, danger levels,
@@ -11245,7 +11245,7 @@ def explore_underwater_research_base(player, game_state):
                     print_typed(f"{Font.INFO('Align the base pairs to match the reference sequence.')}")
                     
                     # Initialize puzzle
-                    def dna_sequencing_puzzle():
+                    def dna_sequencing_puzzle() -> Any:
                         # DNA puzzle setup
                         base_pairs = ['A-T', 'G-C', 'T-A', 'C-G']
                         reference_sequence = [random.choice(base_pairs) for _ in range(5)]
@@ -11497,7 +11497,7 @@ def explore_underwater_research_base(player, game_state):
                 
                 if calibrate_choice == 'y':
                     # Weapon Calibration Puzzle
-                    def weapon_calibration_puzzle():
+                    def weapon_calibration_puzzle() -> Any:
                         """
                         A puzzle where the player must calibrate the sonic weapon 
                         by adjusting multiple parameters to find the optimal configuration.
@@ -11838,7 +11838,7 @@ def explore_underwater_research_base(player, game_state):
                 
                 if decrypt_choice == 'y':
                     # Signal Decryption Puzzle
-                    def signal_reconstruction_puzzle():
+                    def signal_reconstruction_puzzle() -> Any:
                         """
                         A puzzle where the player must reconstruct a corrupted distress signal
                         by correctly identifying signal patterns and filtering out noise.
@@ -12158,7 +12158,7 @@ def explore_underwater_research_base(player, game_state):
     return
 
 
-def fight_neurovore_prime(player, game_state):
+def fight_neurovore_prime(player: Any, game_state: Any) -> Any:
     """Special boss fight against the Neurovore Prime in the deepest section of the research base
     
     Args:
@@ -12400,7 +12400,7 @@ def fight_neurovore_prime(player, game_state):
     return True
 
 
-def encounter_chrono_sentient(player, game_state):
+def encounter_chrono_sentient(player: Any, game_state: Any) -> Any:
     """Special encounter with the interdimensional Chrono-Sentient entity
     
     Args:
@@ -12654,7 +12654,7 @@ def encounter_chrono_sentient(player, game_state):
     input("\nPress Enter to continue...")
     return True
 
-def fight_white_hole_guardian(player):
+def fight_white_hole_guardian(player: Any) -> Any:
     """Special boss fight against the White Hole Guardian"""
     clear_screen()
     print_slow("=" * 60)
@@ -12819,7 +12819,7 @@ def fight_white_hole_guardian(player):
         return False
 
 
-def chapter_seven_teaser():
+def chapter_seven_teaser() -> Any:
     """Display teaser for Chapter 7: Primor Aetherium"""
     clear_screen()
     
@@ -12907,7 +12907,7 @@ def chapter_seven_teaser():
     input("\nPress Enter to return to the main menu...")
     return
 
-def chapter_six_teaser():
+def chapter_six_teaser() -> Any:
     """Display teaser for Chapter 6: The Paradox Horizon"""
     clear_screen()
     
@@ -12991,7 +12991,7 @@ def chapter_six_teaser():
     input("\nPress Enter to return to the main menu...")
     return
     
-def chapter_two_teaser():
+def chapter_two_teaser() -> Any:
     """Display detailed teaser for Chapter 2: Yanglong V with gender-specific content"""
     clear_screen()
     
@@ -13192,7 +13192,7 @@ def chapter_two_teaser():
         start_chapter_two_preview()
 
 
-def start_chapter_two_preview():
+def start_chapter_two_preview() -> Any:
     """Preview of Chapter 2: Yanglong V gameplay"""
     clear_screen()
     print(Font.BOX_TOP)
@@ -13354,7 +13354,7 @@ def start_chapter_two_preview():
         del game_state["inventory"]["grav_boots"]
 
 
-def combat(player, enemy):
+def combat(player: Any, enemy: Any) -> Any:
     """Conduct a battle between player and enemy with sci-fi flavor, integrating player level"""
     # Get player level for combat calculations
     player_level = player.level if hasattr(player, 'level') else 1
@@ -13471,7 +13471,7 @@ def combat(player, enemy):
         return False
 
 
-def thalassia_crash_sequence(game_state, player):
+def thalassia_crash_sequence(game_state: Any, player: Any) -> Any:
     """Display the sequence when crash landing on Thalassia 1"""
     clear_screen()
     print_slow("=" * 60)
@@ -13582,7 +13582,7 @@ def thalassia_crash_sequence(game_state, player):
     clear_screen()
 
 
-def character_selection():
+def character_selection() -> Any:
     """Allow player to choose which character to play as - includes Hyuki when unlocked"""
     clear_screen()
     print(f"{Fore.BLUE}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
@@ -13793,7 +13793,7 @@ def character_selection():
     input("\nPress Enter to continue...")
     return
 
-def h79760_solar_system_quest():
+def h79760_solar_system_quest() -> Any:
     """Branched quest to explore H-79760 solar system after Thalassia 1"""
     clear_screen()
     print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
@@ -13924,7 +13924,7 @@ def h79760_solar_system_quest():
     input("\nPress Enter to continue your journey...")
     return
 
-def explore_terminus(is_last_location):
+def explore_terminus(is_last_location: Any) -> Any:
     """Explore the arctic planet Terminus"""
     clear_screen()
     print(f"{Fore.CYAN}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
@@ -13977,7 +13977,7 @@ def explore_terminus(is_last_location):
     input("\nPress Enter to return to your ship...")
     return
 
-def explore_alpha_star(is_last_location):
+def explore_alpha_star(is_last_location: Any) -> Any:
     """Explore the Alpha Star - Red Giant"""
     clear_screen()
     print(f"{Fore.RED}{Back.BLACK}{'▄' * 50}{Style.RESET_ALL}")
@@ -14013,7 +14013,7 @@ def explore_alpha_star(is_last_location):
     input("\nPress Enter to return to your ship...")
     return
 
-def explore_beta_star(is_last_location):
+def explore_beta_star(is_last_location: Any) -> Any:
     """Explore the Beta Star - Yellow Dwarf"""
     # Similar structure to Alpha Star exploration
     clear_screen()
@@ -14043,7 +14043,7 @@ def explore_beta_star(is_last_location):
     input("\nPress Enter to return to your ship...")
     return
 
-def explore_gamma_star(is_last_location):
+def explore_gamma_star(is_last_location: Any) -> Any:
     """Explore the Gamma Star - White Dwarf"""
     # Similar structure to other star explorations
     if is_last_location:
@@ -14055,7 +14055,7 @@ def explore_gamma_star(is_last_location):
     input("\nPress Enter to return to your ship...")
     return
 
-def explore_novaris(is_last_location):
+def explore_novaris(is_last_location: Any) -> Any:
     """Explore the desert planet Novaris"""
     # Similar structure to other planet explorations
     if is_last_location:
@@ -14067,7 +14067,7 @@ def explore_novaris(is_last_location):
     input("\nPress Enter to return to your ship...")
     return
 
-def explore_aquila(is_last_location):
+def explore_aquila(is_last_location: Any) -> Any:
     """Explore the oceanic planet Aquila"""
     # Similar structure to other planet explorations
     if is_last_location:
@@ -14079,7 +14079,7 @@ def explore_aquila(is_last_location):
     input("\nPress Enter to return to your ship...")
     return
 
-def find_hyuki_cryopod():
+def find_hyuki_cryopod() -> Any:
     """Discover and revive Hyuki from cryopod"""
     print(f"{Fore.BLUE}{Style.BRIGHT}{'═' * 50}{Style.RESET_ALL}")
     
@@ -14152,7 +14152,7 @@ def find_hyuki_cryopod():
     
     return
 
-def andromeda_ending():
+def andromeda_ending() -> Any:
     """Display the game's ending sequence - now gets rocket and map only"""
     clear_screen()
     # More dramatic ending with richer visuals
@@ -14310,7 +14310,7 @@ def andromeda_ending():
     input()
 
 
-def display_stage_transition():
+def display_stage_transition() -> None:
     """Display a transition when moving to a new stage"""
     current_stage = game_state["current_stage"]
 
@@ -14351,7 +14351,7 @@ def display_stage_transition():
         input()
 
 
-def check_stage_progression(player):
+def check_stage_progression(player: Any) -> bool:
     """Check and update stage progression based on player experience"""
     # Simple formula: every level gives one stage
     potential_stage = player.level + (player.experience // 50)
@@ -14373,7 +14373,7 @@ def check_stage_progression(player):
     return False
 
 
-def display_version_info():
+def display_version_info() -> None:
     """Display the game version information and update notes"""
     clear_screen()
     
@@ -14406,7 +14406,7 @@ def display_version_info():
     
     input(f"\n{Font.COMMAND('Press Enter to return to the main menu...')}")
 
-def show_coming_soon():
+def show_coming_soon() -> None:
     """Display a teaser for upcoming features"""
     clear_screen()
     
@@ -14427,7 +14427,7 @@ def show_coming_soon():
     
     input(f"\n{Font.COMMAND('Press Enter to return to the main menu...')}")
 
-def game_menu():
+def game_menu() -> Any:
     """Display the in-game menu with options for player during gameplay"""
     clear_screen()
     
@@ -14520,7 +14520,7 @@ def game_menu():
         return game_menu()
 
 # Helper functions for game_menu
-def display_character_status():
+def display_character_status() -> None:
     """Display detailed character status and stats"""
     clear_screen()
     
@@ -14580,7 +14580,7 @@ def display_inventory() -> None:
     else:
         print("No items in inventory.")
 
-def display_quest_log():
+def display_quest_log() -> None:
     """Display active and completed quests"""
     clear_screen()
     
@@ -14608,7 +14608,7 @@ def display_quest_log():
     else:
         print("No completed quests.")
 
-def display_settings():
+def display_settings() -> None:
     """Display and adjust game settings"""
     clear_screen()
     
@@ -14676,7 +14676,7 @@ def display_settings():
         time.sleep(1)
         return display_settings()
 
-def start_chapter_one():
+def start_chapter_one() -> Any:
     """Start Chapter 1: Earth Reclamation - the beginning of the player's journey"""
     clear_screen()
     
@@ -14709,7 +14709,7 @@ def start_chapter_one():
     # First gameplay segment - exploring the cryostasis facility
     explore_cryostasis_facility()
 
-def explore_cryostasis_facility():
+def explore_cryostasis_facility() -> Any:
     """First gameplay area - the cryostasis facility"""
     clear_screen()
     
@@ -14847,7 +14847,7 @@ def explore_cryostasis_facility():
             print_typed("\nInvalid choice. Please try again.", style=Font.WARNING)
             time.sleep(1)
 
-def continue_chapter_one():
+def continue_chapter_one() -> Any:
     """Continue Chapter 1 after exiting the facility"""
     clear_screen()
     
@@ -15280,7 +15280,7 @@ def main_menu() -> None:
             return main_menu()
 
 
-def main():
+def main() -> Any:
     """Main game function that starts the Last Human: Exodus game"""
     # Initialize colorama
     init(autoreset=True)

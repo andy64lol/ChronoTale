@@ -17,6 +17,7 @@ import os
 import sys
 import time
 import random
+from typing import Dict, List, Any, Optional, Union, Tuple
 import json
 import math
 import textwrap
@@ -6506,15 +6507,15 @@ EVENTS = {
 }
 
 # Utility functions
-def clear_screen():
+def clear_screen() -> None:
     """Clear the terminal screen."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def print_colored(text, color=Fore.WHITE, end="\n"):
+def print_colored(text: Any, color: Any = Fore.WHITE, end: str = "\n") -> None:
     """Print text with color."""
     print(f"{color}{text}{Style.RESET_ALL}", end=end)
 
-def print_header(text):
+def print_header(text: Any) -> None:
     """Print a formatted header."""
     width = 60
     print()
@@ -6523,7 +6524,7 @@ def print_header(text):
     print_colored("═" * width, Fore.BLUE)
     print()
 
-def print_subheader(text):
+def print_subheader(text: Any) -> None:
     """Print a formatted subheader."""
     width = 50
     print()
@@ -6531,15 +6532,15 @@ def print_subheader(text):
     print_colored(f"║{text.center(width-2)}║", Fore.CYAN)
     print_colored(f"╚{'═' * (width-2)}╝", Fore.CYAN)
 
-def print_menu_option(key, description, color=Fore.CYAN):
+def print_menu_option(key: Any, description: Any, color: Any = Fore.CYAN) -> None:
     """Print a menu option."""
     print_colored(f"  {key}. {description}", color)
 
-def input_colored(prompt, color=Fore.YELLOW):
+def input_colored(prompt: Any, color: Any = Fore.YELLOW) -> Any:
     """Get user input with a colored prompt."""
     return input(f"{color}{prompt}{Style.RESET_ALL}")
 
-def print_message(message, message_type="info"):
+def print_message(message: Any, message_type: str = "info") -> None:
     """Print a formatted message with appropriate color based on type."""
     colors = {
         "info": Fore.CYAN,
@@ -6558,15 +6559,15 @@ def print_message(message, message_type="info"):
             "date": f"{game_state['year']}.{game_state['month']}"
         })
 
-def wait_for_input(message="Press Enter to continue..."):
+def wait_for_input(message: str = "Press Enter to continue...") -> Any:
     """Wait for user input with a message."""
     input_colored(f"\n{message}", Fore.CYAN)
 
-def format_number(number):
+def format_number(number: Any) -> Any:
     """Format number with commas for thousands."""
     return f"{number:,}"
 
-def save_game():
+def save_game() -> Any:
     """Save the current game state to a file."""
     if not os.path.exists(SAVE_FOLDER):
         os.makedirs(SAVE_FOLDER)
@@ -6628,7 +6629,7 @@ def save_game():
         print_message(f"Error saving game: {e}", "error")
         return False
 
-def load_game():
+def load_game() -> Any:
     """Load a game state from a save file."""
     if not os.path.exists(SAVE_FOLDER):
         print_message("No save folder found.", "error")
@@ -6697,7 +6698,7 @@ def load_game():
         return False
 
 
-def check_events():
+def check_events() -> bool:
     """Check for and trigger events based on game state."""
     # First check all types of event triggers
     for event_key, event_data in EVENTS.items():
@@ -6767,7 +6768,7 @@ def check_events():
         event_key = game_state["event_queue"].pop(0)
         show_event(event_key)
 
-def show_event(event_key):
+def show_event(event_key: Any) -> None:
     """Display an event and handle player choices."""
     event_data = EVENTS[event_key]
 
@@ -6890,7 +6891,7 @@ def show_event(event_key):
     option_text = available_options[choice].get("text", "Continue")
     print_message(f"Event: {event_data['title']} - {option_text}", "event")
 
-def check_endings():
+def check_endings() -> bool:
     """Check if any game endings have been achieved."""
     # Skip if we've already achieved an ending
     if game_state.get("achieved_ending") is not None:
@@ -7054,7 +7055,7 @@ def check_endings():
             show_ending(ending_key)
             break
 
-def show_ending(ending_key):
+def show_ending(ending_key: Any) -> None:
     """Display the ending screen for the achieved ending."""
     clear_screen()
 
@@ -7166,7 +7167,7 @@ def show_ending(ending_key):
     # Return to main menu
     show_main_menu()
 
-def advance_time():
+def advance_time() -> Any:
     """Advance the game time by one month and process effects."""
     # Process focus - reduce focus days_left by 30 days (1 month)
     if game_state["focus_progress"] is not None:
@@ -7265,7 +7266,7 @@ def advance_time():
                         if from_nation == game_state["player_nation"]:
                             add_message(f"Casus belli against {NATIONS[to_nation]['name']} has expired", "warning")
 
-def select_focus():
+def select_focus() -> Any:
     """Display and handle the national focus selection."""
     player_nation = game_state["player_nation"]
     nation_data = game_state["nations"][player_nation]
@@ -7367,7 +7368,7 @@ def select_focus():
 
     print_message(f"Selected focus: {focus_data['title']}", "success")
 
-def select_research():
+def select_research() -> Any:
     """Display and handle technology research selection."""
     try:
         # Initialize research structure if needed
@@ -7526,7 +7527,7 @@ def select_research():
 
     print_message(f"Started research: {tech_data['name']}", "success")
 
-def process_research():
+def process_research() -> Any:
     """Process ongoing research projects."""
     try:
         # Ensure research structure exists
@@ -7591,7 +7592,7 @@ def process_research():
             "research_slots": 3
         }
 
-def show_production():
+def show_production() -> None:
     """Display and handle production management."""
     clear_screen()
     print_header("Production")
@@ -7681,7 +7682,7 @@ def show_production():
     elif choice == "4":
         manage_factory_allocation()
 
-def add_military_equipment():
+def add_military_equipment() -> None:
     """Add military equipment to production queue."""
     clear_screen()
     print_header("Add Military Equipment")
@@ -7768,7 +7769,7 @@ def add_military_equipment():
 
     print_message(f"Added {quantity} {equipment_data['name']} to production with {factories} factories.", "success")
 
-def add_naval_unit():
+def add_naval_unit() -> None:
     """Add naval unit to production queue."""
     clear_screen()
     print_header("Add Naval Unit")
@@ -7851,7 +7852,7 @@ def add_naval_unit():
 
     print_message(f"Added {quantity} {ship_data['name']} to production with {dockyards} dockyards.", "success")
 
-def add_air_unit():
+def add_air_unit() -> None:
     """Add air unit to production queue."""
     clear_screen()
     print_header("Add Air Unit")
@@ -7935,7 +7936,7 @@ def add_air_unit():
 
     print_message(f"Added {quantity} {aircraft_data['name']} to production with {factories} factories.", "success")
 
-def manage_factory_allocation():
+def manage_factory_allocation() -> Any:
     """Manage factory allocation between production queues."""
     clear_screen()
     print_header("Manage Factory Allocation")
@@ -7970,7 +7971,7 @@ def manage_factory_allocation():
 
     wait_for_input()
 
-def show_construction():
+def show_construction() -> None:
     """Display and handle the construction interface."""
     clear_screen()
     print_header("Construction")
@@ -8053,7 +8054,7 @@ def show_construction():
     elif choice == "3":
         cancel_construction_project()
 
-def add_construction_project():
+def add_construction_project() -> None:
     """Add a new construction project to the queue."""
     clear_screen()
     print_header("Add Construction Project")
@@ -8138,7 +8139,7 @@ def add_construction_project():
 
     wait_for_input()
 
-def adjust_factory_allocation():
+def adjust_factory_allocation() -> Any:
     """Adjust factory allocation between construction projects."""
     clear_screen()
     print_header("Adjust Factory Allocation")
@@ -8205,7 +8206,7 @@ def adjust_factory_allocation():
 
     wait_for_input()
 
-def cancel_construction_project():
+def cancel_construction_project() -> Any:
     """Cancel a construction project from the queue."""
     clear_screen()
     print_header("Cancel Construction Project")
@@ -8248,7 +8249,7 @@ def cancel_construction_project():
 
     wait_for_input()
 
-def total_construction_speed():
+def total_construction_speed() -> Any:
     """Calculate the total construction speed multiplier based on infrastructure and technologies."""
     player_nation = game_state["player_nation"]
     nation_data = game_state["nations"][player_nation]
@@ -8267,7 +8268,7 @@ def total_construction_speed():
 
     return max(0.1, base_speed + infra_bonus + construction_bonus)
 
-def process_construction():
+def process_construction() -> Any:
     """Process ongoing construction projects."""
     if "construction" not in game_state:
         game_state["construction"] = {
@@ -8320,7 +8321,7 @@ def process_construction():
     for idx in sorted(completed_projects, reverse=True):
         game_state["construction"]["queue"].pop(idx)
 
-def process_production():
+def process_production() -> Any:
     """Process ongoing production."""
     if "production" not in game_state:
         return
@@ -8395,7 +8396,7 @@ def process_production():
                 print_message(f"Production completed: {item['quantity']} {item['name']}", "success")
                 break
 
-def show_diplomacy():
+def show_diplomacy() -> None:
     """Display and handle diplomacy screen."""
     clear_screen()
     print_header("Diplomacy")
@@ -8555,7 +8556,7 @@ def show_diplomacy():
     elif choice == "5":
         manage_subject_states()
 
-def improve_relations():
+def improve_relations() -> Any:
     """Improve relations with another nation."""
     clear_screen()
     print_header("Improve Relations")
@@ -8639,7 +8640,7 @@ def improve_relations():
 
         # In a full game, this would trigger an AI decision based on relation level and other factors
 
-def request_alliance():
+def request_alliance() -> Any:
     """Request an alliance with another nation."""
     clear_screen()
     print_header("Request Alliance")
@@ -8725,7 +8726,7 @@ def request_alliance():
 
     wait_for_input()
 
-def issue_ultimatum():
+def issue_ultimatum() -> Any:
     """Issue an ultimatum to another nation."""
     clear_screen()
     print_header("Issue Ultimatum")
@@ -8906,7 +8907,7 @@ def issue_ultimatum():
         print_colored("Invalid input.", Fore.RED)
         wait_for_input()
 
-def manage_subject_states():
+def manage_subject_states() -> Any:
     """Manage puppet and subject states."""
     clear_screen()
     print_header("Manage Subject States")
@@ -8977,7 +8978,7 @@ def manage_subject_states():
         print_colored("Invalid input.", Fore.RED)
         wait_for_input()
 
-def change_subject_type(nation_key):
+def change_subject_type(nation_key: Any) -> Any:
     """Change the type of a subject state."""
     clear_screen()
     print_header(f"Change Subject Type - {NATIONS[nation_key]['name']}")
@@ -9025,7 +9026,7 @@ def change_subject_type(nation_key):
 
     wait_for_input()
 
-def extract_resources(nation_key):
+def extract_resources(nation_key: Any) -> Any:
     """Extract resources from a subject state."""
     clear_screen()
     print_header(f"Extract Resources - {NATIONS[nation_key]['name']}")
@@ -9081,7 +9082,7 @@ def extract_resources(nation_key):
 
     wait_for_input()
 
-def change_autonomy(nation_key, amount):
+def change_autonomy(nation_key: Any, amount: Any) -> Any:
     """Change the autonomy level of a subject state."""
     clear_screen()
     print_header(f"Change Autonomy - {NATIONS[nation_key]['name']}")
@@ -9109,7 +9110,7 @@ def change_autonomy(nation_key, amount):
 
     wait_for_input()
 
-def release_subject(nation_key):
+def release_subject(nation_key: Any) -> Any:
     """Release a subject state as independent."""
     clear_screen()
     print_header(f"Release Subject - {NATIONS[nation_key]['name']}")
@@ -9136,7 +9137,7 @@ def release_subject(nation_key):
 
     wait_for_input()
 
-def calculate_national_strength(nation_key):
+def calculate_national_strength(nation_key: Any) -> Any:
     """Calculate the overall strength of a nation for diplomacy calculations."""
     nation_data = game_state["nations"][nation_key]
 
@@ -9154,7 +9155,7 @@ def calculate_national_strength(nation_key):
 
     return military_strength + industrial_strength
 
-def add_message(text, message_type="info"):
+def add_message(text: Any, message_type: str = "info") -> None:
     """Add a message to the message log."""
     if "message_log" not in game_state:
         game_state["message_log"] = []
@@ -9165,7 +9166,7 @@ def add_message(text, message_type="info"):
         "date": f"{game_state['year']}.{game_state['month']}"
     })
 
-def process_ultimatums():
+def process_ultimatums() -> Any:
     """Process any active ultimatums."""
     if "diplomacy" not in game_state or "active_ultimatums" not in game_state["diplomacy"]:
         return
@@ -9260,7 +9261,7 @@ def process_ultimatums():
     for idx in sorted(ultimatums_to_remove, reverse=True):
         del game_state["diplomacy"]["active_ultimatums"][idx]
 
-def declare_war():
+def declare_war() -> Any:
     """Declare war on another nation."""
     clear_screen()
     print_header("Declare War")
@@ -9373,7 +9374,7 @@ def declare_war():
 
     wait_for_input()
 
-def show_nation_info():
+def show_nation_info() -> None:
     """Display detailed information about the player's nation."""
     clear_screen()
     print_header("Nation Information")
@@ -9434,7 +9435,7 @@ def show_nation_info():
 
     wait_for_input()
 
-def show_message_log():
+def show_message_log() -> None:
     """Display the message log."""
     clear_screen()
     print_header("Message Log")
@@ -9467,7 +9468,7 @@ def show_message_log():
 
     wait_for_input()
 
-def show_help():
+def show_help() -> None:
     """Display help information."""
     clear_screen()
     print_header("Help")
@@ -9512,7 +9513,7 @@ def show_help():
 
     wait_for_input()
 
-def show_country_selection():
+def show_country_selection() -> None:
     """Display country selection screen."""
     clear_screen()
     print_header("Country Selection")
@@ -9611,7 +9612,7 @@ def show_country_selection():
 
     return nation_key
 
-def show_main_menu():
+def show_main_menu() -> None:
     """Display main menu."""
     clear_screen()
 
@@ -9653,7 +9654,7 @@ def show_main_menu():
         time.sleep(1)
         show_main_menu()
 
-def show_new_game_intro(nation_key):
+def show_new_game_intro(nation_key: Any) -> None:
     """Show introduction for a new game."""
     clear_screen()
 
@@ -9891,7 +9892,7 @@ def show_new_game_intro(nation_key):
 
     wait_for_input("\nPress Enter to begin your journey...")
 
-def show_game_menu():
+def show_game_menu() -> None:
     """Display in-game menu."""
     clear_screen()
 
@@ -10005,7 +10006,7 @@ def show_game_menu():
 
     return True
 
-def game_loop():
+def game_loop() -> Any:
     """Main game loop."""
     running = True
 
@@ -10015,7 +10016,7 @@ def game_loop():
     # Return to main menu
     show_main_menu()
 
-def check_launcher():
+def check_launcher() -> bool:
     """Check if script was called from the main launcher."""
     if 'LAUNCHED_FROM_LAUNCHER' not in os.environ:
         print("This game should be launched through the launch.py launcher.")
@@ -10023,7 +10024,7 @@ def check_launcher():
         input("Press Enter to exit...")
         sys.exit()
 
-def main():
+def main() -> Any:
     """Main entry point for the game."""
     # Check if launched from the menu
     check_launcher()
@@ -10039,7 +10040,7 @@ def main():
     show_main_menu()
 
 # Function needs to be defined here and moved above advance_time for proper reference
-def apply_focus_effects(focus_key, focus_data):
+def apply_focus_effects(focus_key: Any, focus_data: Any) -> Any:
     """Apply the effects of a completed focus.
 
     Args:

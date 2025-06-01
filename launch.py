@@ -1,4 +1,5 @@
 import os
+from typing import Dict, List, Any, Optional, Union
 import subprocess
 import sys
 import time
@@ -12,7 +13,7 @@ init(autoreset=True)
 VERSION = "1.4.0"
 
 # Game data persistence
-def load_game_data():
+def load_game_data() -> Any:
     """Load game statistics from JSON file"""
     try:
         with open('game_data.json', 'r') as f:
@@ -25,12 +26,12 @@ def load_game_data():
     except (FileNotFoundError, json.JSONDecodeError):
         return {'plays': 0, 'tokens': 0, 'purchased_games': [], 'settings': {'colors_enabled': True}}
 
-def save_game_data(data):
+def save_game_data(data: Any) -> Any:
     """Save game statistics to JSON file"""
     with open('game_data.json', 'w') as f:
         json.dump(data, f)
 
-def color_text(text, color):
+def color_text(text: Any, color: Any) -> Any:
     """Apply color to text if colors are enabled"""
     data = load_game_data()
     if data['settings']['colors_enabled']:
@@ -38,7 +39,7 @@ def color_text(text, color):
     return text
 
 # Core functions
-def display_banner():
+def display_banner() -> None:
     """Display the ChronoTale banner with pixel font"""
     banner = r"""
  ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░▒▓██████▓▒░░▒▓█▓▒░      ░▒▓████████▓▒░                    ░▒▓█▓▒░       ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓███████▓▒░  
@@ -52,14 +53,14 @@ def display_banner():
     print(color_text(banner, Fore.YELLOW) + color_text("A Multidimensional Adventure Launcher", Fore.CYAN))
     print("\n" + "═" * 50 + "\n")
 
-def check_file(file_name):
+def check_file(file_name: Any) -> bool:
     """Check if a game file exists"""
     if not os.path.isfile(file_name):
         print(color_text(f"█ Error: {file_name} not found!", Fore.RED))
         return False
     return True
 
-def launch_game(file_name):
+def launch_game(file_name: Any) -> Any:
     """Launch the specified game file"""
     try:
         game_name = os.path.splitext(os.path.basename(file_name))[0]
@@ -86,7 +87,7 @@ def launch_game(file_name):
         print(color_text(f"█ Crash: {e}", Fore.RED))
 
 # Menu system
-def games_menu(data):
+def games_menu(data: Any) -> Any:
     """Display games submenu"""
     original_games = [
         ("Legacies of our Legends RPG", "Legacies.py"),
@@ -144,7 +145,7 @@ def games_menu(data):
             print(color_text("\n█ Invalid input!", Fore.RED))
             time.sleep(1)
 
-def shop_menu(data):
+def shop_menu(data: Any) -> Any:
     """Display token shop"""
     purchasable_games = [
         {"name": "Shipwrecked", "file": "shipwrecked.py", "cost": 30},
@@ -200,7 +201,7 @@ def shop_menu(data):
             print(color_text("█ Invalid input!", Fore.RED))
             time.sleep(1)
 
-def credits_menu():
+def credits_menu() -> None:
     """Display credits"""
     os.system('cls' if os.name == 'nt' else 'clear')
     display_banner()
@@ -209,7 +210,7 @@ def credits_menu():
     print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
     input(color_text("\n█ Press Enter to return to main menu...", Fore.YELLOW) + Style.RESET_ALL)
 
-def settings_menu(data):
+def settings_menu(data: Any) -> Any:
     """Display settings"""
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -232,7 +233,7 @@ def settings_menu(data):
             print(color_text("█ Invalid input!", Fore.RED))
             time.sleep(1)
 
-def main_menu():
+def main_menu() -> None:
     """Main menu controller"""
     data = load_game_data()
     while True:

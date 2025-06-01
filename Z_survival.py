@@ -9,6 +9,7 @@ Use /help to see available commands.
 """
 
 import random
+from typing import Dict, List, Any, Optional, Union, Tuple
 import time
 import os
 import json
@@ -31,7 +32,7 @@ if not os.path.exists(SAVES_FOLDER):
 MAX_SAVE_SLOTS = 5
 
 # Helper functions for safer location handling
-def get_safe_location(location_id, default_location="camp"):
+def get_safe_location(location_id: Any, default_location: str = "camp") -> Any:
     """Safely get a location by ID with fallback to default location.
 
     Args:
@@ -645,12 +646,12 @@ class Colors:
     UNDERLINE = Style.BRIGHT  # Closest approximation in colorama
 
     @staticmethod
-    def colorize(text, color):
+    def colorize(text: Any, color: Any) -> Any:
         """Apply color to text."""
         return f"{color}{text}{Colors.ENDC}"
 
     @staticmethod
-    def health_color(value, max_value):
+    def health_color(value: Any, max_value: Any) -> Any:
         """Return appropriate color based on health percentage."""
         percent = value / max_value * 100
         if percent > 70:
@@ -664,7 +665,7 @@ class Colors:
 # Animation utilities
 class Animations:
     @staticmethod
-    def type_text(text, delay=0.03):
+    def type_text(text: Any, delay: float = 0.03) -> Any:
         """Type text with a delay for animation effect."""
         for char in text:
             sys.stdout.write(char)
@@ -673,7 +674,7 @@ class Animations:
         print()
 
     @staticmethod
-    def loading_bar(length=20, delay=0.05, message="Loading"):
+    def loading_bar(length: int = 20, delay: float = 0.05, message: str = "Loading") -> Any:
         """Show a loading bar animation."""
         print(f"{message} ", end="")
         for i in range(length + 1):
@@ -684,7 +685,7 @@ class Animations:
         print()
 
     @staticmethod
-    def zombie_animation():
+    def zombie_animation() -> Any:
         """Display a simple ASCII zombie."""
         zombie_art = r"""
       .-.
@@ -4615,7 +4616,7 @@ MISSIONS = {
 class GameState:
     """Main class to handle game state and save/load functionality."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Ensure saves directory exists
         if not os.path.exists(SAVES_FOLDER):
             os.makedirs(SAVES_FOLDER)
@@ -4792,7 +4793,7 @@ class GameState:
             "/quit": {"func": self.cmd_quit, "help": "Quit the game"},
         }
 
-    def cmd_deathlog(self, *args):
+    def cmd_deathlog(self, *args: Any) -> Any:
         """View the death log (hardcore mode)."""
         # Initialize death log if needed
         if self.death_log is None:
@@ -4852,7 +4853,7 @@ class GameState:
             )
         )
 
-    def _display_game_intro(self):
+    def _display_game_intro(self) -> Any:
         """Display game introduction animation and text."""
         # Display zombie animation as intro
         Animations.zombie_animation()
@@ -4878,7 +4879,7 @@ class GameState:
             )
         )
         
-    def start_game(self):
+    def start_game(self) -> Any:
         """Initialize and start the game."""
         # Clear screen and load death log at game start
         self.clear_screen()
@@ -4898,7 +4899,7 @@ class GameState:
         # Start the main game loop
         self.main_game_loop()
     
-    def _display_save_slots(self):
+    def _display_save_slots(self) -> Any:
         """Display available save slots with detailed information."""
         # Always show save slots at startup
         save_slots = self.get_save_slots()
@@ -4922,7 +4923,7 @@ class GameState:
             print(Colors.colorize("\nNo saved games found.", Colors.YELLOW))
             print(Colors.colorize("Start a new game to create a save.", Colors.CYAN))
     
-    def _handle_save_load_menu(self):
+    def _handle_save_load_menu(self) -> Any:
         """Handle save/load menu interactions."""
         save_slots = self.get_save_slots()
         
@@ -4955,7 +4956,7 @@ class GameState:
             print(Colors.colorize("\nStarting new game...", Colors.GREEN))
             self._create_new_character()
     
-    def _load_save_menu(self):
+    def _load_save_menu(self) -> Any:
         """Handle loading existing saves."""
         save_slots = self.get_save_slots()
         
@@ -4980,7 +4981,7 @@ class GameState:
             except (ValueError, KeyboardInterrupt):
                 print(Colors.colorize("Invalid input.", Colors.RED))
     
-    def _create_new_character(self):
+    def _create_new_character(self) -> Any:
         """Create a new character."""
         print("\n" + Colors.colorize("CHARACTER CREATION", Colors.BOLD + Colors.YELLOW))
         print(Colors.colorize("=" * 50, Colors.YELLOW))
@@ -5015,7 +5016,7 @@ class GameState:
         print(Colors.colorize("Your survival journey begins now...", Colors.YELLOW))
         input(Colors.colorize("\nPress Enter to continue...", Colors.CYAN))
     
-    def main_game_loop(self):
+    def main_game_loop(self) -> Any:
         """Main game loop for command processing."""
         print("\n" + Colors.colorize("=" * 70, Colors.BOLD + Colors.GREEN))
         print(Colors.colorize("GAME STARTED - Type /help for available commands", Colors.BOLD + Colors.GREEN))
@@ -5043,7 +5044,7 @@ class GameState:
             except Exception as e:
                 print(Colors.colorize(f"An error occurred: {e}", Colors.RED))
     
-    def _display_status_bar(self):
+    def _display_status_bar(self) -> Any:
         """Display current player status."""
         health_color = Colors.health_color(self.player["health"], MAX_HEALTH)
         stamina_color = Colors.health_color(self.player["stamina"], MAX_STAMINA)
@@ -5055,7 +5056,7 @@ class GameState:
         
         print(status)
     
-    def _process_command(self, command):
+    def _process_command(self, command: Any) -> Any:
         """Process game commands."""
         parts = command.split()
         cmd = parts[0]
@@ -5088,7 +5089,7 @@ class GameState:
         else:
             print(Colors.colorize(f"Unknown command: {cmd}. Type /help for available commands.", Colors.RED))
     
-    def _show_help(self):
+    def _show_help(self) -> Any:
         """Display available commands."""
         help_text = """
 Available Commands:
@@ -5110,7 +5111,7 @@ Tips:
         """
         print(Colors.colorize(help_text, Colors.CYAN))
     
-    def _show_detailed_status(self):
+    def _show_detailed_status(self) -> Any:
         """Show detailed character status."""
         print(Colors.colorize("\n=== CHARACTER STATUS ===", Colors.BOLD + Colors.YELLOW))
         print(f"Name: {Colors.colorize(self.player['name'], Colors.GREEN)}")
@@ -5121,7 +5122,7 @@ Tips:
         print(f"Time: {Colors.colorize(f"{self.player['hour']:02d}:00", Colors.YELLOW)}")
         print(f"Location: {Colors.colorize(self.player['location'].replace('_', ' ').title(), Colors.CYAN)}")
     
-    def _show_inventory(self):
+    def _show_inventory(self) -> Any:
         """Show player inventory."""
         print(Colors.colorize("\n=== INVENTORY ===", Colors.BOLD + Colors.YELLOW))
         if self.player["inventory"]:
@@ -5130,7 +5131,7 @@ Tips:
         else:
             print(Colors.colorize("Your inventory is empty.", Colors.RED))
     
-    def _look_around(self):
+    def _look_around(self) -> Any:
         """Look around current location with detailed exploration."""
         location_id = self.player.get("location", "abandoned_house")
         
@@ -5174,7 +5175,7 @@ Tips:
         # Time passes when looking around
         self.player["stamina"] = max(0, self.player["stamina"] - 1)
         
-    def _get_location_data(self, location_id):
+    def _get_location_data(self, location_id: Any) -> Any:
         """Get comprehensive location data."""
         locations = {
             "abandoned_house": {
@@ -5230,7 +5231,7 @@ Tips:
         }
         return locations.get(location_id, locations["abandoned_house"])
     
-    def _check_area_items(self, location):
+    def _check_area_items(self, location: Any) -> Any:
         """Check for items that can be found in the current area."""
         print(Colors.colorize("\n--- SEARCH RESULTS ---", Colors.BOLD + Colors.YELLOW))
         
@@ -5267,7 +5268,7 @@ Tips:
         else:
             print(Colors.colorize("You don't find anything useful here.", Colors.YELLOW))
     
-    def _show_location_actions(self, location):
+    def _show_location_actions(self, location: Any) -> Any:
         """Show special actions available at this location."""
         features = location.get("special_features", [])
         if not features:
@@ -5278,7 +5279,7 @@ Tips:
             feature_name = feature.replace("_", " ").title()
             print(Colors.colorize(f"  • {feature_name} (use /explore {feature})", Colors.MAGENTA))
     
-    def _show_location_exits(self, location):
+    def _show_location_exits(self, location: Any) -> Any:
         """Show available exits from current location."""
         exits = location.get("exits", [])
         if not exits:
@@ -5289,7 +5290,7 @@ Tips:
             exit_name = exit_location.replace("_", " ").title()
             print(Colors.colorize(f"  → {exit_name} (use /go {exit_location})", Colors.BLUE))
     
-    def _check_random_encounter(self, location):
+    def _check_random_encounter(self, location: Any) -> Any:
         """Check for random encounters while looking around."""
         encounter_chance = location.get("zombies_chance", 0.2)
         
@@ -5303,7 +5304,7 @@ Tips:
             print(Colors.colorize("\n⚠️  WARNING: You hear shuffling sounds nearby...", Colors.BOLD + Colors.RED))
             print(Colors.colorize("Something dangerous might be approaching!", Colors.RED))
     
-    def _get_time_of_day(self):
+    def _get_time_of_day(self) -> Any:
         """Get current time of day description."""
         hour = self.player["hour"]
         if 6 <= hour < 18:
@@ -5313,7 +5314,7 @@ Tips:
         else:
             return "Night"
     
-    def _add_to_inventory(self, item):
+    def _add_to_inventory(self, item: Any) -> Any:
         """Add item to inventory if there's space."""
         current_items = sum(self.player["inventory"].values())
         if current_items >= 10:  # Max inventory slots
@@ -5325,7 +5326,7 @@ Tips:
             self.player["inventory"][item] = 1
         return True
     
-    def _go_to_location(self, destination):
+    def _go_to_location(self, destination: Any) -> Any:
         """Move to a different location."""
         current_location = self._get_location_data(self.player["location"])
         available_exits = current_location.get("exits", [])
@@ -5356,7 +5357,7 @@ Tips:
         # Show new location automatically
         self._look_around()
     
-    def _explore_feature(self, feature):
+    def _explore_feature(self, feature: Any) -> Any:
         """Explore a special feature in the current location."""
         location = self._get_location_data(self.player["location"])
         available_features = location.get("special_features", [])
@@ -5393,7 +5394,7 @@ Tips:
             # Generic exploration
             self._generic_exploration(feature)
     
-    def _explore_basement(self):
+    def _explore_basement(self) -> Any:
         """Explore a basement."""
         print(Colors.colorize("You descend into the dark basement. The air is musty and cold.", Colors.YELLOW))
         
@@ -5410,7 +5411,7 @@ Tips:
             else:
                 print(Colors.colorize("You found something useful but your inventory is full!", Colors.RED))
     
-    def _explore_attic(self):
+    def _explore_attic(self) -> Any:
         """Explore an attic."""
         print(Colors.colorize("You climb up to the dusty attic. Cobwebs hang from the rafters.", Colors.YELLOW))
         
@@ -5424,7 +5425,7 @@ Tips:
         else:
             print(Colors.colorize("The attic is empty except for dust and memories.", Colors.YELLOW))
     
-    def _explore_pharmacy(self):
+    def _explore_pharmacy(self) -> Any:
         """Explore a pharmacy."""
         print(Colors.colorize("You search through the ransacked pharmacy shelves.", Colors.YELLOW))
         
@@ -5438,7 +5439,7 @@ Tips:
         else:
             print(Colors.colorize("The pharmacy has been completely looted.", Colors.RED))
     
-    def _explore_car_wreckage(self):
+    def _explore_car_wreckage(self) -> Any:
         """Explore car wreckage."""
         print(Colors.colorize("You search through the twisted metal of crashed vehicles.", Colors.YELLOW))
         
@@ -5452,7 +5453,7 @@ Tips:
         else:
             print(Colors.colorize("The wreckage has already been picked clean.", Colors.YELLOW))
     
-    def _explore_pond(self):
+    def _explore_pond(self) -> Any:
         """Explore a pond."""
         print(Colors.colorize("You approach the calm pond water.", Colors.YELLOW))
         
@@ -5467,7 +5468,7 @@ Tips:
         else:
             print(Colors.colorize("The water looks contaminated. Better not risk it.", Colors.RED))
     
-    def _explore_hunting_spot(self):
+    def _explore_hunting_spot(self) -> Any:
         """Explore a hunting spot."""
         print(Colors.colorize("You search for signs of wildlife in this area.", Colors.YELLOW))
         
@@ -5480,7 +5481,7 @@ Tips:
         else:
             print(Colors.colorize("No animals in sight. They must be hiding.", Colors.YELLOW))
     
-    def _generic_exploration(self, feature):
+    def _generic_exploration(self, feature: Any) -> Any:
         """Generic exploration for unspecified features."""
         feature_name = feature.replace("_", " ").title()
         print(Colors.colorize(f"You carefully examine the {feature_name}.", Colors.YELLOW))
@@ -5496,7 +5497,7 @@ Tips:
         else:
             print(Colors.colorize("Nothing useful here.", Colors.YELLOW))
     
-    def _rest(self):
+    def _rest(self) -> Any:
         """Rest to recover stamina and health."""
         print(Colors.colorize("\nYou find a safe spot to rest...", Colors.CYAN))
         
@@ -5533,7 +5534,7 @@ Tips:
             print(Colors.colorize("Your rest was disturbed by strange noises nearby...", Colors.YELLOW))
             self.player["stamina"] -= 5  # Lose some stamina from poor sleep
     
-    def _save_game_menu(self):
+    def _save_game_menu(self) -> Any:
         """Handle saving the game."""
         try:
             slot = 1  # Default to slot 1 for now
@@ -5542,13 +5543,13 @@ Tips:
         except Exception as e:
             print(Colors.colorize(f"Failed to save game: {e}", Colors.RED))
     
-    def _quit_game(self):
+    def _quit_game(self) -> Any:
         """Quit the game."""
         print(Colors.colorize("Thanks for playing Zombie Survival RPG!", Colors.GREEN))
         print(Colors.colorize("Stay alive out there...", Colors.YELLOW))
         sys.exit(0)
     
-    def _display_single_save_slot(self, save):
+    def _display_single_save_slot(self, save: Any) -> Any:
         """Display information for a single save slot.
         
         Args:
@@ -5791,7 +5792,7 @@ Tips:
             except Exception as e:
                 print(Colors.colorize(f"Error executing command: {e}", Colors.RED))
 
-    def advance_time(self, command_type, hours=None):
+    def advance_time(self, command_type: Any, hours: Optional[Any] = None) -> Any:
         """
         Advance game time based on the type of command executed.
         Returns the number of hours that passed.
@@ -5939,7 +5940,7 @@ Tips:
 
         return hours_passed
 
-    def update_weather(self):
+    def update_weather(self) -> None:
         """Update the weather conditions based on time."""
         # Decrease weather duration counter
         self.player["weather_duration"] = max(
@@ -6040,7 +6041,7 @@ Tips:
                         )
                     )
 
-    def update_game_time(self):
+    def update_game_time(self) -> None:
         """Update and display the in-game date and time."""
         days = self.player["days_survived"]
         hours = int(
@@ -6077,11 +6078,11 @@ Tips:
         # Check if weather should change
         self.update_weather()
 
-    def clear_screen(self):
+    def clear_screen(self) -> None:
         """Clear the terminal screen."""
         os.system("cls" if os.name == "nt" else "clear")
 
-    def get_save_slots(self):
+    def get_save_slots(self) -> Any:
         """Get a list of available save slots."""
         save_slots = []
         for i in range(1, MAX_SAVE_SLOTS + 1):
@@ -6105,7 +6106,7 @@ Tips:
                     pass
         return save_slots
 
-    def save_game(self, slot=None):
+    def save_game(self, slot: Optional[Any] = None) -> Any:
         """Save game state to file.
 
         Args:
@@ -6184,7 +6185,7 @@ Tips:
             print(f"Error saving game: {e}")
             return False
 
-    def load_game(self, slot=None):
+    def load_game(self, slot: Optional[Any] = None) -> Any:
         """Load game state from file.
 
         Args:
@@ -6265,7 +6266,7 @@ Tips:
             print(f"Error loading game: {e}")
             return False
 
-    def load_death_log(self):
+    def load_death_log(self) -> Any:
         """Load the hardcore mode death log from file."""
         death_log = {"total_deaths": 0, "deaths": []}
         try:
@@ -6277,7 +6278,7 @@ Tips:
             print(Colors.colorize(f"Error loading death log: {e}", Colors.RED))
             return death_log
 
-    def save_death_log(self):
+    def save_death_log(self) -> Any:
         """Save the hardcore mode death log to file."""
         try:
             with open(DEATH_LOG_FILE, "w") as f:
@@ -6287,7 +6288,7 @@ Tips:
             print(Colors.colorize(f"Error saving death log: {e}", Colors.RED))
             return False
 
-    def record_death(self, cause):
+    def record_death(self, cause: Any) -> Any:
         """Record a death in hardcore mode."""
         if not self.player.get("hardcore_mode", False):
             return
@@ -6350,7 +6351,7 @@ Tips:
         )
 
     # Helper functions
-    def level_up(self):
+    def level_up(self) -> Any:
         """Check and perform level up if enough XP."""
         if self.player["xp"] >= self.player["xp_to_next_level"]:
             self.player["level"] += 1
@@ -6375,7 +6376,7 @@ Tips:
             return True
         return False
 
-    def add_to_inventory(self, item_id, count=1):
+    def add_to_inventory(self, item_id: Any, count: int = 1) -> None:
         """Add an item to player's inventory."""
         if len(self.player["inventory"]) >= MAX_INVENTORY_SLOTS:
             print("Your inventory is full! Drop something first.")
@@ -6402,7 +6403,7 @@ Tips:
             return True
         return False
 
-    def remove_from_inventory(self, item_idx, count=1):
+    def remove_from_inventory(self, item_idx: Any, count: int = 1) -> None:
         """Remove an item from player's inventory."""
         if 0 <= item_idx < len(self.player["inventory"]):
             item = self.player["inventory"][item_idx]
@@ -6420,7 +6421,7 @@ Tips:
                 return True
         return False
 
-    def spawn_zombie(self, specific_boss=None, specific_type=None):
+    def spawn_zombie(self, specific_boss: Optional[Any] = None, specific_type: Optional[Any] = None) -> Any:
         """Create a random zombie based on location danger level or spawn a specific boss/type."""
 
         # Boss zombie dictionaries - moved here temporarily until we can properly add a BOSS_ZOMBIES constant
@@ -6657,7 +6658,7 @@ Tips:
 
         return zombie
 
-    def check_mission_progress(self, event_type, data=None):
+    def check_mission_progress(self, event_type: Any, data: Optional[Any] = None) -> bool:
         """Check if any active missions have progressed."""
         for mission_id in self.player["active_missions"]:
             if mission_id in MISSIONS:
@@ -6708,7 +6709,7 @@ Tips:
                     ):
                         self.complete_mission(mission_id)
 
-    def complete_mission(self, mission_id):
+    def complete_mission(self, mission_id: Any) -> Any:
         """Complete a mission and give rewards."""
         if mission_id in MISSIONS and mission_id in self.player["active_missions"]:
             mission = MISSIONS[mission_id]
@@ -6739,7 +6740,7 @@ Tips:
             # Add new missions as appropriate
             self.check_new_missions()
 
-    def check_new_missions(self):
+    def check_new_missions(self) -> bool:
         """Add new missions based on player progress."""
         level = self.player["level"]
         active_and_completed = (
@@ -6809,14 +6810,14 @@ Tips:
             print("WARNING: This mission involves a powerful boss zombie!")
 
     # Command functions
-    def cmd_help(self, *args):
+    def cmd_help(self, *args: Any) -> Any:
         """Show available commands."""
         print("\nAvailable Commands:")
         print("=" * 50)
         for cmd, info in sorted(self.commands.items()):
             print(f"{cmd:<15} - {info['help']}")
 
-    def cmd_status(self, *args):
+    def cmd_status(self, *args: Any) -> Any:
         """Show player status."""
         p = self.player
 
@@ -7010,7 +7011,7 @@ Tips:
         else:
             print(Colors.colorize("Equipped Weapon: None (Unarmed)", Colors.RED))
 
-    def cmd_inventory(self, *args):
+    def cmd_inventory(self, *args: Any) -> Any:
         """Show player inventory."""
         if not self.player["inventory"]:
             print("\nYour inventory is empty.")
@@ -7050,7 +7051,7 @@ Tips:
         # Checking inventory takes a small amount of time
         self.advance_time("light_action")
 
-    def cmd_equip(self, *args):
+    def cmd_equip(self, *args: Any) -> Any:
         """Equip a weapon."""
         if not args:
             print("Usage: /equip [item_number]")
@@ -7072,7 +7073,7 @@ Tips:
         except ValueError:
             print("Please enter a valid item number.")
 
-    def cmd_use(self, *args):
+    def cmd_use(self, *args: Any) -> Any:
         """Use an item from inventory."""
         if not args:
             print("Usage: /use [item_number]")
@@ -7197,7 +7198,7 @@ Tips:
         except ValueError:
             print("Please enter a valid item number.")
 
-    def cmd_look(self, *args):
+    def cmd_look(self, *args: Any) -> Any:
         """Look around the current location."""
         # Use the safe_location helper to avoid crashes
         location_id = self.player.get(
@@ -7244,7 +7245,7 @@ Tips:
         # Looking around consumes time
         self.advance_time("look")
 
-    def update_survival_stats(self, hours=1):
+    def update_survival_stats(self, hours: int = 1) -> None:
         """Update hunger, thirst, sleep and other stats as time passes."""
         # Convert hours to int if it's a float
         hours = int(hours) if isinstance(hours, float) else hours
@@ -7598,7 +7599,7 @@ Tips:
             print(Colors.colorize(death_message, Colors.BOLD + Colors.RED))
             self.game_running = False
 
-    def cmd_sleep(self, *args):
+    def cmd_sleep(self, *args: Any) -> Any:
         """Sleep to recover energy and reduce fatigue, with location-based risk."""
         if self.in_combat:
             print(Colors.colorize("You can't sleep while in combat!", Colors.RED))
@@ -7833,7 +7834,7 @@ Tips:
                     )
                 )
 
-    def cmd_rest(self, *args):
+    def cmd_rest(self, *args: Any) -> Any:
         """Rest to recover stamina at the cost of hunger and thirst."""
         if self.in_combat:
             print(Colors.colorize("You can't rest while in combat!", Colors.RED))
@@ -8051,7 +8052,7 @@ Tips:
                                 )
                             )
 
-    def cmd_drop(self, *args):
+    def cmd_drop(self, *args: Any) -> Any:
         """Drop an item from inventory."""
         if not args:
             print("Usage: /drop [item_number]")
@@ -8085,7 +8086,7 @@ Tips:
         except ValueError:
             print("Please enter a valid item number.")
 
-    def cmd_craft(self, *args):
+    def cmd_craft(self, *args: Any) -> Any:
         """Craft items from materials."""
         # Define craftable recipes
         RECIPES = {
@@ -8192,7 +8193,7 @@ Tips:
         else:
             print("Inventory full! Couldn't add crafted item.")
 
-    def cmd_go(self, *args):
+    def cmd_go(self, *args: Any) -> Any:
         """Travel to a different location, optionally using a vehicle."""
         # Handle argument parsing with more options
         if not args or (len(args) >= 1 and args[0] == "help"):
@@ -8400,13 +8401,13 @@ Tips:
                 # On foot travel is a heavy action that takes significant time
                 self.advance_time("heavy_action")
 
-    def get_player_vehicles(self):
+    def get_player_vehicles(self) -> Any:
         """Get all vehicles the player currently has access to."""
         if "vehicles" not in self.player:
             self.player["vehicles"] = {}
         return self.player["vehicles"]
 
-    def has_item(self, item_id, amount=1):
+    def has_item(self, item_id: Any, amount: int = 1) -> bool:
         """Check if the player has a specific item in their inventory.
 
         Args:
@@ -8421,7 +8422,7 @@ Tips:
                 return item.get("count", 1) >= amount
         return False
 
-    def find_item_index(self, item_id):
+    def find_item_index(self, item_id: Any) -> Any:
         """Find the index of an item in the player's inventory.
 
         Args:
@@ -8435,7 +8436,7 @@ Tips:
                 return i
         return -1
 
-    def cmd_vehicles(self, *args):
+    def cmd_vehicles(self, *args: Any) -> Any:
         """View, repair, or manage the player's vehicles."""
         if not args:
             print("Usage: /vehicles [list|repair|refuel|status] (vehicle_id)")
@@ -8615,7 +8616,7 @@ Tips:
         else:
             print("Unknown vehicle command. Use /vehicles for help.")
 
-    def cmd_craft_vehicle(self, *args):
+    def cmd_craft_vehicle(self, *args: Any) -> Any:
         """Craft a vehicle from materials."""
         if not args or args[0] == "help":
             print("Usage: /craft_vehicle [vehicle_id]")
@@ -8705,7 +8706,7 @@ Tips:
         # Crafting a vehicle is a heavy action
         self.advance_time("heavy_action", 5)  # Takes 5 hours
 
-    def cmd_explore(self, *args):
+    def cmd_explore(self, *args: Any) -> Any:
         """Explore the area for resources."""
         # Check if player has enough stamina
         if self.player["stamina"] < 15:
@@ -8903,7 +8904,7 @@ Tips:
         # Mission progress for exploration-type missions
         self.check_mission_progress("explore", self.player["location"])
 
-    def start_combat(self):
+    def start_combat(self) -> Any:
         """Initialize combat with a zombie, animal, or hostile survivor."""
         if not hasattr(self, "current_zombie") or not self.current_zombie:
             return
@@ -9108,7 +9109,7 @@ Tips:
 
         # Combat loop handled by the main game loop and combat commands
 
-    def get_companions_assistance(self, enemy_type):
+    def get_companions_assistance(self, enemy_type: Any) -> Any:
         """Calculate and apply combat assistance from companions.
 
         Args:
@@ -9226,7 +9227,7 @@ Tips:
 
         return damage_bonus, messages
 
-    def process_status_effects(self, enemy):
+    def process_status_effects(self, enemy: Any) -> Any:
         """Process status effects applied to enemies during combat.
 
         Args:
@@ -9345,7 +9346,7 @@ Tips:
 
         return damage_multiplier, speed_multiplier, status_message
 
-    def _get_current_enemy(self):
+    def _get_current_enemy(self) -> Any:
         """Helper method to get the current enemy safely."""
         if hasattr(self, "current_zombie"):
             return self.current_zombie
@@ -9353,7 +9354,7 @@ Tips:
             return self.current_enemy
         return None
 
-    def _determine_enemy_type(self, enemy):
+    def _determine_enemy_type(self, enemy: Any) -> Any:
         """Helper method to determine enemy type with null safety."""
         enemy_type = "zombie"  # Default
         if enemy is not None and isinstance(enemy, dict):
@@ -9363,13 +9364,13 @@ Tips:
                 enemy_type = "survivor"
         return enemy_type
 
-    def _initialize_enemy_status_effects(self, enemy):
+    def _initialize_enemy_status_effects(self, enemy: Any) -> Any:
         """Helper method to initialize enemy status effects safely."""
         if enemy is not None and isinstance(enemy, dict):
             if "status_effects" not in enemy:
                 enemy["status_effects"] = {}
 
-    def _check_weapon_durability(self, weapon):
+    def _check_weapon_durability(self, weapon: Any) -> Any:
         """Helper method to check weapon durability and handle broken weapons."""
         if weapon is not None and isinstance(weapon, dict):
             # Only check durability if it exists in the weapon dict - with complete null safety
@@ -9395,7 +9396,7 @@ Tips:
                 return True  # Weapon is broken
         return False  # Weapon is not broken
 
-    def _apply_stamina_effects(self, hardcore_mode, stamina_percent, damage):
+    def _apply_stamina_effects(self, hardcore_mode: Any, stamina_percent: Any, damage: Any) -> Any:
         """Handle stamina and exhaustion effects in combat.
 
         Args:
@@ -9430,7 +9431,7 @@ Tips:
                 self.player["exhaustion"] = min(100, current_exhaustion + 5)
 
         return stamina_penalty, damage_reduction
-    def _apply_mental_stress_effects(self, hardcore_mode):
+    def _apply_mental_stress_effects(self, hardcore_mode: Any) -> Any:
         """Handle mental stress effects in combat.
 
         Args:
@@ -9484,7 +9485,7 @@ Tips:
 
         return insanity_penalty
 
-    def _handle_chain_lightning_effect(self, weapon, enemy_name):
+    def _handle_chain_lightning_effect(self, weapon: Any, enemy_name: Any) -> Any:
         """Handle chain lightning effect from Pulse Gauntlet.
 
         Args:
@@ -9519,7 +9520,7 @@ Tips:
                         Colors.YELLOW
                     ))
 
-    def _handle_acid_effect(self, weapon, enemy, enemy_name, weapon_name):
+    def _handle_acid_effect(self, weapon: Any, enemy: Any, enemy_name: Any, weapon_name: Any) -> Any:
         """Handle acid effect from Chemical Thrower.
 
         Args:
@@ -9546,7 +9547,7 @@ Tips:
             f"Corrosive chemicals from your {weapon_name} begin eating through the {enemy_name}'s flesh!",
             Colors.GREEN
         ))
-    def _handle_area_effect_weapon(self, weapon, weapon_id, enemy, enemy_type, damage, weakness_bonus):
+    def _handle_area_effect_weapon(self, weapon: Any, weapon_id: Any, enemy: Any, enemy_type: Any, damage: Any, weakness_bonus: Any) -> Any:
         """Handle area effect weapons like Molotov cocktails and flamethrowers.
 
         Args:
@@ -9621,7 +9622,7 @@ Tips:
         # Skip to enemy's attack
         print(Colors.colorize("\nThe flames die down...", Colors.YELLOW))
         
-    def _handle_area_zombie_effects(self, enemy, damage):
+    def _handle_area_zombie_effects(self, enemy: Any, damage: Any) -> Any:
         """Handle area effects specifically for zombie enemies.
         
         Args:
@@ -9645,7 +9646,7 @@ Tips:
             print(f"All zombies in the area take an additional {Colors.colorize(str(extra_damage), Colors.RED)} damage.")
             enemy["health"] -= extra_damage
             
-    def _calculate_weakness_bonus(self, enemy_type, enemy, weapon):
+    def _calculate_weakness_bonus(self, enemy_type: Any, enemy: Any, weapon: Any) -> Any:
         """Calculate the weakness bonus based on enemy type and weapon.
         
         Args:
@@ -9719,7 +9720,7 @@ Tips:
             
         return weakness_bonus
     
-    def _handle_special_effect_weapon(self, weapon, enemy, enemy_type):
+    def _handle_special_effect_weapon(self, weapon: Any, enemy: Any, enemy_type: Any) -> Any:
         """Handle special effect weapons and their unique abilities.
         
         Args:
@@ -9786,7 +9787,7 @@ Tips:
                 
         return False
 
-    def cmd_attack(self, *args):
+    def cmd_attack(self, *args: Any) -> Any:
         """Attack the current enemy in combat."""
         if not self.in_combat or (
             not hasattr(self, "current_enemy") and not hasattr(self, "current_zombie")
@@ -9872,11 +9873,7 @@ Tips:
             hardcore_mode, stamina_percent
         )
 
-    def _execute_normal_attack(
-        self, enemy, enemy_type, weapon, damage, weakness_bonus,
-        stamina_penalty, insanity_penalty, companion_damage_bonus,
-        hardcore_mode=False, stamina_percent=1.0
-    ):
+    def _execute_normal_attack(self, enemy: Any, enemy_type: Any, weapon: Any, damage: Any, weakness_bonus: Any, stamina_penalty: Any, insanity_penalty: Any, companion_damage_bonus: Any, hardcore_mode: bool = False, stamina_percent: float = 1.0) -> Any:
         """Execute a normal attack against the enemy.
 
         Args:
@@ -12431,7 +12428,7 @@ Tips:
         # Combat takes time (medium action)
         self.advance_time("medium_action")
 
-    def cmd_flee(self, *args):
+    def cmd_flee(self, *args: Any) -> Any:
         """Attempt to flee from combat."""
         if not self.in_combat or (
             not hasattr(self, "current_enemy") and not hasattr(self, "current_zombie")
@@ -13159,7 +13156,7 @@ Tips:
             # Fleeing takes time (medium action)
             self.advance_time("medium_action")
 
-    def end_combat(self, victory):
+    def end_combat(self, victory: Any) -> Any:
         """End combat state and apply results."""
         self.in_combat = False
 
@@ -13556,7 +13553,7 @@ Tips:
             ):
                 nearby_enemy["status_effects"] = {}
 
-    def cmd_missions(self, *args):
+    def cmd_missions(self, *args: Any) -> Any:
         """Show active and available missions."""
         if not self.player["active_missions"]:
             print("\nYou have no active missions.")
@@ -13583,7 +13580,7 @@ Tips:
                 mission = MISSIONS[mission_id]
                 print(f"- {mission['name']}")
 
-    def cmd_save(self, *args):
+    def cmd_save(self, *args: Any) -> Any:
         """Save the current game state using the slot system."""
         # Check if a slot number was provided as an argument
         slot = None
@@ -13604,7 +13601,7 @@ Tips:
         # Save the game
         self.save_game(slot)
 
-    def cmd_saves_list(self, *args):
+    def cmd_saves_list(self, *args: Any) -> Any:
         """Display a list of all available save slots."""
         save_slots = self.get_save_slots()
 
@@ -13701,7 +13698,7 @@ Tips:
             )
         )
 
-    def cmd_load(self, *args):
+    def cmd_load(self, *args: Any) -> Any:
         """Load a saved game using the slot system."""
         # Check if a slot number was provided as an argument
         slot = None
@@ -13724,7 +13721,7 @@ Tips:
             self.cmd_status()
         # Note: Error messages are handled within the load_game method
 
-    def cmd_map(self, *args):
+    def cmd_map(self, *args: Any) -> Any:
         """Display a map of available locations."""
         print(
             Colors.colorize("\n=== AVAILABLE LOCATIONS ===", Colors.BOLD + Colors.CYAN)
@@ -13793,7 +13790,7 @@ Tips:
                     print("  Resources: None available")
             print()
 
-    def cmd_stats(self, *args):
+    def cmd_stats(self, *args: Any) -> Any:
         """Show detailed player statistics."""
         p = self.player
 
@@ -13856,7 +13853,7 @@ Tips:
         rate_text = f"Completion Rate: {completion_rate:.1f}%"
         print(f"{Colors.colorize(rate_text, Colors.GREEN)}")
 
-    def cmd_time(self, *args):
+    def cmd_time(self, *args: Any) -> Any:
         """Display current game time and date."""
         # Call the existing update_game_time method
         self.update_game_time()
@@ -13894,7 +13891,7 @@ Tips:
         ]
         print(f"\nSurvival Tip: {Colors.colorize(random.choice(tips), Colors.GREEN)}")
 
-    def cmd_boss(self, *args):
+    def cmd_boss(self, *args: Any) -> Any:
         """Information about boss zombies encountered."""
         bosses = self.player["bosses_defeated"]
 
@@ -13930,7 +13927,7 @@ Tips:
                 f"\nThere are {Colors.colorize(str(remaining), Colors.YELLOW)} more boss zombies to discover!"
             )
 
-    def cmd_weather(self, *args):
+    def cmd_weather(self, *args: Any) -> Any:
         """Check the current weather conditions."""
         # Get the current weather
         current_weather = self.player.get("current_weather", "clear")
@@ -14030,7 +14027,7 @@ Tips:
             )
             print(f"{forecast_time}{forecast_weather}")
 
-    def cmd_upgrade_camp(self, *args):
+    def cmd_upgrade_camp(self, *args: Any) -> Any:
         """View or upgrade camp facilities."""
         if self.player["location"] != "camp":
             print(
@@ -14133,7 +14130,7 @@ Tips:
         # Advancing time for checking camp facilities
         self.advance_time("light_action")
 
-    def upgrade_facility(self, facility_id):
+    def upgrade_facility(self, facility_id: Any) -> Any:
         """Upgrade a specific camp facility."""
         if facility_id not in CAMP_UPGRADES:
             print(Colors.colorize(f"Unknown facility: {facility_id}", Colors.RED))
@@ -14285,7 +14282,7 @@ Tips:
             )
             print("Go scavenging to find more resources.")
 
-    def cmd_eat(self, *args):
+    def cmd_eat(self, *args: Any) -> Any:
         """Eat food to reduce hunger and possibly gain health."""
         if self.in_combat:
             print(Colors.colorize("You can't eat during combat!", Colors.RED))
@@ -14501,7 +14498,7 @@ Tips:
         # Eating takes a small amount of time
         self.advance_time("light_action")
 
-    def cmd_dismantle(self, *args):
+    def cmd_dismantle(self, *args: Any) -> Any:
         """Break down an item into its components."""
         if self.in_combat:
             print(
@@ -14624,7 +14621,7 @@ Tips:
         except Exception as e:
             print(Colors.colorize(f"Error dismantling item: {e}", Colors.RED))
 
-    def cmd_repair_barricades(self, *args):
+    def cmd_repair_barricades(self, *args: Any) -> Any:
         """Repair damaged camp barricades."""
         if self.player["location"] != "camp":
             print(
@@ -14768,7 +14765,7 @@ Tips:
             )
             print("Go scavenging to find more resources.")
 
-    def cmd_scavenge_area(self, *args):
+    def cmd_scavenge_area(self, *args: Any) -> Any:
         """Scavenge your current location for resources."""
         if self.in_combat:
             print(Colors.colorize("You can't scavenge while in combat!", Colors.RED))
@@ -15098,7 +15095,7 @@ Tips:
         # Update game time display
         self.update_game_time()
 
-    def cmd_quit(self, *args):
+    def cmd_quit(self, *args: Any) -> Any:
         """Quit the game."""
         confirm = input(
             Colors.colorize(
@@ -15111,7 +15108,7 @@ Tips:
             Animations.type_text(Colors.colorize(farewell, Colors.BOLD + Colors.GREEN))
             self.game_running = False
 
-    def generate_random_name(self):
+    def generate_random_name(self) -> Any:
         """Generate a random name for survivors.
 
         Returns:
@@ -15184,7 +15181,7 @@ Tips:
 
         return f"{first_name} {last_name}"
 
-    def spawn_survivor(self, specific_type=None):
+    def spawn_survivor(self, specific_type: Optional[Any] = None) -> Any:
         """Create a random survivor based on location.
 
         Args:
@@ -15261,7 +15258,7 @@ Tips:
 
         return survivor
 
-    def spawn_animal(self, is_friendly=None, specific_type=None):
+    def spawn_animal(self, is_friendly: Optional[Any] = None, specific_type: Optional[Any] = None) -> Any:
         """Create a random animal based on location.
 
         Args:
@@ -15326,7 +15323,7 @@ Tips:
 
         return animal
 
-    def _select_random_animal_type(self, is_friendly, location_animals):
+    def _select_random_animal_type(self, is_friendly: Any, location_animals: Any) -> Any:
         """Helper function to select a random animal type.
 
         Args:
@@ -15359,7 +15356,7 @@ Tips:
 
         return random.choice(available_types)
 
-    def encounter_survivor(self):
+    def encounter_survivor(self) -> Any:
         """Handle an encounter with another survivor.
 
         Returns:
@@ -15475,7 +15472,7 @@ Tips:
 
         return False
 
-    def peaceful_survivor_interaction(self, survivor):
+    def peaceful_survivor_interaction(self, survivor: Any) -> Any:
         """Handle peaceful interaction with a non-hostile survivor.
 
         Args:
@@ -15553,7 +15550,7 @@ Tips:
                 )
             )
 
-    def trade_with_survivor(self, survivor):
+    def trade_with_survivor(self, survivor: Any) -> Any:
         """Trading interface with a survivor.
 
         Args:
@@ -15653,7 +15650,7 @@ Tips:
             except ValueError:
                 print("Please enter a number.")
 
-    def try_recruit_survivor(self, survivor):
+    def try_recruit_survivor(self, survivor: Any) -> Any:
         """Attempt to recruit a survivor to join your group.
 
         Args:
@@ -15801,7 +15798,7 @@ Tips:
 
             return False
 
-    def cmd_companions(self, *args):
+    def cmd_companions(self, *args: Any) -> Any:
         """View and manage your companions."""
         companions = self.player.get("companions", [])
 
@@ -15886,7 +15883,7 @@ Tips:
         print("/dismiss [name] - Dismiss a companion from your group")
         print("/companions - Show this list again")
 
-    def cmd_dismiss(self, *args):
+    def cmd_dismiss(self, *args: Any) -> Any:
         """Dismiss a companion from your group."""
         if not args:
             print(
@@ -15967,7 +15964,7 @@ Tips:
             )
             print("Use /companions to see a list of your current companions.")
 
-    def apply_companion_skills(self, companion):
+    def apply_companion_skills(self, companion: Any) -> Any:
         """Apply skills and bonuses from a companion.
 
         Args:
@@ -16093,7 +16090,7 @@ Tips:
                     )
                 )
 
-    def encounter_animal(self):
+    def encounter_animal(self) -> Any:
         """Handle an encounter with an animal.
 
         Returns:
