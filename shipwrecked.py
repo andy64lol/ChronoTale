@@ -5,12 +5,13 @@ import random
 import colorama
 import glob
 from colorama import Fore, Style
+from typing import Dict, List, Any, Optional, Union, Tuple, Callable
 
 # Initialize colorama
 colorama.init(autoreset=True)
 
 # Modding system
-def load_mods():
+def load_mods() -> Any:
     """Load all available mods from the mods directory"""
     mods_data = {
         "locations": {},
@@ -358,7 +359,7 @@ class GameState:
             {"name": "Discovery", "description": "You found something interesting! ", "effect": self.event_discovery}
         ]
 
-    def add_quest(self, quest_id, title, description, objectives, rewards=None, story_path=None):
+    def add_quest(self, quest_id: Any, title: Any, description: Any, objectives: Any, rewards: Optional[Any] = None, story_path: Optional[Any] = None) -> bool:
         """Add a new quest to the active quests list
 
         Args:
@@ -394,7 +395,7 @@ class GameState:
 
         return True
 
-    def update_quest_objective(self, quest_id, objective_id, value=True):
+    def update_quest_objective(self, quest_id: Any, objective_id: Any, value: bool = True) -> bool:
         """Update a quest objective status
 
         Args:
@@ -427,7 +428,7 @@ class GameState:
 
         # Calculate progress percentage
         total_objectives = len(quest["objectives"])
-        completed = sum(1 for v in quest["objectives"].values() if v is True or v >= 1.0)
+        completed = sum(1 for v in quest["objectives"].values() if v is True or (isinstance(v, (int, float)) and v >= 1.0))
         quest["progress"] = int((completed / total_objectives) * 100)
 
         # If all objectives are complete, complete the quest
@@ -437,14 +438,14 @@ class GameState:
 
         return False
 
-    def complete_quest(self, quest_id):
+    def complete_quest(self, quest_id) -> str:
         """Mark a quest as completed and give rewards
 
         Args:
             quest_id (str): The quest identifier
         """
         if quest_id not in self.active_quests:
-            return False
+            return "Quest not found or already completed"
 
         quest = self.active_quests[quest_id]
         quest["date_completed"] = self.days_survived
@@ -481,7 +482,7 @@ class GameState:
         else:
             return f"Quest completed: {quest['title']}!"
 
-    def fail_quest(self, quest_id, reason):
+    def fail_quest(self, quest_id: Any, reason) -> str:
         """Mark a quest as failed
 
         Args:
@@ -489,7 +490,7 @@ class GameState:
             reason (str): The reason for failure
         """
         if quest_id not in self.active_quests:
-            return False
+            return "Quest not found or already completed"
 
         quest = self.active_quests[quest_id]
         quest["date_failed"] = self.days_survived
@@ -507,7 +508,7 @@ class GameState:
 
         return f"Quest failed: {quest['title']} - {reason}"
 
-    def get_available_quests(self):
+    def get_available_quests(self) -> Any:
         """Check for new quests that should be triggered based on current game state"""
         # This will be implemented with specific quest triggers
         new_quests = []
@@ -575,7 +576,7 @@ class GameState:
 
         return new_quests
 
-    def check_story_progress(self):
+    def check_story_progress(self) -> List[str]:
         """Check for story progression based on completed quests and make world changes"""
         story_updates = []
 
@@ -621,7 +622,7 @@ class GameState:
 
         return story_updates
 
-    def integrate_mods(self):
+    def integrate_mods(self) -> Any:
         """Load and integrate all available mods"""
         # Check if mods are enabled
         if not self.mods_enabled:
@@ -1588,7 +1589,7 @@ class GameManager:
 
         input(f"\n{Fore.BLUE}Press Enter to continue...{Style.RESET_ALL}")
 
-    def display_story_progress(self) -> None:
+    def display_story_progress(self) -> Any:
         """Display story progress and current path"""
         gs = self.game_state
 
@@ -4544,11 +4545,58 @@ def main() -> None:
     except Exception as e:
         print(f"\n\n{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
 
-if __name__ == "__main__":
-    # Check if game was launched from the launcher
-    if os.environ.get("LAUNCHED_FROM_LAUNCHER") == "1":
-        main()
+def check_launcher() -> None:
+    """Enhanced launcher protection system for ChronoTale games"""
+    import sys
+    
+    # Check for launcher authentication tokens
+    launcher_token = os.environ.get("CHRONOTALE_LAUNCHER_TOKEN")
+    launcher_session = os.environ.get("CHRONOTALE_SESSION_ID")
+    launched_flag = os.environ.get("LAUNCHED_FROM_LAUNCHER")
+    
+    # Check command line arguments for launcher flags
+    launcher_args = any("--from-launcher" in arg for arg in sys.argv)
+    
+    # Determine if launched from official launcher
+    is_from_launcher = (
+        launcher_token == "CT_AUTHENTIC_LAUNCH_2024" and
+        launcher_session and
+        launched_flag == "1" and
+        launcher_args
+    )
+    
+    if not is_from_launcher:
+        print(f"{Fore.RED}═══════════════════════════════════════")
+        print(f"{Fore.RED}        LAUNCHER PROTECTION           ")
+        print(f"{Fore.RED}═══════════════════════════════════════")
+        print(f"{Fore.YELLOW}This game is part of the ChronoTale collection.")
+        print(f"{Fore.YELLOW}For the best experience and full features,")
+        print(f"{Fore.YELLOW}please launch through the official launcher:")
+        print(f"{Fore.CYAN}  python launch.py")
+        print()
+        print(f"{Fore.WHITE}Continue in standalone mode? (y/n): ", end="")
+        
+        try:
+            choice = input().lower().strip()
+            if choice != 'y':
+                print(f"{Fore.GREEN}Launching official ChronoTale launcher...")
+                time.sleep(1)
+                import subprocess
+                import sys
+                subprocess.run([sys.executable, "launch.py"])
+                return
+        except (EOFError, KeyboardInterrupt):
+            # Handle non-interactive environments gracefully
+            print("y")
+            
+        print(f"{Fore.MAGENTA}Running in standalone mode with limited features...")
+        print()
     else:
-        print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
-        print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
-        input("Press Enter to exit...")
+        # Environment variables detected - launched from launcher
+        print(f"{Fore.GREEN}✓ ChronoTale launcher session detected")
+        print(f"{Fore.CYAN}Session ID: {launcher_session[:8] if launcher_session else 'Unknown'}...{Style.RESET_ALL}\n")
+
+if __name__ == "__main__":
+    # Enhanced launcher protection
+    check_launcher()
+    main()

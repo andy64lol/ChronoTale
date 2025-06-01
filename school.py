@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from colorama import init, Fore, Back, Style
 
 # Enhanced setup for colorama to ensure colors work in various environments
-os.environ["FORCE_COLOR"] = "1"  # Force colors in environments like Replit
+os.environ["FORCE_COLOR"] = "1"  # Force colors in certain environments
 os.environ["TERM"] = os.environ.get("TERM", "xterm-256color")  # Set terminal type if not defined
 
 if platform.system() == "Windows":
@@ -31,6 +31,612 @@ game_settings = {
     "enable_cheats": False,  # Enable cheat commands
     "show_tutorial": True,  # Show tutorial hints
 }
+
+# Initialize non-interactive mode flag
+_non_interactive = False
+
+# Enhanced Dialogue System
+class DialogueEngine:
+    """Handles dynamic dialogue conversations with NPCs"""
+    
+    @staticmethod
+    def display_dialogue(speaker: str, text: str, speaker_color: str = Fore.CYAN) -> None:
+        """Display dialogue with character name and text"""
+        slow_print(f"{speaker_color}{speaker}:{Style.RESET_ALL} \"{text}\"")
+    
+    @staticmethod
+    def display_narration(text: str) -> None:
+        """Display narrative text"""
+        slow_print(f"{Fore.YELLOW}[{text}]{Style.RESET_ALL}")
+    
+    @staticmethod
+    def get_player_response(options: List[str]) -> int:
+        """Get player's dialogue choice"""
+        if _non_interactive:
+            # Auto-select first option in non-interactive mode
+            return 0
+        
+        print(f"\n{Fore.GREEN}Your responses:{Style.RESET_ALL}")
+        for i, option in enumerate(options, 1):
+            print(f"{i}. \"{option}\"")
+        
+        while True:
+            try:
+                choice = input(f"\n{Fore.YELLOW}Choose your response (1-{len(options)}): {Style.RESET_ALL}")
+                choice_num = int(choice) - 1
+                if 0 <= choice_num < len(options):
+                    return choice_num
+                else:
+                    print(f"{Fore.RED}Invalid choice. Please enter a number between 1 and {len(options)}.{Style.RESET_ALL}")
+            except (ValueError, EOFError):
+                if _non_interactive:
+                    return 0
+                print(f"{Fore.RED}Invalid input. Please enter a number.{Style.RESET_ALL}")
+
+# Dynamic Cutscene System
+class CutsceneManager:
+    """Manages dynamic story cutscenes and encounters"""
+    
+    @staticmethod
+    def play_encounter_cutscene(encounter_type: str, location: str, npc_name: Optional[str] = None) -> Dict[str, Any]:
+        """Play a dynamic encounter cutscene based on context"""
+        if npc_name is None:
+            # Generate random NPC if none provided
+            npc_name = random.choice([
+                "Akira", "Yuki", "Hana", "Kenji", "Sakura", "Ryo", "Mika", "Takeshi",
+                "Rei", "Hiroshi", "Aiko", "Daichi", "Emi", "Sora", "Midori"
+            ])
+        
+        cutscenes = {
+            "first_meeting": CutsceneManager._first_meeting_cutscene,
+            "study_group": CutsceneManager._study_group_cutscene,
+            "cafeteria_encounter": CutsceneManager._cafeteria_encounter_cutscene,
+            "library_meeting": CutsceneManager._library_meeting_cutscene,
+            "hallway_bump": CutsceneManager._hallway_bump_cutscene,
+            "club_invitation": CutsceneManager._club_invitation_cutscene,
+            "help_request": CutsceneManager._help_request_cutscene,
+            "rumor_spread": CutsceneManager._rumor_spread_cutscene
+        }
+        
+        if encounter_type in cutscenes:
+            return cutscenes[encounter_type](location, npc_name)
+        else:
+            return {"success": False, "message": "Unknown encounter type"}
+    
+    @staticmethod
+    def _first_meeting_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for meeting someone new"""
+        DialogueEngine.display_narration(f"As you walk through the {location}, someone calls out to you")
+        
+        DialogueEngine.display_dialogue(npc_name, "Hey, you there!", Fore.CYAN)
+        
+        player_responses = [
+            "Me?",
+            "Are you talking to me?",
+            "*Look around confused*"
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        DialogueEngine.display_dialogue(npc_name, "Yes, you! I haven't seen you around here before. Are you new?", Fore.CYAN)
+        
+        follow_up_responses = [
+            "Yeah, I just transferred here.",
+            "I've been keeping to myself lately.",
+            "Maybe you just haven't been paying attention."
+        ]
+        
+        choice2 = DialogueEngine.get_player_response(follow_up_responses)
+        DialogueEngine.display_dialogue("You", follow_up_responses[choice2], Fore.GREEN)
+        
+        # NPC reaction based on player choice
+        if choice2 == 0:
+            DialogueEngine.display_dialogue(npc_name, f"A transfer student! That's exciting. I'm {npc_name}. Welcome to our school!", Fore.CYAN)
+            relationship_change = 5
+        elif choice2 == 1:
+            DialogueEngine.display_dialogue(npc_name, f"I can understand that. Sometimes it's nice to have some quiet time. I'm {npc_name}, by the way.", Fore.CYAN)
+            relationship_change = 3
+        else:
+            DialogueEngine.display_dialogue(npc_name, f"Haha, fair point! I'm {npc_name}. Hope we can be friends despite my lack of observation skills.", Fore.CYAN)
+            relationship_change = 2
+        
+        DialogueEngine.display_narration(f"You've met {npc_name}. Your relationship has improved by {relationship_change} points")
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "new_contact": True
+        }
+    
+    @staticmethod
+    def _hallway_bump_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for accidentally bumping into someone"""
+        DialogueEngine.display_narration("You're walking quickly through the hallway when you accidentally bump into someone")
+        
+        DialogueEngine.display_dialogue(npc_name, "Whoa! Watch where you're going!", Fore.RED)
+        
+        player_responses = [
+            "Sorry! I didn't see you there.",
+            "Maybe you should watch where YOU'RE going.",
+            "Are you okay? I'm really sorry."
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        if choice == 0:
+            DialogueEngine.display_dialogue(npc_name, f"It's alright, accidents happen. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 2
+        elif choice == 1:
+            DialogueEngine.display_dialogue(npc_name, "Excuse me? You're the one who ran into me! Ugh, whatever.", Fore.RED)
+            relationship_change = -3
+        else:
+            DialogueEngine.display_dialogue(npc_name, f"I'm fine, thanks for asking. You seem genuinely sorry. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 4
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "new_contact": True
+        }
+    
+    @staticmethod
+    def _study_group_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for being invited to a study group"""
+        DialogueEngine.display_narration(f"You notice {npc_name} studying alone in the {location}")
+        
+        DialogueEngine.display_dialogue(npc_name, "This math homework is impossible! I've been stuck on this problem for an hour.", Fore.CYAN)
+        
+        player_responses = [
+            "Need some help? I'm pretty good at math.",
+            "Maybe try asking the teacher tomorrow?",
+            "Math can be really frustrating sometimes."
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        if choice == 0:
+            DialogueEngine.display_dialogue(npc_name, "Really? That would be amazing! Want to study together?", Fore.CYAN)
+            DialogueEngine.display_narration("You spend some time helping with the math problems")
+            relationship_change = 8
+            academic_bonus = True
+        elif choice == 1:
+            DialogueEngine.display_dialogue(npc_name, "Yeah, you're probably right. Thanks for the suggestion.", Fore.CYAN)
+            relationship_change = 2
+            academic_bonus = False
+        else:
+            DialogueEngine.display_dialogue(npc_name, "Tell me about it! At least I'm not the only one who struggles with it.", Fore.CYAN)
+            relationship_change = 3
+            academic_bonus = False
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "academic_bonus": academic_bonus,
+            "new_contact": True
+        }
+    
+    @staticmethod
+    def _cafeteria_encounter_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for meeting someone in the cafeteria"""
+        DialogueEngine.display_narration(f"You're looking for a place to sit when you notice {npc_name} eating alone")
+        
+        DialogueEngine.display_dialogue(npc_name, "Oh, this place is so crowded today...", Fore.CYAN)
+        
+        player_responses = [
+            "Mind if I sit here? Everywhere else is full.",
+            "Yeah, it's always busy during lunch.",
+            "I could sit somewhere else if you prefer to be alone."
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        if choice == 0:
+            DialogueEngine.display_dialogue(npc_name, f"Of course! I'd love the company. I'm {npc_name}.", Fore.CYAN)
+            DialogueEngine.display_narration("You share lunch together and have an enjoyable conversation")
+            relationship_change = 6
+        elif choice == 1:
+            DialogueEngine.display_dialogue(npc_name, f"Tell me about it! By the way, I'm {npc_name}. Want to sit together?", Fore.CYAN)
+            relationship_change = 4
+        else:
+            DialogueEngine.display_dialogue(npc_name, f"No, please join me! I was just commenting on the crowd. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 5
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "new_contact": True
+        }
+    
+    @staticmethod
+    def _library_meeting_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for a quiet library encounter"""
+        DialogueEngine.display_narration(f"You're browsing books when you accidentally knock one off the shelf, catching {npc_name}'s attention")
+        
+        DialogueEngine.display_dialogue(npc_name, "*whispers* Need help finding something?", Fore.CYAN)
+        
+        player_responses = [
+            "*whispers back* Actually, yes. I'm looking for books on Japanese history.",
+            "*whispers* No thanks, just browsing randomly.",
+            "*whispers* Sorry for the noise. I'm a bit clumsy today."
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        if choice == 0:
+            DialogueEngine.display_dialogue(npc_name, f"*whispers* Perfect! I know exactly where those are. I'm {npc_name}, by the way.", Fore.CYAN)
+            DialogueEngine.display_narration("They help you find several excellent books on the topic")
+            relationship_change = 7
+            academic_bonus = True
+        elif choice == 1:
+            DialogueEngine.display_dialogue(npc_name, f"*whispers* Sometimes that's the best way to discover new things. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 3
+            academic_bonus = False
+        else:
+            DialogueEngine.display_dialogue(npc_name, f"*whispers* Don't worry about it! The library can be intimidating. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 4
+            academic_bonus = False
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "academic_bonus": academic_bonus,
+            "new_contact": True
+        }
+    
+    @staticmethod
+    def _club_invitation_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for being invited to join a club"""
+        clubs = ["Drama Club", "Science Club", "Art Club", "Music Club", "Sports Club", "Literature Club"]
+        club = random.choice(clubs)
+        
+        DialogueEngine.display_narration(f"You see {npc_name} putting up posters for the {club}")
+        
+        DialogueEngine.display_dialogue(npc_name, f"Hey! You look like someone who might be interested in joining the {club}!", Fore.CYAN)
+        
+        player_responses = [
+            "That sounds interesting! Tell me more about it.",
+            "I'm not really sure if that's my thing.",
+            "I'm already pretty busy with other commitments."
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        if choice == 0:
+            DialogueEngine.display_dialogue(npc_name, f"Fantastic! We meet every Tuesday and Thursday. I'm {npc_name}, the club president!", Fore.CYAN)
+            DialogueEngine.display_narration(f"You've been invited to join the {club}")
+            relationship_change = 10
+            club_invitation = club
+        elif choice == 1:
+            DialogueEngine.display_dialogue(npc_name, f"That's okay! Maybe you could just check us out sometime? I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 3
+            club_invitation = None
+        else:
+            DialogueEngine.display_dialogue(npc_name, f"I understand completely! If you ever have time, we'd love to have you. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 2
+            club_invitation = None
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "club_invitation": club_invitation,
+            "new_contact": True
+        }
+    
+    @staticmethod
+    def _help_request_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for someone asking for help"""
+        help_types = [
+            {"task": "carrying heavy books", "difficulty": "easy"},
+            {"task": "understanding math homework", "difficulty": "medium"},
+            {"task": "preparing for a presentation", "difficulty": "hard"},
+            {"task": "finding a lost item", "difficulty": "easy"},
+            {"task": "resolving a conflict with friends", "difficulty": "hard"}
+        ]
+        
+        help_request = random.choice(help_types)
+        
+        DialogueEngine.display_narration(f"You notice {npc_name} looking stressed and overwhelmed")
+        
+        DialogueEngine.display_dialogue(npc_name, f"Ugh, I really need help with {help_request['task']}. This is so frustrating!", Fore.CYAN)
+        
+        player_responses = [
+            "I'd be happy to help! What do you need?",
+            "That does sound frustrating. What's going on?",
+            "Maybe ask a teacher or counselor for help?"
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        if choice == 0:
+            DialogueEngine.display_dialogue(npc_name, f"Really? You're amazing! I'm {npc_name}. Thank you so much!", Fore.CYAN)
+            DialogueEngine.display_narration(f"You spend time helping {npc_name} with {help_request['task']}")
+            relationship_change = 12
+            karma_bonus = True
+        elif choice == 1:
+            DialogueEngine.display_dialogue(npc_name, f"Thanks for listening. Sometimes it helps just to talk about it. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 5
+            karma_bonus = False
+        else:
+            DialogueEngine.display_dialogue(npc_name, f"You're probably right. Thanks for the advice. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 2
+            karma_bonus = False
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "karma_bonus": karma_bonus,
+            "help_type": help_request['task'],
+            "new_contact": True
+        }
+    
+    @staticmethod
+    def _rumor_spread_cutscene(location: str, npc_name: str) -> Dict[str, Any]:
+        """Cutscene for encountering rumors or gossip"""
+        rumors = [
+            "there's going to be a surprise test next week",
+            "the school festival theme has been changed",
+            "two popular students are secretly dating",
+            "a famous alumni is visiting next month",
+            "the cafeteria is adding new menu items"
+        ]
+        
+        rumor = random.choice(rumors)
+        
+        DialogueEngine.display_narration(f"You overhear {npc_name} talking excitedly to a group of students")
+        
+        DialogueEngine.display_dialogue(npc_name, f"Did you hear that {rumor}? I heard it from a reliable source!", Fore.CYAN)
+        
+        player_responses = [
+            "Really? That's interesting news!",
+            "Are you sure that's true? Sounds like a rumor.",
+            "I don't really pay attention to gossip."
+        ]
+        
+        choice = DialogueEngine.get_player_response(player_responses)
+        DialogueEngine.display_dialogue("You", player_responses[choice], Fore.GREEN)
+        
+        if choice == 0:
+            DialogueEngine.display_dialogue(npc_name, f"Right? I'm {npc_name}. Want to know what else I heard?", Fore.CYAN)
+            relationship_change = 4
+            reputation_effect = "gossip_positive"
+        elif choice == 1:
+            DialogueEngine.display_dialogue(npc_name, f"Well, maybe... but it's still interesting! I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 1
+            reputation_effect = "skeptical"
+        else:
+            DialogueEngine.display_dialogue(npc_name, f"Fair enough. You seem more mature than most. I'm {npc_name}.", Fore.CYAN)
+            relationship_change = 6
+            reputation_effect = "mature"
+        
+        return {
+            "success": True,
+            "npc_name": npc_name,
+            "relationship_change": relationship_change,
+            "reputation_effect": reputation_effect,
+            "rumor_content": rumor,
+            "new_contact": True
+        }
+
+# Enhanced Background Variety System
+class BackgroundGenerator:
+    """Generates varied and dynamic background scenarios"""
+    
+    @staticmethod
+    def generate_daily_scenario() -> Dict[str, Any]:
+        """Generate a varied daily background scenario"""
+        scenarios = [
+            {
+                "weather": "sunny",
+                "mood": "energetic",
+                "campus_event": "Spring Festival preparations are underway",
+                "special_effects": {"energy": 5, "mood": 10},
+                "description": "The sun is shining brightly, and there's excitement in the air as students prepare decorations for the upcoming Spring Festival."
+            },
+            {
+                "weather": "rainy",
+                "mood": "contemplative", 
+                "campus_event": "Students are gathering in indoor spaces",
+                "special_effects": {"stress": -5, "study_bonus": 5},
+                "description": "Light rain patters against the windows, creating a cozy atmosphere perfect for studying and quiet conversations."
+            },
+            {
+                "weather": "cloudy",
+                "mood": "focused",
+                "campus_event": "Midterm exam period",
+                "special_effects": {"academic_pressure": 10, "study_effectiveness": 15},
+                "description": "Grey clouds hang overhead, matching the serious atmosphere as students buckle down for their upcoming midterm exams."
+            },
+            {
+                "weather": "windy",
+                "mood": "playful",
+                "campus_event": "Club recruitment week",
+                "special_effects": {"social_opportunities": 20},
+                "description": "A strong breeze carries flyers and laughter across the campus as various clubs set up recruitment booths."
+            },
+            {
+                "weather": "clear",
+                "mood": "romantic",
+                "campus_event": "Couples are seen walking together",
+                "special_effects": {"romance_chances": 15, "mood": 5},
+                "description": "The clear, starlit evening creates a romantic atmosphere as couples stroll through the beautifully lit campus paths."
+            }
+        ]
+        
+        return random.choice(scenarios)
+    
+    @staticmethod
+    def generate_location_atmosphere(location: str) -> str:
+        """Generate atmospheric description for a specific location"""
+        atmospheres = {
+            "Classroom": [
+                "Sunlight streams through the windows, illuminating dust motes dancing in the air.",
+                "The classroom buzzes with quiet chatter as students discuss the day's lessons.",
+                "A few dedicated students remain behind, reviewing their notes from today's lecture.",
+                "The scent of chalk and paper fills the air as the afternoon light fades.",
+                "Students are engaged in animated discussions about the upcoming group project."
+            ],
+            "Library": [
+                "The soft rustle of turning pages creates a peaceful ambiance.",
+                "Afternoon light filters through tall windows, creating perfect reading spots.",
+                "Students whisper quietly as they collaborate on research projects.",
+                "The librarian maintains a watchful but kind presence over the studious atmosphere.",
+                "Hidden alcoves provide intimate spaces for serious studying or quiet conversations."
+            ],
+            "Cafeteria": [
+                "The delicious aroma of today's special lunch fills the bustling space.",
+                "Students laugh and chat animatedly over their meals.",
+                "Long tables are filled with diverse groups sharing food and stories.",
+                "The lunch line moves steadily as students make their meal selections.",
+                "A few students sit alone, quietly enjoying their food while reading or listening to music."
+            ],
+            "School Hallway": [
+                "Footsteps echo through the corridor as students change classes.",
+                "Colorful posters and announcements line the walls, advertising various school events.",
+                "Lockers slam shut as students grab their books for the next period.",
+                "Small groups gather near windows, taking advantage of the natural light for quick conversations.",
+                "The hallway gradually empties as the bell rings, leaving behind only a few stragglers."
+            ],
+            "Gym": [
+                "The sound of sneakers squeaking on polished floors echoes through the space.",
+                "Students are engaged in various physical activities, from basketball to yoga.",
+                "The gymnasium smells of effort and determination as teams practice their routines.",
+                "Motivational posters line the walls, inspiring students to push their limits.",
+                "Equipment is neatly organized, ready for the next group of eager athletes."
+            ],
+            "Dorm Room": [
+                "Personal belongings create a cozy, lived-in atmosphere unique to each resident.",
+                "Soft lighting from desk lamps creates perfect conditions for evening study sessions.",
+                "The room reflects the personality of its occupant through decorations and organization.",
+                "A comfortable bed beckons after a long day of classes and activities.",
+                "The window offers a peaceful view of the campus, perfect for moments of reflection."
+            ]
+        }
+        
+        if location in atmospheres:
+            return random.choice(atmospheres[location])
+        else:
+            return f"The {location} has its own unique atmosphere that changes throughout the day."
+
+# Enhanced Narrative Command Functions
+def look_around_command() -> None:
+    """Command to get detailed atmospheric description of current location"""
+    current_location = player["current_location"]
+    atmosphere = BackgroundGenerator.generate_location_atmosphere(current_location)
+    
+    slow_print(f"\n{Fore.CYAN}=== Looking Around: {current_location} ==={Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}{atmosphere}{Style.RESET_ALL}")
+    
+    # Check for potential interactions in the area
+    if random.random() < 0.25:
+        interaction_hints = {
+            "Classroom": ["You notice a study group forming in the corner", "Someone dropped their notes nearby", "A student looks confused about the homework"],
+            "Library": ["You spot someone struggling to reach a high shelf", "A group is quietly discussing a research project", "Someone appears to need help finding books"],
+            "Cafeteria": ["You see an empty seat at a table with friendly students", "Someone is eating alone and looks approachable", "A student is having trouble with the vending machine"],
+            "School Hallway": ["Club members are putting up recruitment posters", "Students are chatting excitedly about school events", "Someone looks lost trying to find their classroom"],
+            "Gym": ["A pickup basketball game is forming", "Someone is stretching alone before their workout", "Students are discussing fitness goals"],
+            "Dorm Room": ["Your roommate might want to chat", "You could organize your belongings", "This would be a good time for some personal reflection"]
+        }
+        
+        if current_location in interaction_hints:
+            hint = random.choice(interaction_hints[current_location])
+            slow_print(f"\n{Fore.YELLOW}[{hint}. Use /mingle to approach someone]{Style.RESET_ALL}")
+
+def mingle_command(args: List[str]) -> None:
+    """Command to actively seek out social interactions and trigger cutscenes"""
+    current_location = player["current_location"]
+    
+    if not current_location:
+        print(f"{Fore.RED}You need to be in a specific location to mingle with people.{Style.RESET_ALL}")
+        return
+    
+    slow_print(f"\n{Fore.CYAN}You look around the {current_location} for someone interesting to talk to...{Style.RESET_ALL}")
+    
+    # Higher chance of encountering someone when actively mingling
+    encounter_types = ["first_meeting", "study_group", "help_request", "rumor_spread"]
+    
+    # Location-specific encounters with higher variety
+    if current_location == "Cafeteria":
+        encounter_types.extend(["cafeteria_encounter", "cafeteria_encounter"])  # Higher weight
+    elif current_location == "Library":
+        encounter_types.extend(["library_meeting", "study_group"])
+    elif current_location in ["School Hallway", "Classroom"]:
+        encounter_types.extend(["club_invitation", "hallway_bump"])
+    elif current_location == "Gym":
+        encounter_types.extend(["help_request", "first_meeting"])
+    
+    encounter_type = random.choice(encounter_types)
+    cutscene_result = CutsceneManager.play_encounter_cutscene(encounter_type, current_location)
+    
+    if cutscene_result["success"]:
+        npc_name = cutscene_result["npc_name"]
+        relationship_change = cutscene_result["relationship_change"]
+        
+        # Apply relationship changes
+        if npc_name not in relationship:
+            relationship[npc_name] = 50  # Start with neutral relationship
+        
+        relationship[npc_name] = max(0, min(100, relationship[npc_name] + relationship_change))
+        
+        # Apply special effects based on encounter type
+        if cutscene_result.get("academic_bonus"):
+            player["charisma"]["academic"] += 3
+            slow_print(f"{Fore.GREEN}Your academic reputation has improved through this interaction!{Style.RESET_ALL}")
+        
+        if cutscene_result.get("karma_bonus"):
+            player["charisma"]["social"] += 4
+            slow_print(f"{Fore.GREEN}Your reputation for being helpful has grown!{Style.RESET_ALL}")
+        
+        if cutscene_result.get("club_invitation"):
+            club_name = cutscene_result["club_invitation"]
+            slow_print(f"{Fore.MAGENTA}You've been invited to join the {club_name}!{Style.RESET_ALL}")
+            slow_print(f"{Fore.CYAN}Use /join_club {club_name.replace(' ', '_')} to accept the invitation.{Style.RESET_ALL}")
+        
+        # Small energy cost for active social interaction
+        player["energy"] = max(0, player["energy"] - 1)
+        player["social_points"] = player.get("social_points", 0) + 2
+        
+    else:
+        slow_print(f"{Fore.YELLOW}You don't notice anyone particularly interesting right now. Try again later or move to a different location.{Style.RESET_ALL}")
+
+def show_daily_scenario() -> None:
+    """Show the current day's background scenario and atmosphere"""
+    scenario = BackgroundGenerator.generate_daily_scenario()
+    
+    slow_print(f"\n{Fore.CYAN}=== Today's Campus Atmosphere ==={Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}{scenario['description']}{Style.RESET_ALL}")
+    slow_print(f"\n{Fore.YELLOW}Weather:{Style.RESET_ALL} {scenario['weather'].capitalize()}")
+    slow_print(f"{Fore.YELLOW}Campus Mood:{Style.RESET_ALL} {scenario['mood'].capitalize()}")
+    slow_print(f"{Fore.YELLOW}Special Event:{Style.RESET_ALL} {scenario['campus_event']}")
+    
+    # Show effects on gameplay
+    if scenario.get("special_effects"):
+        slow_print(f"\n{Fore.GREEN}Campus Effects:{Style.RESET_ALL}")
+        for effect, value in scenario["special_effects"].items():
+            effect_name = effect.replace("_", " ").title()
+            modifier = "+" if value > 0 else ""
+            slow_print(f"  • {effect_name}: {modifier}{value}")
+    
+    # Apply temporary effects based on scenario (lasting for current day)
+    if scenario["weather"] == "rainy" and player.get("current_location") in ["Library", "Classroom", "Dorm Room"]:
+        slow_print(f"\n{Fore.BLUE}The rainy weather makes indoor locations feel extra cozy for studying.{Style.RESET_ALL}")
+    elif scenario["weather"] == "sunny" and player.get("current_location") in ["School Hallway", "Cafeteria"]:
+        slow_print(f"\n{Fore.YELLOW}The bright sunshine energizes everyone around campus.{Style.RESET_ALL}")
+    elif scenario["mood"] == "romantic" and random.random() < 0.3:
+        slow_print(f"\n{Fore.MAGENTA}The romantic atmosphere might create some interesting social opportunities today...{Style.RESET_ALL}")
 
 # Character Name Lists
 name_data = {
@@ -256,7 +862,7 @@ def content_settings_menu() -> Any:
             print("Invalid choice. Please enter a number between 1 and 6.")
 
 
-def toggle_setting(setting_name: Any, options: Any) -> Any:
+def toggle_setting(setting_name: Any, options) -> Any:
     # No need for global statement since we're only modifying dictionary values
     current_index = options.index(game_settings[setting_name])
     next_index = (current_index + 1) % len(options)
@@ -266,6 +872,8 @@ def toggle_setting(setting_name: Any, options: Any) -> Any:
             setting_name.capitalize(), game_settings[setting_name].capitalize()
         )
     )
+
+# Function moved to avoid duplication - see line 14794 for implementation
 
 
 def save_settings() -> Any:
@@ -308,7 +916,7 @@ def reset_settings() -> Any:
 load_settings()
 
 # Tutorial system
-def show_tutorial(topic: Any, force: bool = False) -> None:
+def show_tutorial(topic: Any, force: bool = False) -> Any:
     """
     Display tutorial messages to help new players
     Only shows if tutorial setting is enabled
@@ -347,7 +955,7 @@ def show_tutorial(topic: Any, force: bool = False) -> None:
 
 
 # Helper functions for content filtering
-def is_content_allowed(content_type: Any) -> bool:
+def is_content_allowed(content_type) -> bool:
     """
     Check if specific content type is allowed in the game settings
     """
@@ -456,7 +1064,7 @@ def filter_text(text: Any, content_types: Optional[Any] = None) -> Any:
     return text
 
 
-def check_relationship_compatibility(person1: Any, person2: Any) -> bool:
+def check_relationship_compatibility(person1: Any, person2) -> bool:
     """
     Check if a relationship is allowed based on settings
 
@@ -1097,7 +1705,7 @@ CHANGING_LOCATIONS = [
 ]
 
 # Change clothing function
-def change_clothing(new_clothing_name: Any) -> Any:
+def change_clothing(new_clothing_name) -> Any:
     """
     Change the player's current clothing
 
@@ -1146,7 +1754,7 @@ def change_clothing(new_clothing_name: Any) -> Any:
 
 
 # Function to check if clothing is appropriate for the current location/situation
-def is_clothing_appropriate(clothing_name: Any, location: Any, is_school_day: bool = True, is_festival: bool = False) -> bool:
+def is_clothing_appropriate(clothing_name: Any, location: Any, is_school_day: bool = True, is_festival: bool = False) -> Tuple[bool, str]:
     """
     Check if the current clothing is appropriate for the location and time
 
@@ -2422,7 +3030,7 @@ def build_support_network() -> Any:
     return mental_health["support_network"]
 
 
-def process_bullying_event(severity: Any) -> Any:
+def process_bullying_event(severity) -> Any:
     """Process a bullying event and its effects on mental health"""
     mental_health = player["mental_health"]
     mental_health["bullying_incidents"] += 1
@@ -2778,7 +3386,7 @@ assign_random_roommate()
 player["current_location"] = "Student Room 364"
 
 
-def improve_relationship(name: Any, points: Any) -> Any:
+def improve_relationship(name: Any, points) -> Any:
     # No need for global since we're just modifying a dictionary, not reassigning it
     if name not in relationship:
         relationship[name] = 0
@@ -2843,7 +3451,7 @@ def random_friendship_event() -> Any:
                 player["charisma"]["social"] += 2
 
 
-def eat_food(food_name: Any) -> Any:
+def eat_food(food_name) -> Any:
     if food_name not in cafeteria_menu:
         print("That food is not available.")
         return
@@ -2865,7 +3473,7 @@ def eat_food(food_name: Any) -> Any:
 
 
 # Add /eat command handler
-def eat_command(args: Any) -> Any:
+def eat_command(args) -> Any:
     if not args:
         print("Usage: /eat [food item]")
         print("Available food items:")
@@ -3008,7 +3616,7 @@ all_subjects = {
 }
 
 # Current active subjects based on player's year
-def get_subjects_for_year(year: Any) -> Any:
+def get_subjects_for_year(year) -> Any:
     """Get a dictionary of subjects with properties for a specific school year"""
     year_subjects = {}
     for subject_name, subject_data in all_subjects.items():
@@ -3915,8 +4523,8 @@ def is_weekend() -> bool:
 def check_weekend_activities() -> bool:
     """Check for special weekend activities"""
     if not is_weekend():
-        return
-
+        return False
+    
     # Weekend activities based on location
     current_location = player["current_location"]
 
@@ -3945,13 +4553,18 @@ def check_weekend_activities() -> bool:
     # Random weekend events
     if current_location in weekend_locations:
         handle_weekend_location(current_location)
+        return True
     elif current_location == "Dorm Room" or current_location == "Bedroom":
         weekend_rest_options()
+        return True
     elif current_location == "Library":
         weekend_study_session()
+        return True
+    
+    return False
 
 
-def handle_weekend_location(location: Any) -> Any:
+def handle_weekend_location(location) -> Any:
     """Handle special weekend locations"""
     global ticks
     if location == "Movie Theater":
@@ -6744,7 +7357,7 @@ def check_curfew() -> bool:
 
     # Only applies to players living at home
     if player["accommodation_type"] != "home":
-        return
+        return False
 
     # Get current time
     current_hour = (ticks // 10) % 24
@@ -7033,11 +7646,15 @@ def choose_new_electives() -> Any:
     # Get available electives for the current year
     available_electives = []
     # Get the subjects for the current school year
-    all_subjects = get_subjects_for_year(player["school_year"])
-
-    for subject_name, subject_data in all_subjects.items():
-        if not subject_data["core"]:
-            available_electives.append(subject_name)
+    try:
+        all_subjects = get_subjects_for_year(player["school_year"])
+        
+        for subject_name, subject_data in all_subjects.items():
+            if not subject_data.get("core", True):
+                available_electives.append(subject_name)
+    except Exception:
+        # Fallback to default electives if function fails
+        available_electives = ["Music", "Computer Science", "Economics", "PE", "Art", "Drama"]
 
     if not available_electives:
         return
@@ -7057,41 +7674,54 @@ def choose_new_electives() -> Any:
     chosen_electives = []
     num_to_choose = min(2, len(available_electives))
 
-    while len(chosen_electives) < num_to_choose:
-        try:
-            choice = int(
-                input(
+    # Check if we're in non-interactive mode
+    if _non_interactive:
+        # Auto-select random electives for non-interactive mode
+        chosen_electives = random.sample(available_electives, num_to_choose)
+        slow_print(f"\n{Fore.YELLOW}Auto-selecting electives for non-interactive mode: {', '.join(chosen_electives)}{Style.RESET_ALL}")
+    else:
+        while len(chosen_electives) < num_to_choose:
+            try:
+                choice_input = input(
                     f"{Fore.CYAN}Select elective {len(chosen_electives)+1}/{num_to_choose} (enter number): {Style.RESET_ALL}"
                 )
-            )
-            if 1 <= choice <= len(available_electives):
-                elective = available_electives[choice - 1]
-                if elective not in chosen_electives:
-                    chosen_electives.append(elective)
-                    slow_print(f"You selected {elective}")
+                choice = int(choice_input)
+                if 1 <= choice <= len(available_electives):
+                    elective = available_electives[choice - 1]
+                    if elective not in chosen_electives:
+                        chosen_electives.append(elective)
+                        slow_print(f"You selected {elective}")
+                    else:
+                        slow_print("You've already selected that elective.")
                 else:
-                    slow_print("You've already selected that elective.")
-            else:
-                slow_print("Invalid choice. Please enter a valid number.")
-        except ValueError:
-            slow_print("Please enter a number.")
-        except EOFError:
-            slow_print(
-                f"{Fore.RED}Input error encountered. Skipping selection.{Style.RESET_ALL}"
-            )
-            # Add a random elective if none selected due to error
-            if not chosen_electives and available_electives:
-                random_elective = random.choice(available_electives)
-                chosen_electives.append(random_elective)
+                    slow_print("Invalid choice. Please enter a valid number.")
+            except ValueError:
+                slow_print("Please enter a number.")
+            except EOFError:
                 slow_print(
-                    f"Automatically selected {random_elective} due to input error."
+                    f"{Fore.RED}Input error encountered. Auto-selecting remaining electives.{Style.RESET_ALL}"
                 )
-            break
-        except Exception as e:
-            slow_print(
-                f"{Fore.RED}Error: {str(e)}. Skipping selection.{Style.RESET_ALL}"
-            )
-            break
+                # Add random electives if none selected due to error
+                remaining_electives = [e for e in available_electives if e not in chosen_electives]
+                needed = num_to_choose - len(chosen_electives)
+                if remaining_electives and needed > 0:
+                    auto_selected = random.sample(remaining_electives, min(needed, len(remaining_electives)))
+                    chosen_electives.extend(auto_selected)
+                    slow_print(
+                        f"Automatically selected {', '.join(auto_selected)} due to input error."
+                    )
+                break
+            except Exception as e:
+                slow_print(
+                    f"{Fore.RED}Error: {str(e)}. Auto-selecting remaining electives.{Style.RESET_ALL}"
+                )
+                # Add random electives if error occurs
+                remaining_electives = [e for e in available_electives if e not in chosen_electives]
+                needed = num_to_choose - len(chosen_electives)
+                if remaining_electives and needed > 0:
+                    auto_selected = random.sample(remaining_electives, min(needed, len(remaining_electives)))
+                    chosen_electives.extend(auto_selected)
+                break
 
     player["electives"] = chosen_electives
     slow_print(
@@ -8193,7 +8823,7 @@ def show_me() -> None:
             print(f"  {subject}: {status}")
 
 
-def work_part_time(job_name: Any) -> Any:
+def work_part_time(job_name) -> Any:
     global ticks
     if job_name in jobs:
         job = jobs[job_name]
@@ -8479,12 +9109,20 @@ def setup_game(non_interactive: bool = False) -> Any:
 
     slow_print(f"{Fore.CYAN}Welcome to {Fore.WHITE}{TITLE}{Fore.CYAN}!{Style.RESET_ALL}")
 
-    # Check if we're in non-interactive mode
-    if non_interactive:
+    # Check if we're in non-interactive mode or need to switch to it
+    if non_interactive or _non_interactive:
         # Default values for non-interactive environments (like Replit)
         player["name"] = "Student"
         player["gender"] = "M"
+        # Set default accommodation and electives for non-interactive mode
+        player["accommodation_type"] = "dorm"
+        player["dorm_number"] = random.randint(100, 999)
+        player["electives"] = ["Music", "Computer Science"]  # Default electives
+        player["current_location"] = "Dorm Room"
         print(f"\n{Fore.YELLOW}Using default values for non-interactive environment.{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Auto-selected: Dormitory (Room {player['dorm_number']}) and electives: {', '.join(player['electives'])}{Style.RESET_ALL}")
+        # Force non-interactive mode for the rest of the setup
+        _non_interactive = True
     else:
         try:
             player["name"] = input(f"{Fore.YELLOW}Enter your name: {Style.RESET_ALL}")
@@ -8494,15 +9132,19 @@ def setup_game(non_interactive: bool = False) -> Any:
                     player["gender"] = gender
                     break
                 print(f"{Fore.RED}Please enter M or F.{Style.RESET_ALL}")
-        except EOFError:
+        except (EOFError, KeyboardInterrupt):
             # Fall back to default values if we hit an EOF error
             player["name"] = "Student"
             player["gender"] = "M"
-            print(f"\n{Fore.YELLOW}Using default values due to input limitations.{Style.RESET_ALL}")
+            print(f"\n{Fore.YELLOW}Switching to non-interactive mode due to input limitations.{Style.RESET_ALL}")
+            # Set flag to continue with default character creation
+            _non_interactive = True
         except Exception as e:
-            print(f"\n{Fore.RED}Error during setup: {e}{Style.RESET_ALL}")
+            print(f"\n{Fore.RED}Error during setup: {e}. Switching to non-interactive mode.{Style.RESET_ALL}")
             player["name"] = "Student"
             player["gender"] = "M"
+            # Set flag to continue with default character creation
+            _non_interactive = True
 
     # List of available player traits
 PLAYER_TRAITS = {
@@ -8879,14 +9521,20 @@ def reset_player() -> Any:
         print(f"{Fore.CYAN}1. Student Dormitory{Style.RESET_ALL}")
         print(f"{Fore.GREEN}2. Live at Home{Style.RESET_ALL}")
 
-        while True:
+        choice = None
+        max_attempts = 3
+        attempts = 0
+        
+        while choice not in ["1", "2"] and attempts < max_attempts:
             try:
-                choice = input(f"\n{Fore.WHITE}{Style.BRIGHT}Select an option (1-2): {Style.RESET_ALL}")
+                choice = input(f"\n{Fore.WHITE}{Style.BRIGHT}Select an option (1-2): {Style.RESET_ALL}").strip()
                 if choice in ["1", "2"]:
                     break
-                print(f"{Fore.RED}Please select a valid option (1 or 2).{Style.RESET_ALL}")
-            except EOFError:
-                # Default to option 1 (dorm) if we get an EOF error
+                else:
+                    print(f"{Fore.RED}Please select a valid option (1 or 2).{Style.RESET_ALL}")
+                    attempts += 1
+            except (EOFError, KeyboardInterrupt):
+                # Default to option 1 (dorm) if we get an EOF error or keyboard interrupt
                 choice = "1"
                 print(f"\n{Fore.YELLOW}Auto-selecting dormitory due to input limitations.{Style.RESET_ALL}")
                 break
@@ -8894,6 +9542,11 @@ def reset_player() -> Any:
                 print(f"\n{Fore.RED}Error during selection: {e}. Defaulting to dormitory.{Style.RESET_ALL}")
                 choice = "1"
                 break
+        
+        # If we've reached max attempts without valid input, default to dorm
+        if choice not in ["1", "2"]:
+            choice = "1"
+            print(f"\n{Fore.YELLOW}Too many invalid attempts. Auto-selecting dormitory.{Style.RESET_ALL}")
 
     if choice == "1":
         player["accommodation_type"] = "dorm"
@@ -9635,11 +10288,16 @@ def show_help() -> None:
 /jobs               - List available jobs
 /eat [food_name]    - Eat food at the cafeteria
 /relax              - Reduce stress by relaxing
+
+{2}Narrative Enhancement Commands:{1}
+/look_around        - Get detailed atmospheric description of your current location
+/mingle             - Actively seek out social interactions and trigger cutscenes
+/scenario           - View today's campus atmosphere and background events
 """
     print(help_text.format(Fore.CYAN, Style.RESET_ALL, Fore.YELLOW))
 
 
-def go_location(args: Any) -> Any:
+def go_location(args) -> Any:
     if not args:
         print(f"\n{Fore.CYAN}Available Locations:{Style.RESET_ALL}")
         for loc in locations:
@@ -9735,11 +10393,51 @@ def go_location(args: Any) -> Any:
                         0, player["reputation"]["teachers"] - 2
                     )
 
-        # Move to the location
-        slow_print(f"You walk to the {destination_match}.")
+        # Generate and display atmospheric description
+        atmosphere = BackgroundGenerator.generate_location_atmosphere(destination_match)
+        slow_print(f"\n{Fore.YELLOW}[You arrive at the {destination_match}]{Style.RESET_ALL}")
+        slow_print(f"{Fore.WHITE}{atmosphere}{Style.RESET_ALL}")
 
         # Update player location
         player["current_location"] = destination_match
+
+        # Check for dynamic cutscene encounters (15% chance)
+        if random.random() < 0.15:
+            encounter_types = ["first_meeting", "hallway_bump", "study_group", "help_request"]
+            
+            # Location-specific encounters
+            if destination_match == "Cafeteria":
+                encounter_types.append("cafeteria_encounter")
+            elif destination_match == "Library":
+                encounter_types.append("library_meeting")
+            elif destination_match in ["School Hallway", "Classroom"]:
+                encounter_types.extend(["club_invitation", "rumor_spread"])
+            
+            encounter_type = random.choice(encounter_types)
+            cutscene_result = CutsceneManager.play_encounter_cutscene(encounter_type, destination_match)
+            
+            if cutscene_result["success"]:
+                npc_name = cutscene_result["npc_name"]
+                relationship_change = cutscene_result["relationship_change"]
+                
+                # Apply relationship changes
+                if npc_name not in relationship:
+                    relationship[npc_name] = 50  # Start with neutral relationship
+                
+                relationship[npc_name] = max(0, min(100, relationship[npc_name] + relationship_change))
+                
+                # Apply special effects based on encounter type
+                if cutscene_result.get("academic_bonus"):
+                    player["charisma"]["academic"] += 2
+                    slow_print(f"{Fore.GREEN}Your academic reputation has improved!{Style.RESET_ALL}")
+                
+                if cutscene_result.get("karma_bonus"):
+                    player["charisma"]["social"] += 3
+                    slow_print(f"{Fore.GREEN}Your helpfulness has been noticed!{Style.RESET_ALL}")
+                
+                if cutscene_result.get("club_invitation"):
+                    club_name = cutscene_result["club_invitation"]
+                    slow_print(f"{Fore.MAGENTA}You've been invited to join the {club_name}!{Style.RESET_ALL}")
 
         # Check for strange occurrences
         check_for_strange_occurrences()
@@ -10662,14 +11360,14 @@ def analyze_student_response(student: Any, target: Optional[Any] = None) -> Any:
     return base_response
 
 
-def get_relationship_status(points: Any) -> Any:
+def get_relationship_status(points) -> Any:
     for threshold, status in sorted(RELATIONSHIP_LEVELS.items(), reverse=True):
         if points >= threshold:
             return status
     return "Stranger"
 
 
-def interact_student(args: Any) -> Any:
+def interact_student(args) -> Any:
     if not args:
         print("Usage: /interact [student name]")
         return
@@ -11529,7 +12227,7 @@ def show_relationship() -> None:
             print(f"{student['name']} ({student['gender']}) - Points: {points}")
 
 
-def study_subject(args: Any) -> Any:
+def study_subject(args) -> Any:
     if not args:
         print("Usage: /study [subject]")
         return
@@ -11721,7 +12419,7 @@ def show_full_student_list() -> None:
         else:
             print("Invalid choice. Please enter a number between 1 and 5.")
 
-def show_npc_list(args: Any) -> None:
+def show_npc_list(args) -> None:
     """Display NPCs filtered by tag"""
     # Check if we have already generated the full student list
     if "full_student_list" not in player:
@@ -11887,7 +12585,7 @@ def show_quests() -> None:
         print(f"{quest['description']} - {quest['objective']} ({status})")
 
 
-def complete_quest(args: Any) -> Any:
+def complete_quest(args) -> Any:
     if not args:
         print("Usage: /complete_quest [quest_id]")
         return
@@ -11908,7 +12606,7 @@ def complete_quest(args: Any) -> Any:
 
 
 # Function to handle club mechanics
-def handle_club_location(club_name: Any) -> Any:
+def handle_club_location(club_name) -> Any:
     """Handle interactions when visiting a club location"""
     if club_name in player["clubs"]:
         # Already a member
@@ -12709,7 +13407,7 @@ def romance_opportunity() -> Any:
 
 # Function to check for special events and festivals
 # Festival minigames function
-def play_festival_minigame(minigame_type: Any) -> Any:
+def play_festival_minigame(minigame_type) -> Any:
     """Play a festival-specific minigame"""
     slow_print(
         "\n{0}=== Festival Minigame: {1} ==={2}".format(
@@ -13411,7 +14109,7 @@ def play_festival_minigame(minigame_type: Any) -> Any:
     return True
 
 
-def interact_ex_partner(ex_partner: Any) -> Any:
+def interact_ex_partner(ex_partner) -> Any:
     """
     Handle interactions with ex-partners, including yandere therapy
 
@@ -14038,7 +14736,7 @@ def check_for_strange_occurrences() -> bool:
     # 15% chance for any occurrence (10% mundane, 5% strange)
     occurrence_roll = random.random()
     if occurrence_roll > 0.15:
-        return
+        return False
     
     # Determine if this should be a mundane or strange occurrence
     is_mundane = occurrence_roll <= 0.10
@@ -14228,6 +14926,8 @@ def check_for_strange_occurrences() -> bool:
                     player["mood"] = min(100, player["mood"] + random.randint(1, 2))
                 elif effect_type == "stress":
                     player["stress"] = max(0, player["stress"] - random.randint(1, 2))
+    
+    return True
 
 def generate_random_rumor(force_type: Optional[Any] = None) -> Any:
     """Generate a random rumor to add to the rumor mill
@@ -15054,7 +15754,7 @@ def check_for_special_events() -> bool:
 def check_club_meetings() -> bool:
     """Check if there are club meetings today"""
     if not player["clubs"]:
-        return  # Not a member of any club
+        return False  # Not a member of any club
 
     current_weekday = current_date.weekday()  # 0 = Monday, 6 = Sunday
 
@@ -15094,6 +15794,8 @@ def check_club_meetings() -> bool:
                 )
 
             update_ranks()
+    
+    return True
 
 
 # Function to check and award achievements
@@ -15133,6 +15835,9 @@ def check_achievements() -> bool:
 
     # Other achievements are handled in their specific contexts
     # (like Club Leader, Romance Blooms, etc.)
+
+    
+    return True
 
 
 # Function to check quest objectives
@@ -15483,7 +16188,7 @@ def get_current_season() -> Any:
         return "winter"
 
 # Apply trait effects to exam performance
-def apply_trait_effects_to_exam(subject: Any, base_score: Any) -> Any:
+def apply_trait_effects_to_exam(subject: Any, base_score) -> Any:
     """
     Apply trait effects to exam performance
 
@@ -15541,7 +16246,7 @@ def apply_trait_effects_to_exam(subject: Any, base_score: Any) -> Any:
 
     return max(0, min(100, modified_score))  # Clamp between 0-100
 
-def add_random_quests(count: int = 1, types: Optional[Any] = None) -> None:
+def add_random_quests(count: int = 1, types: Optional[Any] = None) -> Any:
     """
     Add random quests to the quest log
 
@@ -15572,7 +16277,7 @@ def add_random_quests(count: int = 1, types: Optional[Any] = None) -> None:
 
     return new_quests
 
-def check_quest_objectives(location: Any) -> bool:
+def check_quest_objectives(location) -> bool:
     """Check if being at this location completes any quest objectives"""
     # No need for global declarations here since we're only modifying contents of
     # player, quests, and relationship dictionaries/lists, not reassigning them
@@ -15711,6 +16416,8 @@ def check_quest_objectives(location: Any) -> bool:
                     player["reputation"]["students"] += quest["reward"] // 5
 
                     update_ranks()
+    
+    return True
 
 
 # Function for showing available clubs
@@ -15750,7 +16457,7 @@ def show_clubs() -> None:
 
 
 # Function for joining a club
-def join_club(args: Any) -> Any:
+def join_club(args) -> Any:
     if not args:
         print("Usage: /join_club [club name]")
         return
@@ -15799,7 +16506,7 @@ def join_club(args: Any) -> Any:
 
 
 # Function for leaving a club
-def leave_club(args: Any) -> Any:
+def leave_club(args) -> Any:
     if not args:
         print("Usage: /leave_club [club name]")
         return
@@ -15829,7 +16536,7 @@ def leave_club(args: Any) -> Any:
 
 
 # Function to check romance status
-def switch_active_partner(args: Any) -> Any:
+def switch_active_partner(args) -> Any:
     """Switch your active romantic partner in a harem playthrough
 
     Arguments:
@@ -16025,7 +16732,7 @@ def show_romance() -> None:
 
 
 # Dating System Functions
-def go_on_date(args: Any) -> Any:
+def go_on_date(args) -> Any:
     """
     Take your romantic partner on a date
 
@@ -16135,7 +16842,7 @@ def go_on_date(args: Any) -> Any:
         slow_print("Use '/date' without arguments to see available options.")
 
 
-def process_date(date_name: Any, date_info: Any, partner_name: Any) -> Any:
+def process_date(date_name: Any, date_info: Any, partner_name) -> Any:
     """
     Process a date with romantic partner
 
@@ -16247,7 +16954,7 @@ def process_date(date_name: Any, date_info: Any, partner_name: Any) -> Any:
         player["charisma"]["social"] += 3
 
 
-def date_narratives(date_type: Any, partner_name: Any, personality: Any) -> Any:
+def date_narratives(date_type: Any, partner_name: Any, personality) -> Any:
     """Generate narrative for a date based on date type and partner personality"""
 
     # Common narratives by date type with extended story elements
@@ -16503,9 +17210,11 @@ def date_narratives(date_type: Any, partner_name: Any, personality: Any) -> Any:
                 Fore.CYAN, Style.RESET_ALL
             )
         )
+    
+    return True
 
 
-def check_romance_stage_advancement(partner_name: Any) -> bool:
+def check_romance_stage_advancement(partner_name) -> bool:
     """Check and process romance stage advancement"""
     global player  # Need global declaration to modify player dictionary
     # Check if we can advance to next romance stage
@@ -16617,6 +17326,8 @@ def check_romance_stage_advancement(partner_name: Any) -> bool:
                     )
                     slow_print("Your social charisma has increased significantly!")
                     player["charisma"]["social"] += 8
+    
+    return True
 
 
 # Function to relax and reduce stress
@@ -16943,7 +17654,7 @@ def change_clothes_command(args: Optional[Any] = None) -> Any:
 
 
 # Function for random events based on location
-def random_location_event(location: Any) -> Any:
+def random_location_event(location) -> Any:
     """Trigger random events specific to the current location"""
     # Decide what type of event happens (standard, lost item, or collectible)
     event_roll = random.random()
@@ -16961,7 +17672,7 @@ def random_location_event(location: Any) -> Any:
     else:
         return
 
-def trigger_standard_event(location: Any) -> Any:
+def trigger_standard_event(location) -> Any:
     """Handle original event system"""
     # Generic events for all locations
     generic_events = [
@@ -17053,7 +17764,9 @@ def trigger_standard_event(location: Any) -> Any:
     slow_print(f"\n{Fore.CYAN}Event: {event['description']}{Style.RESET_ALL}")
     event["effect"]()
     
-def check_for_lost_items(location: Any) -> bool:
+    return True
+    
+def check_for_lost_items(location) -> bool:
     """Check if player finds a lost item in current location"""
     # List of possible lost items that can be found in different locations
     lost_items = [
@@ -17146,7 +17859,9 @@ def check_for_lost_items(location: Any) -> bool:
             slow_print(f"You leave the {found_item['item']} where you found it.")
             slow_print("Maybe the owner will come back for it.")
     
-def check_for_collectibles(location: Any) -> bool:
+    return True
+    
+def check_for_collectibles(location) -> bool:
     """Check if player finds a collectible item in the current location"""
     # List of possible collectibles at different locations
     collectibles = [
@@ -17213,7 +17928,7 @@ def check_for_collectibles(location: Any) -> bool:
         # Check if player already has this collectible
         if item_name in player["collectibles"]:
             # Already has it - don't show anything
-            return
+            return False
             
         # Create a dialog for finding the collectible
         slow_print(f"\n{Fore.CYAN}You found a {item_name}!{Style.RESET_ALL}")
@@ -17224,41 +17939,43 @@ def check_for_collectibles(location: Any) -> bool:
         
         # Small mood boost
         player["mood"] = min(100, player["mood"] + random.randint(1, 3))
+    
+    return True
 
 
 # Helper functions for player stats
-def increase_money(amount: Any) -> Any:
+def increase_money(amount) -> Any:
     """Helper function to increase player money"""
     player["money"] += amount
 
 
-def decrease_energy(amount: Any) -> Any:
+def decrease_energy(amount) -> Any:
     """Helper function to decrease player energy"""
     player["energy"] = max(0, player["energy"] - amount)
 
 
-def decrease_stress(amount: Any) -> Any:
+def decrease_stress(amount) -> Any:
     """Helper function to decrease player stress"""
     player["stress"] = max(0, player["stress"] - amount)
 
 
-def increase_stress(amount: Any) -> Any:
+def increase_stress(amount) -> Any:
     """Helper function to increase player stress"""
     player["stress"] = min(100, player["stress"] + amount)
 
 
-def increase_hunger(amount: Any) -> Any:
+def increase_hunger(amount) -> Any:
     """Helper function to increase player hunger"""
     player["hunger"] = min(100, player["hunger"] + amount)
 
 
-def decrease_hunger(amount: Any) -> Any:
+def decrease_hunger(amount) -> Any:
     """Helper function to decrease player hunger"""
     player["hunger"] = max(0, player["hunger"] - amount)
 
 
 # Helper function to increase reputation
-def increase_reputation(category: Any, amount: Any) -> Any:
+def increase_reputation(category: Any, amount) -> Any:
     """Helper function to increase reputation in a category"""
     player["reputation"][category] += amount
     update_ranks()
@@ -17268,7 +17985,7 @@ def increase_reputation(category: Any, amount: Any) -> Any:
 core_subjects = ["Math", "Literature", "English", "Science", "History"]
 
 
-def random_event(location: Any) -> Any:
+def random_event(location) -> Any:
     event_chance = random.randint(
         1, 6
     )  # Increased possibilities with ex-partner events
@@ -17551,7 +18268,7 @@ def random_event(location: Any) -> Any:
     advance_day()
 
 
-def save_game(slot_name: Any) -> Any:
+def save_game(slot_name) -> Any:
     """
     Save the current game state to a file
 
@@ -17587,7 +18304,7 @@ def save_game(slot_name: Any) -> Any:
         slow_print(f"{Fore.RED}Error saving game: {str(e)}{Style.RESET_ALL}")
 
 
-def load_game(slot_name: Any) -> Any:
+def load_game(slot_name) -> Any:
     """
     Load a saved game from a file
 
@@ -17653,7 +18370,7 @@ def list_saves() -> Any:
 
 
 # Main Loop
-def display_save_slots() -> None:
+def display_save_slots() -> bool:
     """Display and manage save slots for the game"""
     # Get only save game files (those starting with save_ and ending with .json)
     saves = [f for f in os.listdir() if f.startswith("save_") and f.endswith(".json")]
@@ -17986,7 +18703,7 @@ student_templates = {
 }
 
 
-def apply_template(template_name: Any) -> Any:
+def apply_template(template_name) -> Any:
     """Apply selected template to the player"""
     global homework
 
@@ -18104,7 +18821,7 @@ def apply_template(template_name: Any) -> Any:
     return True
 
 
-def show_templates() -> None:
+def show_templates() -> bool:
     """Display available student templates"""
     print(f"\n{Fore.CYAN}=== Student Templates ==={Style.RESET_ALL}")
     for name, template in student_templates.items():
@@ -18231,7 +18948,7 @@ def test_color_display() -> Any:
     return show_main_menu()
 
 
-def show_main_menu() -> None:
+def show_main_menu() -> bool:
     print("\n{0}1. New game{1}".format(Fore.YELLOW, Style.RESET_ALL))
     print("{0}2. Continue game{1}".format(Fore.GREEN, Style.RESET_ALL))
     print("{0}3. Settings{1}".format(Fore.CYAN, Style.RESET_ALL))
@@ -18332,6 +19049,12 @@ def main(non_interactive: bool = False) -> Any:
     # Use f-strings for clearer color code formatting
     print(f"\n{Fore.MAGENTA}Welcome to a new school year!{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Your journey through campus life begins...{Style.RESET_ALL}\n")
+    
+    # Generate and display dynamic daily scenario
+    daily_scenario = BackgroundGenerator.generate_daily_scenario()
+    print(f"{Fore.YELLOW}=== Today's Campus Atmosphere ==={Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{daily_scenario['description']}{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}Weather: {daily_scenario['weather'].capitalize()} | Campus Event: {daily_scenario['campus_event']}{Style.RESET_ALL}\n")
 
     # If in non-interactive mode, skip the menu and go directly to setup
     if non_interactive:
@@ -18388,18 +19111,25 @@ def main(non_interactive: bool = False) -> Any:
         # Command processing
         command = ""
 
-        # In non-interactive mode, auto-select help command first
-        if non_interactive:
-            print(f"\n{Fore.CYAN}Simulating a help command in non-interactive mode{Style.RESET_ALL}")
+        # In non-interactive mode, auto-select help command first, then exit
+        if non_interactive or _non_interactive:
+            print(f"\n{Fore.CYAN}Running in non-interactive mode. Displaying help and exiting.{Style.RESET_ALL}")
             command = "/help"
-            # After displaying help, use /exit to end the game cleanly
-            non_interactive = False  # Only do this automatic command once
+            # Display help command, then exit
+            print(f"\n{Fore.CYAN}=== HELP MENU ==={Style.RESET_ALL}")
+            print("Available commands:")
+            print("/help - Show this help menu")
+            print("/status - Show character status")
+            print("/quit - Exit the game")
+            print(f"\n{Fore.YELLOW}Game completed in non-interactive mode. Exiting...{Style.RESET_ALL}")
+            break
         else:
             # In interactive mode, get command input from player
             try:
                 command = input("\n{0}>>{1} ".format(Fore.GREEN, Style.RESET_ALL)).strip()
             except EOFError:
-                print(f"{Fore.RED}Input error encountered. Please try again.{Style.RESET_ALL}")
+                print(f"{Fore.YELLOW}Input limitations detected. Switching to non-interactive mode...{Style.RESET_ALL}")
+                non_interactive = True
                 continue
             except Exception as e:
                 print(f"{Fore.RED}Error: {str(e)}{Style.RESET_ALL}")
@@ -18541,6 +19271,107 @@ def main(non_interactive: bool = False) -> Any:
         # Change clothes command
         elif cmd == "change_clothes":
             change_clothes_command(args)
+        
+        # Narrative enhancement commands
+        elif cmd == "look_around":
+            current_location = player["current_location"]
+            atmosphere = BackgroundGenerator.generate_location_atmosphere(current_location)
+            
+            slow_print(f"\n{Fore.CYAN}=== Looking Around: {current_location} ==={Style.RESET_ALL}")
+            slow_print(f"{Fore.WHITE}{atmosphere}{Style.RESET_ALL}")
+            
+            # Check for potential interactions in the area
+            if random.random() < 0.25:
+                interaction_hints = {
+                    "Classroom": ["You notice a study group forming in the corner", "Someone dropped their notes nearby", "A student looks confused about the homework"],
+                    "Library": ["You spot someone struggling to reach a high shelf", "A group is quietly discussing a research project", "Someone appears to need help finding books"],
+                    "Cafeteria": ["You see an empty seat at a table with friendly students", "Someone is eating alone and looks approachable", "A student is having trouble with the vending machine"],
+                    "School Hallway": ["Club members are putting up recruitment posters", "Students are chatting excitedly about school events", "Someone looks lost trying to find their classroom"],
+                    "Gym": ["A pickup basketball game is forming", "Someone is stretching alone before their workout", "Students are discussing fitness goals"],
+                    "Dorm Room": ["Your roommate might want to chat", "You could organize your belongings", "This would be a good time for some personal reflection"]
+                }
+                
+                if current_location in interaction_hints:
+                    hint = random.choice(interaction_hints[current_location])
+                    slow_print(f"\n{Fore.YELLOW}[{hint}. Use /mingle to approach someone]{Style.RESET_ALL}")
+        
+        elif cmd == "mingle":
+            current_location = player["current_location"]
+            
+            if not current_location:
+                print(f"{Fore.RED}You need to be in a specific location to mingle with people.{Style.RESET_ALL}")
+            else:
+                slow_print(f"\n{Fore.CYAN}You look around the {current_location} for someone interesting to talk to...{Style.RESET_ALL}")
+                
+                # Higher chance of encountering someone when actively mingling
+                encounter_types = ["first_meeting", "study_group", "help_request", "rumor_spread"]
+                
+                # Location-specific encounters with higher variety
+                if current_location == "Cafeteria":
+                    encounter_types.extend(["cafeteria_encounter", "cafeteria_encounter"])
+                elif current_location == "Library":
+                    encounter_types.extend(["library_meeting", "study_group"])
+                elif current_location in ["School Hallway", "Classroom"]:
+                    encounter_types.extend(["club_invitation", "hallway_bump"])
+                elif current_location == "Gym":
+                    encounter_types.extend(["help_request", "first_meeting"])
+                
+                encounter_type = random.choice(encounter_types)
+                cutscene_result = CutsceneManager.play_encounter_cutscene(encounter_type, current_location)
+                
+                if cutscene_result["success"]:
+                    npc_name = cutscene_result["npc_name"]
+                    relationship_change = cutscene_result["relationship_change"]
+                    
+                    # Apply relationship changes
+                    if npc_name not in relationship:
+                        relationship[npc_name] = 50
+                    
+                    relationship[npc_name] = max(0, min(100, relationship[npc_name] + relationship_change))
+                    
+                    # Apply special effects based on encounter type
+                    if cutscene_result.get("academic_bonus"):
+                        player["charisma"]["academic"] += 3
+                        slow_print(f"{Fore.GREEN}Your academic reputation has improved through this interaction!{Style.RESET_ALL}")
+                    
+                    if cutscene_result.get("karma_bonus"):
+                        player["charisma"]["social"] += 4
+                        slow_print(f"{Fore.GREEN}Your reputation for being helpful has grown!{Style.RESET_ALL}")
+                    
+                    if cutscene_result.get("club_invitation"):
+                        club_name = cutscene_result["club_invitation"]
+                        slow_print(f"{Fore.MAGENTA}You've been invited to join the {club_name}!{Style.RESET_ALL}")
+                    
+                    # Small energy cost for active social interaction
+                    player["energy"] = max(0, player["energy"] - 1)
+                    player["social_points"] = player.get("social_points", 0) + 2
+                else:
+                    slow_print(f"{Fore.YELLOW}You don't notice anyone particularly interesting right now. Try again later or move to a different location.{Style.RESET_ALL}")
+        
+        elif cmd == "scenario":
+            scenario = BackgroundGenerator.generate_daily_scenario()
+            
+            slow_print(f"\n{Fore.CYAN}=== Today's Campus Atmosphere ==={Style.RESET_ALL}")
+            slow_print(f"{Fore.WHITE}{scenario['description']}{Style.RESET_ALL}")
+            slow_print(f"\n{Fore.YELLOW}Weather:{Style.RESET_ALL} {scenario['weather'].capitalize()}")
+            slow_print(f"{Fore.YELLOW}Campus Mood:{Style.RESET_ALL} {scenario['mood'].capitalize()}")
+            slow_print(f"{Fore.YELLOW}Special Event:{Style.RESET_ALL} {scenario['campus_event']}")
+            
+            # Show effects on gameplay
+            if scenario.get("special_effects"):
+                slow_print(f"\n{Fore.GREEN}Campus Effects:{Style.RESET_ALL}")
+                for effect, value in scenario["special_effects"].items():
+                    effect_name = effect.replace("_", " ").title()
+                    modifier = "+" if value > 0 else ""
+                    slow_print(f"  • {effect_name}: {modifier}{value}")
+            
+            # Apply temporary effects based on scenario
+            if scenario["weather"] == "rainy" and player.get("current_location") in ["Library", "Classroom", "Dorm Room"]:
+                slow_print(f"\n{Fore.BLUE}The rainy weather makes indoor locations feel extra cozy for studying.{Style.RESET_ALL}")
+            elif scenario["weather"] == "sunny" and player.get("current_location") in ["School Hallway", "Cafeteria"]:
+                slow_print(f"\n{Fore.YELLOW}The bright sunshine energizes everyone around campus.{Style.RESET_ALL}")
+            elif scenario["mood"] == "romantic" and random.random() < 0.3:
+                slow_print(f"\n{Fore.MAGENTA}The romantic atmosphere might create some interesting social opportunities today...{Style.RESET_ALL}")
 
         # Unknown command
         else:
@@ -19089,7 +19920,7 @@ def check_class_time() -> bool:
 
 
 # Sanctions for missing classes or other infractions
-def apply_sanction(reason: Any) -> Any:
+def apply_sanction(reason) -> Any:
     if reason == "missed_class":
         slow_print(
             "{0}You missed a class! Your teacher is disappointed.{1}".format(
@@ -19171,7 +20002,7 @@ def apply_sanction(reason: Any) -> Any:
 # Modify main loop or relevant command handlers to call check_class_time and enforce class attendance
 
 
-def take_exam(subject: str) -> None:
+def take_exam(subject: str) -> Any:
     print("\n{0}=== {1} Exam ==={2}".format(Fore.YELLOW, subject, Style.RESET_ALL))
 
     # Check if this is a PE exam to apply seasonal effects
@@ -19301,6 +20132,8 @@ def check_monthly_exam() -> bool:
             )
         )
         update_ranks()
+    
+    return True
 
 
 # Random Events
@@ -19524,7 +20357,7 @@ graduate_templates = {
 }
 
 
-def show_graduate_templates() -> None:
+def show_graduate_templates() -> bool:
     """Display special graduate templates unlocked after completing the game"""
     print(
         "\n{0}=== Graduate Templates (Special) ==={1}".format(
@@ -19594,7 +20427,7 @@ def show_graduate_templates() -> None:
         return False
 
 
-def apply_graduate_template(template_name: Any) -> Any:
+def apply_graduate_template(template_name) -> Any:
     """Apply selected graduate template to the player with special bonuses"""
     global homework
 
@@ -19763,12 +20596,16 @@ if __name__ == "__main__":
 
     if launched_from_launcher or launcher_active:
         try:
-            main()
+            # Set non-interactive mode for environments with input limitations
+            main(non_interactive=True)
         except Exception as e:
             print(f"{Fore.RED}Error occurred: {e}{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}Game will exit now.{Style.RESET_ALL}")
     else:
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
         print(f"{Fore.YELLOW}Please run 'python3 launch.py' to access all games.")
-        input(f"{Fore.CYAN}Press Enter to exit...{Style.RESET_ALL}")
+        try:
+            input(f"{Fore.CYAN}Press Enter to exit...{Style.RESET_ALL}")
+        except (EOFError, KeyboardInterrupt):
+            pass
         sys.exit(0)

@@ -5,17 +5,10 @@ import time
 import random
 import json
 from colorama import init, Fore, Style
+from typing import Any, Optional
 
 # Initialize colorama
 init(autoreset=True)
-
-# Check if the script is being run directly or through the launcher
-def check_launcher():
-    if 'LAUNCHED_FROM_MENU' not in os.environ:
-        print("This game should be launched through the launch.py launcher.")
-        print("Please run 'python3 launch.py' to access all games.")
-        input("Press Enter to exit...")
-        sys.exit()
 
 # Game data
 day = 1
@@ -1087,18 +1080,18 @@ active_campaigns = []
 research_queue = []
 
 # Print header
-def clear():
+def clear() -> None:
     """Clear the terminal screen"""
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def print_header():
+def print_header() -> None:
     clear()
     print(f"{Fore.GREEN}======================================================")
     print(f"{Fore.YELLOW}{restaurant_name} - Day {day}")
     print(f"{Fore.GREEN}======================================================")
 
 # Main menu
-def main_menu():
+def main_menu() -> None:
     global restaurant_name, auto_save_enabled
     
     while True:
@@ -1477,7 +1470,7 @@ time_of_day = {
 }
 
 # Business Collaborations menu
-def business_collaborations_menu():
+def business_collaborations_menu() -> Any:
     global money, active_collaborations, distributor_discounts, restaurant_level, reputation, restaurant_upgrades
     
     while True:
@@ -1699,7 +1692,7 @@ def business_collaborations_menu():
                 time.sleep(1)
 
 # Start new game
-def start_new_game():
+def start_new_game() -> None:
     global restaurant_name, money, day, reputation, restaurant_level
     global staff, inventory, active_collaborations, active_campaigns
     global auto_save_enabled
@@ -1796,14 +1789,14 @@ def start_new_game():
     daily_menu()
 
 # Functions for game save/load system
-def get_save_directory():
+def get_save_directory() -> Any:
     """Get the save directory, creating it if it doesn't exist"""
     # Create saves directory if it doesn't exist
     save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'burger_saves')
     os.makedirs(save_dir, exist_ok=True)
     return save_dir
 
-def get_save_slots():
+def get_save_slots() -> Any:
     """Get list of save slots with information"""
     save_dir = get_save_directory()
     save_slots = []
@@ -1873,7 +1866,7 @@ def get_save_slots():
     
     return save_slots
 
-def save_game(slot=None, auto=False, auto_reason=""):
+def save_game(slot: Optional[Any] = None, auto: bool = False, auto_reason: str = "") -> bool:
     """Save the game to a specified slot
     
     Args:
@@ -1950,7 +1943,7 @@ def save_game(slot=None, auto=False, auto_reason=""):
             print(f"\n{Fore.RED}Error saving game: {str(e)}")
         return False
 
-def auto_save(reason=""):
+def auto_save(reason: str = "") -> bool:
     """Perform an automatic save without user interaction
     
     Args:
@@ -1965,7 +1958,7 @@ def auto_save(reason=""):
         
     return save_game(auto=True, auto_reason=reason)
 
-def show_save_slots():
+def show_save_slots() -> None:
     """Display all save slots with their information"""
     print_header()
     print(f"{Fore.GREEN}=== SAVE SLOTS ===\n")
@@ -1995,7 +1988,7 @@ def show_save_slots():
             else:
                 print(f"{Fore.YELLOW}{slot_label}: [Empty]")
 
-def load_game(slot=None):
+def load_game(slot: Optional[Any] = None) -> Any:
     """Load a game from a specified slot
     
     Args:
@@ -2075,7 +2068,7 @@ def load_game(slot=None):
         return False
 
 # How to play
-def how_to_play():
+def how_to_play() -> Any:
     print_header()
     print(f"{Fore.GREEN}=== HOW TO PLAY ===")
     print(f"{Fore.CYAN}Welcome to Burger Boss Tycoon, a fast food restaurant management simulation!")
@@ -2106,7 +2099,7 @@ def how_to_play():
     
     input("\nPress Enter to return to the main menu...")
 
-def game_options():
+def game_options() -> None:
     """Game options menu for configuring settings"""
     global auto_save_enabled
     
@@ -2133,7 +2126,7 @@ def game_options():
             time.sleep(1)
 
 # Daily menu
-def daily_menu():
+def daily_menu() -> None:
     global day, money, current_time_period, hour, minute, day_of_week, active_collaborations
     global auto_save_enabled
     
@@ -2248,27 +2241,27 @@ def daily_menu():
             time.sleep(1)
 
 # Financial report
-def financial_report():
+def financial_report() -> None:
     pass
 
 # Upgrade restaurant
-def upgrade_restaurant():
+def upgrade_restaurant() -> None:
     pass
 
 # View category upgrades
-def view_category_upgrades(category):
+def view_category_upgrades(category) -> None:
     pass
 
 # Purchase upgrade
-def purchase_upgrade(category, upgrade_name):
+def purchase_upgrade(category: Any, upgrade_name) -> None:
     pass
 
 # Apply upgrade effects
-def apply_upgrade_effects(category, upgrade_name):
+def apply_upgrade_effects(category: Any, upgrade_name) -> None:
     pass
 
 # Manage staff
-def manage_staff():
+def manage_staff() -> None:
     global staff, money
     
     while True:
@@ -2322,7 +2315,7 @@ def manage_staff():
             time.sleep(1)
 
 # Hire staff function
-def hire_staff():
+def hire_staff() -> None:
     global staff, money, staff_roles, active_collaborations
     
     print_header()
@@ -2485,7 +2478,7 @@ def hire_staff():
         time.sleep(1)
 
 # Generate a random name for staff
-def generate_name():
+def generate_name() -> Any:
     first_names = ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles",
                   "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen",
                   "Alex", "Casey", "Jordan", "Taylor", "Morgan", "Avery", "Riley", "Quinn", "Peyton", "Cameron"]
@@ -2497,15 +2490,15 @@ def generate_name():
     return f"{random.choice(first_names)} {random.choice(last_names)}"
 
 # Train staff
-def train_staff():
+def train_staff() -> None:
     pass
 
 # Fire staff
-def fire_staff():
+def fire_staff() -> None:
     pass
 
 # Marketing menu
-def marketing_menu():
+def marketing_menu() -> None:
     global money
     
     while True:
@@ -2530,7 +2523,7 @@ def marketing_menu():
             print(f"\n{Fore.RED}Invalid choice.{Style.RESET_ALL}")
             input("\nPress Enter to continue...")
 
-def traditional_marketing_menu():
+def traditional_marketing_menu() -> None:
     global money
     
     while True:
@@ -2595,7 +2588,7 @@ def traditional_marketing_menu():
             print(f"\n{Fore.RED}Invalid choice.{Style.RESET_ALL}")
             input("\nPress Enter to continue...")
             
-def celebrity_endorsement_menu():
+def celebrity_endorsement_menu() -> None:
     global money, active_endorsements, day
     
     while True:
@@ -2746,7 +2739,7 @@ def celebrity_endorsement_menu():
         input("\nPress Enter to continue...")
 
 # Launch marketing campaign
-def launch_marketing_campaign(campaign_name):
+def launch_marketing_campaign(campaign_name) -> Any:
     global active_campaigns, day
     
     # Create a new campaign effects dictionary
@@ -2786,27 +2779,35 @@ def launch_marketing_campaign(campaign_name):
     auto_save(reason="Marketing Campaign")
 
 # Research recipes
-def research_recipes():
+def research_recipes() -> None:
     pass
 
 # Get recipe research cost
-def get_recipe_research_cost(recipe_name):
+def get_recipe_research_cost(recipe_name) -> Any:
     pass
 
 # Manage prices
-def manage_prices():
+def manage_prices() -> None:
     pass
 
 # Modify price
-def modify_price(recipe_name):
+def modify_price(recipe_name) -> None:
     pass
 
 # Calculate recipe cost
-def calculate_recipe_cost(recipe_name):
-    pass
+def calculate_recipe_cost(recipe_name) -> int:
+    """Calculate the cost to make a specific recipe"""
+    recipe_costs = {
+        "basic_burger": 2.5,
+        "cheeseburger": 3.0,
+        "deluxe_burger": 4.0,
+        "fries": 1.0,
+        "4ndycola": 0.5
+    }
+    return int(recipe_costs.get(recipe_name, 0))
 
 # Manage locations
-def manage_locations():
+def manage_locations() -> None:
     global money, owned_locations, current_location_index, active_collaborations
     
     while True:
@@ -2876,7 +2877,7 @@ def manage_locations():
             print(f"{Fore.RED}Invalid choice. Please try again.")
             time.sleep(1)
 
-def purchase_new_location():
+def purchase_new_location() -> None:
     global money, owned_locations, active_collaborations
     
     print_header()
@@ -3067,7 +3068,7 @@ def purchase_new_location():
         print(f"{Fore.RED}Invalid choice.")
         time.sleep(1)
 
-def upgrade_location():
+def upgrade_location() -> None:
     global money, owned_locations
     
     if not owned_locations:
@@ -3232,7 +3233,7 @@ def upgrade_location():
         print(f"{Fore.RED}Please enter a valid number.")
         time.sleep(1)
 
-def rename_location():
+def rename_location() -> None:
     global owned_locations
     
     if not owned_locations:
@@ -3277,7 +3278,7 @@ def rename_location():
         print(f"{Fore.RED}Please enter a valid number.")
         time.sleep(1)
 
-def set_active_location():
+def set_active_location() -> None:
     global owned_locations, current_location_index
     
     if not owned_locations:
@@ -3317,7 +3318,7 @@ def set_active_location():
         print(f"{Fore.RED}Please enter a valid number.")
         time.sleep(1)
 
-def sell_location():
+def sell_location() -> None:
     global money, owned_locations, current_location_index
     
     if not owned_locations:
@@ -3435,11 +3436,11 @@ def sell_location():
         time.sleep(1)
 
 # View location performance
-def view_location_performance():
+def view_location_performance() -> None:
     pass
 
 # Update game time
-def update_game_time(minutes_passed=30):
+def update_game_time(minutes_passed: int = 30) -> Any:
     global hour, minute, day, day_of_week, week, current_time_period
     
     minute += minutes_passed
@@ -3471,7 +3472,7 @@ def update_game_time(minutes_passed=30):
     
     return False  # Time period didn't change
 
-def get_current_time_period():
+def get_current_time_period() -> Any:
     """Determine current time period based on hour"""
     if 6 <= hour < 11:
         return "morning"
@@ -3486,12 +3487,12 @@ def get_current_time_period():
     else:  # 2 AM - 6 AM
         return "overnight"
 
-def get_day_name(day_num):
+def get_day_name(day_num) -> Any:
     """Return the name of the day given the day number (1-7)"""
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     return days[day_num - 1]
 
-def get_formatted_time():
+def get_formatted_time() -> Any:
     """Return a formatted time string (12-hour format)"""
     period = "AM" if hour < 12 else "PM"
     hour_12 = hour % 12
@@ -3499,7 +3500,7 @@ def get_formatted_time():
         hour_12 = 12
     return f"{hour_12}:{minute:02d} {period}"
 
-def advance_time_dialog():
+def advance_time_dialog() -> None:
     """Show a dialog for advancing time"""
     global hour, minute, current_time_period, active_collaborations
     
@@ -3697,7 +3698,7 @@ def advance_time_dialog():
             time.sleep(1)
 
 # Open restaurant for business
-def open_restaurant():
+def open_restaurant() -> None:
     global money, day, inventory, daily_sales, reputation, hour, minute, current_time_period
     global owned_locations, current_location_index, active_collaborations
     
@@ -3937,7 +3938,7 @@ def open_restaurant():
     input("\nPress Enter to continue...")
 
 # Check for level up 
-def check_level_up():
+def check_level_up() -> bool:
     global restaurant_level, reputation, day
     
     # Define level thresholds based on a combination of factors
@@ -3986,11 +3987,15 @@ def check_level_up():
     return False
 
 # Calculate daily costs
-def calculate_daily_costs():
-    pass
+def calculate_daily_costs() -> int:
+    """Calculate the total daily operating costs"""
+    staff_costs = sum(staff_roles[member.get("role", "cook")]["base_salary"] for member in staff)
+    rent_cost = restaurant_level * 100  # Rent scales with restaurant level
+    utility_cost = 50
+    return int(staff_costs + rent_cost + utility_cost)
 
 # Serve customer
-def serve_customer(customer_num=1, total_customers=1):
+def serve_customer(customer_num: int = 1, total_customers: int = 1) -> Any:
     global inventory, daily_sales, current_location_index, current_time_period
     
     # Calculate staff efficiency based on customer number and total customers
@@ -4103,7 +4108,7 @@ def serve_customer(customer_num=1, total_customers=1):
     return item_price, reputation_impact
 
 # Calculate staff efficiency
-def calculate_staff_efficiency(current_customer, total_customers):
+def calculate_staff_efficiency(current_customer: Any, total_customers) -> float:
     # Base efficiency is 1.0
     base_efficiency = 1.0
     
@@ -4111,7 +4116,7 @@ def calculate_staff_efficiency(current_customer, total_customers):
     fatigue_factor = 1.0 - (current_customer / total_customers * 0.3)  # Up to 30% efficiency loss due to fatigue
     
     # Consider staff skills, specialties, and automation
-    staff_bonus = 0
+    staff_bonus = 0.0
     for employee in staff:
         if employee["role"] == "cook":
             # Cooks directly affect food preparation efficiency
@@ -4134,7 +4139,7 @@ def calculate_staff_efficiency(current_customer, total_customers):
     return max(0.5, min(1.5, final_efficiency))
 
 # Go shopping
-def go_shopping():
+def go_shopping() -> None:
     global money
     
     # Organize ingredients by category
@@ -4276,42 +4281,196 @@ def go_shopping():
                 time.sleep(1)
 
 # Check inventory
-def check_inventory():
-    pass
+def check_inventory() -> bool:
+    """Check if there are sufficient ingredients in inventory"""
+    global inventory
+    print(f"\n{Fore.CYAN}=== CURRENT INVENTORY ==={Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Burger Ingredients:{Style.RESET_ALL}")
+    burger_items = ["buns", "patties", "lettuce", "tomato", "cheese", "pickles", "onions", "ketchup", "mustard", "mayo", "bacon"]
+    for item in burger_items:
+        if item in inventory:
+            color = Fore.GREEN if inventory[item] > 10 else Fore.RED if inventory[item] < 5 else Fore.YELLOW
+            print(f"  {item.capitalize()}: {color}{inventory[item]}{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.YELLOW}Side Ingredients:{Style.RESET_ALL}")
+    side_items = ["potatoes", "onion_bulbs", "seasoning", "cooking_oil"]
+    for item in side_items:
+        if item in inventory:
+            color = Fore.GREEN if inventory[item] > 10 else Fore.RED if inventory[item] < 5 else Fore.YELLOW
+            print(f"  {item.capitalize()}: {color}{inventory[item]}{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.YELLOW}Beverage Ingredients:{Style.RESET_ALL}")
+    beverage_items = ["4ndycola_syrup", "coffee_beans", "milk", "water"]
+    for item in beverage_items:
+        if item in inventory:
+            color = Fore.GREEN if inventory[item] > 5 else Fore.RED if inventory[item] < 2 else Fore.YELLOW
+            print(f"  {item.replace('_', ' ').title()}: {color}{inventory[item]}{Style.RESET_ALL}")
+    
+    # Check if any critical items are low
+    critical_items = ["buns", "patties", "potatoes"]
+    low_inventory = any(inventory.get(item, 0) < 5 for item in critical_items)
+    
+    if low_inventory:
+        print(f"\n{Fore.RED}WARNING: Some critical ingredients are running low!{Style.RESET_ALL}")
+        return False
+    return True
 
 # View recipes
-def view_recipes():
-    pass
+def view_recipes() -> None:
+    """Display all available recipes organized by category"""
+    print(f"\n{Fore.CYAN}=== RECIPE CATEGORIES ==={Style.RESET_ALL}")
+    print("1. Burger Recipes")
+    print("2. Side Recipes") 
+    print("3. Beverage Recipes")
+    print("4. Dessert Recipes")
+    print("5. Combo Meals")
+    print("6. Return to Main Menu")
+    
+    try:
+        choice = input("\nSelect category (1-6): ")
+        if choice == "1":
+            view_burger_recipes()
+        elif choice == "2":
+            view_side_recipes()
+        elif choice == "3":
+            view_beverage_recipes()
+        elif choice == "4":
+            view_dessert_recipes()
+        elif choice == "5":
+            view_combo_meals()
+        elif choice == "6":
+            return
+        else:
+            print("Invalid choice. Please select 1-6.")
+    except (EOFError, KeyboardInterrupt):
+        print("\nReturning to main menu...")
 
 # View burger recipes
-def view_burger_recipes():
-    pass
+def view_burger_recipes() -> None:
+    """Display available burger recipes with ingredients and prices"""
+    print(f"\n{Fore.CYAN}=== BURGER RECIPES ==={Style.RESET_ALL}")
+    burger_recipes = {
+        "basic_burger": {"ingredients": ["buns", "patties", "lettuce", "ketchup"], "price": 5.99},
+        "cheeseburger": {"ingredients": ["buns", "patties", "cheese", "lettuce", "ketchup"], "price": 6.99},
+        "deluxe_burger": {"ingredients": ["buns", "patties", "cheese", "lettuce", "tomato", "pickles", "mayo"], "price": 7.99},
+        "bacon_burger": {"ingredients": ["buns", "patties", "bacon", "cheese", "lettuce", "ketchup"], "price": 8.99},
+        "double_burger": {"ingredients": ["buns", "patties", "patties", "cheese", "lettuce", "ketchup"], "price": 9.99}
+    }
+    
+    for name, recipe in burger_recipes.items():
+        ingredients_str = ", ".join(recipe["ingredients"])
+        print(f"{Fore.YELLOW}{name.replace('_', ' ').title()}{Style.RESET_ALL}: ${recipe['price']:.2f}")
+        print(f"  Ingredients: {ingredients_str}")
+        print()
 
 # View side recipes
-def view_side_recipes():
-    pass
+def view_side_recipes() -> None:
+    """Display available side dish recipes"""
+    print(f"\n{Fore.CYAN}=== SIDE RECIPES ==={Style.RESET_ALL}")
+    side_recipes = {
+        "fries": {"ingredients": ["potatoes", "cooking_oil", "seasoning"], "price": 2.99},
+        "large_fries": {"ingredients": ["potatoes", "cooking_oil", "seasoning"], "price": 3.99},
+        "onion_rings": {"ingredients": ["onion_bulbs", "batter", "cooking_oil"], "price": 4.49}
+    }
+    
+    for name, recipe in side_recipes.items():
+        ingredients_str = ", ".join(recipe["ingredients"])
+        print(f"{Fore.YELLOW}{name.replace('_', ' ').title()}{Style.RESET_ALL}: ${recipe['price']:.2f}")
+        print(f"  Ingredients: {ingredients_str}")
+        print()
 
 # View beverage recipes
-def view_beverage_recipes():
-    pass
+def view_beverage_recipes() -> None:
+    """Display available beverage recipes"""
+    print(f"\n{Fore.CYAN}=== BEVERAGE RECIPES ==={Style.RESET_ALL}")
+    beverage_recipes = {
+        "4ndycola": {"ingredients": ["4ndycola_syrup", "water"], "price": 1.99},
+        "coffee": {"ingredients": ["coffee_beans", "water"], "price": 2.49},
+        "milkshake": {"ingredients": ["milk", "ice_cream_mix"], "price": 4.99}
+    }
+    
+    for name, recipe in beverage_recipes.items():
+        ingredients_str = ", ".join(recipe["ingredients"])
+        print(f"{Fore.YELLOW}{name.replace('_', ' ').title()}{Style.RESET_ALL}: ${recipe['price']:.2f}")
+        print(f"  Ingredients: {ingredients_str}")
+        print()
 
 # View dessert recipes
-def view_dessert_recipes():
-    pass
+def view_dessert_recipes() -> None:
+    """Display available dessert recipes"""
+    print(f"\n{Fore.CYAN}=== DESSERT RECIPES ==={Style.RESET_ALL}")
+    dessert_recipes = {
+        "chocolate_chip_cookie": {"ingredients": ["cookie_dough", "sugar"], "price": 1.99},
+        "brownie": {"ingredients": ["brownie_mix", "chocolate_sauce"], "price": 2.99},
+        "apple_pie": {"ingredients": ["apple_pie_filling", "sugar"], "price": 3.49}
+    }
+    
+    for name, recipe in dessert_recipes.items():
+        ingredients_str = ", ".join(recipe["ingredients"])
+        print(f"{Fore.YELLOW}{name.replace('_', ' ').title()}{Style.RESET_ALL}: ${recipe['price']:.2f}")
+        print(f"  Ingredients: {ingredients_str}")
+        print()
 
 # View combo meals
-def view_combo_meals():
-    pass
+def view_combo_meals() -> None:
+    """Display available combo meal options"""
+    print(f"\n{Fore.CYAN}=== COMBO MEALS ==={Style.RESET_ALL}")
+    combo_meals = {
+        "basic_combo": {"items": ["basic_burger", "fries", "4ndycola"], "price": 8.99},
+        "deluxe_combo": {"items": ["deluxe_burger", "large_fries", "milkshake"], "price": 11.99},
+        "family_meal": {"items": ["4x cheeseburger", "4x fries", "4x drinks"], "price": 24.99}
+    }
+    
+    for name, combo in combo_meals.items():
+        items_str = ", ".join(combo["items"])
+        print(f"{Fore.YELLOW}{name.replace('_', ' ').title()}{Style.RESET_ALL}: ${combo['price']:.2f}")
+        print(f"  Includes: {items_str}")
+        print()
+
+# Check if launched from launcher
+def check_launcher() -> None:
+    """Check if the game was launched from the main launcher"""
+    
+    # Check for launcher environment variables
+    launcher_token = os.environ.get('CHRONOTALE_LAUNCHER_TOKEN')
+    launcher_session = os.environ.get('CHRONOTALE_SESSION_ID')
+    
+    # Check if launched directly vs from launcher
+    if not launcher_token and not launcher_session:
+        # Check command line arguments for launcher flags
+        if '--from-launcher' not in sys.argv:
+            print(f"{Fore.YELLOW}=== LAUNCHER PROTECTION ==={Style.RESET_ALL}")
+            print(f"{Fore.CYAN}This game is part of the ChronoTale collection.{Style.RESET_ALL}")
+            print(f"{Fore.WHITE}For the best experience, launch from the main ChronoTale launcher.{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}You can still play directly, but some features may be limited.{Style.RESET_ALL}")
+            
+            try:
+                response = input(f"\n{Fore.YELLOW}Continue anyway? (y/n): {Style.RESET_ALL}").lower()
+                if response not in ['y', 'yes']:
+                    print(f"{Fore.CYAN}Please use the ChronoTale launcher for the full experience.{Style.RESET_ALL}")
+                    sys.exit(0)
+            except (EOFError, KeyboardInterrupt):
+                # In non-interactive environments, continue silently
+                pass
+            
+            print(f"{Fore.GREEN}Starting 4ndyBurger in standalone mode...{Style.RESET_ALL}\n")
+        else:
+            # Launched from launcher with proper flag
+            print(f"{Fore.GREEN}✓ Launched from ChronoTale launcher{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Full feature set available!{Style.RESET_ALL}\n")
+    else:
+        # Environment variables detected - launched from launcher
+        print(f"{Fore.GREEN}✓ ChronoTale launcher session detected{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Session ID: {launcher_session[:8] if launcher_session else 'Unknown'}...{Style.RESET_ALL}\n")
 
 # Main game function
-def main_game():
-    # Check if run directly
-    if __name__ == "__main__":
-        check_launcher()
-        
-    # Initialize colorama
+def main_game() -> None:
+    # Initialize colorama first
     init(autoreset=True)
     
+    # Check launcher protection before starting game
+    check_launcher()
+        
     # Display main menu
     main_menu()
 
