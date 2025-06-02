@@ -10331,6 +10331,243 @@ def generate_full_student_list() -> Any:
 
     return full_student_list
 
+def attend_class_command(args) -> Any:
+    """Attend a specific class with random lecture cutscenes or exams"""
+    global ticks, current_date
+    
+    if not args:
+        print(f"{Fore.YELLOW}Usage: /attend [subject name]{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Available classes:{Style.RESET_ALL}")
+        current_subjects = get_current_subjects()
+        for i, subject in enumerate(current_subjects, 1):
+            print(f"{i}. {subject}")
+        return
+    
+    subject_name = " ".join(args)
+    current_subjects = get_current_subjects()
+    
+    # Find the subject (case insensitive)
+    actual_subject = None
+    for subject in current_subjects:
+        if subject.lower() == subject_name.lower():
+            actual_subject = subject
+            break
+    
+    if not actual_subject:
+        print(f"{Fore.RED}Subject '{subject_name}' not found in your current courses.{Style.RESET_ALL}")
+        return
+    
+    # Check if it's appropriate class time (8 AM to 5 PM on weekdays)
+    current_hour = (ticks // 10) % 24
+    current_weekday = current_date.weekday()
+    
+    if current_weekday >= 5:  # Weekend
+        print(f"{Fore.YELLOW}It's the weekend! Classes are not in session.{Style.RESET_ALL}")
+        return
+    
+    if current_hour < 8 or current_hour > 17:
+        print(f"{Fore.YELLOW}Classes are not in session at this time. Class hours are 8 AM to 5 PM.{Style.RESET_ALL}")
+        return
+    
+    print(f"\n{Fore.CYAN}Attending {actual_subject} class...{Style.RESET_ALL}")
+    
+    # Check if there's an exam today (15% chance or specific dates)
+    exam_chance = 0.15
+    if current_date.day in [15, 30] or random.random() < exam_chance:
+        take_class_exam(actual_subject)
+    else:
+        # Random lecture cutscene
+        play_lecture_cutscene(actual_subject)
+    
+    # Advance time (1 hour class)
+    ticks += 10
+    
+    # Small energy cost and potential benefits
+    player["energy"] = max(0, player["energy"] - 10)
+    
+    # Small chance to improve relationship with classmates
+    if random.random() < 0.3:
+        improve_random_relationship()
+
+def take_class_exam(subject_name: str) -> Any:
+    """Handle in-class exam"""
+    print(f"\n{Fore.YELLOW}📋 SURPRISE EXAM! {subject_name} Quiz{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}Your teacher announces an unexpected quiz for today's class.{Style.RESET_ALL}")
+    
+    time.sleep(1)
+    
+    # Get subject difficulty
+    subject_data = subjects.get(subject_name, {"difficulty": 3})
+    difficulty = subject_data["difficulty"]
+    
+    # Generate exam score based on current grade and difficulty
+    current_grade = player["grades"].get(subject_name, "C")
+    grade_values = {"A": 90, "B": 80, "C": 70, "D": 60, "F": 50}
+    base_score = grade_values.get(current_grade, 70)
+    
+    # Random variation based on difficulty
+    variation = random.randint(-20, 20) - (difficulty * 2)
+    final_score = max(0, min(100, base_score + variation))
+    
+    print(f"\n{Fore.YELLOW}⏰ Taking the {subject_name} quiz...{Style.RESET_ALL}")
+    time.sleep(2)
+    
+    # Show result with grade feedback
+    if final_score >= 90:
+        grade = "A"
+        color = Fore.GREEN
+        reaction = "Excellent work! The teacher is impressed."
+    elif final_score >= 80:
+        grade = "B"
+        color = Fore.CYAN
+        reaction = "Good job! You clearly understood the material."
+    elif final_score >= 70:
+        grade = "C"
+        color = Fore.YELLOW
+        reaction = "Decent effort. You passed the quiz."
+    elif final_score >= 60:
+        grade = "D"
+        color = Fore.MAGENTA
+        reaction = "You struggled but managed to pass."
+    else:
+        grade = "F"
+        color = Fore.RED
+        reaction = "The teacher looks concerned about your performance."
+    
+    print(f"\n{color}📊 Quiz Result: {final_score}/100 (Grade: {grade}){Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{reaction}{Style.RESET_ALL}")
+    
+    # Update grade (weighted average)
+    current_grade_value = grade_values.get(player["grades"].get(subject_name, "C"), 70)
+    new_grade_value = (current_grade_value * 0.8) + (final_score * 0.2)
+    
+    for letter, value in grade_values.items():
+        if new_grade_value >= value:
+            player["grades"][subject_name] = letter
+            break
+
+def play_lecture_cutscene(subject_name: str) -> Any:
+    """Play a random lecture cutscene based on the subject"""
+    
+    # Get teacher for this subject
+    teacher = next((t for t in teachers if t["subject"] == subject_name), None)
+    teacher_name = teacher["name"] if teacher else "Professor"
+    teacher_personality = teacher.get("personality", "serious") if teacher else "serious"
+    
+    print(f"\n{Fore.CYAN}🏫 {subject_name} Class with {teacher_name}{Style.RESET_ALL}")
+    
+    # Varied lecture scenarios
+    lecture_scenarios = get_lecture_scenarios(subject_name, teacher_name, teacher_personality)
+    scenario = random.choice(lecture_scenarios)
+    
+    print(f"\n{Fore.WHITE}{scenario['setting']}{Style.RESET_ALL}")
+    time.sleep(1)
+    
+    print(f"\n{Fore.YELLOW}{teacher_name}: \"{scenario['dialogue']}\"{Style.RESET_ALL}")
+    time.sleep(2)
+    
+    # Interactive element
+    if scenario.get("interactive") and not _non_interactive:
+        print(f"\n{Fore.CYAN}{scenario['prompt']}{Style.RESET_ALL}")
+        choices = scenario["choices"]
+        
+        for i, choice in enumerate(choices, 1):
+            print(f"{i}. {choice['text']}")
+        
+        try:
+            choice_input = input(f"\n{Fore.GREEN}Your response (1-{len(choices)}): {Style.RESET_ALL}")
+            choice_num = int(choice_input) - 1
+            if 0 <= choice_num < len(choices):
+                chosen = choices[choice_num]
+                print(f"\n{Fore.GREEN}You: \"{chosen['text']}\"{Style.RESET_ALL}")
+                print(f"{Fore.WHITE}{chosen['result']}{Style.RESET_ALL}")
+                
+                # Apply effects
+                if chosen.get("grade_boost"):
+                    improve_subject_grade(subject_name, chosen["grade_boost"])
+            else:
+                print(f"\n{Fore.YELLOW}You listen quietly to the lecture.{Style.RESET_ALL}")
+        except (ValueError, EOFError):
+            print(f"\n{Fore.YELLOW}You listen quietly to the lecture.{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.CYAN}Class ends. You feel like you learned something today.{Style.RESET_ALL}")
+
+def get_lecture_scenarios(subject_name: str, teacher_name: str, teacher_personality: str) -> Any:
+    """Generate varied lecture scenarios based on subject and teacher"""
+    
+    scenarios = {
+        "Math I": [
+            {
+                "setting": "The classroom is filled with equations on the whiteboard. Students are taking notes as the teacher explains derivatives.",
+                "dialogue": "Now, who can tell me what happens when we differentiate x squared?",
+                "interactive": True,
+                "prompt": "The teacher is looking for volunteers to answer.",
+                "choices": [
+                    {"text": "Raise your hand confidently", "result": "Correct! The teacher nods approvingly.", "grade_boost": 2},
+                    {"text": "Stay quiet and take notes", "result": "You focus on understanding the concept thoroughly.", "grade_boost": 1},
+                    {"text": "Whisper to a classmate", "result": "Your classmate appreciates the help, but the teacher notices."}
+                ]
+            },
+            {
+                "setting": "The teacher is demonstrating a complex word problem on the board, step by step.",
+                "dialogue": "Mathematics isn't just about numbers - it's about logical thinking and problem-solving.",
+                "interactive": False
+            }
+        ],
+        "Art": [
+            {
+                "setting": "The art studio smells of paint and creativity. Students are working on their latest projects.",
+                "dialogue": "Art is not about perfection - it's about expression. Let your creativity flow.",
+                "interactive": True,
+                "prompt": "Your teacher suggests trying a new technique.",
+                "choices": [
+                    {"text": "Experiment boldly", "result": "Your willingness to take risks pays off beautifully.", "grade_boost": 3},
+                    {"text": "Ask for guidance first", "result": "The teacher appreciates your thoughtful approach.", "grade_boost": 2}
+                ]
+            }
+        ],
+        "Music": [
+            {
+                "setting": "The music room resonates with harmony as students practice their instruments.",
+                "dialogue": "Feel the rhythm, don't just count it. Music comes from the heart.",
+                "interactive": True,
+                "prompt": "You're asked to perform a solo passage.",
+                "choices": [
+                    {"text": "Play with confidence", "result": "Your performance moves the entire class.", "grade_boost": 3},
+                    {"text": "Focus on technique", "result": "Your precision is noted and appreciated.", "grade_boost": 2}
+                ]
+            }
+        ]
+    }
+    
+    # Return scenarios for the subject, or generic ones if not found
+    return scenarios.get(subject_name, [{
+        "setting": f"The {subject_name} classroom is quiet as students focus on today's lesson.",
+        "dialogue": "Today we'll be covering some important concepts that will be useful in your future studies.",
+        "interactive": False
+    }])
+
+def improve_subject_grade(subject_name: str, boost: int) -> Any:
+    """Improve grade for a subject"""
+    grade_values = {"F": 50, "D": 60, "C": 70, "B": 80, "A": 90}
+    current_grade = player["grades"].get(subject_name, "C")
+    current_value = grade_values.get(current_grade, 70)
+    new_value = min(100, current_value + boost)
+    
+    for letter, value in [("A", 90), ("B", 80), ("C", 70), ("D", 60), ("F", 50)]:
+        if new_value >= value:
+            player["grades"][subject_name] = letter
+            break
+
+def improve_random_relationship() -> Any:
+    """Improve relationship with a random classmate"""
+    if students:
+        random_student = random.choice(students)
+        student_name = random_student["name"]
+        current_rel = relationship.get(student_name, 0)
+        relationship[student_name] = min(100, current_rel + random.randint(1, 3))
+        print(f"{Fore.GREEN}You had a nice chat with {student_name} after class.{Style.RESET_ALL}")
+
 def show_help() -> None:
     help_text = """
 {0}=== AVAILABLE COMMANDS ==={1}
@@ -12826,7 +13063,6 @@ def handle_club_location(club_name) -> Any:
                         update_ranks()
 
 
-# Function for PE class challenges
 def pe_class_challenge() -> Any:
     """Handle PE class challenges in the gym with enhanced narrative"""
     if "PE" not in player["electives"] and random.random() < 0.7:
@@ -19338,6 +19574,8 @@ def main(non_interactive: bool = False) -> Any:
         # Academic commands
         elif cmd == "study":
             study_subject(args)
+        elif cmd == "attend":
+            attend_class_command(args)
         elif cmd == "teachers":
             show_teachers()
         elif cmd == "students":
