@@ -638,53 +638,337 @@ def show_daily_scenario() -> None:
     elif scenario["mood"] == "romantic" and random.random() < 0.3:
         slow_print(f"\n{Fore.MAGENTA}The romantic atmosphere might create some interesting social opportunities today...{Style.RESET_ALL}")
 
-# Character Name Lists
+# Enhanced Character Name Generation System
 name_data = {
     "japanese": {
         "male": [
+            # Traditional names
             "Haruki", "Kenji", "Akira", "Daichi", "Ryo", "Kenta", "Sora", "Yuki", "Takeshi", "Hiroshi",
             "Kazuki", "Haru", "Takumi", "Hayato", "Tsubasa", "Kaito", "Haruto", "Minato", "Ren", "Sota",
             "Yuto", "Yusei", "Shota", "Jin", "Tatsuya", "Kosei", "Ryota", "Eiji", "Yuji", "Naoki",
             "Kazuya", "Shinichi", "Taro", "Takuya", "Kohei", "Shun", "Daisuke", "Yuma", "Kosuke", "Riku",
             "Masaki", "Sho", "Makoto", "Itsuki", "Natsuki", "Ryohei", "Seiji", "Masaru", "Manabu", "Nobu",
-            "Hikaru", "Taichi", "Arata", "Shohei", "Kenshin", "Souta", "Yudai", "Tetsuya", "Atsushi", "Kiyoshi"
+            "Hikaru", "Taichi", "Arata", "Shohei", "Kenshin", "Souta", "Yudai", "Tetsuya", "Atsushi", "Kiyoshi",
+            # Modern names
+            "Aoto", "Asahi", "Ayumu", "Daiki", "Fuma", "Gaku", "Hisoka", "Ibuki", "Jiro", "Kei",
+            "Leito", "Mahiro", "Nao", "Oto", "Raito", "Sosuke", "Tomoya", "Wataru", "Yoshiki", "Zen",
+            # Classical names
+            "Hideaki", "Ichiro", "Junpei", "Katsuya", "Masato", "Noboru", "Osamu", "Saburo", "Tadashi", "Yoshihiko"
         ],
         "female": [
+            # Traditional names
             "Emi", "Mika", "Yuna", "Kaori", "Hana", "Sakura", "Rei", "Yuki", "Aiko", "Midori",
             "Yui", "Hinata", "Haruka", "Aoi", "Akane", "Misaki", "Nao", "Ayaka", "Nanami", "Rin",
             "Mio", "Saki", "Karin", "Ai", "Kokoro", "Miyu", "Hina", "Ichika", "Mai", "Kotone",
             "Risa", "Ayane", "Kana", "Yuka", "Reina", "Maya", "Momoka", "Yuzuki", "Sumire", "Chihiro",
             "Nozomi", "Sayaka", "Asuka", "Megumi", "Tomoyo", "Noriko", "Yuriko", "Eri", "Satomi", "Riko",
-            "Fumika", "Yurina", "Airi", "Tsumugi", "Ririka", "Mizuki", "Ayumi", "Kasumi", "Nao", "Yume"
+            "Fumika", "Yurina", "Airi", "Tsumugi", "Ririka", "Mizuki", "Ayumi", "Kasumi", "Nao", "Yume",
+            # Modern names
+            "Akari", "Anzu", "Chiaki", "Emiri", "Fuka", "Himari", "Izumi", "Kaho", "Luna", "Mana",
+            "Nico", "Oto", "Rika", "Suzu", "Toka", "Yua", "Yuria", "Zara", "Amane", "Koyuki",
+            # Classical names
+            "Chiyo", "Fumi", "Hanako", "Kiyoko", "Mariko", "Naoko", "Sadako", "Tamako", "Yoshiko", "Yukiko"
         ],
-        "last": [
+        "last_names": [
+            # Common surnames
             "Takahashi", "Yamamoto", "Kobayashi", "Tanaka", "Sasaki", "Fujimoto", "Hoshino", "Shimizu",
             "Nakamura", "Suzuki", "Sato", "Kato", "Ito", "Watanabe", "Yamada", "Matsumoto", "Inoue",
             "Kimura", "Hayashi", "Saito", "Yamaguchi", "Nakajima", "Matsui", "Ikeda", "Yoshida",
             "Yamashita", "Yamazaki", "Ogawa", "Ishikawa", "Maeda", "Hasegawa", "Murata", "Kojima",
-            "Fujita", "Abe", "Okamoto", "Kondo", "Imai", "Tsunoda", "Shibata", "Kaneko", "Ueda", "Kurata"
+            "Fujita", "Abe", "Okamoto", "Kondo", "Imai", "Tsunoda", "Shibata", "Kaneko", "Ueda", "Kurata",
+            # Additional surnames
+            "Mori", "Goto", "Hashimoto", "Morita", "Nishida", "Ono", "Takeda", "Tani", "Yamamoto", "Yoshikawa",
+            "Aoki", "Fujiwara", "Harada", "Hirata", "Honda", "Ishida", "Kawamura", "Matsuda", "Nakano", "Ohta"
         ]
     },
-    "international": {
+    "chinese": {
         "male": [
-            "Li", "Wei", "Chen", "Ming", "John", "Michael", "William", "David", "James",
-            "Raj", "Arun", "Vikram", "Carlos", "Miguel", "Ahmed", "Mohammad", "Omar",
-            "Daniel", "Lucas", "Noah", "Oliver", "Leon", "Mateo", "Luis", "Tariq", "Zayd",
-            "Isaac", "Elijah", "Amir", "Alex", "Ethan", "Yusuf", "Ibrahim"
+            "Wei", "Chen", "Ming", "Li", "Feng", "Hao", "Jun", "Kai", "Lei", "Peng",
+            "Qiang", "Rui", "Tao", "Xiang", "Yang", "Zheng", "An", "Bin", "Cheng", "Dong",
+            "Gang", "Hui", "Jian", "Kang", "Long", "Ning", "Ping", "Qin", "Sheng", "Tian",
+            "Wang", "Xin", "Yu", "Zhi", "Aiguo", "Baoming", "Changwei", "Daming", "Enlai", "Fuhua"
         ],
         "female": [
-            "Jing", "Emma", "Olivia", "Priya", "Divya", "Maria", "Ana", "Sofia", "Fatima", "Aisha",
-            "Emily", "Luna", "Zara", "Maya", "Isabella", "Amira", "Chloe", "Lea", "Aria", "Nina",
-            "Elsa", "Nora", "Lara", "Hana", "Grace", "Tara", "Lucia", "Ines", "Layla", "Freya"
+            "Jing", "Li", "Mei", "Na", "Qing", "Ting", "Xia", "Yan", "Yun", "Zhen",
+            "Ai", "Bing", "Cui", "Dan", "Er", "Fang", "Gui", "Hong", "Juan", "Kun",
+            "Lan", "Min", "Ning", "Ou", "Ping", "Qiu", "Rong", "Shu", "Tang", "Wei",
+            "Xiao", "Ying", "Zhou", "Aihua", "Baoli", "Changmei", "Dandan", "Fengying", "Guihua"
         ],
-        "last": [
-            "Wang", "Zhang", "Liu", "Chen", "Yang", "Kim", "Lee", "Park", "Choi", "Kang",
-            "Smith", "Johnson", "Brown", "Williams", "Jones", "Patel", "Sharma", "Singh", "Kumar", "Shah",
-            "Rodriguez", "Garcia", "Martinez", "Gonzalez", "Lopez", "Ali", "Hassan", "Khan", "Ahmed", "Mahmoud",
-            "Nguyen", "Tran", "Silva", "Fernandez", "Torres", "Moreno", "Díaz", "Costa", "Rossi", "Greco"
+        "last_names": [
+            "Wang", "Zhang", "Liu", "Chen", "Yang", "Huang", "Zhao", "Wu", "Zhou", "Xu",
+            "Sun", "Ma", "Zhu", "Hu", "Guo", "He", "Gao", "Lin", "Luo", "Zheng",
+            "Liang", "Xie", "Tang", "Han", "Cao", "Xu", "Deng", "Xiao", "Feng", "Zeng"
+        ]
+    },
+    "korean": {
+        "male": [
+            "Min-ho", "Ji-hoon", "Tae-hyun", "Young-woo", "Seung-jun", "Jae-min", "Hyun-soo", "Dong-hyun",
+            "Woo-jin", "Chang-min", "Kyung-soo", "Sang-hoon", "Jin-woo", "Hye-sung", "Myung-hoon",
+            "Jun-ho", "Sung-min", "Kyu-hyun", "Joon-gi", "Hae-jin", "Min-woo", "Tae-min", "Soo-hyun"
+        ],
+        "female": [
+            "Min-ji", "Soo-jin", "Hye-jin", "Yu-na", "Eun-ji", "Ji-hye", "So-young", "Eun-young",
+            "Mi-sook", "Hye-young", "Sun-hee", "Young-hee", "Mi-young", "Kyung-hee", "Jung-hwa",
+            "Soo-kyung", "Hye-won", "Min-kyung", "Ji-won", "Eun-hee", "Hye-rim", "So-ra", "Yu-jin"
+        ],
+        "last_names": [
+            "Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim",
+            "Han", "Oh", "Seo", "Shin", "Kwon", "Hwang", "Ahn", "Song", "Jeon", "Hong"
+        ]
+    },
+    "american": {
+        "male": [
+            "John", "Michael", "William", "David", "James", "Robert", "Christopher", "Joseph", "Thomas", "Charles",
+            "Daniel", "Matthew", "Anthony", "Mark", "Donald", "Steven", "Paul", "Andrew", "Joshua", "Kenneth",
+            "Kevin", "Brian", "George", "Timothy", "Ronald", "Jason", "Edward", "Jeffrey", "Ryan", "Jacob",
+            "Gary", "Nicholas", "Eric", "Jonathan", "Stephen", "Larry", "Justin", "Scott", "Brandon", "Benjamin"
+        ],
+        "female": [
+            "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen",
+            "Lisa", "Nancy", "Betty", "Helen", "Sandra", "Donna", "Carol", "Ruth", "Sharon", "Michelle",
+            "Laura", "Sarah", "Kimberly", "Deborah", "Dorothy", "Lisa", "Nancy", "Karen", "Betty", "Helen",
+            "Sandra", "Donna", "Carol", "Ruth", "Sharon", "Michelle", "Laura", "Emily", "Kimberly", "Deborah"
+        ],
+        "last_names": [
+            "Smith", "Johnson", "Brown", "Williams", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
+            "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
+            "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson"
+        ]
+    },
+    "spanish": {
+        "male": [
+            "Carlos", "Miguel", "Javier", "Luis", "Jorge", "Antonio", "Alejandro", "Roberto", "Diego", "Hector",
+            "Francisco", "Manuel", "Rafael", "Fernando", "Eduardo", "Ricardo", "Sergio", "Pablo", "Andres", "Oscar",
+            "Alberto", "Julio", "Lorenzo", "Mauricio", "Victor", "Ignacio", "Arturo", "Gustavo", "Emilio", "Salvador"
+        ],
+        "female": [
+            "Maria", "Ana", "Sofia", "Isabella", "Valentina", "Gabriela", "Camila", "Lucia", "Elena", "Carmen",
+            "Mariana", "Paula", "Daniela", "Victoria", "Catalina", "Laura", "Adriana", "Alicia", "Veronica", "Fernanda",
+            "Jimena", "Paola", "Alejandra", "Monica", "Claudia", "Sara", "Teresa", "Rosa", "Julieta", "Marta"
+        ],
+        "last_names": [
+            "Rodriguez", "Garcia", "Martinez", "Gonzalez", "Lopez", "Hernandez", "Perez", "Sanchez", "Ramirez", "Cruz",
+            "Flores", "Gomez", "Morales", "Rivera", "Ramos", "Gutierrez", "Ortiz", "Chavez", "Torres", "Dominguez"
+        ]
+    },
+    "indian": {
+        "male": [
+            "Arjun", "Vikram", "Raj", "Aditya", "Amit", "Rohan", "Vijay", "Sanjay", "Ajay", "Rahul",
+            "Nikhil", "Varun", "Karthik", "Ravi", "Pranav", "Akash", "Kunal", "Arun", "Gaurav", "Nitin",
+            "Deepak", "Manish", "Rajiv", "Vinay", "Prakash", "Dinesh", "Rajesh", "Manoj", "Sunil", "Anil"
+        ],
+        "female": [
+            "Priya", "Lakshmi", "Neha", "Divya", "Anjali", "Anika", "Meera", "Riya", "Shreya", "Tanvi",
+            "Ananya", "Kavya", "Ishita", "Deepika", "Nisha", "Pooja", "Simran", "Anita", "Sanjana", "Isha",
+            "Aarti", "Jyoti", "Shweta", "Priyanka", "Sneha", "Sunita", "Rekha", "Swati", "Sapna", "Usha"
+        ],
+        "last_names": [
+            "Patel", "Sharma", "Singh", "Kumar", "Shah", "Das", "Rao", "Reddy", "Nair", "Devi",
+            "Kaur", "Malhotra", "Chatterjee", "Kapoor", "Jain", "Agarwal", "Mukherjee", "Verma", "Yadav", "Banerjee"
+        ]
+    },
+    "russian": {
+        "male": [
+            "Dmitri", "Ivan", "Alexei", "Viktor", "Nikolai", "Sergei", "Vladimir", "Mikhail", "Boris", "Oleg",
+            "Andrei", "Yuri", "Pavel", "Grigori", "Pyotr", "Maxim", "Leonid", "Vitaly", "Roman", "Semyon"
+        ],
+        "female": [
+            "Olga", "Tatiana", "Anastasia", "Natalia", "Svetlana", "Irina", "Yelena", "Katya", "Polina", "Ekaterina",
+            "Maria", "Daria", "Lyudmila", "Valentina", "Nadezhda", "Galina", "Vera", "Alina", "Anna", "Marina"
+        ],
+        "last_names": [
+            "Volkov", "Smirnov", "Kuznetsov", "Popov", "Vasiliev", "Petrov", "Sokolov", "Mikhailov", "Novikov", "Fedorov",
+            "Morozov", "Volkov", "Alekseev", "Lebedev", "Semenov", "Egorov", "Pavlov", "Kozlov", "Stepanov", "Nikolaev"
+        ]
+    },
+    "middle_eastern": {
+        "male": [
+            "Ahmed", "Mohammed", "Ali", "Hassan", "Ibrahim", "Omar", "Mustafa", "Karim", "Samir", "Yusuf",
+            "Khalid", "Mahmoud", "Tariq", "Rami", "Jamal", "Bilal", "Hamza", "Ziad", "Fadi", "Nasir",
+            "Adnan", "Faisal", "Hakim", "Salim", "Abdul", "Malik", "Rashid", "Kareem", "Bassam", "Jalal"
+        ],
+        "female": [
+            "Fatima", "Aisha", "Leila", "Zahra", "Yasmin", "Amira", "Noor", "Samira", "Farah", "Zeinab",
+            "Layla", "Hanan", "Rana", "Maya", "Maha", "Dalia", "Rasha", "Jamila", "Salma", "Nadia",
+            "Mariam", "Fathima", "Soraya", "Sahar", "Noura", "Asma", "Reem", "Farida", "Latifa", "Rabab"
+        ],
+        "last_names": [
+            "Ali", "Hassan", "Khan", "Ahmed", "Mahmoud", "Ibrahim", "Omar", "Al-Rashid", "Al-Mansouri", "Al-Zahra",
+            "Al-Hassan", "Al-Ahmad", "Al-Mohammed", "Al-Khalil", "Al-Sabah", "Al-Najjar", "Al-Khoury", "Al-Masri", "Al-Shami", "Al-Iraqi"
         ]
     }
 }
+
+# Advanced Name Generation Functions
+class AdvancedNameGenerator:
+    """Enhanced name generation system with sophisticated patterns"""
+    
+    @staticmethod
+    def generate_random_name(nationality: str = None, gender: str = None, style: str = "normal") -> Dict[str, str]:
+        """Generate a random name with enhanced variety and cultural authenticity
+        
+        Args:
+            nationality: Specific nationality or 'random' for any
+            gender: 'M', 'F', or None for random
+            style: 'traditional', 'modern', 'mixed', 'formal', 'casual'
+        """
+        if nationality is None or nationality == "random":
+            # Weight Japanese names more heavily (60%) since it's a Japanese school
+            nationality_weights = {
+                "japanese": 0.60,
+                "chinese": 0.08,
+                "korean": 0.08,
+                "american": 0.08,
+                "spanish": 0.06,
+                "indian": 0.04,
+                "russian": 0.03,
+                "middle_eastern": 0.03
+            }
+            nationality = random.choices(
+                list(nationality_weights.keys()), 
+                weights=list(nationality_weights.values())
+            )[0]
+        
+        if gender is None:
+            gender = random.choice(["M", "F"])
+        
+        # Get name lists for the chosen nationality
+        if nationality not in name_data:
+            nationality = "japanese"  # Fallback
+        
+        names = name_data[nationality]
+        
+        # Select first name based on gender and style
+        if gender == "M":
+            first_names = names["male"]
+        else:
+            first_names = names["female"]
+        
+        # Apply style filtering for names that have style variations
+        if nationality == "japanese" and style in ["traditional", "modern"]:
+            if style == "traditional":
+                # Prefer traditional names (first 40 in list)
+                first_names = first_names[:40] + random.sample(first_names[40:], k=min(10, len(first_names[40:])))
+            elif style == "modern":
+                # Prefer modern names (later in list)
+                first_names = first_names[30:] + random.sample(first_names[:30], k=min(10, len(first_names[:30])))
+        
+        first_name = random.choice(first_names)
+        last_name = random.choice(names["last_names"])
+        
+        return {
+            "first_name": first_name,
+            "last_name": last_name,
+            "full_name": f"{first_name} {last_name}",
+            "nationality": nationality,
+            "gender": gender,
+            "style": style
+        }
+    
+    @staticmethod
+    def generate_teacher_name(subject: str = None) -> Dict[str, str]:
+        """Generate appropriate teacher names with sensei honorifics"""
+        # Teachers are primarily Japanese with some international faculty
+        if random.random() < 0.85:  # 85% Japanese teachers
+            name_info = AdvancedNameGenerator.generate_random_name("japanese", style="formal")
+            honorific = "-sensei"
+        else:  # 15% international teachers
+            nationality = random.choice(["american", "chinese", "korean", "spanish"])
+            name_info = AdvancedNameGenerator.generate_random_name(nationality, style="formal")
+            honorific = "-sensei" if nationality in ["chinese", "korean"] else ""
+        
+        # Add subject-specific title preferences
+        if subject:
+            if subject.lower() in ["pe", "physical education", "sports"]:
+                # PE teachers often use "Coach" title
+                if name_info["nationality"] == "american":
+                    name_info["display_name"] = f"Coach {name_info['last_name']}"
+                else:
+                    name_info["display_name"] = f"{name_info['last_name']}-sensei"
+            else:
+                name_info["display_name"] = f"{name_info['last_name']}{honorific}"
+        else:
+            name_info["display_name"] = f"{name_info['last_name']}{honorific}"
+        
+        return name_info
+    
+    @staticmethod
+    def generate_student_batch(count: int, year_level: int = None) -> List[Dict[str, Any]]:
+        """Generate a batch of students with diverse backgrounds and realistic distribution"""
+        students = []
+        
+        for _ in range(count):
+            # Determine nationality with realistic distribution for Japanese school
+            if random.random() < 0.75:  # 75% Japanese students
+                nationality = "japanese"
+            else:  # 25% international students
+                nationality = random.choice([
+                    "chinese", "korean", "american", "spanish", 
+                    "indian", "russian", "middle_eastern"
+                ])
+            
+            # Generate name
+            gender = random.choice(["M", "F"])
+            style = random.choice(["traditional", "modern", "mixed"])
+            name_info = AdvancedNameGenerator.generate_random_name(nationality, gender, style)
+            
+            # Add student-specific data
+            student = {
+                "name": name_info["full_name"],
+                "first_name": name_info["first_name"],
+                "last_name": name_info["last_name"],
+                "nationality": nationality,
+                "gender": gender,
+                "year": year_level or random.randint(1, 4),
+                "is_international": nationality != "japanese",
+                "personality": random.choice([
+                    "shy", "outgoing", "studious", "athletic", "artistic", 
+                    "rebellious", "helpful", "competitive", "calm", "energetic"
+                ]),
+                "clubs": [],
+                "hobbies": random.sample([
+                    "reading", "gaming", "sports", "music", "art", "cooking",
+                    "photography", "dancing", "writing", "technology"
+                ], k=random.randint(1, 3))
+            }
+            
+            students.append(student)
+        
+        return students
+    
+    @staticmethod
+    def generate_family_name(base_student: Dict[str, str], relationship: str) -> Dict[str, str]:
+        """Generate family member names that are culturally consistent"""
+        # Use same nationality and last name
+        nationality = base_student["nationality"]
+        last_name = base_student["last_name"]
+        
+        # Determine gender based on relationship
+        if relationship in ["father", "brother", "uncle", "grandfather"]:
+            gender = "M"
+        elif relationship in ["mother", "sister", "aunt", "grandmother"]:
+            gender = "F"
+        else:
+            gender = random.choice(["M", "F"])
+        
+        # Generate appropriate first name
+        if nationality in name_data:
+            names = name_data[nationality]
+            if gender == "M":
+                first_name = random.choice(names["male"])
+            else:
+                first_name = random.choice(names["female"])
+        else:
+            first_name = f"Family_{random.randint(1, 999)}"
+        
+        return {
+            "first_name": first_name,
+            "last_name": last_name,
+            "full_name": f"{first_name} {last_name}",
+            "nationality": nationality,
+            "gender": gender,
+            "relationship": relationship
+        }
 
 
 # Remove access aliases - we'll access name_data directly
@@ -9126,6 +9410,7 @@ def setup_game(non_interactive: bool = False) -> Any:
         player["dorm_number"] = random.randint(100, 999)
         player["electives"] = ["Music", "Computer Science"]  # Default electives
         player["current_location"] = "Dorm Room"
+        player["settings"] = {"lgbtq": False}  # Default LGBTQ setting
         print(f"\n{Fore.YELLOW}Using default values for non-interactive environment.{Style.RESET_ALL}")
         print(f"{Fore.CYAN}Auto-selected: Dormitory (Room {player['dorm_number']}) and electives: {', '.join(player['electives'])}{Style.RESET_ALL}")
         # Force non-interactive mode for the rest of the setup
@@ -10244,92 +10529,192 @@ def show_academic_year() -> None:
 
 
 def generate_full_student_list() -> Any:
-    """Generate a large list of students for the school (500-600 students)"""
+    """Generate a large list of students for the school (500-600 students) with enhanced name diversity"""
     full_student_list = []
 
     # Generate a random number between 500 and 600
     total_students = random.randint(500, 600)
 
-    # We're now using the centralized name data structure directly
-    # No need for maintaining separate name lists as we access name_data directly
-
-    # Tags that can be assigned to students
+    # Enhanced tags that can be assigned to students
     tags = [
         "athlete", "honors", "exchange", "scholarship", "commuter", "resident", 
         "club_member", "volunteer", "part_time_worker", "mentor", "tutor",
         "student_council", "newspaper", "theater", "music", "art", "stem", "social",
-        "introverted", "extroverted", "night_owl", "early_bird", "studious", "party_goer"
+        "introverted", "extroverted", "night_owl", "early_bird", "studious", "party_goer",
+        "debate_team", "chess_club", "anime_fan", "bookworm", "gamer", "photographer",
+        "dancer", "singer", "writer", "tech_savvy", "environmentalist", "leader"
     ]
 
-    # Generate students
-    for _ in range(total_students):
-        # Determine if this student is international (15% chance)
-        is_international = random.random() < 0.15
+    # Generate students using the advanced name generator
+    for i in range(total_students):
+        # Determine nationality with realistic distribution
+        if random.random() < 0.25:  # 25% international students
+            nationality = random.choice([
+                "chinese", "korean", "american", "spanish", 
+                "indian", "russian", "middle_eastern"
+            ])
+            is_international = True
+        else:  # 75% Japanese students
+            nationality = "japanese"
+            is_international = False
 
+        # Generate name using advanced system
         gender = random.choice(["M", "F"])
-
-        if is_international:
-            # Map nationality to name data keys
-            nationality_mapping = {
-                "American": "american",
-                "Chinese": "chinese", 
-                "Korean": "korean",
-                "Spanish": "spanish",
-                "Indian": "indian",
-                "Russian": "russian",
-                "Middle Eastern": "middle_eastern"
-            }
-            
-            # Choose a random nationality from available options in our name data
-            nationality = random.choice(list(nationality_mapping.keys()))
-            name_data_key = nationality_mapping[nationality]
-            
-            # Use the appropriate names from our centralized structure based on nationality
-            if gender == "M":
-                first_name = random.choice(name_data[name_data_key]['male'])
-            else:
-                first_name = random.choice(name_data[name_data_key]['female'])
-
-            last_name = random.choice(name_data[name_data_key]['last_names'])
-        else:
-            # Japanese student
-            first_name = random.choice(
-                name_data['japanese']['male'] if gender == "M" else name_data['japanese']['female']
-            )
-            last_name = random.choice(name_data['japanese']['last_names'])
-            nationality = "Japanese"
-
-        name = first_name + " " + last_name
+        style = random.choice(["traditional", "modern", "mixed"])
+        name_info = AdvancedNameGenerator.generate_random_name(nationality, gender, style)
+        
+        # Select personality
         personality = random.choice(list(personalities.keys()))
         year = random.randint(1, 4)  # Students can be from any year
 
-        # Assign 1-3 random tags
-        student_tags = random.sample(tags, random.randint(1, 3))
+        # Assign 1-4 random tags with some correlation to personality
+        base_tag_count = random.randint(1, 4)
+        
+        # Add personality-influenced tags
+        personality_tag_mapping = {
+            "shy": ["introverted", "bookworm", "art", "music"],
+            "outgoing": ["extroverted", "social", "leader", "theater"],
+            "studious": ["honors", "tutor", "stem", "debate_team"],
+            "athletic": ["athlete", "early_bird", "sports"],
+            "artistic": ["art", "music", "theater", "writer"],
+            "rebellious": ["night_owl", "gamer", "party_goer"],
+            "helpful": ["volunteer", "mentor", "student_council"],
+            "competitive": ["athlete", "debate_team", "chess_club", "leader"]
+        }
+        
+        influenced_tags = personality_tag_mapping.get(personality, [])
+        
+        # Select tags with some bias toward personality-influenced ones
+        available_tags = tags.copy()
+        selected_tags = []
+        
+        # 60% chance to include a personality-influenced tag
+        if influenced_tags and random.random() < 0.6:
+            selected_tags.append(random.choice(influenced_tags))
+            base_tag_count -= 1
+        
+        # Fill remaining tag slots randomly
+        remaining_tags = [tag for tag in available_tags if tag not in selected_tags]
+        additional_tags = random.sample(remaining_tags, min(base_tag_count, len(remaining_tags)))
+        selected_tags.extend(additional_tags)
 
         student = {
-            "name": name, 
+            "name": name_info["full_name"],
+            "first_name": name_info["first_name"], 
+            "last_name": name_info["last_name"],
             "personality": personality, 
             "gender": gender, 
             "year": year,
             "nationality": nationality,
             "is_international": is_international,
-            "tags": student_tags
+            "tags": selected_tags,
+            "style": style,  # Track naming style for consistency
+            "background": generate_student_background(nationality, selected_tags)
         }
 
-        # Special chance for club membership
-        if random.random() < 0.2:  # 20% chance
-            all_club_names = []
-            for club_name in clubs:
-                all_club_names.append(club_name)
-
+        # Enhanced club membership with multiple possible clubs
+        club_count = 0
+        if random.random() < 0.3:  # 30% chance for club membership
+            club_count = random.choices([1, 2, 3], weights=[70, 25, 5])[0]  # Most have 1 club
+            
+            all_club_names = list(clubs.keys())
             if all_club_names:
-                student["club_member"] = random.choice(all_club_names)
-                if "club_member" not in student_tags:
-                    student_tags.append("club_member")
+                # Select clubs based on student interests/tags
+                preferred_clubs = []
+                for tag in selected_tags:
+                    if tag in ["music", "art", "theater", "stem", "sports", "debate_team"]:
+                        # Map tags to likely clubs
+                        tag_club_mapping = {
+                            "music": ["Music Club", "Band", "Choir"],
+                            "art": ["Art Club", "Photography Club"],
+                            "theater": ["Drama Club", "Theater Club"],
+                            "stem": ["Science Club", "Computer Club", "Math Club"],
+                            "sports": ["Sports Club", "Athletics"],
+                            "debate_team": ["Debate Club", "Student Council"]
+                        }
+                        if tag in tag_club_mapping:
+                            preferred_clubs.extend([club for club in tag_club_mapping[tag] if club in all_club_names])
+                
+                # Select clubs (prefer relevant ones)
+                student_clubs = []
+                for _ in range(club_count):
+                    if preferred_clubs and random.random() < 0.7:  # 70% chance for relevant club
+                        club = random.choice(preferred_clubs)
+                        if club not in student_clubs:
+                            student_clubs.append(club)
+                            preferred_clubs.remove(club)
+                    else:  # Random club
+                        available_clubs = [club for club in all_club_names if club not in student_clubs]
+                        if available_clubs:
+                            student_clubs.append(random.choice(available_clubs))
+                
+                if student_clubs:
+                    student["clubs"] = student_clubs
+                    if "club_member" not in selected_tags:
+                        selected_tags.append("club_member")
 
         full_student_list.append(student)
 
     return full_student_list
+
+def generate_student_background(nationality: str, tags: List[str]) -> Dict[str, Any]:
+    """Generate detailed background information for a student"""
+    background = {
+        "hometown": generate_hometown(nationality),
+        "family_situation": random.choice(["nuclear_family", "single_parent", "extended_family", "guardian"]),
+        "economic_status": random.choices(
+            ["wealthy", "upper_middle", "middle", "lower_middle", "working_class"],
+            weights=[5, 15, 50, 20, 10]
+        )[0],
+        "academic_focus": generate_academic_focus(tags),
+        "social_circle": random.choice(["popular", "average", "small_group", "loner"]),
+        "future_goals": generate_future_goals(nationality, tags)
+    }
+    
+    return background
+
+def generate_hometown(nationality: str) -> str:
+    """Generate appropriate hometown based on nationality"""
+    hometown_mapping = {
+        "japanese": ["Tokyo", "Osaka", "Kyoto", "Yokohama", "Nagoya", "Fukuoka", "Sendai", "Hiroshima"],
+        "chinese": ["Beijing", "Shanghai", "Guangzhou", "Shenzhen", "Chengdu", "Hangzhou", "Nanjing"],
+        "korean": ["Seoul", "Busan", "Incheon", "Daegu", "Daejeon", "Gwangju", "Ulsan"],
+        "american": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio"],
+        "spanish": ["Madrid", "Barcelona", "Valencia", "Seville", "Bilbao", "Malaga", "Murcia"],
+        "indian": ["Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Pune", "Hyderabad"],
+        "russian": ["Moscow", "St. Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Samara"],
+        "middle_eastern": ["Dubai", "Cairo", "Istanbul", "Tehran", "Baghdad", "Riyadh", "Beirut"]
+    }
+    
+    return random.choice(hometown_mapping.get(nationality, ["Unknown City"]))
+
+def generate_academic_focus(tags: List[str]) -> str:
+    """Generate academic focus based on student tags"""
+    if "stem" in tags or "tech_savvy" in tags:
+        return random.choice(["mathematics", "science", "computer_science", "engineering"])
+    elif "art" in tags or "music" in tags or "theater" in tags:
+        return random.choice(["fine_arts", "performing_arts", "literature", "creative_writing"])
+    elif "honors" in tags or "studious" in tags:
+        return random.choice(["general_studies", "advanced_placement", "academic_excellence"])
+    elif "athlete" in tags:
+        return random.choice(["physical_education", "sports_science", "health"])
+    else:
+        return random.choice(["general_studies", "undecided", "liberal_arts"])
+
+def generate_future_goals(nationality: str, tags: List[str]) -> str:
+    """Generate realistic future goals based on background"""
+    if "honors" in tags or "stem" in tags:
+        goals = ["university", "research", "graduate_school", "professional_career"]
+    elif "athlete" in tags:
+        goals = ["sports_scholarship", "professional_sports", "sports_coaching", "fitness_industry"]
+    elif "art" in tags or "music" in tags:
+        goals = ["art_school", "creative_career", "entertainment_industry", "freelance_artist"]
+    elif "volunteer" in tags or "student_council" in tags:
+        goals = ["public_service", "non_profit_work", "politics", "community_leadership"]
+    else:
+        goals = ["university", "trade_school", "workforce", "travel", "entrepreneurship"]
+    
+    return random.choice(goals)
 
 def attend_class_command(args) -> Any:
     """Attend a specific class with random lecture cutscenes or exams"""
@@ -10385,9 +10770,15 @@ def attend_class_command(args) -> Any:
     # Small energy cost and potential benefits
     player["energy"] = max(0, player["energy"] - 10)
     
-    # Small chance to improve relationship with classmates
-    if random.random() < 0.3:
-        improve_random_relationship()
+    # Various random events after class
+    post_class_events()
+    
+    # Update stats based on grades and money
+    update_grade_effects()
+    
+    # Occasional weather events
+    if random.random() < 0.1:  # 10% chance
+        handle_weather_events()
 
 def take_class_exam(subject_name: str) -> Any:
     """Handle in-class exam"""
@@ -10503,14 +10894,100 @@ def get_lecture_scenarios(subject_name: str, teacher_name: str, teacher_personal
                 "interactive": True,
                 "prompt": "The teacher is looking for volunteers to answer.",
                 "choices": [
-                    {"text": "Raise your hand confidently", "result": "Correct! The teacher nods approvingly.", "grade_boost": 2},
-                    {"text": "Stay quiet and take notes", "result": "You focus on understanding the concept thoroughly.", "grade_boost": 1},
-                    {"text": "Whisper to a classmate", "result": "Your classmate appreciates the help, but the teacher notices."}
+                    {"text": "Raise your hand confidently", "result": "Correct! The teacher nods approvingly.", "grade_boost": 2, "alignment": {"teacher_student": 3}},
+                    {"text": "Stay quiet and take notes", "result": "You focus on understanding the concept thoroughly.", "grade_boost": 1, "alignment": {"selfish_selfless": -2}},
+                    {"text": "Whisper to a classmate", "result": "Your classmate appreciates the help, but the teacher notices.", "alignment": {"selfish_selfless": 5, "teacher_student": -2}}
                 ]
             },
             {
                 "setting": "The teacher is demonstrating a complex word problem on the board, step by step.",
                 "dialogue": "Mathematics isn't just about numbers - it's about logical thinking and problem-solving.",
+                "interactive": False
+            },
+            {
+                "setting": "A pop quiz is being handed out. Students look nervous as they flip through the pages.",
+                "dialogue": "Don't panic. Remember, show your work even if you're not sure of the final answer.",
+                "interactive": True,
+                "prompt": "You encounter a difficult problem halfway through the quiz.",
+                "choices": [
+                    {"text": "Skip it and come back later", "result": "Good strategy! You manage your time well.", "grade_boost": 1},
+                    {"text": "Work through it step by step", "result": "Your methodical approach pays off.", "grade_boost": 3},
+                    {"text": "Guess and move on", "result": "Sometimes intuition works, but not this time."}
+                ]
+            },
+            {
+                "setting": "The teacher is explaining how mathematical concepts apply to real-world situations.",
+                "dialogue": "You'll use these formulas in engineering, physics, economics... mathematics is everywhere!",
+                "interactive": True,
+                "prompt": "A student asks about practical applications.",
+                "choices": [
+                    {"text": "Share an example from daily life", "result": "Your practical thinking impresses everyone.", "grade_boost": 2},
+                    {"text": "Ask about career connections", "result": "Your forward-thinking gets valuable advice."},
+                    {"text": "Listen to other examples", "result": "You gain broader perspective on math applications.", "grade_boost": 1}
+                ]
+            }
+        ],
+        "Science I": [
+            {
+                "setting": "The lab is set up for today's experiment. Safety goggles and lab coats are required.",
+                "dialogue": "Remember, science is about observation and hypothesis. What do you predict will happen?",
+                "interactive": True,
+                "prompt": "You're conducting a chemical reaction experiment.",
+                "choices": [
+                    {"text": "Make a detailed prediction", "result": "Your hypothesis shows scientific thinking.", "grade_boost": 3},
+                    {"text": "Follow the lab manual exactly", "result": "Safety first! Your careful approach is noted.", "grade_boost": 2},
+                    {"text": "Watch your partner's technique", "result": "Observational learning has its benefits.", "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "The classroom is dim as the teacher shows microscopic slides on the projector.",
+                "dialogue": "Look closely at these cells. Notice how the mitochondria are distributed throughout the cytoplasm.",
+                "interactive": True,
+                "prompt": "The teacher asks you to identify a cellular structure.",
+                "choices": [
+                    {"text": "Point out the nucleus confidently", "result": "Correct! Your knowledge of cell biology shines.", "grade_boost": 2},
+                    {"text": "Ask for clarification first", "result": "Good scientific practice - always verify before concluding.", "grade_boost": 1},
+                    {"text": "Admit you're unsure", "result": "Honesty in science is important. The teacher explains patiently."}
+                ]
+            },
+            {
+                "setting": "Students are working in groups to design an experiment for the science fair.",
+                "dialogue": "The best experiments often come from simple questions about the world around us.",
+                "interactive": True,
+                "prompt": "Your group is brainstorming experiment ideas.",
+                "choices": [
+                    {"text": "Suggest testing plant growth", "result": "A classic with room for creativity! Good choice.", "grade_boost": 2},
+                    {"text": "Propose something more complex", "result": "Ambitious! The teacher helps you scale it appropriately.", "grade_boost": 1},
+                    {"text": "Support someone else's idea", "result": "Team collaboration shows maturity.", "grade_boost": 1}
+                ]
+            }
+        ],
+        "History I": [
+            {
+                "setting": "Maps and timelines cover the classroom walls. Today's focus is on ancient civilizations.",
+                "dialogue": "History isn't just dates and names - it's about understanding how people lived and why they made certain choices.",
+                "interactive": True,
+                "prompt": "The class is discussing the fall of the Roman Empire.",
+                "choices": [
+                    {"text": "Mention economic factors", "result": "Excellent analysis! You understand the complexity of historical events.", "grade_boost": 3},
+                    {"text": "Ask about daily life back then", "result": "Great question! Understanding people makes history alive.", "grade_boost": 2},
+                    {"text": "Compare to modern situations", "result": "Drawing parallels shows deep thinking.", "grade_boost": 2}
+                ]
+            },
+            {
+                "setting": "Primary source documents are being passed around the classroom.",
+                "dialogue": "These letters were written by actual people who lived through these events. What can we learn from their words?",
+                "interactive": True,
+                "prompt": "You're analyzing a historical letter.",
+                "choices": [
+                    {"text": "Focus on the writer's emotions", "result": "Empathy helps us understand history deeply.", "grade_boost": 2},
+                    {"text": "Look for factual information", "result": "Good historian instincts - facts matter.", "grade_boost": 2},
+                    {"text": "Consider the historical context", "result": "Contextual thinking shows advanced understanding.", "grade_boost": 3}
+                ]
+            },
+            {
+                "setting": "The teacher is explaining how different cultures developed unique solutions to similar problems.",
+                "dialogue": "Innovation happens everywhere. Each civilization found its own path to greatness.",
                 "interactive": False
             }
         ],
@@ -10522,7 +10999,30 @@ def get_lecture_scenarios(subject_name: str, teacher_name: str, teacher_personal
                 "prompt": "Your teacher suggests trying a new technique.",
                 "choices": [
                     {"text": "Experiment boldly", "result": "Your willingness to take risks pays off beautifully.", "grade_boost": 3},
-                    {"text": "Ask for guidance first", "result": "The teacher appreciates your thoughtful approach.", "grade_boost": 2}
+                    {"text": "Ask for guidance first", "result": "The teacher appreciates your thoughtful approach.", "grade_boost": 2},
+                    {"text": "Stick to familiar methods", "result": "Your technical skill shows in the refined result.", "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "Students are critiquing each other's artwork in a respectful gallery walk.",
+                "dialogue": "Art criticism isn't about finding flaws - it's about understanding choices and intentions.",
+                "interactive": True,
+                "prompt": "You're viewing a classmate's abstract painting.",
+                "choices": [
+                    {"text": "Comment on color choices", "result": "Your eye for color theory impresses everyone.", "grade_boost": 2},
+                    {"text": "Ask about their inspiration", "result": "Your curiosity leads to meaningful artistic dialogue.", "charisma_boost": 2},
+                    {"text": "Share how it makes you feel", "result": "Your emotional response validates the artist's work.", "grade_boost": 1, "charisma_boost": 1}
+                ]
+            },
+            {
+                "setting": "The class is learning about famous artists and their techniques throughout history.",
+                "dialogue": "Every master started as a beginner. Study their techniques, but find your own voice.",
+                "interactive": True,
+                "prompt": "You're recreating a style from the Renaissance period.",
+                "choices": [
+                    {"text": "Focus on historical accuracy", "result": "Your attention to detail captures the period perfectly.", "grade_boost": 3},
+                    {"text": "Add your own modern twist", "result": "Your creative interpretation bridges past and present.", "grade_boost": 2},
+                    {"text": "Study the original carefully first", "result": "Your methodical approach builds strong foundations.", "grade_boost": 2}
                 ]
             }
         ],
@@ -10533,25 +11033,243 @@ def get_lecture_scenarios(subject_name: str, teacher_name: str, teacher_personal
                 "interactive": True,
                 "prompt": "You're asked to perform a solo passage.",
                 "choices": [
-                    {"text": "Play with confidence", "result": "Your performance moves the entire class.", "grade_boost": 3},
-                    {"text": "Focus on technique", "result": "Your precision is noted and appreciated.", "grade_boost": 2}
+                    {"text": "Play with confidence", "result": "Your performance moves the entire class.", "grade_boost": 3, "charisma_boost": 2},
+                    {"text": "Focus on technique", "result": "Your precision is noted and appreciated.", "grade_boost": 2},
+                    {"text": "Play it safe", "result": "You deliver a solid, reliable performance.", "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "The choir is rehearsing for the upcoming school concert. Harmonies fill the air.",
+                "dialogue": "In music, we don't just play notes - we create emotions and tell stories without words.",
+                "interactive": True,
+                "prompt": "Your section is struggling with a challenging harmony.",
+                "choices": [
+                    {"text": "Help your section mates", "result": "Your leadership and musical ear help everyone improve.", "grade_boost": 2, "charisma_boost": 2},
+                    {"text": "Practice extra after class", "result": "Your dedication to perfection shows in your performance.", "grade_boost": 3},
+                    {"text": "Ask the teacher for tips", "result": "Your willingness to learn impresses the instructor.", "grade_boost": 2}
+                ]
+            },
+            {
+                "setting": "Students are composing their own melodies using music theory concepts.",
+                "dialogue": "Composition is where theory meets creativity. Let the rules guide you, not limit you.",
+                "interactive": True,
+                "prompt": "You're creating a melody in a minor key.",
+                "choices": [
+                    {"text": "Experiment with unconventional progressions", "result": "Your creative approach produces something unique.", "grade_boost": 3},
+                    {"text": "Follow traditional patterns", "result": "Your solid understanding of theory creates a beautiful piece.", "grade_boost": 2},
+                    {"text": "Collaborate with a classmate", "result": "Two musical minds create something greater than the sum of parts.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            }
+        ],
+        "Computer Science": [
+            {
+                "setting": "The computer lab hums with the sound of keyboards and focused concentration.",
+                "dialogue": "Programming is like learning a new language - one that lets you communicate with machines.",
+                "interactive": True,
+                "prompt": "Your code has a bug that needs debugging.",
+                "choices": [
+                    {"text": "Debug systematically", "result": "Your methodical approach solves the problem efficiently.", "grade_boost": 3},
+                    {"text": "Ask a classmate for help", "result": "Collaboration leads to learning for both of you.", "charisma_boost": 2, "grade_boost": 1},
+                    {"text": "Try random fixes", "result": "Eventually you stumble upon the solution.", "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "Students are working on a group project to create a simple game or application.",
+                "dialogue": "Real programming is teamwork. Learn to read others' code and write code others can understand.",
+                "interactive": True,
+                "prompt": "Your team is deciding on the project architecture.",
+                "choices": [
+                    {"text": "Suggest using best practices", "result": "Your knowledge of clean code principles guides the team well.", "grade_boost": 3},
+                    {"text": "Focus on user experience", "result": "Your attention to the end user creates a better product.", "grade_boost": 2},
+                    {"text": "Volunteer for the challenging parts", "result": "Your willingness to tackle difficulty earns team respect.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "Today's lesson covers cybersecurity basics and ethical hacking concepts.",
+                "dialogue": "With great coding power comes great responsibility. Always use your skills ethically.",
+                "interactive": True,
+                "prompt": "You're learning about password security and encryption.",
+                "choices": [
+                    {"text": "Ask about real-world applications", "result": "Your practical interest shows mature thinking about technology.", "grade_boost": 2},
+                    {"text": "Suggest testing on the school system", "result": "The teacher explains why that would be inappropriate, but appreciates your curiosity."},
+                    {"text": "Focus on the technical details", "result": "Your deep dive into encryption algorithms impresses the class.", "grade_boost": 3}
+                ]
+            }
+        ],
+        "Drama": [
+            {
+                "setting": "The drama classroom has been transformed into a rehearsal space with costumes and props scattered about.",
+                "dialogue": "Acting isn't about pretending to be someone else - it's about finding truth in imaginary circumstances.",
+                "interactive": True,
+                "prompt": "You're rehearsing an emotional scene with a scene partner.",
+                "choices": [
+                    {"text": "Commit fully to the emotion", "result": "Your authentic performance moves everyone watching.", "grade_boost": 3, "charisma_boost": 2},
+                    {"text": "Focus on clear delivery", "result": "Your professional approach ensures the audience understands every word.", "grade_boost": 2},
+                    {"text": "Support your scene partner", "result": "Your generous acting makes your partner look good too.", "charisma_boost": 3, "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "Students are improvising scenes based on random prompts, building confidence and quick thinking.",
+                "dialogue": "Improv teaches you to say 'yes, and...' to life. Accept what's given and build on it.",
+                "interactive": True,
+                "prompt": "You're given a challenging improv scenario about being stuck in an elevator.",
+                "choices": [
+                    {"text": "Create an interesting character", "result": "Your unique character choices drive the scene forward.", "grade_boost": 2, "charisma_boost": 2},
+                    {"text": "Focus on making others look good", "result": "Your supportive improv makes everyone shine.", "charisma_boost": 3},
+                    {"text": "Add unexpected plot twists", "result": "Your creative additions keep the audience engaged.", "grade_boost": 3}
+                ]
+            },
+            {
+                "setting": "The class is analyzing famous plays and discussing character motivations and themes.",
+                "dialogue": "Great drama reflects the human condition. Every character wants something desperately.",
+                "interactive": True,
+                "prompt": "You're discussing the motivations of a complex character like Lady Macbeth.",
+                "choices": [
+                    {"text": "Analyze her psychological state", "result": "Your deep character analysis shows sophisticated understanding.", "grade_boost": 3},
+                    {"text": "Compare to modern examples", "result": "Your connections to contemporary issues bring the play to life.", "grade_boost": 2},
+                    {"text": "Act out a key scene", "result": "Your performance demonstrates your understanding better than words.", "grade_boost": 2, "charisma_boost": 1}
+                ]
+            }
+        ],
+        "Photography": [
+            {
+                "setting": "Students are learning about composition and lighting in the photography studio.",
+                "dialogue": "Photography is painting with light. Learn to see how light shapes everything around you.",
+                "interactive": True,
+                "prompt": "You're setting up a portrait shot with natural lighting.",
+                "choices": [
+                    {"text": "Experiment with different angles", "result": "Your creative perspective produces a striking image.", "grade_boost": 3},
+                    {"text": "Focus on technical perfection", "result": "Your attention to exposure and focus creates a technically excellent shot.", "grade_boost": 2},
+                    {"text": "Work with your model's comfort", "result": "Your people skills result in natural, relaxed expressions.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "The class is on a field trip around campus, capturing candid moments and architectural details.",
+                "dialogue": "The best photographs tell stories. Look for moments that speak to you.",
+                "interactive": True,
+                "prompt": "You notice an interesting play of shadows on the library steps.",
+                "choices": [
+                    {"text": "Wait for the perfect moment", "result": "Your patience pays off with a perfectly timed shot.", "grade_boost": 3},
+                    {"text": "Take multiple shots quickly", "result": "Your thorough approach ensures you capture the scene.", "grade_boost": 2},
+                    {"text": "Include people in the composition", "result": "Your human element adds life to the architectural shot.", "grade_boost": 2}
+                ]
+            },
+            {
+                "setting": "Students are learning digital editing techniques to enhance their photographs.",
+                "dialogue": "Editing is part of photography, but remember - enhance reality, don't replace it.",
+                "interactive": True,
+                "prompt": "You're editing a landscape photo that came out slightly underexposed.",
+                "choices": [
+                    {"text": "Make subtle adjustments", "result": "Your restrained editing maintains the photo's natural beauty.", "grade_boost": 2},
+                    {"text": "Learn advanced techniques", "result": "Your technical skills open up new creative possibilities.", "grade_boost": 3},
+                    {"text": "Ask classmates for opinions", "result": "Your collaborative approach helps everyone learn.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            }
+        ],
+        "Creative Writing": [
+            {
+                "setting": "The classroom feels like a cozy library corner, with soft lighting and comfortable seating for sharing stories.",
+                "dialogue": "Writing is thinking on paper. Don't worry about perfection in your first draft - just get the story out.",
+                "interactive": True,
+                "prompt": "You're workshopping a short story with your classmates.",
+                "choices": [
+                    {"text": "Accept feedback gracefully", "result": "Your openness to criticism helps you grow as a writer.", "grade_boost": 2, "charisma_boost": 1},
+                    {"text": "Ask specific questions", "result": "Your targeted questions get valuable feedback on plot structure.", "grade_boost": 3},
+                    {"text": "Offer helpful suggestions to others", "result": "Your constructive criticism helps the whole class improve.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "Students are exploring different genres, from science fiction to mystery to literary fiction.",
+                "dialogue": "Every genre has its own rules and expectations. Master the conventions before you break them.",
+                "interactive": True,
+                "prompt": "You're writing a mystery story and need to plant clues fairly.",
+                "choices": [
+                    {"text": "Research classic mystery techniques", "result": "Your knowledge of genre conventions creates a well-crafted puzzle.", "grade_boost": 3},
+                    {"text": "Focus on character development", "result": "Your rich characters make the mystery more engaging.", "grade_boost": 2},
+                    {"text": "Test your story on classmates", "result": "Your peer feedback helps you gauge if the mystery is solvable.", "charisma_boost": 1, "grade_boost": 2}
+                ]
+            },
+            {
+                "setting": "The class is practicing different writing exercises to develop voice and style.",
+                "dialogue": "Voice is what makes your writing uniquely yours. It can't be taught, only discovered.",
+                "interactive": True,
+                "prompt": "You're writing the same scene from three different character perspectives.",
+                "choices": [
+                    {"text": "Make each voice completely distinct", "result": "Your mastery of different voices shows advanced writing skills.", "grade_boost": 3},
+                    {"text": "Focus on emotional authenticity", "result": "Your authentic character emotions resonate with readers.", "grade_boost": 2},
+                    {"text": "Experiment with writing styles", "result": "Your willingness to try new approaches expands your range.", "grade_boost": 2}
                 ]
             }
         ]
     }
     
-    # Return scenarios for the subject, or generic ones if not found
-    return scenarios.get(subject_name, [{
-        "setting": f"The {subject_name} classroom is quiet as students focus on today's lesson.",
-        "dialogue": "Today we'll be covering some important concepts that will be useful in your future studies.",
-        "interactive": False
-    }])
+    # Get scenarios for the subject and add extended content
+    base_subject_scenarios = scenarios.get(subject_name, [])
+    
+    # Add extended scenarios for more variety
+    extended_scenarios = add_extended_scenarios()
+    if subject_name in extended_scenarios:
+        base_subject_scenarios.extend(extended_scenarios[subject_name])
+    
+    # Apply seasonal and time variations
+    varied_scenarios = vary_cutscene_content(subject_name, base_subject_scenarios)
+    
+    # If no specific scenarios, create generic ones
+    if not varied_scenarios:
+        varied_scenarios = [
+            {
+                "setting": f"The {subject_name} classroom is quiet as students focus on today's lesson.",
+                "dialogue": "Today we'll be covering some important concepts that will be useful in your future studies.",
+                "interactive": False
+            }
+        ]
+    
+    # Modify scenarios based on teacher personality
+    if teacher_personality == "strict":
+        for scenario in varied_scenarios:
+            scenario["dialogue"] = scenario["dialogue"].replace("!", ".")
+    elif teacher_personality == "friendly":
+        for scenario in varied_scenarios:
+            if not scenario["dialogue"].endswith("!"):
+                scenario["dialogue"] += " 😊"
+    
+    return varied_scenarios
 
 def improve_subject_grade(subject_name: str, boost: int) -> Any:
-    """Improve grade for a subject"""
+    """Improve grade for a subject (affected by alignment)"""
     grade_values = {"F": 50, "D": 60, "C": 70, "B": 80, "A": 90}
     current_grade = player["grades"].get(subject_name, "C")
     current_value = grade_values.get(current_grade, 70)
+    
+    # Apply alignment modifiers to grade improvement
+    alignment = player.get("alignment", {"teacher_student": 0, "selfish_selfless": 0})
+    
+    # Teacher-aligned students get grade bonuses
+    if alignment["teacher_student"] > 20:  # Rule follower or teacher's pet
+        teacher_bonus = int(alignment["teacher_student"] / 25)  # Up to +4 bonus
+        boost += teacher_bonus
+        if teacher_bonus > 0:
+            print(f"{Fore.CYAN}Your good standing with teachers provides a grade bonus!{Style.RESET_ALL}")
+    
+    # Rebellious students get grade penalties from teacher bias
+    elif alignment["teacher_student"] < -20:
+        teacher_penalty = int(abs(alignment["teacher_student"]) / 33)  # Up to -3 penalty
+        boost = max(1, boost - teacher_penalty)
+        if teacher_penalty > 0:
+            print(f"{Fore.RED}Your rebellious reputation makes teachers grade you more harshly.{Style.RESET_ALL}")
+    
+    # Selfish students focus better on individual work
+    if alignment["selfish_selfless"] < -20:
+        if subject_name in ["Math I", "Science I", "Computer Science"]:  # Individual subjects
+            boost += 1
+            print(f"{Fore.BLUE}Your self-focused nature helps with independent study.{Style.RESET_ALL}")
+    
+    # Selfless students do better in collaborative subjects
+    elif alignment["selfish_selfless"] > 20:
+        if subject_name in ["Drama", "Music", "Art", "English I"]:  # Collaborative subjects
+            boost += 1
+            print(f"{Fore.GREEN}Your collaborative nature enhances your performance.{Style.RESET_ALL}")
+    
     new_value = min(100, current_value + boost)
     
     for letter, value in [("A", 90), ("B", 80), ("C", 70), ("D", 60), ("F", 50)]:
@@ -10560,13 +11278,1448 @@ def improve_subject_grade(subject_name: str, boost: int) -> Any:
             break
 
 def improve_random_relationship() -> Any:
-    """Improve relationship with a random classmate"""
+    """Improve relationship with a random classmate (affected by alignment)"""
     if students:
         random_student = random.choice(students)
         student_name = random_student["name"]
         current_rel = relationship.get(student_name, 0)
-        relationship[student_name] = min(100, current_rel + random.randint(1, 3))
+        
+        # Base relationship gain
+        base_gain = random.randint(1, 3)
+        
+        # Apply alignment modifiers
+        alignment = player.get("alignment", {"selfish_selfless": 0, "teacher_student": 0})
+        
+        # Selfless people build relationships easier but gain less independence
+        selfless_modifier = alignment["selfish_selfless"] / 50  # -2 to +2 range
+        relationship_gain = max(1, int(base_gain + selfless_modifier))
+        
+        # Student-aligned characters are more popular with students
+        if alignment["teacher_student"] < -20:  # Rebellious
+            relationship_gain += 1
+            print(f"{Fore.GREEN}Your rebellious reputation makes you more interesting to {student_name}.{Style.RESET_ALL}")
+        
+        relationship[student_name] = min(100, current_rel + relationship_gain)
         print(f"{Fore.GREEN}You had a nice chat with {student_name} after class.{Style.RESET_ALL}")
+        
+        # Selfish characters become more independent but struggle with relationships
+        if alignment["selfish_selfless"] < -30:
+            player["independence"] = player.get("independence", 50) + 1
+            if random.random() < 0.3:  # 30% chance of relationship strain
+                other_student = random.choice([s for s in students if s["name"] != student_name])
+                other_name = other_student["name"]
+                relationship[other_name] = max(0, relationship.get(other_name, 0) - 1)
+                print(f"{Fore.YELLOW}Your self-focused nature slightly strains your relationship with {other_name}.{Style.RESET_ALL}")
+        
+        # Selfless characters become more clingy and manipulable
+        elif alignment["selfish_selfless"] > 30:
+            player["manipulation_resistance"] = max(0, player.get("manipulation_resistance", 50) - 1)
+            if random.random() < 0.2:  # 20% chance of being taken advantage of
+                print(f"{Fore.YELLOW}Your eagerness to help makes you vulnerable to being taken advantage of.{Style.RESET_ALL}")
+                player["stress"] = min(100, player.get("stress", 0) + 5)
+
+def post_class_events() -> Any:
+    """Handle various random events that can happen after class"""
+    event_chance = random.random()
+    
+    if event_chance < 0.2:
+        improve_random_relationship()
+    elif event_chance < 0.3:
+        handle_crush_development()
+    elif event_chance < 0.35:
+        handle_academic_event()
+    elif event_chance < 0.4:
+        handle_social_event()
+    elif event_chance < 0.45:
+        handle_dramatic_event()
+    elif event_chance < 0.5:
+        handle_random_interference()
+    elif event_chance < 0.6:
+        check_locker_letters()
+    elif event_chance < 0.65:
+        handle_teacher_interaction()
+
+def handle_teacher_interaction() -> Any:
+    """Handle interactions with teachers that can boost academic reputation"""
+    teachers = [
+        {"name": "Ms. Rodriguez", "subject": "Math I", "personality": "strict_but_fair"},
+        {"name": "Mr. Chen", "subject": "Science I", "personality": "encouraging"},
+        {"name": "Mrs. Thompson", "subject": "English I", "personality": "intellectual"},
+        {"name": "Mr. Davis", "subject": "History I", "personality": "passionate"},
+        {"name": "Ms. Kim", "subject": "Art", "personality": "creative"},
+        {"name": "Coach Wilson", "subject": "PE", "personality": "motivational"}
+    ]
+    
+    teacher = random.choice(teachers)
+    teacher_name = teacher["name"]
+    subject = teacher["subject"]
+    personality = teacher["personality"]
+    
+    # Different interaction types based on academic charisma and alignment
+    academic_charisma = player["charisma"]["academic"]
+    alignment = player.get("alignment", {"teacher_student": 0})
+    
+    interaction_types = []
+    
+    # Always available interactions
+    interaction_types.extend([
+        {
+            "type": "ask_question",
+            "description": f"Ask {teacher_name} an insightful question about {subject}",
+            "academic_req": 0,
+            "result_text": "Your thoughtful question impresses the teacher.",
+            "reputation_gain": 2,
+            "charisma_gain": 1
+        },
+        {
+            "type": "offer_help",
+            "description": f"Offer to help {teacher_name} with classroom tasks",
+            "academic_req": 0,
+            "result_text": "Your willingness to help is appreciated.",
+            "reputation_gain": 3,
+            "charisma_gain": 1
+        }
+    ])
+    
+    # High academic charisma interactions
+    if academic_charisma >= 60:
+        interaction_types.extend([
+            {
+                "type": "academic_discussion",
+                "description": f"Engage in an advanced discussion about {subject} concepts",
+                "academic_req": 60,
+                "result_text": "Your deep understanding of the subject matter amazes the teacher.",
+                "reputation_gain": 5,
+                "charisma_gain": 2
+            },
+            {
+                "type": "research_proposal",
+                "description": f"Propose an independent research project in {subject}",
+                "academic_req": 60,
+                "result_text": "Your initiative and academic curiosity greatly impress the teacher.",
+                "reputation_gain": 6,
+                "charisma_gain": 3
+            }
+        ])
+    
+    # Teacher-aligned students get special interactions
+    if alignment["teacher_student"] > 20:
+        interaction_types.append({
+            "type": "rule_enforcement",
+            "description": f"Help {teacher_name} address a classroom disruption",
+            "academic_req": 0,
+            "result_text": "Your support in maintaining classroom order is valued.",
+            "reputation_gain": 4,
+            "charisma_gain": 1
+        })
+    
+    # Personality-based interactions
+    if personality == "encouraging":
+        interaction_types.append({
+            "type": "share_struggle",
+            "description": f"Share academic challenges with the understanding {teacher_name}",
+            "academic_req": 0,
+            "result_text": "Your honesty and desire to improve touches the teacher.",
+            "reputation_gain": 3,
+            "charisma_gain": 2
+        })
+    elif personality == "intellectual":
+        interaction_types.append({
+            "type": "philosophical_discussion",
+            "description": f"Engage in a philosophical discussion with {teacher_name}",
+            "academic_req": 40,
+            "result_text": "Your intellectual curiosity sparks a meaningful conversation.",
+            "reputation_gain": 4,
+            "charisma_gain": 2
+        })
+    
+    # Filter interactions based on requirements
+    available_interactions = [i for i in interaction_types if academic_charisma >= i["academic_req"]]
+    
+    if not available_interactions:
+        return  # No suitable interactions
+    
+    print(f"\n{Fore.BLUE}📚 TEACHER ENCOUNTER 📚{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}You encounter {teacher_name} ({subject}) in the hallway.{Style.RESET_ALL}")
+    
+    # Personality-based greeting
+    if personality == "strict_but_fair":
+        print(f"{Fore.WHITE}{teacher_name} nods professionally as you approach.{Style.RESET_ALL}")
+    elif personality == "encouraging":
+        print(f"{Fore.WHITE}{teacher_name} smiles warmly when they see you.{Style.RESET_ALL}")
+    elif personality == "intellectual":
+        print(f"{Fore.WHITE}{teacher_name} looks up from the book they're reading.{Style.RESET_ALL}")
+    elif personality == "passionate":
+        print(f"{Fore.WHITE}{teacher_name} is animatedly discussing {subject} with another teacher.{Style.RESET_ALL}")
+    elif personality == "creative":
+        print(f"{Fore.WHITE}{teacher_name} has paint stains on their clothes and looks inspired.{Style.RESET_ALL}")
+    elif personality == "motivational":
+        print(f"{Fore.WHITE}{teacher_name} has the energy of someone who just finished a workout.{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.YELLOW}How do you want to interact?{Style.RESET_ALL}")
+    
+    for i, interaction in enumerate(available_interactions, 1):
+        req_text = f" (Requires {interaction['academic_req']} academic charisma)" if interaction["academic_req"] > 0 else ""
+        print(f"{Fore.WHITE}[{i}] {interaction['description']}{req_text}{Style.RESET_ALL}")
+    
+    print(f"{Fore.WHITE}[{len(available_interactions) + 1}] Just say hello and move on{Style.RESET_ALL}")
+    
+    try:
+        choice = int(input("Your choice: ")) - 1
+        
+        if 0 <= choice < len(available_interactions):
+            chosen_interaction = available_interactions[choice]
+            
+            print(f"\n{Fore.GREEN}{chosen_interaction['result_text']}{Style.RESET_ALL}")
+            
+            # Apply benefits
+            current_rep = player["reputation"]["teachers"]
+            new_rep = min(100, current_rep + chosen_interaction["reputation_gain"])
+            player["reputation"]["teachers"] = new_rep
+            
+            current_academic = player["charisma"]["academic"]
+            new_academic = min(100, current_academic + chosen_interaction["charisma_gain"])
+            player["charisma"]["academic"] = new_academic
+            
+            print(f"{Fore.CYAN}Teacher reputation: +{chosen_interaction['reputation_gain']} (now {new_rep}){Style.RESET_ALL}")
+            print(f"{Fore.BLUE}Academic charisma: +{chosen_interaction['charisma_gain']} (now {new_academic}){Style.RESET_ALL}")
+            
+            # Alignment changes
+            if chosen_interaction["type"] in ["offer_help", "rule_enforcement"]:
+                apply_alignment_changes({"teacher_student": 2})
+            elif chosen_interaction["type"] in ["academic_discussion", "research_proposal"]:
+                apply_alignment_changes({"teacher_student": 1, "good_bad": 1})
+            
+            # Special subject-based benefits
+            if subject in player["grades"]:
+                if chosen_interaction["type"] in ["academic_discussion", "research_proposal"]:
+                    improve_subject_grade(subject, 1)
+                    print(f"{Fore.GREEN}Your {subject} understanding improves slightly!{Style.RESET_ALL}")
+            
+        elif choice == len(available_interactions):
+            print(f"\n{Fore.WHITE}You exchange pleasantries with {teacher_name} and continue on your way.{Style.RESET_ALL}")
+            player["reputation"]["teachers"] = min(100, player["reputation"]["teachers"] + 1)
+            print(f"{Fore.CYAN}Teacher reputation: +1{Style.RESET_ALL}")
+        
+    except (ValueError, IndexError):
+        print(f"{Fore.RED}Invalid choice. You awkwardly walk away.{Style.RESET_ALL}")
+
+def check_locker_letters() -> Any:
+    """Check for letters in player's locker based on popularity and charisma"""
+    global player, students, clubs, relationship
+    
+    # Calculate base letter chance based on charisma and alignment
+    social_charisma = player["charisma"]["social"]
+    academic_charisma = player["charisma"]["academic"]
+    alignment = player.get("alignment", {"good_bad": 0, "selfish_selfless": 0, "teacher_student": 0})
+    
+    # Base chances
+    love_letter_chance = 0.02  # 2% base chance
+    invitation_chance = 0.05   # 5% base chance
+    
+    # Charisma modifiers
+    love_letter_chance += (social_charisma - 50) / 2000  # Up to 2.5% bonus
+    invitation_chance += (social_charisma - 50) / 1000   # Up to 5% bonus
+    
+    # Academic charisma affects invitation chances (academic opportunities)
+    invitation_chance += (academic_charisma - 50) / 2000  # Up to 2.5% bonus for academic invitations
+    
+    # Alignment effects on popularity
+    if alignment["teacher_student"] < -20:  # Rebellious = popular with students
+        love_letter_chance += 0.015
+        invitation_chance += 0.02
+    elif alignment["teacher_student"] > 30:  # Teacher's pet = less popular romantically
+        love_letter_chance -= 0.01
+        invitation_chance += 0.01  # But more academic invitations
+    
+    if alignment["good_bad"] > 20:  # Good people are more attractive
+        love_letter_chance += 0.01
+    
+    # Check total relationships to determine popularity
+    total_relationships = sum(relationship.values()) if relationship else 0
+    avg_relationship = total_relationships / max(len(relationship), 1) if relationship else 0
+    
+    if avg_relationship > 60:  # Very popular
+        love_letter_chance += 0.02
+        invitation_chance += 0.03
+    elif avg_relationship > 40:  # Moderately popular
+        love_letter_chance += 0.01
+        invitation_chance += 0.015
+    
+    # Style points affect attractiveness
+    style_points = player.get("style_points", 0)
+    if style_points > 30:
+        love_letter_chance += 0.015
+    elif style_points > 15:
+        love_letter_chance += 0.008
+    
+    # Check for love letters
+    if random.random() < love_letter_chance:
+        generate_love_letter()
+    
+    # Check for invitation letters
+    if random.random() < invitation_chance:
+        generate_invitation_letter()
+
+def generate_love_letter() -> Any:
+    """Generate a love letter from a random student"""
+    global students, relationship
+    
+    if not students:
+        return
+    
+    # Filter potential admirers
+    potential_admirers = []
+    
+    for student in students:
+        # Don't send letters from people who already have high relationships (they'd confess directly)
+        if relationship.get(student["name"], 0) < 70:
+            # Check gender compatibility with LGBTQ settings
+            student_gender = student.get("gender", random.choice(["M", "F"]))
+            player_gender = player.get("gender", "M")
+            lgbtq_enabled = player.get("settings", {}).get("lgbtq", False)
+            
+            if student_gender != player_gender or lgbtq_enabled:
+                potential_admirers.append(student)
+    
+    if not potential_admirers:
+        return
+    
+    admirer = random.choice(potential_admirers)
+    admirer_name = admirer["name"]
+    
+    # Different letter types based on personality and relationship
+    current_rel = relationship.get(admirer_name, 0)
+    
+    letter_types = [
+        {
+            "type": "shy_confession",
+            "title": "Anonymous Letter",
+            "content": "I've been watching you from afar and I think you're really special. I'm too nervous to say this in person, but I wanted you to know that someone cares about you.\n\n- A Secret Admirer",
+            "reveal_chance": 0.3
+        },
+        {
+            "type": "poetry",
+            "title": "Poem for You",
+            "content": f"Roses are red, violets are blue,\nEvery day at school, I think of you.\nYour smile brightens up my day,\nI hope someday I'll find the courage to say...\n\n- {admirer_name if random.random() > 0.5 else 'Someone Special'}",
+            "reveal_chance": 0.5
+        },
+        {
+            "type": "direct_interest",
+            "title": "Getting to Know You",
+            "content": f"Hi! I've noticed you around school and you seem really cool. I'd love to get to know you better. Maybe we could study together sometime?\n\n- {admirer_name}",
+            "reveal_chance": 1.0
+        },
+        {
+            "type": "compliment",
+            "title": "You're Amazing",
+            "content": "I wanted to tell you that I really admire how you handle yourself in class. You're smart, kind, and just really impressive. Keep being awesome!\n\n- A Fan",
+            "reveal_chance": 0.2
+        }
+    ]
+    
+    # Choose letter type based on relationship level
+    if current_rel > 40:
+        letter = letter_types[2]  # Direct interest
+    elif current_rel > 20:
+        letter = random.choice(letter_types[1:3])  # Poetry or direct
+    else:
+        letter = random.choice(letter_types[:2] + [letter_types[3]])  # Shy or compliment
+    
+    print(f"\n{Fore.MAGENTA}💌 LOVE LETTER FOUND! 💌{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}You find a letter in your locker...{Style.RESET_ALL}")
+    print(f"\n{Fore.CYAN}--- {letter['title']} ---{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{letter['content']}{Style.RESET_ALL}")
+    
+    # Reveal sender if chance allows
+    if random.random() < letter["reveal_chance"] and "A Secret Admirer" in letter["content"]:
+        print(f"{Fore.MAGENTA}You recognize the handwriting... it's from {admirer_name}!{Style.RESET_ALL}")
+    
+    # Boost relationship and charisma
+    relationship[admirer_name] = min(100, relationship.get(admirer_name, 0) + random.randint(8, 15))
+    player["charisma"]["social"] = min(100, player["charisma"]["social"] + random.randint(1, 3))
+    
+    print(f"{Fore.GREEN}Your confidence gets a boost from the positive attention!{Style.RESET_ALL}")
+
+def generate_invitation_letter() -> Any:
+    """Generate invitation letters for clubs, events, or activities"""
+    global clubs, player
+    
+    invitation_types = [
+        {
+            "type": "club_invitation",
+            "weight": 40,
+            "generator": generate_club_invitation
+        },
+        {
+            "type": "study_group",
+            "weight": 30,
+            "generator": generate_study_group_invitation
+        },
+        {
+            "type": "social_event",
+            "weight": 20,
+            "generator": generate_social_event_invitation
+        },
+        {
+            "type": "academic_opportunity",
+            "weight": 10,
+            "generator": generate_academic_opportunity
+        }
+    ]
+    
+    # Weight selection based on academic charisma for academic opportunities  
+    academic_charisma = player["charisma"]["academic"]
+    if academic_charisma > 70:
+        invitation_types[3]["weight"] = 25  # Boost academic opportunities
+    
+    # Select invitation type
+    total_weight = sum(inv["weight"] for inv in invitation_types)
+    rand_val = random.randint(1, total_weight)
+    current_weight = 0
+    
+    for invitation in invitation_types:
+        current_weight += invitation["weight"]
+        if rand_val <= current_weight:
+            invitation["generator"]()
+            break
+
+def generate_club_invitation() -> Any:
+    """Generate a club invitation letter"""
+    global clubs, player
+    
+    # Use simple club names from the clubs list
+    available_clubs = [club for club in clubs if club not in player.get("clubs", [])]
+    
+    if not available_clubs:
+        # Generate study group instead if no clubs available
+        generate_study_group_invitation()
+        return
+    
+    club_name = random.choice(available_clubs)
+    
+    invitation_messages = [
+        f"Hi! We've noticed your {random.choice(['academic performance', 'social skills', 'positive attitude'])} and think you'd be a great fit for {club_name}. We meet regularly and would love to have you join us!",
+        f"The {club_name} is looking for new members! Your {random.choice(['talents', 'personality', 'enthusiasm'])} would be a perfect addition to our group. Come check us out!",
+        f"Exclusive invitation: {club_name} is extending a personal invitation for you to join our club. We believe you have exactly what we're looking for!"
+    ]
+    
+    message = random.choice(invitation_messages)
+    
+    print(f"\n{Fore.BLUE}📧 CLUB INVITATION 📧{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}--- Invitation from {club_name} ---{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{message}{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}Meeting Time: Regularly scheduled{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}This invitation boosts your reputation with the {club_name}!{Style.RESET_ALL}")
+    
+    # Boost reputation with that club type
+    if club_name == "Drama Club":
+        player["charisma"]["social"] = min(100, player["charisma"]["social"] + 2)
+    elif club_name == "Science Club":
+        player["charisma"]["academic"] = min(100, player["charisma"]["academic"] + 2)
+
+def generate_study_group_invitation() -> Any:
+    """Generate a study group invitation"""
+    subjects = list(player["grades"].keys())
+    subject = random.choice(subjects)
+    
+    organizers = ["Sarah", "Mike", "Jessica", "Alex", "Jordan", "Taylor"]
+    organizer = random.choice(organizers)
+    
+    locations = ["the library", "the student center", "the math tutoring room", "someone's dorm"]
+    location = random.choice(locations)
+    
+    times = ["tomorrow after class", "this weekend", "Wednesday evening", "during study hall"]
+    time = random.choice(times)
+    
+    print(f"\n{Fore.GREEN}📚 STUDY GROUP INVITATION 📚{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}--- Study Group for {subject} ---{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}Hey! {organizer} is organizing a study group for {subject} {time} at {location}. Your insights would be really valuable to the group. Hope to see you there!{Style.RESET_ALL}")
+    
+    # Small academic charisma boost
+    player["charisma"]["academic"] = min(100, player["charisma"]["academic"] + 1)
+    print(f"{Fore.BLUE}Your academic reputation grows from being invited to study groups!{Style.RESET_ALL}")
+
+def generate_social_event_invitation() -> Any:
+    """Generate social event invitations"""
+    events = [
+        "a movie night in the common room",
+        "a weekend trip to the nearby city",
+        "a birthday party this Saturday",
+        "a game night with board games and snacks",
+        "a group outing to the local café",
+        "a beach volleyball tournament",
+        "a karaoke night at the student center"
+    ]
+    
+    event = random.choice(events)
+    host = random.choice(["Emma", "Chris", "Maya", "Ryan", "Zoe", "Sam"])
+    
+    print(f"\n{Fore.YELLOW}🎉 SOCIAL EVENT INVITATION 🎉{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}--- You're Invited! ---{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{host} is hosting {event} and you're invited! It's going to be a great time with friends. Hope you can make it!{Style.RESET_ALL}")
+    
+    # Social charisma boost
+    player["charisma"]["social"] = min(100, player["charisma"]["social"] + 2)
+    print(f"{Fore.GREEN}Being included in social events boosts your popularity!{Style.RESET_ALL}")
+
+def generate_academic_opportunity() -> Any:
+    """Generate academic opportunity invitations"""
+    opportunities = [
+        {
+            "title": "Honor Society Nomination",
+            "content": "Congratulations! You've been nominated for the National Honor Society based on your academic performance and character. Please attend the informational meeting next week.",
+            "charisma_boost": 5
+        },
+        {
+            "title": "Research Assistant Position",
+            "content": "A professor has noticed your excellent work and is offering you a position as a research assistant. This is a prestigious opportunity that looks great on college applications.",
+            "charisma_boost": 4
+        },
+        {
+            "title": "Academic Competition Team",
+            "content": "You're invited to join the academic bowl team! Your knowledge and quick thinking would be valuable assets for our upcoming competitions.",
+            "charisma_boost": 3
+        },
+        {
+            "title": "Tutoring Opportunity",
+            "content": "The academic support center would like you to become a peer tutor. Your strong grades and helpful nature make you an ideal candidate.",
+            "charisma_boost": 3
+        },
+        {
+            "title": "Student Leadership Council",
+            "content": "You've been recommended for the Student Leadership Council. Your positive influence and academic standing make you a strong candidate for this position.",
+            "charisma_boost": 4
+        }
+    ]
+    
+    opportunity = random.choice(opportunities)
+    
+    print(f"\n{Fore.YELLOW}🏆 ACADEMIC OPPORTUNITY 🏆{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}--- {opportunity['title']} ---{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{opportunity['content']}{Style.RESET_ALL}")
+    
+    # Significant academic charisma boost
+    player["charisma"]["academic"] = min(100, player["charisma"]["academic"] + opportunity["charisma_boost"])
+    player["reputation"]["teachers"] = min(100, player["reputation"]["teachers"] + 3)
+    
+    print(f"{Fore.BLUE}This prestigious opportunity significantly enhances your academic reputation!{Style.RESET_ALL}")
+
+
+
+
+def handle_weather_events() -> Any:
+    """Handle weather-related events that affect school activities"""
+    weather_events = [
+        {
+            "text": "Heavy snow closes several school buildings, but classes continue online.",
+            "effect": {"energy": 5, "stress": -3},
+            "resolution": "You enjoy the cozy indoor learning environment."
+        },
+        {
+            "text": "A beautiful spring day makes it hard to concentrate during indoor classes.",
+            "effect": {"energy": 10, "mood": 5, "focus": -5},
+            "resolution": "Teachers move some lessons outside to take advantage of the weather."
+        },
+        {
+            "text": "Thunderstorms cause power outages during your presentation day.",
+            "effect": {"stress": 8, "adaptability": 3},
+            "resolution": "You learn to present without technology, building confidence."
+        }
+    ]
+    
+    event = random.choice(weather_events)
+    print(f"\n{Fore.CYAN}🌤️ WEATHER EVENT 🌤️{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{event['text']}{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}{event['resolution']}{Style.RESET_ALL}")
+    apply_weather_effects(event["effect"])
+
+def apply_weather_effects(effects: dict) -> Any:
+    """Apply weather-related effects"""
+    global player
+    
+    for effect_type, effect_value in effects.items():
+        if effect_type == "mood":
+            current_stress = player.get("stress", 0)
+            player["stress"] = max(0, min(100, current_stress - effect_value))
+            if effect_value > 0:
+                print(f"{Fore.GREEN}The weather improves your mood.{Style.RESET_ALL}")
+        
+        elif effect_type == "focus":
+            if effect_value < 0:
+                print(f"{Fore.YELLOW}It's harder to focus due to the weather.{Style.RESET_ALL}")
+        
+        elif effect_type == "adaptability":
+            player["charisma"]["social"] = min(100, player["charisma"]["social"] + effect_value)
+            print(f"{Fore.BLUE}You develop better adaptability skills.{Style.RESET_ALL}")
+        
+        elif effect_type == "energy":
+            player["energy"] = max(0, min(100, player["energy"] + effect_value))
+
+def handle_crush_development() -> Any:
+    """Handle crush mechanics with LGBTQ consideration and alignment effects"""
+    global player, students, relationship
+    
+    # Check if player has LGBTQ flag enabled
+    lgbtq_enabled = player.get("settings", {}).get("lgbtq", False)
+    
+    # Base chance of someone developing crush (6%)
+    base_crush_chance = 0.06
+    
+    # Charisma bonus (social charisma affects attractiveness)
+    charisma_bonus = (player["charisma"]["social"] - 50) / 1000  # 0-5% bonus
+    
+    # Academic charisma bonus (smart is attractive)
+    academic_bonus = (player["charisma"]["academic"] - 50) / 2000  # 0-2.5% bonus
+    
+    # Style bonus based on money spent on appearance
+    style_bonus = min(player["money"] / 10000, 0.02)  # Up to 2% bonus
+    
+    # Alignment effects on attractiveness
+    alignment = player.get("alignment", {"good_bad": 0, "selfish_selfless": 0, "teacher_student": 0})
+    
+    # Good alignment makes you more attractive
+    good_bonus = max(0, alignment["good_bad"]) / 2000  # Up to 5% bonus for saints
+    
+    # Moderate selfishness can be attractive (independence), but extreme hurts
+    selfishness = alignment["selfish_selfless"]
+    if -30 <= selfishness <= -10:  # Moderately independent
+        independence_bonus = 0.01
+    elif selfishness < -50:  # Too selfish
+        independence_bonus = -0.02
+    elif selfishness > 50:  # Too clingy/selfless
+        independence_bonus = -0.015
+    else:
+        independence_bonus = 0
+    
+    # Student-aligned characters are popular, teacher's pets less so
+    if alignment["teacher_student"] < -20:  # Rebellious is attractive
+        rebel_bonus = min(abs(alignment["teacher_student"]) / 1000, 0.03)
+    elif alignment["teacher_student"] > 40:  # Teacher's pet is less attractive
+        rebel_bonus = -0.02
+    else:
+        rebel_bonus = 0
+    
+    total_chance = base_crush_chance + charisma_bonus + academic_bonus + style_bonus + good_bonus + independence_bonus + rebel_bonus
+    
+    if random.random() < total_chance and students:
+        # Select potential admirer
+        available_students = []
+        for student in students:
+            # Check gender compatibility
+            student_gender = student.get("gender", "other")
+            player_gender = player.get("gender", "other")
+            
+            # Same gender crushes only if LGBTQ enabled
+            if student_gender == player_gender and not lgbtq_enabled:
+                continue
+                
+            # Don't create duplicate crushes
+            if not student.get("has_crush_on_player", False):
+                available_students.append(student)
+        
+        if available_students:
+            admirer = random.choice(available_students)
+            admirer["has_crush_on_player"] = True
+            admirer_name = admirer["name"]
+            
+            # Relationship boost from their crush
+            current_rel = relationship.get(admirer_name, 0)
+            relationship[admirer_name] = min(100, current_rel + random.randint(5, 15))
+            
+            # Different messages based on relationship level
+            rel_level = relationship[admirer_name]
+            if rel_level < 30:
+                print(f"{Fore.MAGENTA}You notice {admirer_name} seems to be watching you from across the classroom.{Style.RESET_ALL}")
+            elif rel_level < 60:
+                print(f"{Fore.MAGENTA}{admirer_name} compliments your work and seems genuinely interested in talking with you.{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.MAGENTA}{admirer_name} asks if you'd like to study together sometime, with a slight blush.{Style.RESET_ALL}")
+            
+            # Charisma boost from positive attention
+            player["charisma"]["social"] = min(100, player["charisma"]["social"] + random.randint(1, 3))
+
+def handle_academic_event() -> Any:
+    """Handle academic-related random events"""
+    events = [
+        {
+            "text": "A teacher notices your consistent effort and mentions you're on track for academic honors.",
+            "effect": {"charisma": {"academic": 3}, "grades": "boost_random"}
+        },
+        {
+            "text": "You help a struggling classmate understand a difficult concept.",
+            "effect": {"charisma": {"social": 2, "academic": 1}, "relationship": "random_boost"}
+        },
+        {
+            "text": "You discover you've been making a consistent error in your work.",
+            "effect": {"grades": "slight_penalty", "learning": True}
+        },
+        {
+            "text": "Your hard work in class catches the attention of the student council president.",
+            "effect": {"charisma": {"social": 4}, "reputation": {"students": 3}}
+        }
+    ]
+    
+    event = random.choice(events)
+    print(f"{Fore.CYAN}{event['text']}{Style.RESET_ALL}")
+    apply_event_effects(event["effect"])
+
+def handle_social_event() -> Any:
+    """Handle social-related random events"""
+    events = [
+        {
+            "text": "You join an impromptu study group that turns into a fun social gathering.",
+            "effect": {"charisma": {"social": 3}, "energy": 5, "relationship": "group_boost"}
+        },
+        {
+            "text": "Someone compliments your style today.",
+            "effect": {"charisma": {"social": 2}}
+        },
+        {
+            "text": "You overhear classmates planning a weekend activity and are invited to join.",
+            "effect": {"charisma": {"social": 4}, "reputation": {"students": 2}}
+        },
+        {
+            "text": "A teacher asks you to help show new students around the school.",
+            "effect": {"charisma": {"social": 3, "academic": 1}, "reputation": {"teachers": 2}}
+        }
+    ]
+    
+    event = random.choice(events)
+    print(f"{Fore.GREEN}{event['text']}{Style.RESET_ALL}")
+    apply_event_effects(event["effect"])
+
+def apply_event_effects(effects: dict) -> Any:
+    """Apply various effects from events"""
+    global player, relationship, students
+    
+    for effect_type, effect_value in effects.items():
+        if effect_type == "charisma":
+            for charisma_type, boost in effect_value.items():
+                player["charisma"][charisma_type] = min(100, player["charisma"][charisma_type] + boost)
+        
+        elif effect_type == "grades":
+            if effect_value == "boost_random":
+                random_subject = random.choice(list(player["grades"].keys()))
+                improve_subject_grade(random_subject, random.randint(1, 3))
+            elif effect_value == "slight_penalty":
+                random_subject = random.choice(list(player["grades"].keys()))
+                current_grade = player["grades"][random_subject]
+                grade_values = {"A": 90, "B": 80, "C": 70, "D": 60, "F": 50}
+                current_value = grade_values.get(current_grade, 70)
+                new_value = max(50, current_value - random.randint(1, 5))
+                for letter, value in [("F", 50), ("D", 60), ("C", 70), ("B", 80), ("A", 90)]:
+                    if new_value >= value:
+                        player["grades"][random_subject] = letter
+                        break
+            elif effect_value == "boost_minor":
+                random_subject = random.choice(list(player["grades"].keys()))
+                improve_subject_grade(random_subject, random.randint(1, 2))
+        
+        elif effect_type == "energy":
+            player["energy"] = min(100, max(0, player["energy"] + effect_value))
+        
+        elif effect_type == "stress":
+            if "stress" not in player:
+                player["stress"] = 0
+            player["stress"] = min(100, max(0, player["stress"] + effect_value))
+        
+        elif effect_type == "reputation":
+            for rep_type, boost in effect_value.items():
+                if rep_type in player["reputation"]:
+                    player["reputation"][rep_type] = min(100, max(0, player["reputation"][rep_type] + boost))
+                    if boost > 0:
+                        print(f"{Fore.GREEN}Your reputation with {rep_type} increases by {boost}.{Style.RESET_ALL}")
+                    elif boost < 0:
+                        print(f"{Fore.YELLOW}Your reputation with {rep_type} decreases by {abs(boost)}.{Style.RESET_ALL}")
+        
+        elif effect_type == "relationship":
+            if effect_value == "random_boost" and students:
+                random_student = random.choice(students)
+                student_name = random_student["name"]
+                current_rel = relationship.get(student_name, 0)
+                relationship[student_name] = min(100, current_rel + random.randint(3, 8))
+            elif effect_value == "group_boost" and students:
+                # Boost relationships with multiple students
+                selected_students = random.sample(students, min(3, len(students)))
+                for student in selected_students:
+                    student_name = student["name"]
+                    current_rel = relationship.get(student_name, 0)
+                    relationship[student_name] = min(100, current_rel + random.randint(1, 4))
+            elif effect_value == "new_friend" and students:
+                # Add a new student as a friend
+                available_students = [s for s in students if relationship.get(s["name"], 0) < 50]
+                if available_students:
+                    new_friend = random.choice(available_students)
+                    relationship[new_friend["name"]] = min(100, relationship.get(new_friend["name"], 0) + random.randint(15, 25))
+        
+        elif effect_type == "family_relationship":
+            # Handle family relationship effects (future expansion)
+            pass
+        
+        elif effect_type == "money":
+            player["money"] = max(0, player["money"] + effect_value)
+            if effect_value > 0:
+                print(f"{Fore.GREEN}You gain ${effect_value}.{Style.RESET_ALL}")
+            elif effect_value < 0:
+                print(f"{Fore.RED}You spend ${abs(effect_value)}.{Style.RESET_ALL}")
+        
+        elif effect_type == "style_points":
+            if "style_points" not in player:
+                player["style_points"] = 0
+            player["style_points"] = max(0, player["style_points"] + effect_value)
+            if effect_value > 0:
+                print(f"{Fore.MAGENTA}Your style improves by {effect_value} points.{Style.RESET_ALL}")
+        
+        elif effect_type == "alignment":
+            apply_alignment_changes(effect_value)
+
+def apply_alignment_changes(alignment_effects: dict) -> Any:
+    """Apply alignment changes and show feedback"""
+    global player
+    
+    if "alignment" not in player:
+        player["alignment"] = {
+            "good_bad": 0,
+            "selfish_selfless": 0, 
+            "teacher_student": 0
+        }
+    
+    for axis, change in alignment_effects.items():
+        if axis in player["alignment"]:
+            old_value = player["alignment"][axis]
+            new_value = max(-100, min(100, old_value + change))
+            player["alignment"][axis] = new_value
+            
+            # Show alignment shift messages
+            if change > 0:
+                if axis == "good_bad":
+                    print(f"{Fore.BLUE}Your moral compass shifts toward good.{Style.RESET_ALL}")
+                elif axis == "selfish_selfless":
+                    print(f"{Fore.GREEN}You become more selfless in your actions.{Style.RESET_ALL}")
+                elif axis == "teacher_student":
+                    print(f"{Fore.CYAN}You align more with authority and rules.{Style.RESET_ALL}")
+            elif change < 0:
+                if axis == "good_bad":
+                    print(f"{Fore.RED}Your moral compass shifts toward darkness.{Style.RESET_ALL}")
+                elif axis == "selfish_selfless":
+                    print(f"{Fore.YELLOW}You become more focused on personal gain.{Style.RESET_ALL}")
+                elif axis == "teacher_student":
+                    print(f"{Fore.MAGENTA}You embrace a more rebellious nature.{Style.RESET_ALL}")
+
+def get_alignment_description() -> str:
+    """Get a description of the player's current alignment"""
+    alignment = player.get("alignment", {"good_bad": 0, "selfish_selfless": 0, "teacher_student": 0})
+    
+    # Good/Bad axis
+    good_bad = alignment["good_bad"]
+    if good_bad >= 60:
+        moral_desc = "Saint-like"
+    elif good_bad >= 30:
+        moral_desc = "Good-hearted"
+    elif good_bad >= 10:
+        moral_desc = "Well-meaning"
+    elif good_bad >= -10:
+        moral_desc = "Morally Neutral"
+    elif good_bad >= -30:
+        moral_desc = "Questionable"
+    elif good_bad >= -60:
+        moral_desc = "Morally Corrupt"
+    else:
+        moral_desc = "Evil"
+    
+    # Selfish/Selfless axis
+    selfish_selfless = alignment["selfish_selfless"]
+    if selfish_selfless >= 60:
+        social_desc = "Completely Selfless"
+    elif selfish_selfless >= 30:
+        social_desc = "Altruistic"
+    elif selfish_selfless >= 10:
+        social_desc = "Considerate"
+    elif selfish_selfless >= -10:
+        social_desc = "Balanced"
+    elif selfish_selfless >= -30:
+        social_desc = "Self-centered"
+    elif selfish_selfless >= -60:
+        social_desc = "Selfish"
+    else:
+        social_desc = "Completely Selfish"
+    
+    # Teacher/Student axis
+    teacher_student = alignment["teacher_student"]
+    if teacher_student >= 60:
+        authority_desc = "Teacher's Pet"
+    elif teacher_student >= 30:
+        authority_desc = "Rule Follower"
+    elif teacher_student >= 10:
+        authority_desc = "Respectful Student"
+    elif teacher_student >= -10:
+        authority_desc = "Independent"
+    elif teacher_student >= -30:
+        authority_desc = "Questioning Authority"
+    elif teacher_student >= -60:
+        authority_desc = "Rebellious"
+    else:
+        authority_desc = "Complete Rebel"
+    
+    return f"{moral_desc} | {social_desc} | {authority_desc}"
+
+def show_alignment_status() -> Any:
+    """Display detailed alignment information"""
+    print(f"\n{Fore.CYAN}=== MORAL ALIGNMENT ==={Style.RESET_ALL}")
+    
+    alignment = player.get("alignment", {"good_bad": 0, "selfish_selfless": 0, "teacher_student": 0})
+    
+    # Visual alignment bars
+    def create_alignment_bar(value: int, left_label: str, right_label: str) -> str:
+        # Convert -100 to 100 range to 0 to 20 positions
+        position = int((value + 100) / 10)
+        bar = ["-"] * 21
+        bar[position] = "●"
+        bar_str = "".join(bar)
+        return f"{left_label:<12} [{bar_str}] {right_label:>12}"
+    
+    print(f"{Fore.WHITE}{create_alignment_bar(alignment['good_bad'], 'Evil', 'Good')}{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{create_alignment_bar(alignment['selfish_selfless'], 'Selfish', 'Selfless')}{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{create_alignment_bar(alignment['teacher_student'], 'Rebel', 'Teacher\'s Pet')}{Style.RESET_ALL}")
+    
+    print(f"\n{Fore.YELLOW}Overall Character: {get_alignment_description()}{Style.RESET_ALL}")
+    
+    # Show alignment effects on gameplay
+    show_alignment_effects()
+
+def show_alignment_effects() -> Any:
+    """Show how current alignment affects gameplay"""
+    alignment = player.get("alignment", {"good_bad": 0, "selfish_selfless": 0, "teacher_student": 0})
+    
+    print(f"\n{Fore.CYAN}Alignment Effects:{Style.RESET_ALL}")
+    
+    # Good/Bad effects
+    good_bad = alignment["good_bad"]
+    if good_bad >= 30:
+        print(f"{Fore.GREEN}• Students trust you more easily{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}• Positive actions have greater impact{Style.RESET_ALL}")
+    elif good_bad <= -30:
+        print(f"{Fore.RED}• Some students are wary of you{Style.RESET_ALL}")
+        print(f"{Fore.RED}• You're more likely to consider unethical options{Style.RESET_ALL}")
+    
+    # Selfish/Selfless effects
+    selfish_selfless = alignment["selfish_selfless"]
+    if selfish_selfless >= 30:
+        print(f"{Fore.BLUE}• Group activities are more successful{Style.RESET_ALL}")
+        print(f"{Fore.BLUE}• Others seek your help more often{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}• More vulnerable to manipulation{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}• Can become clingy in relationships{Style.RESET_ALL}")
+    elif selfish_selfless <= -30:
+        print(f"{Fore.GREEN}• Stronger independence and self-reliance{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}• Better at individual tasks and studies{Style.RESET_ALL}")
+        print(f"{Fore.RED}• Relationships are more difficult to maintain{Style.RESET_ALL}")
+        print(f"{Fore.RED}• Others may see you as cold or distant{Style.RESET_ALL}")
+    
+    # Teacher/Student effects
+    teacher_student = alignment["teacher_student"]
+    if teacher_student >= 30:
+        print(f"{Fore.CYAN}• Significant grade bonuses from teacher favoritism{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}• Teachers give you special privileges and opportunities{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}• High reputation with faculty{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}• Some students may see you as a teacher's pet{Style.RESET_ALL}")
+    elif teacher_student <= -30:
+        print(f"{Fore.MAGENTA}• Very popular among students (rebellious appeal){Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}• Students see you as cool and independent{Style.RESET_ALL}")
+        print(f"{Fore.RED}• Teachers grade you more harshly{Style.RESET_ALL}")
+        print(f"{Fore.RED}• More likely to get in trouble with authority{Style.RESET_ALL}")
+    
+    # Show current stats affected by alignment
+    independence = player.get("independence", 50)
+    manipulation_resistance = player.get("manipulation_resistance", 50)
+    print(f"\n{Fore.WHITE}Independence Level: {independence}/100{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}Manipulation Resistance: {manipulation_resistance}/100{Style.RESET_ALL}")
+
+def check_academic_failure() -> Any:
+    """Check if player should drop out due to poor grades"""
+    failing_grades = sum(1 for grade in player["grades"].values() if grade in ["D", "F"])
+    
+    if failing_grades >= 5:
+        print(f"\n{Fore.RED}{'='*50}{Style.RESET_ALL}")
+        print(f"{Fore.RED}ACADEMIC DISMISSAL{Style.RESET_ALL}")
+        print(f"{Fore.RED}{'='*50}{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}You have failing grades in {failing_grades} subjects.{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}The school administration has decided you must repeat the year{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}or transfer to a different program.{Style.RESET_ALL}")
+        print(f"\n{Fore.RED}GAME OVER{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Your academic journey at this school has ended.{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Perhaps with better study habits, you could succeed elsewhere.{Style.RESET_ALL}")
+        
+        # Option to restart or quit
+        if not _non_interactive:
+            print(f"\n{Fore.GREEN}Press Enter to return to main menu...{Style.RESET_ALL}")
+            input()
+        
+        # Return to main menu
+        import sys
+        sys.exit(0)
+
+def update_grade_effects() -> Any:
+    """Update stats based on current grades and money"""
+    global player
+    
+    # Calculate average grade value
+    grade_values = {"A": 90, "B": 80, "C": 70, "D": 60, "F": 50}
+    total_value = sum(grade_values.get(grade, 70) for grade in player["grades"].values())
+    average_grade = total_value / max(len(player["grades"]), 1)
+    
+    # Academic charisma based on grades
+    target_academic_charisma = int((average_grade - 50) * 1.2)  # 50-90 range roughly
+    current_academic = player["charisma"]["academic"]
+    
+    # Gradual adjustment toward target
+    if current_academic < target_academic_charisma:
+        player["charisma"]["academic"] = min(100, current_academic + 1)
+    elif current_academic > target_academic_charisma:
+        player["charisma"]["academic"] = max(0, current_academic - 1)
+    
+    # Money affects social charisma (appearance, activities)
+    money_factor = min(player["money"] / 1000, 20)  # Up to 20 point bonus
+    base_social = max(30, 50 + money_factor)  # Base social charisma from money
+    
+    # Don't reduce existing social charisma, only boost if higher
+    if base_social > player["charisma"]["social"]:
+        player["charisma"]["social"] = min(100, base_social)
+    
+    # Check for academic failure
+    check_academic_failure()
+
+def handle_dramatic_event() -> Any:
+    """Handle dramatic school events that create memorable moments"""
+    dramatic_events = [
+        {
+            "text": "You witness a heated argument between two popular students in the hallway.",
+            "choices": [
+                {"text": "Try to mediate the conflict", "result": "Your diplomatic intervention prevents a bigger scene.", "effect": {"charisma": {"social": 4}, "reputation": {"students": 5}, "alignment": {"good_bad": 8, "selfish_selfless": 10}}},
+                {"text": "Stay out of it but offer support later", "result": "Your tactful approach earns respect from both sides.", "effect": {"charisma": {"social": 2}, "alignment": {"selfish_selfless": 5}}},
+                {"text": "Quietly leave the area", "result": "Sometimes discretion is the better part of valor.", "effect": {"alignment": {"selfish_selfless": -3}}},
+                {"text": "Record it for social media", "result": "You get viral content, but at others' expense.", "effect": {"charisma": {"social": -5}, "reputation": {"students": -8}, "alignment": {"good_bad": -15, "selfish_selfless": -10}}}
+            ]
+        },
+        {
+            "text": "A fire drill interrupts your favorite class just as you were understanding a difficult concept.",
+            "choices": [
+                {"text": "Ask the teacher to continue the explanation later", "result": "Your dedication to learning impresses the teacher.", "effect": {"charisma": {"academic": 3}, "reputation": {"teachers": 2}}},
+                {"text": "Form a study group to review the material", "result": "Your initiative helps several classmates.", "effect": {"charisma": {"social": 3}, "relationship": "group_boost"}},
+                {"text": "Research the topic on your own", "result": "Your independent learning pays off.", "effect": {"grades": "boost_random"}}
+            ]
+        },
+        {
+            "text": "You discover someone cheating on an important exam sitting right next to you.",
+            "choices": [
+                {"text": "Report it to the teacher discretely", "result": "Your integrity is noted, though it creates some tension.", "effect": {"charisma": {"academic": 5}, "reputation": {"teachers": 4, "students": -2}, "alignment": {"good_bad": 15, "teacher_student": 10}}},
+                {"text": "Warn the student quietly", "result": "Your compassion prevents a bigger problem.", "effect": {"charisma": {"social": 3}, "alignment": {"good_bad": 5, "selfish_selfless": 8}}},
+                {"text": "Focus on your own test", "result": "You concentrate on doing your best work.", "effect": {"grades": "boost_minor", "alignment": {"selfish_selfless": -3}}},
+                {"text": "Help them cheat", "result": "They're grateful, but you compromise your integrity.", "effect": {"charisma": {"social": 5}, "reputation": {"students": 8}, "alignment": {"good_bad": -20, "teacher_student": -15}}}
+            ]
+        },
+        {
+            "text": "A new transfer student seems lost and overwhelmed on their first day.",
+            "choices": [
+                {"text": "Offer to show them around", "result": "Your kindness creates a lasting friendship.", "effect": {"charisma": {"social": 4}, "relationship": "new_friend", "alignment": {"good_bad": 10, "selfish_selfless": 12}}},
+                {"text": "Introduce them to your friend group", "result": "Your inclusive nature helps them feel welcome.", "effect": {"charisma": {"social": 3}, "reputation": {"students": 3}, "alignment": {"selfish_selfless": 8}}},
+                {"text": "Give them helpful advice about teachers", "result": "Your insider knowledge proves invaluable.", "effect": {"charisma": {"social": 2}, "alignment": {"selfish_selfless": 5}}},
+                {"text": "Ignore them - not your problem", "result": "You avoid getting involved in others' issues.", "effect": {"alignment": {"selfish_selfless": -8}}}
+            ]
+        },
+        {
+            "text": "Your phone buzzes with a family emergency text during an important lecture.",
+            "choices": [
+                {"text": "Ask to be excused immediately", "result": "The teacher understands family comes first.", "effect": {"stress": 10, "family_relationship": 5}},
+                {"text": "Wait until class ends to respond", "result": "Your commitment to education is noted, but you worry.", "effect": {"charisma": {"academic": 2}, "stress": 5}},
+                {"text": "Quickly text back under your desk", "result": "You manage both responsibilities, but it's risky.", "effect": {"stress": 3}}
+            ]
+        }
+    ]
+    
+    event = random.choice(dramatic_events)
+    print(f"\n{Fore.YELLOW}🎭 DRAMATIC EVENT 🎭{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{event['text']}{Style.RESET_ALL}")
+    
+    if not _non_interactive:
+        print(f"\n{Fore.CYAN}How do you respond?{Style.RESET_ALL}")
+        for i, choice in enumerate(event["choices"], 1):
+            print(f"{i}. {choice['text']}")
+        
+        try:
+            choice_input = input(f"\n{Fore.GREEN}Your choice (1-{len(event['choices'])}): {Style.RESET_ALL}")
+            choice_num = int(choice_input) - 1
+            if 0 <= choice_num < len(event["choices"]):
+                chosen = event["choices"][choice_num]
+                print(f"\n{Fore.GREEN}You: {chosen['text']}{Style.RESET_ALL}")
+                print(f"{Fore.WHITE}{chosen['result']}{Style.RESET_ALL}")
+                apply_event_effects(chosen["effect"])
+            else:
+                print(f"\n{Fore.YELLOW}You hesitate and the moment passes.{Style.RESET_ALL}")
+        except (ValueError, EOFError):
+            print(f"\n{Fore.YELLOW}You're unsure how to react and the situation resolves itself.{Style.RESET_ALL}")
+    else:
+        # Auto-select random choice in non-interactive mode
+        chosen = random.choice(event["choices"])
+        print(f"\n{Fore.GREEN}You: {chosen['text']}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}{chosen['result']}{Style.RESET_ALL}")
+        apply_event_effects(chosen["effect"])
+
+def handle_random_interference() -> Any:
+    """Handle random events that interfere with school activities"""
+    global player
+    
+    interference_events = [
+        {
+            "text": "The school's WiFi goes down during your online assignment.",
+            "subject_affected": "Computer Science",
+            "effect": {"grades": "minor_penalty", "stress": 5},
+            "resolution": "You adapt by working offline and submitting later."
+        },
+        {
+            "text": "A pipe bursts in the science wing, flooding the chemistry lab.",
+            "subject_affected": "Science I",
+            "effect": {"grades": "class_cancelled", "energy": 10},
+            "resolution": "Class is moved to the library for theoretical discussion."
+        },
+        {
+            "text": "Your art supplies go missing right before a major project deadline.",
+            "subject_affected": "Art",
+            "effect": {"stress": 8, "money": -20},
+            "resolution": "You have to buy new supplies and work extra hard to catch up."
+        },
+        {
+            "text": "The drama teacher calls in sick during dress rehearsal week.",
+            "subject_affected": "Drama",
+            "effect": {"charisma": {"social": 2}, "stress": 3},
+            "resolution": "Students step up to direct themselves, building teamwork."
+        },
+        {
+            "text": "Your calculator breaks during a crucial math test.",
+            "subject_affected": "Math I",
+            "effect": {"grades": "test_penalty", "stress": 7},
+            "resolution": "You have to solve everything by hand, showing your true understanding."
+        },
+        {
+            "text": "A surprise assembly cancels your study hall period.",
+            "subject_affected": "general",
+            "effect": {"stress": 4, "energy": -5},
+            "resolution": "You lose valuable study time but learn about college scholarships."
+        },
+        {
+            "text": "Your PE class is moved indoors due to severe weather.",
+            "subject_affected": "PE",
+            "effect": {"energy": -3},
+            "resolution": "Indoor activities focus more on strategy than endurance."
+        },
+        {
+            "text": "The music room piano is out of tune on performance day.",
+            "subject_affected": "Music",
+            "effect": {"charisma": {"social": 1}, "grades": "performance_adjusted"},
+            "resolution": "Everyone adapts, showing musical flexibility and ear training."
+        }
+    ]
+    
+    event = random.choice(interference_events)
+    print(f"\n{Fore.RED}⚠️ RANDOM INTERFERENCE ⚠️{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}{event['text']}{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}{event['resolution']}{Style.RESET_ALL}")
+    
+    # Apply effects based on event type
+    if event["subject_affected"] in player["grades"]:
+        print(f"{Fore.MAGENTA}This affects your {event['subject_affected']} progress.{Style.RESET_ALL}")
+    
+    apply_interference_effects(event["effect"])
+
+def apply_interference_effects(effects: dict) -> Any:
+    """Apply effects from interference events"""
+    global player
+    
+    for effect_type, effect_value in effects.items():
+        if effect_type == "stress":
+            player["stress"] = min(100, player.get("stress", 0) + effect_value)
+            if effect_value > 5:
+                print(f"{Fore.RED}Your stress level increases significantly.{Style.RESET_ALL}")
+        
+        elif effect_type == "energy":
+            player["energy"] = max(0, min(100, player["energy"] + effect_value))
+            if effect_value > 0:
+                print(f"{Fore.GREEN}You gain {effect_value} energy from the change of pace.{Style.RESET_ALL}")
+            elif effect_value < 0:
+                print(f"{Fore.YELLOW}You lose {abs(effect_value)} energy dealing with the disruption.{Style.RESET_ALL}")
+        
+        elif effect_type == "money":
+            player["money"] = max(0, player["money"] + effect_value)
+            if effect_value < 0:
+                print(f"{Fore.RED}You spend ${abs(effect_value)} dealing with the situation.{Style.RESET_ALL}")
+        
+        elif effect_type == "grades":
+            if effect_value == "minor_penalty":
+                random_subject = random.choice(list(player["grades"].keys()))
+                current_grade = player["grades"][random_subject]
+                grade_values = {"A": 90, "B": 80, "C": 70, "D": 60, "F": 50}
+                current_value = grade_values.get(current_grade, 70)
+                new_value = max(50, current_value - random.randint(1, 3))
+                for letter, value in [("F", 50), ("D", 60), ("C", 70), ("B", 80), ("A", 90)]:
+                    if new_value >= value:
+                        player["grades"][random_subject] = letter
+                        break
+                print(f"{Fore.YELLOW}Your {random_subject} grade drops slightly due to the disruption.{Style.RESET_ALL}")
+            
+            elif effect_value == "class_cancelled":
+                print(f"{Fore.BLUE}Class time is used differently, creating unique learning opportunities.{Style.RESET_ALL}")
+            
+            elif effect_value == "test_penalty":
+                print(f"{Fore.YELLOW}The test becomes more challenging due to the circumstances.{Style.RESET_ALL}")
+            
+            elif effect_value == "performance_adjusted":
+                print(f"{Fore.CYAN}The performance expectations are adjusted for the circumstances.{Style.RESET_ALL}")
+
+def add_extended_scenarios() -> dict:
+    """Add more varied cutscene scenarios for existing subjects"""
+    extended_scenarios = {
+        "English I": [
+            {
+                "setting": "The classroom has been transformed into a mock courtroom for a literature trial.",
+                "dialogue": "Today we'll put Macbeth on trial for his crimes. You'll serve as witnesses, lawyers, and jury.",
+                "interactive": True,
+                "prompt": "You're chosen to be Macbeth's defense attorney.",
+                "choices": [
+                    {"text": "Argue he was manipulated by Lady Macbeth", "result": "Your psychological defense is compelling.", "grade_boost": 3},
+                    {"text": "Claim supernatural influence", "result": "Your creative interpretation sparks debate.", "grade_boost": 2},
+                    {"text": "Focus on his guilt and remorse", "result": "Your moral argument shows deep character understanding.", "grade_boost": 2}
+                ]
+            },
+            {
+                "setting": "Students are participating in a poetry slam, sharing original works.",
+                "dialogue": "Poetry is the music of language. Let your words dance and sing.",
+                "interactive": True,
+                "prompt": "You're nervous about performing your personal poem about identity.",
+                "choices": [
+                    {"text": "Perform with raw emotion", "result": "Your vulnerability creates a powerful connection with the audience.", "grade_boost": 3, "charisma_boost": 3},
+                    {"text": "Focus on technical skill", "result": "Your mastery of form impresses everyone.", "grade_boost": 2},
+                    {"text": "Add humor to lighten the mood", "result": "Your comedic timing makes serious topics accessible.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            }
+        ],
+        "Math I": [
+            {
+                "setting": "The class is using virtual reality to explore geometric concepts in 3D space.",
+                "dialogue": "Mathematics isn't just numbers on paper - it's the architecture of reality itself.",
+                "interactive": True,
+                "prompt": "You're manipulating a complex polyhedron to understand its properties.",
+                "choices": [
+                    {"text": "Analyze the symmetry patterns", "result": "Your spatial reasoning leads to geometric insights.", "grade_boost": 3},
+                    {"text": "Calculate surface area and volume", "result": "Your computational skills are solid.", "grade_boost": 2},
+                    {"text": "Help struggling classmates", "result": "Your patient teaching helps everyone understand.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            },
+            {
+                "setting": "Students are working on a real math competition problem that requires creative thinking.",
+                "dialogue": "Competition problems require more than formulas - they need mathematical intuition.",
+                "interactive": True,
+                "prompt": "You're stuck on a problem involving number theory and need a breakthrough.",
+                "choices": [
+                    {"text": "Try working backwards", "result": "Your reverse engineering approach cracks the problem.", "grade_boost": 3},
+                    {"text": "Look for patterns in smaller cases", "result": "Your systematic approach builds to the solution.", "grade_boost": 2},
+                    {"text": "Brainstorm with teammates", "result": "Collaborative thinking leads to an elegant solution.", "charisma_boost": 2, "grade_boost": 2}
+                ]
+            }
+        ]
+    }
+    return extended_scenarios
+
+def vary_cutscene_content(subject_name: str, base_scenarios: list) -> list:
+    """Add seasonal and contextual variations to cutscenes"""
+    current_month = current_date.month
+    varied_scenarios = base_scenarios.copy()
+    
+    # Add seasonal scenarios directly to the list
+    if current_month in [12, 1, 2]:  # Winter
+        if subject_name == "PE":
+            winter_pe_scenario = {
+                "setting": "The gym is set up for winter sports simulation since outdoor activities are limited. Equipment for basketball, volleyball, and indoor track is arranged.",
+                "dialogue": "Winter doesn't mean we stop being active. Let's adapt our training to the season and build strength indoors.",
+                "interactive": True,
+                "prompt": "The instructor is teaching winter conditioning techniques.",
+                "choices": [
+                    {"text": "Focus on building core strength", "result": "Your dedication to fitness shows through the cold season.", "grade_boost": 3},
+                    {"text": "Help set up equipment for others", "result": "Your teamwork makes everyone's workout better.", "charisma_boost": 2, "grade_boost": 1},
+                    {"text": "Practice winter sports techniques", "result": "You prepare for outdoor activities when weather improves.", "grade_boost": 2}
+                ],
+                "seasonal_note": "❄️ Winter conditioning program"
+            }
+            varied_scenarios.append(winter_pe_scenario)
+        
+        elif subject_name == "Art":
+            winter_art_scenario = {
+                "setting": "The art room is decorated with winter themes, inspiring seasonal creativity. Natural light filtering through frost creates unique shadows.",
+                "dialogue": "Winter light has unique qualities. Notice how it affects color and shadow differently than summer light.",
+                "interactive": True,
+                "prompt": "You're working on a winter landscape painting.",
+                "choices": [
+                    {"text": "Capture the cool color palette", "result": "Your understanding of seasonal colors impresses everyone.", "grade_boost": 3},
+                    {"text": "Focus on light and shadow effects", "result": "Your technique with winter lighting is masterful.", "grade_boost": 2},
+                    {"text": "Add warm elements for contrast", "result": "Your artistic eye for balance creates a compelling piece.", "grade_boost": 2}
+                ],
+                "seasonal_note": "❄️ Winter light studies"
+            }
+            varied_scenarios.append(winter_art_scenario)
+    
+    elif current_month in [3, 4, 5]:  # Spring
+        if subject_name == "Science I":
+            spring_science_scenario = {
+                "setting": "The science class moves outside to study plant growth and ecosystem changes as spring awakens the campus.",
+                "dialogue": "Spring is nature's laboratory. Observe how life responds to changing conditions and increasing daylight.",
+                "interactive": True,
+                "prompt": "You're documenting the growth patterns of different plant species.",
+                "choices": [
+                    {"text": "Measure growth rates precisely", "result": "Your scientific methodology produces valuable data.", "grade_boost": 3},
+                    {"text": "Observe animal behavior changes", "result": "Your holistic approach captures ecosystem interactions.", "grade_boost": 2},
+                    {"text": "Collect samples for lab analysis", "result": "Your preparation for detailed study shows scientific thinking.", "grade_boost": 2}
+                ],
+                "seasonal_note": "🌱 Spring ecology field study"
+            }
+            varied_scenarios.append(spring_science_scenario)
+        
+        elif subject_name == "PE":
+            spring_pe_scenario = {
+                "setting": "The track and field area is finally accessible after winter. Fresh air and warming weather energize everyone.",
+                "dialogue": "Spring brings new energy and opportunities for outdoor training. Let's take advantage of the perfect weather.",
+                "interactive": True,
+                "prompt": "You're participating in outdoor track and field activities.",
+                "choices": [
+                    {"text": "Train for endurance running", "result": "The fresh spring air boosts your stamina significantly.", "grade_boost": 3},
+                    {"text": "Practice field events", "result": "Your technique improves with outdoor space to work with.", "grade_boost": 2},
+                    {"text": "Help organize team activities", "result": "Your leadership brings everyone together for spring training.", "charisma_boost": 3, "grade_boost": 1}
+                ],
+                "seasonal_note": "🌸 Spring outdoor training"
+            }
+            varied_scenarios.append(spring_pe_scenario)
+    
+    elif current_month in [6, 7, 8]:  # Summer
+        if subject_name == "PE":
+            summer_pe_scenario = {
+                "setting": "Early morning outdoor activities before the heat becomes too intense. The dawn air is cool and refreshing.",
+                "dialogue": "Summer requires us to adapt our schedule to work with nature, not against it. Early training builds discipline.",
+                "interactive": True,
+                "prompt": "You're participating in dawn athletics training.",
+                "choices": [
+                    {"text": "Push through the early wake-up", "result": "Your discipline in summer training pays off with excellent results.", "grade_boost": 3},
+                    {"text": "Focus on hydration strategies", "result": "Your smart approach to summer fitness keeps you healthy.", "grade_boost": 2},
+                    {"text": "Help teammates adjust to early schedule", "result": "Your support helps everyone succeed in summer training.", "charisma_boost": 2, "grade_boost": 1}
+                ],
+                "seasonal_note": "☀️ Summer heat adaptation training"
+            }
+            varied_scenarios.append(summer_pe_scenario)
+    
+    else:  # Fall (September, October, November)
+        if subject_name == "English I":
+            fall_english_scenario = {
+                "setting": "The classroom windows showcase autumn colors, inspiring creative writing as leaves change outside.",
+                "dialogue": "Fall is a time of transition and reflection. Let this season inspire your storytelling and personal expression.",
+                "interactive": True,
+                "prompt": "You're writing a personal essay about change and growth.",
+                "choices": [
+                    {"text": "Draw inspiration from autumn metaphors", "result": "Your seasonal imagery creates powerful, evocative writing.", "grade_boost": 3},
+                    {"text": "Focus on personal transformation themes", "result": "Your introspective approach produces meaningful work.", "grade_boost": 2},
+                    {"text": "Connect to universal human experiences", "result": "Your writing resonates with classmates and teacher alike.", "charisma_boost": 2, "grade_boost": 2}
+                ],
+                "seasonal_note": "🍂 Autumn reflection writing"
+            }
+            varied_scenarios.append(fall_english_scenario)
+        
+        elif subject_name == "PE":
+            fall_pe_scenario = {
+                "setting": "Crisp autumn air makes outdoor activities invigorating. Fallen leaves crunch underfoot as you train.",
+                "dialogue": "Fall weather is perfect for building endurance before winter. The cool air helps performance.",
+                "interactive": True,
+                "prompt": "You're doing cross-country training through the autumn campus.",
+                "choices": [
+                    {"text": "Embrace the challenging terrain", "result": "Your adaptability to seasonal conditions builds real fitness.", "grade_boost": 3},
+                    {"text": "Pace yourself for the longer season", "result": "Your strategic approach sets you up for winter success.", "grade_boost": 2},
+                    {"text": "Enjoy the scenic autumn route", "result": "Your appreciation for the season makes exercise more enjoyable.", "grade_boost": 1, "charisma_boost": 1}
+                ],
+                "seasonal_note": "🍁 Fall endurance training"
+            }
+            varied_scenarios.append(fall_pe_scenario)
+    
+    # Add time-of-day variations to existing scenarios
+    current_hour = (ticks // 10) % 24
+    for scenario in varied_scenarios:
+        if scenario.get("interactive"):
+            if current_hour < 10:  # Morning classes
+                scenario["time_note"] = "🌅 Morning energy boost"
+                # Slight energy bonus for morning classes
+                if "choices" in scenario:
+                    for choice in scenario["choices"]:
+                        if "grade_boost" in choice:
+                            choice["morning_bonus"] = True
+            elif current_hour > 15:  # Afternoon classes
+                scenario["time_note"] = "🌇 Afternoon focus challenge"
+                # Slight focus penalty for afternoon classes
+                if "choices" in scenario:
+                    for choice in scenario["choices"]:
+                        if "grade_boost" in choice and choice["grade_boost"] > 1:
+                            choice["grade_boost"] = max(1, choice["grade_boost"] - 1)
+    
+    return varied_scenarios
+
+def add_special_event_cutscenes() -> dict:
+    """Add special event-based cutscenes that occur during school events"""
+    special_events = {
+        "science_fair": {
+            "Science I": {
+                "setting": "The gymnasium has been transformed into a science fair showcase with student projects everywhere.",
+                "dialogue": "Today, you're not just students - you're researchers presenting to the scientific community.",
+                "interactive": True,
+                "prompt": "Your volcano model isn't working as expected during the demonstration.",
+                "choices": [
+                    {"text": "Explain the scientific principles anyway", "result": "Your knowledge impresses the judges despite the technical failure.", "grade_boost": 3},
+                    {"text": "Improvise with backup materials", "result": "Your quick thinking saves the presentation.", "grade_boost": 2, "charisma_boost": 2},
+                    {"text": "Ask for help from other students", "result": "Your collaborative spirit creates a better demonstration.", "charisma_boost": 3, "grade_boost": 1}
+                ]
+            }
+        },
+        "arts_festival": {
+            "Art": {
+                "setting": "The school hallways have become an art gallery with student work displayed for the community.",
+                "dialogue": "Art isn't just for artists - it's communication, emotion, and human connection made visible.",
+                "interactive": True,
+                "prompt": "A local art critic is examining your piece and asks about your inspiration.",
+                "choices": [
+                    {"text": "Share your personal story behind the work", "result": "Your authenticity creates a meaningful connection.", "grade_boost": 3, "charisma_boost": 2},
+                    {"text": "Discuss your technical process", "result": "Your craftsmanship knowledge impresses the critic.", "grade_boost": 2},
+                    {"text": "Ask about their perspective on the piece", "result": "Your humility and curiosity show artistic maturity.", "charisma_boost": 3, "grade_boost": 1}
+                ]
+            },
+            "Music": {
+                "setting": "The auditorium buzzes with excitement as students prepare for the evening concert performance.",
+                "dialogue": "Tonight, we share our musical souls with the world. Play not just the notes, but the emotions.",
+                "interactive": True,
+                "prompt": "You have a solo section coming up and feel the pre-performance nerves hitting.",
+                "choices": [
+                    {"text": "Channel the nerves into energy", "result": "Your passionate performance moves the entire audience.", "grade_boost": 3, "charisma_boost": 3},
+                    {"text": "Focus on technical precision", "result": "Your flawless execution earns professional respect.", "grade_boost": 2},
+                    {"text": "Make eye contact with friends for support", "result": "Your connection with the audience creates intimacy.", "charisma_boost": 2, "grade_boost": 1}
+                ]
+            }
+        },
+        "debate_tournament": {
+            "English I": {
+                "setting": "The classroom has been set up as a formal debate arena with timers and judges.",
+                "dialogue": "Debate teaches us to understand multiple perspectives and defend our reasoning with evidence.",
+                "interactive": True,
+                "prompt": "Your opponent just made a strong counterargument you didn't expect.",
+                "choices": [
+                    {"text": "Acknowledge their point and build on it", "result": "Your intellectual honesty strengthens your position.", "grade_boost": 3},
+                    {"text": "Pivot to your strongest evidence", "result": "Your strategic thinking keeps you in the game.", "grade_boost": 2},
+                    {"text": "Ask a clarifying question", "result": "Your Socratic approach reveals weaknesses in their argument.", "grade_boost": 2, "charisma_boost": 1}
+                ]
+            }
+        }
+    }
+    return special_events
 
 def show_help() -> None:
     help_text = """
@@ -13061,6 +15214,316 @@ def handle_club_location(club_name) -> Any:
                         )
                         player["reputation"]["students"] += 5
                         update_ranks()
+
+
+def shopping_system() -> Any:
+    """Enhanced shopping system with clothing and accessories"""
+    global player
+    
+    print(f"\n{Fore.CYAN}🛍️ CAMPUS STORE 🛍️{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}Current Money: ${player['money']}{Style.RESET_ALL}")
+    
+    if "wardrobe" not in player:
+        player["wardrobe"] = {
+            "tops": ["Basic T-Shirt"],
+            "bottoms": ["Jeans"], 
+            "shoes": ["Sneakers"],
+            "accessories": [],
+            "outerwear": [],
+            "current_outfit": {
+                "top": "Basic T-Shirt",
+                "bottom": "Jeans", 
+                "shoes": "Sneakers",
+                "accessory": None,
+                "outerwear": None
+            }
+        }
+    
+    clothing_store = {
+        "Tops": {
+            "Polo Shirt": {"price": 25, "style": 3, "description": "Classic preppy look"},
+            "Hoodie": {"price": 35, "style": 2, "description": "Comfortable and casual"},
+            "Button-up Shirt": {"price": 40, "style": 5, "description": "Professional appearance"},
+            "Graphic Tee": {"price": 20, "style": 1, "description": "Express your personality"},
+            "Sweater": {"price": 45, "style": 4, "description": "Cozy and stylish"},
+            "Tank Top": {"price": 15, "style": 2, "description": "Perfect for warm weather"},
+            "Blazer": {"price": 80, "style": 8, "description": "Sophisticated and sharp"}
+        },
+        "Bottoms": {
+            "Khakis": {"price": 30, "style": 4, "description": "Versatile and neat"},
+            "Dress Pants": {"price": 50, "style": 6, "description": "Formal and polished"},
+            "Shorts": {"price": 25, "style": 2, "description": "Casual summer wear"},
+            "Skirt": {"price": 35, "style": 5, "description": "Feminine and stylish"},
+            "Leggings": {"price": 20, "style": 3, "description": "Comfortable and flexible"},
+            "Designer Jeans": {"price": 60, "style": 5, "description": "Premium denim quality"}
+        },
+        "Shoes": {
+            "Dress Shoes": {"price": 70, "style": 7, "description": "Elegant and formal"},
+            "Running Shoes": {"price": 80, "style": 4, "description": "Athletic performance"},
+            "Boots": {"price": 90, "style": 6, "description": "Rugged and fashionable"},
+            "Sandals": {"price": 30, "style": 2, "description": "Casual summer footwear"},
+            "Loafers": {"price": 65, "style": 5, "description": "Comfortable sophistication"},
+            "High-tops": {"price": 55, "style": 4, "description": "Street style classic"}
+        },
+        "Accessories": {
+            "Watch": {"price": 100, "style": 6, "description": "Timeless elegance"},
+            "Sunglasses": {"price": 40, "style": 4, "description": "Cool and mysterious"},
+            "Backpack": {"price": 60, "style": 3, "description": "Functional and stylish"},
+            "Baseball Cap": {"price": 20, "style": 2, "description": "Casual sporty look"},
+            "Scarf": {"price": 25, "style": 3, "description": "Adds color and warmth"},
+            "Jewelry Set": {"price": 75, "style": 5, "description": "Sparkle and shine"},
+            "Belt": {"price": 35, "style": 3, "description": "Finishing touch for any outfit"}
+        },
+        "Outerwear": {
+            "Leather Jacket": {"price": 150, "style": 8, "description": "Rebellious cool factor"},
+            "Denim Jacket": {"price": 60, "style": 5, "description": "Classic American style"},
+            "Windbreaker": {"price": 45, "style": 3, "description": "Practical and sporty"},
+            "Cardigan": {"price": 55, "style": 4, "description": "Cozy layering piece"},
+            "Vest": {"price": 40, "style": 4, "description": "Preppy sophistication"},
+            "Parka": {"price": 120, "style": 3, "description": "Winter weather protection"}
+        },
+        "School Supplies": {
+            "Premium Notebook Set": {"price": 15, "style": 1, "description": "Organization boost", "effect": "study_bonus"},
+            "Fancy Pens": {"price": 25, "style": 2, "description": "Writing in style", "effect": "academic_charisma"},
+            "Calculator": {"price": 50, "style": 0, "description": "Math class essential", "effect": "math_bonus"},
+            "Art Supplies Kit": {"price": 40, "style": 2, "description": "Unleash creativity", "effect": "art_bonus"},
+            "Laptop Sleeve": {"price": 30, "style": 3, "description": "Protect your tech", "effect": "tech_bonus"}
+        }
+    }
+    
+    print(f"\n{Fore.YELLOW}Available Categories:{Style.RESET_ALL}")
+    categories = list(clothing_store.keys())
+    for i, category in enumerate(categories, 1):
+        print(f"{i}. {category}")
+    print(f"{len(categories)+1}. View Current Outfit")
+    print(f"{len(categories)+2}. Change Outfit") 
+    print(f"{len(categories)+3}. Exit Store")
+    
+    if not _non_interactive:
+        try:
+            choice = input(f"\n{Fore.GREEN}Select category (1-{len(categories)+3}): {Style.RESET_ALL}")
+            choice_num = int(choice) - 1
+            
+            if 0 <= choice_num < len(categories):
+                selected_category = categories[choice_num]
+                show_clothing_category(selected_category, clothing_store[selected_category])
+            elif choice_num == len(categories):
+                show_current_outfit()
+            elif choice_num == len(categories) + 1:
+                change_outfit_interface()
+            elif choice_num == len(categories) + 2:
+                return
+        except (ValueError, EOFError):
+            print(f"{Fore.RED}Invalid choice.{Style.RESET_ALL}")
+    else:
+        # Auto-buy random affordable item
+        affordable_items = []
+        for category, items in clothing_store.items():
+            for item, details in items.items():
+                if details["price"] <= player["money"]:
+                    affordable_items.append((category, item, details))
+        
+        if affordable_items:
+            category, item, details = random.choice(affordable_items)
+            player["money"] -= details["price"]
+            add_to_wardrobe(category.lower().rstrip('s'), item)
+            print(f"{Fore.GREEN}Auto-purchased {item} for ${details['price']}.{Style.RESET_ALL}")
+
+def show_clothing_category(category: str, items: dict) -> Any:
+    """Display items in a clothing category"""
+    print(f"\n{Fore.CYAN}=== {category.upper()} ==={Style.RESET_ALL}")
+    
+    item_list = list(items.items())
+    for i, (item_name, details) in enumerate(item_list, 1):
+        price = details["price"]
+        style = details["style"]
+        desc = details["description"]
+        
+        affordability = Fore.GREEN if price <= player["money"] else Fore.RED
+        print(f"{i}. {affordability}{item_name}{Style.RESET_ALL} - ${price}")
+        print(f"   Style: {'+' * style} | {desc}")
+    
+    print(f"\n{len(item_list)+1}. Back to categories")
+    
+    if not _non_interactive:
+        try:
+            choice = input(f"\n{Fore.GREEN}Select item to buy (1-{len(item_list)+1}): {Style.RESET_ALL}")
+            choice_num = int(choice) - 1
+            
+            if 0 <= choice_num < len(item_list):
+                item_name, details = item_list[choice_num]
+                purchase_item(category, item_name, details)
+            elif choice_num == len(item_list):
+                shopping_system()
+        except (ValueError, EOFError):
+            print(f"{Fore.RED}Invalid choice.{Style.RESET_ALL}")
+
+def purchase_item(category: str, item_name: str, details: dict) -> Any:
+    """Handle purchasing an item"""
+    global player
+    
+    price = details["price"]
+    
+    if player["money"] >= price:
+        player["money"] -= price
+        
+        # Add to wardrobe
+        category_key = category.lower().rstrip('s')  # Remove plural
+        if category_key == "school supplie":
+            category_key = "supplies"
+        
+        add_to_wardrobe(category_key, item_name)
+        
+        # Apply style benefits
+        style_points = details["style"]
+        if "style_points" not in player:
+            player["style_points"] = 0
+        player["style_points"] += style_points
+        
+        # Apply special effects
+        if "effect" in details:
+            apply_purchase_effects(details["effect"])
+        
+        print(f"\n{Fore.GREEN}✓ Purchased {item_name} for ${price}!{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}+{style_points} Style Points{Style.RESET_ALL}")
+        
+        # Update social charisma based on style
+        style_bonus = min(style_points // 2, 3)
+        player["charisma"]["social"] = min(100, player["charisma"]["social"] + style_bonus)
+        
+        if style_bonus > 0:
+            print(f"{Fore.CYAN}Your improved style boosts your social charisma!{Style.RESET_ALL}")
+    else:
+        needed = price - player["money"]
+        print(f"{Fore.RED}You need ${needed} more to buy this item.{Style.RESET_ALL}")
+
+def add_to_wardrobe(category: str, item_name: str) -> Any:
+    """Add item to player's wardrobe"""
+    if category == "top":
+        category = "tops"
+    elif category == "bottom":
+        category = "bottoms"
+    elif category == "shoe":
+        category = "shoes"
+    elif category == "accessorie":
+        category = "accessories"
+    elif category == "outerwear":
+        category = "outerwear"
+    elif category == "supplies":
+        if "supplies" not in player["wardrobe"]:
+            player["wardrobe"]["supplies"] = []
+        category = "supplies"
+    
+    if category in player["wardrobe"]:
+        if item_name not in player["wardrobe"][category]:
+            player["wardrobe"][category].append(item_name)
+
+def apply_purchase_effects(effect_type: str) -> Any:
+    """Apply special effects from purchased items"""
+    global player
+    
+    if effect_type == "study_bonus":
+        player["study_efficiency"] = player.get("study_efficiency", 1.0) + 0.1
+        print(f"{Fore.BLUE}Study efficiency increased!{Style.RESET_ALL}")
+    elif effect_type == "academic_charisma":
+        player["charisma"]["academic"] = min(100, player["charisma"]["academic"] + 3)
+        print(f"{Fore.BLUE}Academic presentation improved!{Style.RESET_ALL}")
+    elif effect_type == "math_bonus":
+        if "Math I" in player["grades"]:
+            improve_subject_grade("Math I", 2)
+            print(f"{Fore.BLUE}Math performance enhanced!{Style.RESET_ALL}")
+    elif effect_type == "art_bonus":
+        if "Art" in player["grades"]:
+            improve_subject_grade("Art", 2)
+            print(f"{Fore.BLUE}Artistic abilities boosted!{Style.RESET_ALL}")
+    elif effect_type == "tech_bonus":
+        if "Computer Science" in player["grades"]:
+            improve_subject_grade("Computer Science", 2)
+            print(f"{Fore.BLUE}Tech skills improved!{Style.RESET_ALL}")
+
+def show_current_outfit() -> Any:
+    """Display current outfit and style information"""
+    outfit = player["wardrobe"]["current_outfit"]
+    
+    print(f"\n{Fore.CYAN}=== CURRENT OUTFIT ==={Style.RESET_ALL}")
+    print(f"Top: {Fore.YELLOW}{outfit['top']}{Style.RESET_ALL}")
+    print(f"Bottom: {Fore.YELLOW}{outfit['bottom']}{Style.RESET_ALL}")
+    print(f"Shoes: {Fore.YELLOW}{outfit['shoes']}{Style.RESET_ALL}")
+    print(f"Accessory: {Fore.YELLOW}{outfit['accessory'] or 'None'}{Style.RESET_ALL}")
+    print(f"Outerwear: {Fore.YELLOW}{outfit['outerwear'] or 'None'}{Style.RESET_ALL}")
+    
+    total_style = player.get("style_points", 0)
+    print(f"\n{Fore.MAGENTA}Total Style Points: {total_style}{Style.RESET_ALL}")
+    
+    if total_style >= 50:
+        print(f"{Fore.GREEN}You're a fashion icon on campus!{Style.RESET_ALL}")
+    elif total_style >= 30:
+        print(f"{Fore.CYAN}Your style is noticed and admired.{Style.RESET_ALL}")
+    elif total_style >= 15:
+        print(f"{Fore.YELLOW}You have a developing sense of style.{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.WHITE}Your style is still developing.{Style.RESET_ALL}")
+
+def change_outfit_interface() -> Any:
+    """Interface for changing current outfit"""
+    print(f"\n{Fore.CYAN}=== CHANGE OUTFIT ==={Style.RESET_ALL}")
+    
+    categories = ["tops", "bottoms", "shoes", "accessories", "outerwear"]
+    for i, category in enumerate(categories, 1):
+        items = player["wardrobe"].get(category, [])
+        current = player["wardrobe"]["current_outfit"].get(category.rstrip('s'), "None")
+        print(f"{i}. {category.title()}: {Fore.YELLOW}{current}{Style.RESET_ALL} ({len(items)} owned)")
+    
+    print(f"{len(categories)+1}. Done changing outfit")
+    
+    if not _non_interactive:
+        try:
+            choice = input(f"\n{Fore.GREEN}What to change (1-{len(categories)+1}): {Style.RESET_ALL}")
+            choice_num = int(choice) - 1
+            
+            if 0 <= choice_num < len(categories):
+                change_outfit_piece(categories[choice_num])
+            elif choice_num == len(categories):
+                shopping_system()
+        except (ValueError, EOFError):
+            print(f"{Fore.RED}Invalid choice.{Style.RESET_ALL}")
+
+def change_outfit_piece(category: str) -> Any:
+    """Change a specific piece of the outfit"""
+    items = player["wardrobe"].get(category, [])
+    
+    if not items:
+        print(f"{Fore.RED}You don't own any {category}.{Style.RESET_ALL}")
+        return
+    
+    print(f"\n{Fore.CYAN}Available {category.title()}:{Style.RESET_ALL}")
+    for i, item in enumerate(items, 1):
+        print(f"{i}. {item}")
+    print(f"{len(items)+1}. Remove current {category.rstrip('s')}")
+    print(f"{len(items)+2}. Cancel")
+    
+    if not _non_interactive:
+        try:
+            choice = input(f"\n{Fore.GREEN}Select item (1-{len(items)+2}): {Style.RESET_ALL}")
+            choice_num = int(choice) - 1
+            
+            if 0 <= choice_num < len(items):
+                outfit_key = category.rstrip('s')
+                if outfit_key == "accessorie":
+                    outfit_key = "accessory"
+                player["wardrobe"]["current_outfit"][outfit_key] = items[choice_num]
+                print(f"{Fore.GREEN}Changed {outfit_key} to {items[choice_num]}.{Style.RESET_ALL}")
+            elif choice_num == len(items):
+                outfit_key = category.rstrip('s')
+                if outfit_key == "accessorie":
+                    outfit_key = "accessory"
+                player["wardrobe"]["current_outfit"][outfit_key] = None
+                print(f"{Fore.YELLOW}Removed {outfit_key}.{Style.RESET_ALL}")
+            
+            change_outfit_interface()
+        except (ValueError, EOFError):
+            print(f"{Fore.RED}Invalid choice.{Style.RESET_ALL}")
+
 
 
 def pe_class_challenge() -> Any:
