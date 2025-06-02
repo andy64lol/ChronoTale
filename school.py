@@ -1,5 +1,5 @@
 import random
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Dict, List, Any, Optional, Tuple
 import time
 import json
 import os
@@ -748,7 +748,7 @@ def content_settings_menu() -> Any:
     # No need for global statement since we're only modifying dictionary contents
     # not reassigning game_settings itself
     while True:
-        print("\n{0}===== CONTENT SETTINGS ====={1}".format(Fore.CYAN, Style.RESET_ALL))
+        print(f"\n{Fore.CYAN}===== CONTENT SETTINGS ====={Style.RESET_ALL}")
         print(
             "1. Allow Bullying Events: {0}".format(
                 "Yes" if game_settings["allow_bullying"] else "No"
@@ -3509,19 +3509,25 @@ all_subjects = {
     "PE I": {"difficulty": 2, "homework_freq": 0.3, "year": 1, "core": True},
     "Art": {"difficulty": 2, "homework_freq": 0.4, "year": 1, "core": False},
     "Music": {"difficulty": 2, "homework_freq": 0.4, "year": 1, "core": False},
-    "Computer Basics": {
-        "difficulty": 2,
-        "homework_freq": 0.5,
-        "year": 1,
-        "core": False,
-    },
-    "Economics Basics": {
+    "Computer Science": {
         "difficulty": 3,
         "homework_freq": 0.6,
         "year": 1,
         "core": False,
     },
-    "Psychology Intro": {
+    "Drama": {
+        "difficulty": 2,
+        "homework_freq": 0.3,
+        "year": 1,
+        "core": False,
+    },
+    "Photography": {
+        "difficulty": 2,
+        "homework_freq": 0.4,
+        "year": 1,
+        "core": False,
+    },
+    "Creative Writing": {
         "difficulty": 3,
         "homework_freq": 0.5,
         "year": 1,
@@ -3536,7 +3542,7 @@ all_subjects = {
     "World History": {"difficulty": 4, "homework_freq": 0.7, "year": 2, "core": True},
     "Literature II": {"difficulty": 3, "homework_freq": 0.6, "year": 2, "core": True},
     "PE II": {"difficulty": 2, "homework_freq": 0.3, "year": 2, "core": True},
-    "Computer Science": {
+    "Advanced Computer Science": {
         "difficulty": 4,
         "homework_freq": 0.7,
         "year": 2,
@@ -3638,7 +3644,7 @@ def get_current_subjects() -> Any:
 subjects = {}  # Will be filled during setup_game or year progression
 
 # Elective Subjects (subset of subjects for clarity)
-elective_subjects = ["Music", "Computer Science", "Economics", "PE"]
+elective_subjects = ["Art", "Music", "Computer Science", "Drama", "Photography", "Creative Writing"]
 
 homework = {}
 teachers = []
@@ -7632,9 +7638,10 @@ def show_year_end_summary() -> None:
         f"\n{Fore.GREEN}Ready to advance to Year {player['school_year'] + 1}?{Style.RESET_ALL}"
     )
     try:
-        input(
-            f"{Fore.CYAN}Press Enter to continue...{Style.RESET_ALL}"
-        )  # No need to store the input
+        if not _non_interactive:
+            input(
+                f"{Fore.CYAN}Press Enter to continue...{Style.RESET_ALL}"
+            )  # No need to store the input
     except EOFError:
         print(f"{Fore.RED}Input error encountered. Continuing...{Style.RESET_ALL}")
     except Exception as e:
@@ -8499,7 +8506,7 @@ def random_school_event() -> Any:
         if random.random() < 0.20:
             support_event = random.choice(support_events)
             slow_print(
-                "\n{0}Later:{1} {2}".format(Fore.CYAN, Style.RESET_ALL, support_event)
+                f"\n{Fore.CYAN}Later:{Style.RESET_ALL} {support_event}"
             )
 
             # Support events reduce the negative impact
@@ -8513,7 +8520,7 @@ def random_school_event() -> Any:
     else:
         # Regular event
         event = random.choice(regular_events)
-        slow_print("\n{0}Event:{1} {2}".format(Fore.YELLOW, Style.RESET_ALL, event))
+        slow_print(f"\n{Fore.YELLOW}Event:{Style.RESET_ALL} {event}")
 
         if event == "You forgot your homework!":
             # Get current subjects - this already returns a list
@@ -9132,6 +9139,74 @@ def setup_game(non_interactive: bool = False) -> Any:
                     player["gender"] = gender
                     break
                 print(f"{Fore.RED}Please enter M or F.{Style.RESET_ALL}")
+            
+            # Ask about living arrangement
+            print(f"\n{Fore.CYAN}=== Living Arrangement ==={Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Where would you like to live during your school years?{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}1. Dormitory{Style.RESET_ALL} - Live on campus with other students")
+            print(f"{Fore.GREEN}2. At Home{Style.RESET_ALL} - Stay with your family")
+            print(f"{Fore.GREEN}3. Apartment{Style.RESET_ALL} - Independent living off-campus")
+            
+            while True:
+                try:
+                    accommodation_choice = input(f"{Fore.CYAN}Choose your living arrangement (1-3): {Style.RESET_ALL}")
+                    if accommodation_choice == "1":
+                        player["accommodation_type"] = "dorm"
+                        player["dorm_number"] = random.randint(100, 999)
+                        player["current_location"] = "Dorm Room"
+                        print(f"{Fore.GREEN}You've been assigned to Dormitory Room {player['dorm_number']}!{Style.RESET_ALL}")
+                        break
+                    elif accommodation_choice == "2":
+                        player["accommodation_type"] = "home"
+                        player["current_location"] = "Home"
+                        print(f"{Fore.GREEN}You'll be living at home with your family!{Style.RESET_ALL}")
+                        break
+                    elif accommodation_choice == "3":
+                        player["accommodation_type"] = "apartment"
+                        player["current_location"] = "Apartment"
+                        print(f"{Fore.GREEN}You've secured an apartment for independent living!{Style.RESET_ALL}")
+                        break
+                    else:
+                        print(f"{Fore.RED}Please choose 1, 2, or 3.{Style.RESET_ALL}")
+                except (EOFError, KeyboardInterrupt):
+                    print(f"{Fore.YELLOW}Switching to non-interactive mode...{Style.RESET_ALL}")
+                    _non_interactive = True
+                    player["accommodation_type"] = "dorm"
+                    player["dorm_number"] = random.randint(100, 999)
+                    player["current_location"] = "Dorm Room"
+                    break
+            
+            # Ask about electives selection
+            if not _non_interactive:
+                print(f"\n{Fore.CYAN}=== Elective Courses ==={Style.RESET_ALL}")
+                print(f"{Fore.YELLOW}Choose 2 elective courses for your first year:{Style.RESET_ALL}")
+                
+                available_electives = ["Art", "Music", "Computer Science", "Drama", "Photography", "Creative Writing"]
+                
+                for i, elective in enumerate(available_electives, 1):
+                    print(f"{Fore.GREEN}{i}. {elective}{Style.RESET_ALL}")
+                
+                chosen_electives = []
+                while len(chosen_electives) < 2:
+                    try:
+                        choice = input(f"{Fore.CYAN}Select elective {len(chosen_electives)+1}/2 (enter number): {Style.RESET_ALL}")
+                        if choice.isdigit() and 1 <= int(choice) <= len(available_electives):
+                            elective_choice = available_electives[int(choice) - 1]
+                            if elective_choice not in chosen_electives:
+                                chosen_electives.append(elective_choice)
+                                print(f"{Fore.GREEN}You selected {elective_choice}!{Style.RESET_ALL}")
+                            else:
+                                print(f"{Fore.RED}You already selected that elective.{Style.RESET_ALL}")
+                        else:
+                            print(f"{Fore.RED}Please choose a number between 1 and {len(available_electives)}.{Style.RESET_ALL}")
+                    except (EOFError, KeyboardInterrupt):
+                        print(f"{Fore.YELLOW}Switching to non-interactive mode for electives...{Style.RESET_ALL}")
+                        _non_interactive = True
+                        chosen_electives = ["Music", "Computer Science"]
+                        break
+                
+                player["electives"] = chosen_electives
+                print(f"\n{Fore.GREEN}Your electives: {', '.join(chosen_electives)}{Style.RESET_ALL}")
         except (EOFError, KeyboardInterrupt):
             # Fall back to default values if we hit an EOF error
             player["name"] = "Student"
@@ -9702,18 +9777,39 @@ def reset_player() -> Any:
     # Show the chosen electives
     slow_print(f"\n{Fore.GREEN}Your electives for Year 1 are: {', '.join(chosen_electives)}{Style.RESET_ALL}")
 
-    # Create list of core subjects
+    # Create list of core subjects and initialize all subjects
     core_subjects = []
+    all_year_subjects = []
 
     # Get subject data for the first year
     subjects_data = get_subjects_for_year(player["school_year"])
 
-    # Identify core subjects
+    # Identify core subjects and all subjects for the year
     for subject_name, subject_data in subjects_data.items():
         if subject_data.get("core", False):
             core_subjects.append(subject_name)
+        all_year_subjects.append(subject_name)
+
+    # Combine core subjects and chosen electives for the current subjects list
+    current_year_subjects = core_subjects + chosen_electives
+    
+    # Initialize the global subjects dictionary with all current subjects
+    global subjects
+    subjects = {}
+    for subject_name in current_year_subjects:
+        if subject_name in subjects_data:
+            subjects[subject_name] = subjects_data[subject_name]
 
     slow_print(f"\nYour core subjects are: {', '.join(core_subjects)}")
+    slow_print(f"Your electives are: {', '.join(chosen_electives)}")
+
+    # Initialize homework for ALL current subjects (core + electives)
+    global homework
+    homework = {}
+    for subject_name in current_year_subjects:
+        homework[subject_name] = False
+    
+    slow_print(f"\nHomework initialized for: {', '.join(homework.keys())}")
 
     # Initialize teachers for all subjects
     for subject_name, subject_data in subjects_data.items():
@@ -9732,7 +9828,9 @@ def reset_player() -> Any:
                 "gender": gender,
             }
         )
-        player["grades"][subject_name] = "C"  # Starting grade
+        # Only assign grades to subjects the player is actually taking
+        if subject_name in current_year_subjects:
+            player["grades"][subject_name] = "C"  # Starting grade
 
     # We're now using the centralized name data structure directly
     # No need for maintaining separate name lists as we access name_data directly
@@ -12736,7 +12834,7 @@ def pe_class_challenge() -> Any:
         return
 
     slow_print(
-        "\n{0}=== PE Class Challenge ==={1}".format(Fore.YELLOW, Style.RESET_ALL)
+        f"\n{Fore.YELLOW}=== PE Class Challenge ==={Style.RESET_ALL}"
     )
 
     # Check the current season to apply seasonal effects
@@ -12929,7 +13027,7 @@ def pe_class_challenge() -> Any:
     slow_print("")
 
     # Display preparation narrative
-    slow_print("{0}=== Setting the Scene ==={1}".format(Fore.MAGENTA, Style.RESET_ALL))
+    slow_print(f"{Fore.MAGENTA}=== Setting the Scene ==={Style.RESET_ALL}")
     for line in challenge["prep_narrative"]:
         slow_print(line)
         time.sleep(0.3)  # Brief pause between narrative lines
@@ -12937,7 +13035,7 @@ def pe_class_challenge() -> Any:
     slow_print("")  # Empty line for spacing
 
     # Print a prompt to build anticipation
-    slow_print("{0}The challenge begins...{1}".format(Fore.YELLOW, Style.RESET_ALL))
+    slow_print(f"{Fore.YELLOW}The challenge begins...{Style.RESET_ALL}")
     time.sleep(1)  # Dramatic pause
 
     # Challenge success is based on player's energy, PE stats, traits, season, social charisma, and some randomness
@@ -13007,7 +13105,7 @@ def pe_class_challenge() -> Any:
         result = "failure"
 
     # Display narrative based on result
-    slow_print("\n{0}=== Challenge Results ==={1}".format(Fore.YELLOW, Style.RESET_ALL))
+    slow_print(f"\n{Fore.YELLOW}=== Challenge Results ==={Style.RESET_ALL}")
 
     # Display result and apply effects
     if result == "great_success":
@@ -18864,13 +18962,13 @@ def test_color_display() -> Any:
     print("This is normal text (no color)")
 
     # Basic color tests
-    print("{}This should be RED text{}".format(Fore.RED, Style.RESET_ALL))
-    print("{}This should be GREEN text{}".format(Fore.GREEN, Style.RESET_ALL))
-    print("{}This should be YELLOW text{}".format(Fore.YELLOW, Style.RESET_ALL))
-    print("{}This should be BLUE text{}".format(Fore.BLUE, Style.RESET_ALL))
-    print("{}This should be MAGENTA text{}".format(Fore.MAGENTA, Style.RESET_ALL))
-    print("{}This should be CYAN text{}".format(Fore.CYAN, Style.RESET_ALL))
-    print("{}This should be WHITE text{}".format(Fore.WHITE, Style.RESET_ALL))
+    print(f"{Fore.RED}This should be RED text{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}This should be GREEN text{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}This should be YELLOW text{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}This should be BLUE text{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}This should be MAGENTA text{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}This should be CYAN text{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}This should be WHITE text{Style.RESET_ALL}")
 
     # Mixed color test
     print("\nMixed color test:")
@@ -18949,19 +19047,19 @@ def test_color_display() -> Any:
 
 
 def show_main_menu() -> bool:
-    print("\n{0}1. New game{1}".format(Fore.YELLOW, Style.RESET_ALL))
-    print("{0}2. Continue game{1}".format(Fore.GREEN, Style.RESET_ALL))
-    print("{0}3. Settings{1}".format(Fore.CYAN, Style.RESET_ALL))
+    print(f"\n{Fore.YELLOW}1. New game{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}2. Continue game{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}3. Settings{Style.RESET_ALL}")
     print(
         "{0}4. Student Templates (Password Required){1}".format(
             Fore.MAGENTA, Style.RESET_ALL
         )
     )
-    print("{0}5. Test Colors (Debug){1}".format(Fore.BLUE, Style.RESET_ALL))
+    print(f"{Fore.BLUE}5. Test Colors (Debug){Style.RESET_ALL}")
 
     try:
         choice = input(
-            "\n{0}Select an option (1-5):{1} ".format(Fore.GREEN, Style.RESET_ALL)
+            f"\n{Fore.GREEN}Select an option (1-5):{Style.RESET_ALL} "
         ).strip()
         if choice == "1":
             return False
@@ -19017,7 +19115,7 @@ def show_main_menu() -> bool:
         )
         return False
     except Exception as e:
-        print("{0}Error: {1}{2}".format(Fore.RED, str(e), Style.RESET_ALL))
+        print(f"{Fore.RED}Error: {str(e)}{Style.RESET_ALL}")
         return False
 
 
@@ -19101,7 +19199,7 @@ def main(non_interactive: bool = False) -> Any:
                 )
             )
             print(
-                "{0}Secret password: SCHOOLYEAREND{1}".format(Fore.YELLOW, Style.RESET_ALL)
+                f"{Fore.YELLOW}Secret password: SCHOOLYEAREND{Style.RESET_ALL}"
             )
             print(
                 "Use this password in the main menu to access special student templates for your next playthrough!"
@@ -19111,18 +19209,30 @@ def main(non_interactive: bool = False) -> Any:
         # Command processing
         command = ""
 
-        # In non-interactive mode, auto-select help command first, then exit
+        # In non-interactive mode, simulate some gameplay actions automatically
         if non_interactive or _non_interactive:
-            print(f"\n{Fore.CYAN}Running in non-interactive mode. Displaying help and exiting.{Style.RESET_ALL}")
-            command = "/help"
-            # Display help command, then exit
-            print(f"\n{Fore.CYAN}=== HELP MENU ==={Style.RESET_ALL}")
-            print("Available commands:")
-            print("/help - Show this help menu")
-            print("/status - Show character status")
-            print("/quit - Exit the game")
-            print(f"\n{Fore.YELLOW}Game completed in non-interactive mode. Exiting...{Style.RESET_ALL}")
-            break
+            print(f"\n{Fore.CYAN}Running in non-interactive mode. Playing automatically...{Style.RESET_ALL}")
+            
+            # Simulate a few days of school life
+            for day in range(3):
+                print(f"\n{Fore.YELLOW}=== Day {day + 1} ==={Style.RESET_ALL}")
+                
+                # Simulate attending classes
+                print(f"{Fore.GREEN}Attending classes...{Style.RESET_ALL}")
+                # Automatically attend morning classes
+                for subject in list(subjects.keys())[:2]:  # Attend first 2 subjects
+                    print(f"Attending {subject} class")
+                    time.sleep(0.5)
+                
+                # Show status periodically
+                if day == 1:
+                    show_status()
+                
+                time.sleep(1)
+            
+            print(f"\n{Fore.YELLOW}Non-interactive gameplay completed. You experienced 3 days of school life!{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}Game completed successfully.{Style.RESET_ALL}")
+            return
         else:
             # In interactive mode, get command input from player
             try:
@@ -20003,7 +20113,7 @@ def apply_sanction(reason) -> Any:
 
 
 def take_exam(subject: str) -> Any:
-    print("\n{0}=== {1} Exam ==={2}".format(Fore.YELLOW, subject, Style.RESET_ALL))
+    print(f"\n{Fore.YELLOW}=== {subject} Exam ==={Style.RESET_ALL}")
 
     # Check if this is a PE exam to apply seasonal effects
     if subject.startswith("PE"):
@@ -20066,7 +20176,7 @@ def take_exam(subject: str) -> Any:
         if answer.isdigit() and 1 <= int(answer) <= len(q["options"]):
             if q["options"][int(answer) - 1] == q["answer"]:
                 base_score += 10 / total_questions  # Score scaled by number of questions
-                print("{0}Correct!{1}".format(Fore.GREEN, Style.RESET_ALL))
+                print(f"{Fore.GREEN}Correct!{Style.RESET_ALL}")
             else:
                 print(
                     "{0}Incorrect! The answer was: {1}{2}".format(
@@ -20074,7 +20184,7 @@ def take_exam(subject: str) -> Any:
                     )
                 )
         else:
-            print("{0}Invalid answer! Skipping...{1}".format(Fore.RED, Style.RESET_ALL))
+            print(f"{Fore.RED}Invalid answer! Skipping...{Style.RESET_ALL}")
 
     # Apply trait effects to the base score
     modified_score = apply_trait_effects_to_exam(subject, base_score)
@@ -20092,7 +20202,7 @@ def take_exam(subject: str) -> Any:
 def check_monthly_exam() -> bool:
     global current_date
     if current_date.day == 28:  # End of month exam
-        print("\n{0}=== Monthly Exams ==={1}".format(Fore.YELLOW, Style.RESET_ALL))
+        print(f"\n{Fore.YELLOW}=== Monthly Exams ==={Style.RESET_ALL}")
         for subject in subjects:
             score = take_exam(subject)
             # Calculate grade based on score with A+, A++, no E, and D, F grades
@@ -20596,8 +20706,8 @@ if __name__ == "__main__":
 
     if launched_from_launcher or launcher_active:
         try:
-            # Set non-interactive mode for environments with input limitations
-            main(non_interactive=True)
+            # Always run in interactive mode so you can actually play the game
+            main(non_interactive=False)
         except Exception as e:
             print(f"{Fore.RED}Error occurred: {e}{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}Game will exit now.{Style.RESET_ALL}")
