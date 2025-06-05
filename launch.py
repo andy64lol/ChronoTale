@@ -10,7 +10,7 @@ from colorama import init, Fore, Style
 init(autoreset=True)
 
 # Constants
-VERSION = "1.4.0"
+VERSION = "2.0.0"
 
 # Game data persistence
 def load_game_data() -> Any:
@@ -21,10 +21,27 @@ def load_game_data() -> Any:
             if 'purchased_games' not in data:
                 data['purchased_games'] = []
             if 'settings' not in data:
-                data['settings'] = {'colors_enabled': True}
+                data['settings'] = {'colors_enabled': True, 'auto_save': True}
+            if 'game_statistics' not in data:
+                data['game_statistics'] = {}
+            if 'achievements' not in data:
+                data['achievements'] = []
+            if 'last_played' not in data:
+                data['last_played'] = None
+            if 'total_playtime' not in data:
+                data['total_playtime'] = 0
             return data
     except (FileNotFoundError, json.JSONDecodeError):
-        return {'plays': 0, 'tokens': 0, 'purchased_games': [], 'settings': {'colors_enabled': True}}
+        return {
+            'plays': 0, 
+            'tokens': 0, 
+            'purchased_games': [], 
+            'settings': {'colors_enabled': True, 'auto_save': True},
+            'game_statistics': {},
+            'achievements': [],
+            'last_played': None,
+            'total_playtime': 0
+        }
 
 def save_game_data(data: Any) -> Any:
     """Save game statistics to JSON file"""
@@ -40,7 +57,7 @@ def color_text(text: Any, color: Any) -> Any:
 
 # Core functions
 def display_banner() -> None:
-    """Display the ChronoTale banner with pixel font"""
+    """Display the enhanced ChronoTale banner with version info"""
     banner = r"""
  ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░▒▓██████▓▒░░▒▓█▓▒░      ░▒▓████████▓▒░                    ░▒▓█▓▒░       ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓███████▓▒░  
 ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░             ░▒▓██▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
@@ -49,9 +66,12 @@ def display_banner() -> None:
 ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░             ░▒▓██▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
 ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░             ░▒▓██▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░ 
  ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░  ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░                    ░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+
 """
-    print(color_text(banner, Fore.YELLOW) + color_text("A Multidimensional Adventure Launcher", Fore.CYAN))
-    print("\n" + "═" * 50 + "\n")
+    print(color_text(banner, Fore.YELLOW))
+    print(color_text("                    ⚡ MULTIDIMENSIONAL ADVENTURE LAUNCHER ⚡", Fore.CYAN))
+    print(color_text(f"                              Version {VERSION}", Fore.MAGENTA))
+    print("\n" + "═" * 80 + "\n")
 
 def check_file(file_name: Any) -> bool:
     """Check if a game file exists"""
@@ -60,31 +80,102 @@ def check_file(file_name: Any) -> bool:
         return False
     return True
 
-def launch_game(file_name: Any) -> Any:
-    """Launch the specified game file"""
+def launch_game(file_name: Any, data: Any) -> Any:
+    """Launch the specified game file with enhanced tracking"""
     try:
         game_name = os.path.splitext(os.path.basename(file_name))[0]
         print(color_text(f"\n█ Launching {game_name}...", Fore.GREEN) + Style.RESET_ALL)
 
-        # Pixel-style loading animation
+        # Enhanced loading animation
         frames = ["[■□□□]", "[■■□□]", "[■■■□]", "[■■■■]"]
         for frame in frames:
             print(color_text(f"█ Loading {frame}", Fore.BLUE), end='\r')
             time.sleep(0.2)
         
+        # Track game statistics
+        if game_name not in data['game_statistics']:
+            data['game_statistics'][game_name] = {'launches': 0, 'total_time': 0, 'last_played': None}
+        
+        data['game_statistics'][game_name]['launches'] += 1
+        data['game_statistics'][game_name]['last_played'] = time.time()
+        data['last_played'] = game_name
+        
         # Set environment variable to indicate the game was launched from launcher
         os.environ["LAUNCHED_FROM_LAUNCHER"] = "1"
+        
+        # Track launch time
+        start_time = time.time()
         
         # Run the game
         subprocess.run([sys.executable, file_name], check=True)
         
+        # Calculate session time
+        end_time = time.time()
+        session_time = end_time - start_time
+        data['game_statistics'][game_name]['total_time'] += session_time
+        data['total_playtime'] += session_time
+        
+        # Award achievements for playtime
+        check_playtime_achievements(data, game_name, session_time)
+        
         # Clear the environment variable when game exits
         if "LAUNCHED_FROM_LAUNCHER" in os.environ:
             del os.environ["LAUNCHED_FROM_LAUNCHER"]
+            
+        return session_time
+        
     except subprocess.CalledProcessError as e:
         print(color_text(f"█ Crash: Game exited with error {e.returncode}", Fore.RED))
+        return 0
     except Exception as e:
         print(color_text(f"█ Crash: {e}", Fore.RED))
+        return 0
+
+def check_playtime_achievements(data: Any, game_name: str, session_time: float) -> None:
+    """Check and award achievements based on playtime"""
+    achievements = []
+    
+    # Session-based achievements
+    if session_time >= 300:  # 5 minutes
+        achievements.append("Dedicated Player")
+    if session_time >= 1800:  # 30 minutes
+        achievements.append("Marathon Gamer")
+    if session_time >= 3600:  # 1 hour
+        achievements.append("Epic Session")
+    
+    # Total playtime achievements
+    total_time = data['total_playtime']
+    if total_time >= 3600 and "Gaming Enthusiast" not in data['achievements']:
+        achievements.append("Gaming Enthusiast")
+    if total_time >= 18000 and "ChronoTale Master" not in data['achievements']:
+        achievements.append("ChronoTale Master")
+    
+    # Game-specific achievements
+    game_stats = data['game_statistics'].get(game_name, {})
+    if game_stats.get('launches', 0) >= 5 and f"{game_name} Veteran" not in data['achievements']:
+        achievements.append(f"{game_name} Veteran")
+    
+    # Collection achievements
+    if len(data['purchased_games']) >= 3 and "Collector" not in data['achievements']:
+        achievements.append("Collector")
+    
+    # Award new achievements
+    for achievement in achievements:
+        if achievement not in data['achievements']:
+            data['achievements'].append(achievement)
+            print(color_text(f"\n🏆 Achievement Unlocked: {achievement}!", Fore.YELLOW))
+            data['tokens'] += 5  # Bonus tokens for achievements
+
+def format_time(seconds: float) -> str:
+    """Format time in a human-readable format"""
+    if seconds < 60:
+        return f"{int(seconds)}s"
+    elif seconds < 3600:
+        return f"{int(seconds // 60)}m {int(seconds % 60)}s"
+    else:
+        hours = int(seconds // 3600)
+        minutes = int((seconds % 3600) // 60)
+        return f"{hours}h {minutes}m"
 
 # Menu system
 def games_menu(data: Any) -> Any:
@@ -121,13 +212,10 @@ def games_menu(data: Any) -> Any:
                 selected_game = all_games[choice_int - 1]
                 game_name, game_file = selected_game
                 if check_file(game_file):
-                    start_time = time.time()
-                    launch_game(game_file)
-                    end_time = time.time()
+                    session_time = launch_game(game_file, data)
 
                     # Calculate playtime tokens
-                    elapsed = end_time - start_time
-                    elapsed_minutes = elapsed // 60
+                    elapsed_minutes = session_time // 60
                     time_tokens = (elapsed_minutes // 5) * 10
 
                     # Update game data
@@ -148,13 +236,13 @@ def games_menu(data: Any) -> Any:
 def shop_menu(data: Any) -> Any:
     """Display token shop"""
     purchasable_games = [
+        {"name": "My Last Days Here: Farewell", "file": "My_last_days_here.py", "cost": 35},
         {"name": "Shipwrecked", "file": "shipwrecked.py", "cost": 30},
         {"name": "Carnival", "file": "Carnival.py", "cost": 30},
         {"name": "World Of Monsters", "file": "WOM.py", "cost": 30},
         {"name": "Hacker: Digital Hijacker", "file": "hacker.py", "cost": 40},
         {"name": "4ndyBurger Tycoon", "file": "burger.py", "cost": 40},
-        {"name": "Deutschland: 1936", "file": "deutschland.py", "cost": 40},
-        {"name": "My last days here: Farewell", "file": "My_last_days_here.py", "cost": 40},
+        {"name": "Deutschland: 1936", "file": "deutschland.py", "cost": 40}
     ]
 
     while True:
@@ -211,6 +299,63 @@ def credits_menu() -> None:
     print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
     input(color_text("\n█ Press Enter to return to main menu...", Fore.YELLOW) + Style.RESET_ALL)
 
+def statistics_menu(data: Any) -> Any:
+    """Display comprehensive statistics and achievements"""
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        display_banner()
+        print(color_text("█ CHRONOTALE STATISTICS & ACHIEVEMENTS", Fore.MAGENTA))
+        print("\n" + "═" * 80 + "\n")
+        
+        # Overall Statistics
+        print(color_text("📊 OVERALL STATISTICS", Fore.CYAN))
+        print(color_text(f"Total Games Launched: {data['plays']}", Fore.WHITE))
+        print(color_text(f"Total Playtime: {format_time(data['total_playtime'])}", Fore.WHITE))
+        print(color_text(f"Tokens Earned: {data['tokens']}", Fore.WHITE))
+        print(color_text(f"Games Owned: {len(data['purchased_games']) + 5}", Fore.WHITE))  # 5 base games
+        if data['last_played']:
+            print(color_text(f"Last Played: {data['last_played']}", Fore.WHITE))
+        
+        # Game Statistics
+        print(color_text("\n🎮 GAME STATISTICS", Fore.CYAN))
+        if data['game_statistics']:
+            for game_name, stats in data['game_statistics'].items():
+                playtime = format_time(stats['total_time'])
+                launches = stats['launches']
+                print(color_text(f"  {game_name}: {launches} launches, {playtime} played", Fore.WHITE))
+        else:
+            print(color_text("  No game statistics yet - start playing to see data!", Fore.YELLOW))
+        
+        # Achievements
+        print(color_text("\n🏆 ACHIEVEMENTS", Fore.CYAN))
+        if data['achievements']:
+            for achievement in data['achievements']:
+                print(color_text(f"  ✓ {achievement}", Fore.GREEN))
+        else:
+            print(color_text("  No achievements unlocked yet - keep playing!", Fore.YELLOW))
+        
+        # Achievement Progress Hints
+        print(color_text("\n💡 ACHIEVEMENT HINTS", Fore.CYAN))
+        hints = []
+        if data['total_playtime'] < 3600:
+            hints.append("Play for 1 hour total to become a Gaming Enthusiast")
+        if len(data['purchased_games']) < 3:
+            hints.append("Buy 3 games to become a Collector")
+        if not any("Veteran" in achievement for achievement in data['achievements']):
+            hints.append("Launch any game 5 times to become a Veteran")
+        
+        for hint in hints[:3]:  # Show max 3 hints
+            print(color_text(f"  • {hint}", Fore.YELLOW))
+        
+        print(color_text("\n█ [1] Back to Main Menu", Fore.RED))
+        choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
+        
+        if choice == '1':
+            return
+        else:
+            print(color_text("█ Invalid input!", Fore.RED))
+            time.sleep(1)
+
 def settings_menu(data: Any) -> Any:
     """Display settings"""
     while True:
@@ -245,9 +390,10 @@ def main_menu() -> None:
         print(color_text("█ Main Menu:\n", Fore.MAGENTA))
         print(color_text("█ [1] Games", Fore.CYAN))
         print(color_text("█ [2] Shop", Fore.CYAN))
-        print(color_text("█ [3] Credits", Fore.CYAN))
-        print(color_text("█ [4] Settings", Fore.CYAN))
-        print(color_text("█ [5] Quit", Fore.RED))
+        print(color_text("█ [3] Statistics & Achievements", Fore.CYAN))
+        print(color_text("█ [4] Credits", Fore.CYAN))
+        print(color_text("█ [5] Settings", Fore.CYAN))
+        print(color_text("█ [6] Quit", Fore.RED))
         print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
 
         choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
@@ -257,10 +403,12 @@ def main_menu() -> None:
         elif choice == '2':
             shop_menu(data)
         elif choice == '3':
-            credits_menu()
+            statistics_menu(data)
         elif choice == '4':
-            settings_menu(data)
+            credits_menu()
         elif choice == '5':
+            settings_menu(data)
+        elif choice == '6':
             print(color_text("\n█ Closing...", Fore.YELLOW))
             time.sleep(1)
             break
