@@ -236,10 +236,10 @@ def games_menu(data: Any) -> Any:
 def shop_menu(data: Any) -> Any:
     """Display token shop"""
     purchasable_games = [
-        {"name": "My Last Days Here: Farewell", "file": "My_last_days_here.py", "cost": 35},
         {"name": "Shipwrecked", "file": "shipwrecked.py", "cost": 30},
         {"name": "Carnival", "file": "Carnival.py", "cost": 30},
         {"name": "World Of Monsters", "file": "WOM.py", "cost": 30},
+        {"name": "My Last Days Here: Farewell", "file": "My_last_days_here.py", "cost": 35},
         {"name": "Hacker: Digital Hijacker", "file": "hacker.py", "cost": 40},
         {"name": "4ndyBurger Tycoon", "file": "burger.py", "cost": 40},
         {"name": "Deutschland: 1936", "file": "deutschland.py", "cost": 40}
