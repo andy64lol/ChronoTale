@@ -153,7 +153,8 @@ def shop_menu(data: Any) -> Any:
         {"name": "World Of Monsters", "file": "WOM.py", "cost": 30},
         {"name": "Hacker: Digital Hijacker", "file": "hacker.py", "cost": 40},
         {"name": "4ndyBurger Tycoon", "file": "burger.py", "cost": 40},
-        {"name": "Deutschland: 1936", "file": "deutschland.py", "cost": 40}
+        {"name": "Deutschland: 1936", "file": "deutschland.py", "cost": 40},
+        {"name": "My last days here: Farewell", "file": "My_last_days_here.py", "cost": 40},
     ]
 
     while True:
