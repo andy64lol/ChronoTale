@@ -1,5 +1,5 @@
 """
-Deutschland: A HOI4-style Text-Based Strategy Game
+Deutschland: A Text-Based Strategy Game
 ===================================================
 A text-based grand strategy game inspired by Hearts of Iron 4, where you
 manage a nation through economic, diplomatic, and military challenges.
@@ -17,7 +17,7 @@ import os
 import sys
 import time
 import random
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Any
 import json
 import math
 import textwrap
@@ -2412,6 +2412,7 @@ NATIONS = {
         "playable": True,
         "description": "The remnant of a once-great empire, Austria stands at a crossroads. Internal pressure for Anschluss (union) with Germany is growing, while the economy struggles. Can you preserve Austrian independence, or forge a new path for this proud nation?",
     },
+
 }
 
 # Focus trees
@@ -5484,7 +5485,7 @@ FOCUS_TREES = {
             },
             "position": [2, 4],
         },
-    }
+    },
 }
 
 # Building types for construction
@@ -6767,6 +6768,9 @@ def check_events() -> bool:
     if "event_queue" in game_state and game_state["event_queue"]:
         event_key = game_state["event_queue"].pop(0)
         show_event(event_key)
+        return True
+    
+    return False
 
 def show_event(event_key: Any) -> None:
     """Display an event and handle player choices."""
@@ -6895,7 +6899,7 @@ def check_endings() -> bool:
     """Check if any game endings have been achieved."""
     # Skip if we've already achieved an ending
     if game_state.get("achieved_ending") is not None:
-        return
+        return False
 
     # Check for nation-specific endings
     player_nation_key = game_state["player_nation"]
@@ -7053,7 +7057,10 @@ def check_endings() -> bool:
         if ending_achieved:
             game_state["achieved_ending"] = ending_key
             show_ending(ending_key)
-            break
+            return True
+    
+    # No ending achieved
+    return False
 
 def show_ending(ending_key: Any) -> None:
     """Display the ending screen for the achieved ending."""
@@ -9892,7 +9899,7 @@ def show_new_game_intro(nation_key: Any) -> None:
 
     wait_for_input("\nPress Enter to begin your journey...")
 
-def show_game_menu() -> None:
+def show_game_menu() -> bool:
     """Display in-game menu."""
     clear_screen()
 
@@ -10023,6 +10030,7 @@ def check_launcher() -> bool:
         print("Please run 'python3 launch.py' to access all games.")
         input("Press Enter to exit...")
         sys.exit()
+    return True
 
 def main() -> Any:
     """Main entry point for the game."""
