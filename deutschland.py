@@ -46,9 +46,15 @@ ENDINGS = {
             "government": "Fascist",
             "conquered_nations": [
                 "france", "poland", "belgium", "netherlands", 
-                "denmark", "norway", "yugoslavia"
+                "denmark", "norway", "yugoslavia", "czechoslovakia", "austria"
             ],
-            "year_min": 1940
+            "stability": 70,
+            "war_support": 80,
+            "focus_completed": ["anschluss", "sudetenland", "danzig_or_war"],
+            "faction_leader": True,
+            "puppet_states_count": 3,
+            "year_min": 1942,
+            "industrial_power": 100
         },
         "type": "victory"
     },
@@ -63,8 +69,12 @@ ENDINGS = {
                         "still avoiding a full declaration of war that might leave Spain vulnerable."),
         "requirements": {
             "player_nation": "spain",
-            "focus_completed": ["anti_communist_volunteers"],
-            "not_at_war": True
+            "focus_completed": ["anti_communist_volunteers", "axis_cooperation"],
+            "not_at_war": True,
+            "stability": 60,
+            "war_support": 40,
+            "relation_with": {"germany": 50, "italy": 30},
+            "year_min": 1941
         },
         "type": "victory"
     },
@@ -77,8 +87,13 @@ ENDINGS = {
                         "confrontation with the major combatants."),
         "requirements": {
             "player_nation": "spain",
-            "focus_completed": ["reclaim_empire", "gibraltar_operation"],
-            "government": "Fascist"
+            "focus_completed": ["reclaim_empire", "gibraltar_operation", "african_expansion"],
+            "government": "Fascist",
+            "conquered_nations": ["gibraltar", "morocco"],
+            "stability": 70,
+            "war_support": 60,
+            "military_strength": 50,
+            "year_min": 1942
         },
         "type": "victory"
     },
@@ -96,6 +111,33 @@ ENDINGS = {
         },
         "type": "victory"
     },
+    "spanish_democratic_victory": {
+        "name": "La España Republicana",
+        "description": "In a shocking turn of events, Republican forces have regained control of Spain. Franco's regime has been overthrown, and the Second Spanish Republic has been restored with democratic institutions and worker's rights.",
+        "requirements": {
+            "player_nation": "spain",
+            "government": "Democratic",
+            "focus_completed": ["republican_restoration", "worker_solidarity"],
+            "stability": 65,
+            "war_support": 30,
+            "civil_war_won": True,
+            "supported_by": ["france", "ussr"]
+        },
+        "type": "victory"
+    },
+    "spanish_carlist_monarchy": {
+        "name": "The Carlist Crown",
+        "description": "Traditional monarchist forces have triumphed, restoring the Bourbon dynasty with strong Catholic and conservative values. Spain has become a traditional monarchy rejecting both fascism and republicanism.",
+        "requirements": {
+            "player_nation": "spain",
+            "government": "Monarchist",
+            "focus_completed": ["bourbon_restoration", "traditional_values"],
+            "stability": 75,
+            "relation_with": {"italy": 40, "france": -20},
+            "year_min": 1940
+        },
+        "type": "victory"
+    },
 
     # Turkey Endings
     "new_ottoman_empire": {
@@ -107,9 +149,14 @@ ENDINGS = {
                         "in the region."),
         "requirements": {
             "player_nation": "turkey",
-            "focus_completed": ["ottoman_restoration", "balkan_dominance"],
-            "conquered_nations": ["greece", "bulgaria"],
-            "year_min": 1942
+            "focus_completed": ["ottoman_restoration", "balkan_dominance", "caliphate_restored"],
+            "conquered_nations": ["greece", "bulgaria", "syria", "iraq"],
+            "government": "Fascist",
+            "stability": 60,
+            "war_support": 70,
+            "military_strength": 60,
+            "year_min": 1943,
+            "control_straits": True
         },
         "type": "victory"
     },
@@ -122,9 +169,40 @@ ENDINGS = {
                         "Turkey stands poised to become a significant regional power in the post-war era."),
         "requirements": {
             "player_nation": "turkey",
-            "focus_completed": ["strategic_neutrality", "industrial_modernization"],
+            "focus_completed": ["strategic_neutrality", "industrial_modernization", "diplomatic_balance"],
             "not_at_war": True,
-            "stability": 70
+            "stability": 80,
+            "industrial_power": 40,
+            "trade_agreements_count": 4,
+            "year_min": 1944,
+            "world_tension": 70
+        },
+        "type": "victory"
+    },
+    "turkish_kemalist_revolution": {
+        "name": "The Second Kemalist Revolution",
+        "description": "Inspired by Atatürk's legacy, you have led Turkey through a radical modernization that surpasses even the founder's achievements. Turkey has become a beacon of secular democracy and technological progress in the region.",
+        "requirements": {
+            "player_nation": "turkey",
+            "government": "Democratic",
+            "focus_completed": ["secular_modernization", "technological_advancement", "educational_reform"],
+            "stability": 85,
+            "industrial_power": 50,
+            "research_completed": 15,
+            "year_min": 1943
+        },
+        "type": "victory"
+    },
+    "turkish_balkan_federation": {
+        "name": "The Balkan Federation",
+        "description": "Rather than conquest, you have united the Balkan nations in a peaceful federation with Turkey as the senior partner. This alliance provides mutual defense and economic cooperation while preserving each nation's sovereignty.",
+        "requirements": {
+            "player_nation": "turkey",
+            "focus_completed": ["balkan_cooperation", "economic_integration"],
+            "alliance_with": ["bulgaria", "greece", "yugoslavia"],
+            "not_at_war": True,
+            "stability": 70,
+            "faction_leader": True
         },
         "type": "victory"
     },
@@ -135,9 +213,14 @@ ENDINGS = {
         "description": "You have united the Nordic countries under a defensive alliance that has successfully maintained independence throughout the war. This 'Third Way' between the warring powers has preserved Scandinavian democracy and prosperity while much of Europe burns.",
         "requirements": {
             "player_nation": "sweden",
-            "focus_completed": ["nordic_defense_pact", "scandinavian_cooperation"],
+            "focus_completed": ["nordic_defense_pact", "scandinavian_cooperation", "unified_command"],
             "alliance_with": ["finland", "norway", "denmark"],
-            "not_conquered": ["finland", "norway", "denmark"]
+            "not_conquered": ["finland", "norway", "denmark"],
+            "stability": 80,
+            "faction_leader": True,
+            "military_strength": 40,
+            "year_min": 1942,
+            "trade_agreements_count": 3
         },
         "type": "victory"
     },
@@ -146,9 +229,27 @@ ENDINGS = {
         "description": "You have leveraged Sweden's vast iron resources to build a powerful industrial base and military. By carefully balancing relations with all major powers while remaining officially neutral, your nation has emerged from the war as one of the wealthiest and most stable in Europe, poised to play a major role in post-war reconstruction.",
         "requirements": {
             "player_nation": "sweden",
-            "focus_completed": ["expand_mining_operations", "industrial_self_sufficiency"],
-            "stability": 80,
+            "focus_completed": ["expand_mining_operations", "industrial_self_sufficiency", "export_economy"],
+            "stability": 90,
             "not_at_war": True,
+            "industrial_power": 60,
+            "resources": {"steel": 100},
+            "trade_agreements_count": 5,
+            "year_min": 1944,
+            "economic_strength": 80
+        },
+        "type": "victory"
+    },
+    "swedish_welfare_state": {
+        "name": "The Nordic Model",
+        "description": "Sweden has pioneered a new form of democratic socialism that balances free markets with comprehensive social welfare. This 'Third Way' has created unprecedented prosperity and equality, making Sweden a model for the post-war world.",
+        "requirements": {
+            "player_nation": "sweden",
+            "government": "Democratic",
+            "focus_completed": ["social_democracy", "welfare_reforms", "mixed_economy"],
+            "stability": 95,
+            "not_at_war": True,
+            "industrial_power": 50,
             "year_min": 1943
         },
         "type": "victory"
@@ -160,9 +261,15 @@ ENDINGS = {
         "description": "After years of struggle against both Japanese invaders and Communist insurgents, your Nationalist government has reunified China under its banner. With the Japanese expelled from the mainland and the Communist threat neutralized, China stands ready to take its place as a major power in the post-war order.",
         "requirements": {
             "player_nation": "nationalist_china",
-            "focus_completed": ["anti_communist_campaign", "modernize_military"],
-            "conquered_nations": ["communist_china"],
-            "not_conquered": ["nationalist_china"]
+            "focus_completed": ["anti_communist_campaign", "modernize_military", "national_reconstruction"],
+            "conquered_nations": ["communist_china", "manchukuo"],
+            "not_conquered": ["nationalist_china"],
+            "stability": 60,
+            "war_support": 70,
+            "military_strength": 50,
+            "industrial_power": 30,
+            "year_min": 1943,
+            "foreign_support": ["usa", "uk"]
         },
         "type": "victory"
     },
@@ -171,9 +278,14 @@ ENDINGS = {
         "description": "Your Nationalist government has successfully implemented democratic reforms while maintaining stability and territorial integrity. With support from Western democracies, China has emerged from conflict as a democratic nation with growing economic strength and international respect.",
         "requirements": {
             "player_nation": "nationalist_china",
-            "focus_completed": ["constitutional_reforms", "american_aid_program"],
+            "focus_completed": ["constitutional_reforms", "american_aid_program", "democratic_institutions"],
             "government": "Democratic",
-            "stability": 70
+            "stability": 80,
+            "war_support": 50,
+            "industrial_power": 25,
+            "relation_with": {"usa": 70, "uk": 50},
+            "year_min": 1944,
+            "not_at_war": True
         },
         "type": "victory"
     },
@@ -188,6 +300,190 @@ ENDINGS = {
         },
         "type": "victory"
     },
+    
+    # United States Endings
+    "american_arsenal_democracy": {
+        "name": "Arsenal of Democracy",
+        "description": "The United States has emerged as the dominant global superpower, leading the Allies to total victory. American industrial might and democratic values now shape the post-war world order.",
+        "requirements": {
+            "player_nation": "usa",
+            "government": "Democratic",
+            "focus_completed": ["lend_lease", "war_production", "global_leadership"],
+            "faction_leader": True,
+            "conquered_nations": ["germany", "japan"],
+            "stability": 80,
+            "industrial_power": 200,
+            "year_min": 1945,
+            "nuclear_weapons": True
+        },
+        "type": "victory"
+    },
+    "american_isolationist_fortress": {
+        "name": "Fortress America",
+        "description": "America has successfully remained isolated from foreign entanglements while building the most powerful military and economy in the world. The Monroe Doctrine has been extended globally.",
+        "requirements": {
+            "player_nation": "usa",
+            "focus_completed": ["america_first", "hemispheric_defense", "continental_fortress"],
+            "not_at_war": True,
+            "stability": 90,
+            "industrial_power": 150,
+            "military_strength": 100,
+            "year_min": 1944,
+            "trade_agreements_count": 10
+        },
+        "type": "victory"
+    },
+    "american_communist_revolution": {
+        "name": "The American Soviet Republic",
+        "description": "In a stunning turn of events, communist forces have triumphed in America. The United Socialist States of America now stands as a beacon of workers' revolution in the Western Hemisphere.",
+        "requirements": {
+            "player_nation": "usa",
+            "government": "Communist",
+            "focus_completed": ["workers_revolution", "proletarian_dictatorship", "red_america"],
+            "stability": 60,
+            "civil_war_won": True,
+            "alliance_with": ["ussr"],
+            "year_min": 1943
+        },
+        "type": "victory"
+    },
+    
+    # Soviet Union Endings
+    "soviet_world_revolution": {
+        "name": "Global Socialist Revolution",
+        "description": "The Red Army has swept across Europe and beyond, establishing communist governments worldwide. Stalin's vision of global revolution has been achieved under your leadership.",
+        "requirements": {
+            "player_nation": "ussr",
+            "government": "Communist",
+            "focus_completed": ["permanent_revolution", "global_communism", "red_europe"],
+            "conquered_nations": ["germany", "poland", "france", "uk"],
+            "faction_leader": True,
+            "stability": 70,
+            "war_support": 80,
+            "year_min": 1946,
+            "puppet_states_count": 8
+        },
+        "type": "victory"
+    },
+    "soviet_defensive_victory": {
+        "name": "Fortress of Socialism",
+        "description": "The Soviet Union has successfully defended socialism in one country, repelling all invasions while building a powerful industrial state that serves as a beacon for workers worldwide.",
+        "requirements": {
+            "player_nation": "ussr",
+            "government": "Communist",
+            "focus_completed": ["socialism_in_one_country", "defensive_buildup", "industrial_might"],
+            "not_conquered": ["ussr"],
+            "stability": 80,
+            "industrial_power": 120,
+            "military_strength": 100,
+            "year_min": 1944
+        },
+        "type": "victory"
+    },
+    "soviet_tsarist_restoration": {
+        "name": "The Restored Russian Empire",
+        "description": "In an extraordinary reversal, the Romanov dynasty has been restored to power. The new Tsar rules over a vast empire stretching from Europe to the Pacific.",
+        "requirements": {
+            "player_nation": "ussr",
+            "government": "Monarchist",
+            "focus_completed": ["white_restoration", "romanov_return", "imperial_reconstruction"],
+            "stability": 75,
+            "civil_war_won": True,
+            "conquered_nations": ["poland", "finland"],
+            "year_min": 1943
+        },
+        "type": "victory"
+    },
+    
+    # United Kingdom Endings
+    "british_empire_triumphant": {
+        "name": "The Sun Never Sets",
+        "description": "The British Empire has not only survived but emerged stronger than ever. With the Axis defeated and the Empire intact, Britain remains the dominant global power.",
+        "requirements": {
+            "player_nation": "uk",
+            "government": "Democratic",
+            "focus_completed": ["imperial_federation", "royal_navy_supremacy", "commonwealth_unity"],
+            "faction_leader": True,
+            "conquered_nations": ["germany", "italy"],
+            "not_conquered": ["india", "australia", "canada", "south_africa"],
+            "stability": 80,
+            "naval_supremacy": True,
+            "year_min": 1945
+        },
+        "type": "victory"
+    },
+    "british_socialist_commonwealth": {
+        "name": "The Socialist Commonwealth",
+        "description": "Labour's radical reforms have transformed the Empire into a socialist commonwealth of equal nations. The old imperial system has given way to voluntary cooperation based on shared socialist values.",
+        "requirements": {
+            "player_nation": "uk",
+            "government": "Communist",
+            "focus_completed": ["labour_revolution", "socialist_empire", "decolonization"],
+            "stability": 70,
+            "alliance_with": ["india", "australia", "canada"],
+            "year_min": 1944
+        },
+        "type": "victory"
+    },
+    
+    # France Endings
+    "french_empire_reborn": {
+        "name": "La Grande Nation Restored",
+        "description": "France has reclaimed its position as the dominant continental power. The spirit of Napoleon lives on as French influence spreads across Europe and beyond.",
+        "requirements": {
+            "player_nation": "france",
+            "focus_completed": ["grande_armee", "continental_system", "french_hegemony"],
+            "conquered_nations": ["germany", "italy", "spain"],
+            "stability": 75,
+            "military_strength": 80,
+            "year_min": 1944
+        },
+        "type": "victory"
+    },
+    "french_popular_front_triumph": {
+        "name": "The People's Republic of France",
+        "description": "The Popular Front has achieved its ultimate victory, establishing a socialist republic that serves as a model for progressive movements worldwide.",
+        "requirements": {
+            "player_nation": "france",
+            "government": "Communist",
+            "focus_completed": ["popular_front_victory", "socialist_reconstruction", "workers_state"],
+            "stability": 80,
+            "alliance_with": ["ussr", "spain"],
+            "year_min": 1943
+        },
+        "type": "victory"
+    },
+    
+    # Japan Endings
+    "japanese_pacific_empire": {
+        "name": "Empire of the Rising Sun",
+        "description": "Japan has achieved total domination of the Pacific, establishing the Greater East Asia Co-Prosperity Sphere under Japanese leadership. The Western colonial powers have been expelled from Asia.",
+        "requirements": {
+            "player_nation": "japan",
+            "government": "Fascist",
+            "focus_completed": ["greater_east_asia", "pacific_conquest", "divine_wind"],
+            "conquered_nations": ["china", "philippines", "netherlands_east_indies", "australia"],
+            "stability": 70,
+            "war_support": 80,
+            "naval_supremacy": True,
+            "year_min": 1944
+        },
+        "type": "victory"
+    },
+    "japanese_constitutional_monarchy": {
+        "name": "The Peaceful Empire",
+        "description": "Japan has embraced constitutional democracy while maintaining the Emperor. This peaceful path has led to prosperity and respect among the community of nations.",
+        "requirements": {
+            "player_nation": "japan",
+            "government": "Democratic",
+            "focus_completed": ["constitutional_reforms", "peaceful_expansion", "democratic_empire"],
+            "stability": 85,
+            "not_at_war": True,
+            "industrial_power": 60,
+            "year_min": 1943
+        },
+        "type": "victory"
+    },
 
     # Communist China Endings
     "peoples_republic": {
@@ -195,9 +491,14 @@ ENDINGS = {
         "description": "Your Chinese Communist Party has triumphed in the civil war, establishing the People's Republic of China. Under Chairman Mao's leadership, the new communist state is implementing sweeping land reforms and industrialization programs while consolidating control over the vast nation.",
         "requirements": {
             "player_nation": "communist_china",
-            "focus_completed": ["peoples_war", "defeat_nationalists"],
-            "conquered_nations": ["nationalist_china"],
-            "government": "Communist"
+            "focus_completed": ["peoples_war", "defeat_nationalists", "land_reform", "cultural_revolution"],
+            "conquered_nations": ["nationalist_china", "tibet"],
+            "government": "Communist",
+            "stability": 60,
+            "war_support": 80,
+            "industrial_power": 35,
+            "year_min": 1949,
+            "puppet_states_count": 2
         },
         "type": "victory"
     },
@@ -206,9 +507,13 @@ ENDINGS = {
         "description": "You have formed a powerful alliance with the Soviet Union, creating a unified communist bloc that spans the Eurasian continent. With Soviet industrial aid and military support, your China is rapidly developing into a formidable power that will shape the future of Asia and the world.",
         "requirements": {
             "player_nation": "communist_china",
-            "focus_completed": ["soviet_advisors", "socialist_industrialization"],
-            "alliance_with": ["ussr"],
-            "stability": 65
+            "focus_completed": ["soviet_advisors", "socialist_industrialization", "fraternal_assistance"],
+            "alliance_with": ["ussr", "mongolia"],
+            "stability": 70,
+            "industrial_power": 40,
+            "military_strength": 60,
+            "relation_with": {"ussr": 80},
+            "year_min": 1950
         },
         "type": "victory"
     },
@@ -217,9 +522,28 @@ ENDINGS = {
         "description": "You have charted your own unique path to socialism, independent of Soviet influence. By balancing pragmatic economic policies with revolutionary ideology, your China has created a distinct model of development that maintains communist principles while adapting to Chinese realities.",
         "requirements": {
             "player_nation": "communist_china",
-            "focus_completed": ["self_reliance", "chinese_characteristics"],
-            "stability": 70,
-            "not_at_war": True
+            "focus_completed": ["self_reliance", "chinese_characteristics", "market_socialism"],
+            "stability": 80,
+            "not_at_war": True,
+            "industrial_power": 45,
+            "economic_strength": 60,
+            "year_min": 1952,
+            "research_completed": 10
+        },
+        "type": "victory"
+    },
+    "maoist_global_revolution": {
+        "name": "Maoist World Revolution",
+        "description": "Your revolutionary model has spread beyond China's borders, inspiring peasant uprisings and communist movements worldwide. The Maoist path has become the dominant form of revolutionary socialism.",
+        "requirements": {
+            "player_nation": "communist_china",
+            "focus_completed": ["peasant_revolution", "third_world_solidarity", "continuous_revolution"],
+            "government": "Communist",
+            "alliance_with": ["vietnam", "korea"],
+            "stability": 65,
+            "war_support": 85,
+            "puppet_states_count": 4,
+            "year_min": 1960
         },
         "type": "victory"
     },
@@ -258,8 +582,8 @@ ENDINGS = {
         },
         "type": "victory"
     },
-    "soviet_world_revolution": {
-        "name": "Global Soviet Revolution",
+    "soviet_european_revolution": {
+        "name": "European Soviet Revolution", 
         "description": "You have fulfilled Marx's prediction of world revolution. Your Red Army tanks have rolled across Europe, toppling capitalist governments and establishing workers' states. With Germany crushed and Europe turned red, the tide of communism is unstoppable.",
         "requirements": {
             "player_nation": "ussr",
@@ -1310,12 +1634,91 @@ POLITICAL_PARTIES = {
     }
 }
 
+# Faction definitions
+FACTIONS = {
+    "allies": {
+        "name": "Allies",
+        "leader": "uk",
+        "members": ["uk", "france", "canada", "australia", "south_africa", "new_zealand"],
+        "color": Fore.BLUE,
+        "ideology": "Democratic",
+        "description": "Democratic nations united against fascist aggression"
+    },
+    "axis": {
+        "name": "Axis",
+        "leader": "germany",
+        "members": ["germany", "italy", "japan"],
+        "color": Fore.RED,
+        "ideology": "Fascist",
+        "description": "Fascist powers seeking to reshape the world order"
+    },
+    "comintern": {
+        "name": "Comintern",
+        "leader": "ussr",
+        "members": ["ussr"],
+        "color": Fore.RED,
+        "ideology": "Communist",
+        "description": "Communist nations working toward world revolution"
+    },
+    "non_aligned": {
+        "name": "Non-Aligned",
+        "leader": None,
+        "members": ["usa", "brazil", "argentina", "mexico", "turkey", "iran", "cuba"],
+        "color": Fore.YELLOW,
+        "ideology": "Non-Aligned",
+        "description": "Nations maintaining neutrality or independence"
+    }
+}
+
+# Trade goods and their base values
+TRADE_GOODS = {
+    "steel": {"base_value": 2, "demand_multiplier": 1.2},
+    "oil": {"base_value": 3, "demand_multiplier": 1.5},
+    "aluminum": {"base_value": 4, "demand_multiplier": 1.3},
+    "rubber": {"base_value": 5, "demand_multiplier": 1.4},
+    "tungsten": {"base_value": 6, "demand_multiplier": 1.6},
+    "chromium": {"base_value": 5, "demand_multiplier": 1.5},
+}
+
+# Battle types and their modifiers
+BATTLE_TYPES = {
+    "infantry_assault": {
+        "name": "Infantry Assault",
+        "attacker_bonus": {"infantry": 1.2, "artillery": 1.1},
+        "defender_bonus": {"infantry": 1.3, "artillery": 1.0},
+        "terrain_factors": {"plains": 1.0, "hills": 0.8, "mountains": 0.6, "urban": 0.7}
+    },
+    "armored_breakthrough": {
+        "name": "Armored Breakthrough", 
+        "attacker_bonus": {"tanks": 1.5, "infantry": 0.9},
+        "defender_bonus": {"tanks": 1.2, "artillery": 1.3},
+        "terrain_factors": {"plains": 1.3, "hills": 0.9, "mountains": 0.5, "urban": 0.8}
+    },
+    "naval_invasion": {
+        "name": "Naval Invasion",
+        "attacker_bonus": {"infantry": 0.8, "tanks": 0.7},
+        "defender_bonus": {"infantry": 1.4, "artillery": 1.2},
+        "terrain_factors": {"coastal": 1.0, "inland": 0.6}
+    },
+    "air_superiority": {
+        "name": "Air Superiority Battle",
+        "attacker_bonus": {"fighters": 1.3, "bombers": 1.1},
+        "defender_bonus": {"fighters": 1.2, "bombers": 0.9},
+        "terrain_factors": {"all": 1.0}
+    }
+}
+
 # Game state
 game_state = {
     "year": 1936,
     "month": 1,
     "player_nation": "",
     "nations": {},
+    "factions": FACTIONS.copy(),
+    "active_wars": {},
+    "trade_routes": {},
+    "battle_fronts": {},
+    "world_tension": 0,
     "focus_progress": None,
     "events": [],
     "wars": [],
@@ -1328,6 +1731,8 @@ game_state = {
     "last_save": None,
     "internal_conflicts": 0,
     "achieved_ending": None,
+    "peace_negotiations": {},
+    "puppet_relationships": {},
     "political_influence": 0
 }
 
@@ -1895,53 +2300,6 @@ NATIONS = {
         "playable": True,
         "description": "Sweden enjoys peace and prosperity while much of Europe spirals into conflict. Its neutrality policy has kept it out of wars for over a century, but with Nazi Germany dominating neighboring Norway and Denmark, and the Soviet Union attacking Finland, maintaining this neutrality will be challenging. Sweden's vast iron ore resources are coveted by all major powers. Can you guide Sweden safely through the storm?",
     },
-    "thailand": {
-        "name": "Thailand",
-        "color": Fore.LIGHTRED_EX,
-        "leader": "Plaek Phibunsongkhram",
-        "government": "Military",
-        "stability": 60,
-        "war_support": 25,
-        "industry": {
-            "civilian_factories": 3,
-            "military_factories": 2,
-            "dockyards": 1,
-            "infrastructure": 2,
-        },
-        "resources": {
-            "steel": 5,
-            "oil": 0,
-            "aluminum": 0,
-            "rubber": 20,
-            "tungsten": 5,
-            "chromium": 0,
-        },
-        "army": {
-            "divisions": 8,
-            "manpower": 120000,
-            "equipment": {
-                "infantry_equipment": 18000,
-                "artillery": 200,
-                "tanks": 10,
-            },
-        },
-        "navy": {
-            "ships": {
-                "battleships": 0,
-                "cruisers": 2,
-                "destroyers": 4,
-                "submarines": 0,
-            },
-        },
-        "air_force": {
-            "fighters": 30,
-            "bombers": 15,
-        },
-        "neighbors": ["burma", "french_indochina", "malaya"],
-        "focus_tree": "thailand_focus_tree",
-        "playable": True,
-        "description": "Thailand (formerly Siam) is caught between powerful colonial empires in Southeast Asia. Japan's expansion threatens the regional balance of power, while Thailand's own ambitions to reclaim lost territories could lead to confrontation with Britain and France. Will you align with Japan's Co-Prosperity Sphere, remain neutral, or support the Allied powers?",
-    },
     "philippines": {
         "name": "Philippines",
         "color": Fore.BLUE,
@@ -2410,7 +2768,929 @@ NATIONS = {
         "neighbors": ["germany", "italy", "czechoslovakia", "hungary", "switzerland"],
         "focus_tree": "austrian_focus_tree",
         "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["germany", "italy"],
         "description": "The remnant of a once-great empire, Austria stands at a crossroads. Internal pressure for Anschluss (union) with Germany is growing, while the economy struggles. Can you preserve Austrian independence, or forge a new path for this proud nation?",
+    },
+    "canada": {
+        "name": "Canada",
+        "color": Fore.RED,
+        "leader": "William Lyon Mackenzie King",
+        "government": "Democratic",
+        "stability": 85,
+        "war_support": 25,
+        "industry": {
+            "civilian_factories": 14,
+            "military_factories": 4,
+            "dockyards": 4,
+            "infrastructure": 6,
+        },
+        "resources": {
+            "steel": 8,
+            "oil": 4,
+            "aluminum": 12,
+            "rubber": 0,
+            "tungsten": 3,
+            "chromium": 2,
+        },
+        "army": {
+            "divisions": 6,
+            "manpower": 180000,
+            "equipment": {
+                "infantry_equipment": 22000,
+                "artillery": 350,
+                "tanks": 25,
+            },
+        },
+        "air_force": {
+            "fighters": 22,
+            "bombers": 8,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 2,
+                "destroyers": 12,
+                "submarines": 4,
+            },
+        },
+        "neighbors": ["usa"],
+        "focus_tree": "canadian_focus_tree",
+        "playable": True,
+        "faction": "allies",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["usa", "uk"],
+        "description": "A dominion of the British Empire with vast natural resources and growing industrial capacity. Canada balances loyalty to Britain with increasing autonomy and continental ties to the United States.",
+    },
+    "mexico": {
+        "name": "Mexico",
+        "color": Fore.GREEN,
+        "leader": "Lázaro Cárdenas",
+        "government": "Democratic",
+        "stability": 55,
+        "war_support": 15,
+        "industry": {
+            "civilian_factories": 6,
+            "military_factories": 2,
+            "dockyards": 1,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 2,
+            "oil": 12,
+            "aluminum": 1,
+            "rubber": 0,
+            "tungsten": 0,
+            "chromium": 1,
+        },
+        "army": {
+            "divisions": 8,
+            "manpower": 140000,
+            "equipment": {
+                "infantry_equipment": 20000,
+                "artillery": 280,
+                "tanks": 15,
+            },
+        },
+        "air_force": {
+            "fighters": 12,
+            "bombers": 4,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 1,
+                "destroyers": 3,
+                "submarines": 2,
+            },
+        },
+        "neighbors": ["usa"],
+        "focus_tree": "mexican_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["usa"],
+        "description": "Under President Cárdenas, Mexico pursues progressive reforms while maintaining neutrality. Rich in oil resources, Mexico faces pressure from both fascist and democratic powers seeking influence.",
+    },
+    "brazil": {
+        "name": "Brazil",
+        "color": Fore.YELLOW,
+        "leader": "Getúlio Vargas",
+        "government": "Non-Aligned",
+        "stability": 60,
+        "war_support": 20,
+        "industry": {
+            "civilian_factories": 8,
+            "military_factories": 3,
+            "dockyards": 2,
+            "infrastructure": 4,
+        },
+        "resources": {
+            "steel": 4,
+            "oil": 2,
+            "aluminum": 6,
+            "rubber": 15,
+            "tungsten": 2,
+            "chromium": 2,
+        },
+        "army": {
+            "divisions": 12,
+            "manpower": 250000,
+            "equipment": {
+                "infantry_equipment": 35000,
+                "artillery": 450,
+                "tanks": 20,
+            },
+        },
+        "air_force": {
+            "fighters": 18,
+            "bombers": 6,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 2,
+                "cruisers": 2,
+                "destroyers": 8,
+                "submarines": 3,
+            },
+        },
+        "neighbors": ["argentina"],
+        "focus_tree": "brazilian_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["usa", "argentina"],
+        "description": "Under Vargas's Estado Novo, Brazil emerges as South America's dominant power. With vast resources and growing industry, Brazil seeks to play a major role in hemispheric affairs.",
+    },
+    "argentina": {
+        "name": "Argentina",
+        "color": Fore.LIGHTBLUE_EX,
+        "leader": "Roberto Ortiz",
+        "government": "Democratic",
+        "stability": 65,
+        "war_support": 10,
+        "industry": {
+            "civilian_factories": 10,
+            "military_factories": 3,
+            "dockyards": 2,
+            "infrastructure": 5,
+        },
+        "resources": {
+            "steel": 3,
+            "oil": 3,
+            "aluminum": 2,
+            "rubber": 0,
+            "tungsten": 1,
+            "chromium": 1,
+        },
+        "army": {
+            "divisions": 10,
+            "manpower": 200000,
+            "equipment": {
+                "infantry_equipment": 30000,
+                "artillery": 400,
+                "tanks": 18,
+            },
+        },
+        "air_force": {
+            "fighters": 16,
+            "bombers": 5,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 2,
+                "cruisers": 3,
+                "destroyers": 10,
+                "submarines": 4,
+            },
+        },
+        "neighbors": ["brazil"],
+        "focus_tree": "argentine_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["brazil", "uk"],
+        "description": "Argentina maintains neutrality while building up its military and economy. As South America's second-largest power, Argentina competes with Brazil for regional dominance.",
+    },
+    "cuba": {
+        "name": "Cuba",
+        "color": Fore.RED,
+        "leader": "Fulgencio Batista",
+        "government": "Non-Aligned",
+        "stability": 50,
+        "war_support": 15,
+        "industry": {
+            "civilian_factories": 2,
+            "military_factories": 1,
+            "dockyards": 1,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 0,
+            "oil": 0,
+            "aluminum": 0,
+            "rubber": 0,
+            "tungsten": 0,
+            "chromium": 0,
+        },
+        "army": {
+            "divisions": 3,
+            "manpower": 40000,
+            "equipment": {
+                "infantry_equipment": 8000,
+                "artillery": 80,
+                "tanks": 5,
+            },
+        },
+        "air_force": {
+            "fighters": 6,
+            "bombers": 2,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 0,
+                "destroyers": 2,
+                "submarines": 1,
+            },
+        },
+        "neighbors": ["usa"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["usa"],
+        "description": "Cuba under Batista maintains close ties with the United States while pursuing internal stability. The island's strategic position in the Caribbean makes it valuable to all major powers.",
+    },
+    "south_africa": {
+        "name": "South Africa",
+        "color": Fore.YELLOW,
+        "leader": "J.B.M. Hertzog",
+        "government": "Democratic",
+        "stability": 70,
+        "war_support": 30,
+        "industry": {
+            "civilian_factories": 6,
+            "military_factories": 2,
+            "dockyards": 2,
+            "infrastructure": 4,
+        },
+        "resources": {
+            "steel": 6,
+            "oil": 0,
+            "aluminum": 2,
+            "rubber": 0,
+            "tungsten": 3,
+            "chromium": 8,
+        },
+        "army": {
+            "divisions": 6,
+            "manpower": 80000,
+            "equipment": {
+                "infantry_equipment": 15000,
+                "artillery": 200,
+                "tanks": 12,
+            },
+        },
+        "air_force": {
+            "fighters": 14,
+            "bombers": 4,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 2,
+                "destroyers": 6,
+                "submarines": 2,
+            },
+        },
+        "neighbors": [],
+        "focus_tree": "south_african_focus_tree",
+        "playable": True,
+        "faction": "allies",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["uk"],
+        "description": "A dominion of the British Empire rich in minerals and strategic resources. South Africa's location controls vital sea routes while internal tensions over participation in European conflicts simmer.",
+    },
+    "new_zealand": {
+        "name": "New Zealand",
+        "color": Fore.BLUE,
+        "leader": "Michael Joseph Savage",
+        "government": "Democratic",
+        "stability": 85,
+        "war_support": 40,
+        "industry": {
+            "civilian_factories": 3,
+            "military_factories": 1,
+            "dockyards": 2,
+            "infrastructure": 5,
+        },
+        "resources": {
+            "steel": 1,
+            "oil": 0,
+            "aluminum": 2,
+            "rubber": 0,
+            "tungsten": 0,
+            "chromium": 0,
+        },
+        "army": {
+            "divisions": 3,
+            "manpower": 35000,
+            "equipment": {
+                "infantry_equipment": 7000,
+                "artillery": 100,
+                "tanks": 8,
+            },
+        },
+        "air_force": {
+            "fighters": 8,
+            "bombers": 3,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 2,
+                "destroyers": 4,
+                "submarines": 1,
+            },
+        },
+        "neighbors": ["australia"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "allies",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["uk", "australia"],
+        "description": "A loyal dominion of the British Empire with strong democratic traditions. Despite its small size, New Zealand punches above its weight in supporting Britain's global commitments.",
+    },
+    "iran": {
+        "name": "Iran",
+        "color": Fore.GREEN,
+        "leader": "Reza Shah Pahlavi",
+        "government": "Non-Aligned",
+        "stability": 55,
+        "war_support": 20,
+        "industry": {
+            "civilian_factories": 5,
+            "military_factories": 2,
+            "dockyards": 1,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 2,
+            "oil": 20,
+            "aluminum": 1,
+            "rubber": 0,
+            "tungsten": 0,
+            "chromium": 1,
+        },
+        "army": {
+            "divisions": 10,
+            "manpower": 180000,
+            "equipment": {
+                "infantry_equipment": 25000,
+                "artillery": 350,
+                "tanks": 15,
+            },
+        },
+        "air_force": {
+            "fighters": 12,
+            "bombers": 4,
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 1,
+                "destroyers": 3,
+                "submarines": 2,
+            },
+        },
+        "neighbors": ["soviet_union", "turkey"],
+        "focus_tree": "iranian_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["germany", "uk"],
+        "description": "Under Reza Shah's modernization drive, Iran seeks to balance between British and Soviet influence while exploiting its vast oil reserves. Strategic position makes Iran crucial to all major powers.",
+    },
+    "venezuela": {
+        "name": "Venezuela",
+        "color": Fore.YELLOW,
+        "leader": "Eleazar López Contreras",
+        "government": "Military",
+        "stability": 60,
+        "war_support": 25,
+        "industry": {
+            "civilian_factories": 3,
+            "military_factories": 1,
+            "dockyards": 1,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 2,
+            "oil": 50,
+            "aluminum": 5,
+            "rubber": 8,
+            "tungsten": 0,
+            "chromium": 0,
+        },
+        "army": {
+            "divisions": 4,
+            "manpower": 80000,
+            "equipment": {
+                "infantry_equipment": 12000,
+                "artillery": 200,
+                "tanks": 20,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 1,
+                "destroyers": 3,
+                "submarines": 2,
+            },
+        },
+        "air_force": {
+            "fighters": 15,
+            "bombers": 8,
+        },
+        "neighbors": ["colombia", "brazil", "guyana"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["usa", "uk"],
+        "description": "Oil-rich Venezuela under military rule seeks to modernize while balancing American and European oil company interests. Growing petroleum industry provides economic potential.",
+    },
+    "colombia": {
+        "name": "Colombia",
+        "color": Fore.LIGHTYELLOW_EX,
+        "leader": "Alfonso López Pumarejo",
+        "government": "Democratic",
+        "stability": 65,
+        "war_support": 20,
+        "industry": {
+            "civilian_factories": 4,
+            "military_factories": 2,
+            "dockyards": 1,
+            "infrastructure": 4,
+        },
+        "resources": {
+            "steel": 3,
+            "oil": 15,
+            "aluminum": 3,
+            "rubber": 10,
+            "tungsten": 2,
+            "chromium": 1,
+        },
+        "army": {
+            "divisions": 6,
+            "manpower": 120000,
+            "equipment": {
+                "infantry_equipment": 18000,
+                "artillery": 300,
+                "tanks": 30,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 2,
+                "destroyers": 4,
+                "submarines": 1,
+            },
+        },
+        "air_force": {
+            "fighters": 20,
+            "bombers": 12,
+        },
+        "neighbors": ["venezuela", "brazil", "panama"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["usa", "uk"],
+        "description": "Colombia under Liberal Party rule pursues democratic reforms and economic modernization. Coffee exports and emerging oil production provide economic foundation.",
+    },
+    "chile": {
+        "name": "Chile",
+        "color": Fore.LIGHTCYAN_EX,
+        "leader": "Arturo Alessandri",
+        "government": "Democratic",
+        "stability": 70,
+        "war_support": 30,
+        "industry": {
+            "civilian_factories": 5,
+            "military_factories": 2,
+            "dockyards": 2,
+            "infrastructure": 4,
+        },
+        "resources": {
+            "steel": 8,
+            "oil": 0,
+            "aluminum": 12,
+            "rubber": 0,
+            "tungsten": 15,
+            "chromium": 5,
+        },
+        "army": {
+            "divisions": 8,
+            "manpower": 150000,
+            "equipment": {
+                "infantry_equipment": 22000,
+                "artillery": 400,
+                "tanks": 50,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 2,
+                "cruisers": 4,
+                "destroyers": 8,
+                "submarines": 3,
+            },
+        },
+        "air_force": {
+            "fighters": 30,
+            "bombers": 20,
+        },
+        "neighbors": ["argentina", "bolivia", "peru"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["uk", "germany"],
+        "description": "Chile's mineral wealth and strategic Pacific position make it influential in South America. Strong navy and German-trained army maintain regional balance.",
+    },
+    "thailand": {
+        "name": "Thailand",
+        "color": Fore.LIGHTCYAN_EX,
+        "leader": "Plaek Phibunsongkhram",
+        "government": "Military",
+        "stability": 60,
+        "war_support": 40,
+        "industry": {
+            "civilian_factories": 3,
+            "military_factories": 2,
+            "dockyards": 1,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 2,
+            "oil": 0,
+            "aluminum": 1,
+            "rubber": 20,
+            "tungsten": 8,
+            "chromium": 0,
+        },
+        "army": {
+            "divisions": 6,
+            "manpower": 120000,
+            "equipment": {
+                "infantry_equipment": 18000,
+                "artillery": 300,
+                "tanks": 25,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 2,
+                "destroyers": 4,
+                "submarines": 2,
+            },
+        },
+        "air_force": {
+            "fighters": 20,
+            "bombers": 12,
+        },
+        "neighbors": ["burma", "french_indochina", "malaya"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["japan", "uk"],
+        "description": "The only Southeast Asian nation to avoid European colonization, Thailand under military leadership modernizes while balancing between Japanese and Western interests.",
+    },
+    "korea": {
+        "name": "Korea",
+        "color": Fore.MAGENTA,
+        "leader": "Minami Jirō",
+        "government": "Fascist",
+        "stability": 35,
+        "war_support": 20,
+        "industry": {
+            "civilian_factories": 4,
+            "military_factories": 2,
+            "dockyards": 1,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 8,
+            "oil": 0,
+            "aluminum": 3,
+            "rubber": 0,
+            "tungsten": 15,
+            "chromium": 5,
+        },
+        "army": {
+            "divisions": 8,
+            "manpower": 200000,
+            "equipment": {
+                "infantry_equipment": 25000,
+                "artillery": 400,
+                "tanks": 50,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 1,
+                "destroyers": 3,
+                "submarines": 2,
+            },
+        },
+        "air_force": {
+            "fighters": 25,
+            "bombers": 15,
+        },
+        "neighbors": ["china", "ussr"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "axis",
+        "puppet_master": "japan",
+        "puppet_states": [],
+        "trade_agreements": ["japan"],
+        "description": "Korea under Japanese colonial rule since 1910 serves as a staging ground for expansion into China. Industrial development occurs alongside cultural suppression.",
+    },
+    "manchukuo": {
+        "name": "Manchukuo",
+        "color": Fore.LIGHTRED_EX,
+        "leader": "Puyi",
+        "government": "Fascist",
+        "stability": 40,
+        "war_support": 30,
+        "industry": {
+            "civilian_factories": 6,
+            "military_factories": 3,
+            "dockyards": 1,
+            "infrastructure": 4,
+        },
+        "resources": {
+            "steel": 25,
+            "oil": 5,
+            "aluminum": 8,
+            "rubber": 0,
+            "tungsten": 12,
+            "chromium": 8,
+        },
+        "army": {
+            "divisions": 12,
+            "manpower": 300000,
+            "equipment": {
+                "infantry_equipment": 40000,
+                "artillery": 600,
+                "tanks": 80,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 0,
+                "destroyers": 2,
+                "submarines": 1,
+            },
+        },
+        "air_force": {
+            "fighters": 30,
+            "bombers": 20,
+        },
+        "neighbors": ["china", "ussr", "mongolia"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "axis",
+        "puppet_master": "japan",
+        "puppet_states": [],
+        "trade_agreements": ["japan"],
+        "description": "Japanese puppet state established in 1932 with the last Qing emperor as figurehead. Rich in resources and heavy industry, serving Japan's war machine.",
+    },
+    "french_indochina": {
+        "name": "French Indochina",
+        "color": Fore.LIGHTBLUE_EX,
+        "leader": "Jules Brévié",
+        "government": "Democratic",
+        "stability": 45,
+        "war_support": 25,
+        "industry": {
+            "civilian_factories": 3,
+            "military_factories": 1,
+            "dockyards": 2,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 2,
+            "oil": 0,
+            "aluminum": 3,
+            "rubber": 25,
+            "tungsten": 10,
+            "chromium": 2,
+        },
+        "army": {
+            "divisions": 6,
+            "manpower": 100000,
+            "equipment": {
+                "infantry_equipment": 15000,
+                "artillery": 250,
+                "tanks": 20,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 1,
+                "destroyers": 3,
+                "submarines": 2,
+            },
+        },
+        "air_force": {
+            "fighters": 18,
+            "bombers": 10,
+        },
+        "neighbors": ["thailand", "china"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "allies",
+        "puppet_master": "france",
+        "puppet_states": [],
+        "trade_agreements": ["france", "uk"],
+        "description": "French colonial federation comprising Vietnam, Laos, and Cambodia. Rich in rubber and minerals but facing growing independence movements.",
+    },
+    "tibet": {
+        "name": "Tibet",
+        "color": Fore.YELLOW,
+        "leader": "14th Dalai Lama",
+        "government": "Neutral",
+        "stability": 55,
+        "war_support": 20,
+        "industry": {
+            "civilian_factories": 1,
+            "military_factories": 1,
+            "dockyards": 0,
+            "infrastructure": 1,
+        },
+        "resources": {
+            "steel": 1,
+            "oil": 0,
+            "aluminum": 2,
+            "rubber": 0,
+            "tungsten": 8,
+            "chromium": 3,
+        },
+        "army": {
+            "divisions": 4,
+            "manpower": 80000,
+            "equipment": {
+                "infantry_equipment": 12000,
+                "artillery": 100,
+                "tanks": 5,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 0,
+                "destroyers": 0,
+                "submarines": 0,
+            },
+        },
+        "air_force": {
+            "fighters": 4,
+            "bombers": 2,
+        },
+        "neighbors": ["china", "india"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["uk"],
+        "description": "Isolated Buddhist theocracy maintaining traditional governance while facing pressure from Chinese expansion. The young Dalai Lama seeks to preserve Tibetan independence.",
+    },
+    "afghanistan": {
+        "name": "Afghanistan",
+        "color": Fore.LIGHTBLACK_EX,
+        "leader": "Mohammed Zahir Shah",
+        "government": "Neutral",
+        "stability": 45,
+        "war_support": 30,
+        "industry": {
+            "civilian_factories": 2,
+            "military_factories": 1,
+            "dockyards": 0,
+            "infrastructure": 2,
+        },
+        "resources": {
+            "steel": 3,
+            "oil": 2,
+            "aluminum": 1,
+            "rubber": 0,
+            "tungsten": 5,
+            "chromium": 2,
+        },
+        "army": {
+            "divisions": 6,
+            "manpower": 150000,
+            "equipment": {
+                "infantry_equipment": 20000,
+                "artillery": 200,
+                "tanks": 10,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 0,
+                "destroyers": 0,
+                "submarines": 0,
+            },
+        },
+        "air_force": {
+            "fighters": 8,
+            "bombers": 4,
+        },
+        "neighbors": ["iran", "ussr", "india"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["germany", "ussr"],
+        "description": "Afghanistan under King Zahir Shah maintains independence between British India and Soviet Union. The Great Game continues as both powers seek influence.",
+    },
+    "peru": {
+        "name": "Peru",
+        "color": Fore.LIGHTRED_EX,
+        "leader": "Oscar R. Benavides",
+        "government": "Military",
+        "stability": 50,
+        "war_support": 35,
+        "industry": {
+            "civilian_factories": 3,
+            "military_factories": 1,
+            "dockyards": 1,
+            "infrastructure": 3,
+        },
+        "resources": {
+            "steel": 5,
+            "oil": 8,
+            "aluminum": 6,
+            "rubber": 5,
+            "tungsten": 8,
+            "chromium": 3,
+        },
+        "army": {
+            "divisions": 6,
+            "manpower": 100000,
+            "equipment": {
+                "infantry_equipment": 15000,
+                "artillery": 250,
+                "tanks": 25,
+            },
+        },
+        "navy": {
+            "ships": {
+                "battleships": 0,
+                "cruisers": 2,
+                "destroyers": 4,
+                "submarines": 2,
+            },
+        },
+        "air_force": {
+            "fighters": 18,
+            "bombers": 10,
+        },
+        "neighbors": ["chile", "bolivia", "brazil", "colombia", "ecuador"],
+        "focus_tree": "minor_nation_focus_tree",
+        "playable": True,
+        "faction": "non_aligned",
+        "puppet_master": None,
+        "puppet_states": [],
+        "trade_agreements": ["usa", "uk"],
+        "description": "Peru under military strongman Benavides seeks modernization while managing territorial disputes. Mining wealth provides economic potential but political instability persists.",
     },
 
 }
@@ -6569,7 +7849,7 @@ def format_number(number: Any) -> Any:
     return f"{number:,}"
 
 def save_game() -> Any:
-    """Save the current game state to a file."""
+    """Save the current game state to a file with comprehensive data preservation."""
     if not os.path.exists(SAVE_FOLDER):
         os.makedirs(SAVE_FOLDER)
 
@@ -6614,24 +7894,149 @@ def save_game() -> Any:
     if choice == 0:
         return False
 
-    # Save game
+    # Save game with comprehensive data
     save_path = os.path.join(SAVE_FOLDER, f"save_{choice}.json")
 
-    # Add save time
-    save_data = game_state.copy()
-    save_data["save_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    # Create comprehensive save data structure
+    comprehensive_save_data = {
+        # Core game state
+        "game_state": game_state.copy(),
+        
+        # Save metadata
+        "save_metadata": {
+            "save_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "game_version": "3.0_enhanced",
+            "save_slot": choice,
+            "save_count": game_state.get("save_count", 0) + 1,
+            "total_playtime": game_state.get("total_playtime", 0),
+            "creation_date": game_state.get("creation_date", datetime.now().isoformat())
+        },
+        
+        # Player progression and statistics
+        "player_stats": {
+            "player_nation": game_state.get("player_nation", "Unknown"),
+            "difficulty_level": game_state.get("difficulty", "Normal"),
+            "tutorial_completed": game_state.get("tutorial_completed", False),
+            "achievements_unlocked": game_state.get("achievements", []),
+            "total_wars_fought": game_state.get("wars_fought", 0),
+            "victories_achieved": game_state.get("victories", 0),
+            "defeats_suffered": game_state.get("defeats", 0),
+            "diplomatic_actions": game_state.get("diplomatic_history", []),
+            "economic_milestones": game_state.get("economic_progress", {}),
+            "military_campaigns": game_state.get("military_history", [])
+        },
+        
+        # Complete nation data preservation
+        "nations_data": {
+            "all_nations": game_state.get("nations", {}),
+            "nation_relationships": game_state.get("nation_relationships", {}),
+            "trade_agreements": game_state.get("trade_agreements", {}),
+            "alliance_data": game_state.get("alliances", {}),
+            "puppet_states": game_state.get("puppet_states", {}),
+            "faction_memberships": game_state.get("factions", {}),
+            "territorial_changes": game_state.get("territorial_history", [])
+        },
+        
+        # Military and warfare systems
+        "military_data": {
+            "active_wars": game_state.get("active_wars", {}),
+            "war_history": game_state.get("war_history", []),
+            "battle_results": game_state.get("battle_results", []),
+            "military_units": game_state.get("military_units", {}),
+            "fortifications": game_state.get("fortifications", {}),
+            "naval_status": game_state.get("naval_power", {}),
+            "air_force_data": game_state.get("air_force", {}),
+            "nuclear_weapons": game_state.get("nuclear_arsenal", {})
+        },
+        
+        # Economic and industrial systems
+        "economic_data": {
+            "industrial_capacity": game_state.get("industrial_capacity", {}),
+            "resource_production": game_state.get("resources", {}),
+            "trade_routes": game_state.get("trade_routes", {}),
+            "economic_policies": game_state.get("economic_policies", {}),
+            "infrastructure": game_state.get("infrastructure", {}),
+            "technology_level": game_state.get("technology", {}),
+            "research_progress": game_state.get("research", {}),
+            "construction_projects": game_state.get("construction", {})
+        },
+        
+        # Political and social systems
+        "political_data": {
+            "government_type": game_state.get("government", "Unknown"),
+            "political_parties": game_state.get("political_parties", {}),
+            "stability_level": game_state.get("stability", 50),
+            "war_support": game_state.get("war_support", 50),
+            "political_advisors": game_state.get("advisors", {}),
+            "focus_tree_progress": game_state.get("focus_progress", {}),
+            "completed_focuses": game_state.get("completed_focuses", []),
+            "ideology_support": game_state.get("ideology", {}),
+            "resistance_movements": game_state.get("resistance", {})
+        },
+        
+        # Diplomatic and international systems
+        "diplomatic_data": {
+            "diplomatic_relations": game_state.get("diplomacy", {}),
+            "embassy_network": game_state.get("embassies", {}),
+            "international_agreements": game_state.get("agreements", {}),
+            "spy_networks": game_state.get("espionage", {}),
+            "intelligence_reports": game_state.get("intelligence", {}),
+            "diplomatic_missions": game_state.get("missions", {}),
+            "international_reputation": game_state.get("reputation", 0)
+        },
+        
+        # Events and historical tracking
+        "events_data": {
+            "historical_events": game_state.get("events_triggered", []),
+            "random_events": game_state.get("random_events", []),
+            "decision_history": game_state.get("decisions_made", []),
+            "crisis_management": game_state.get("crisis_events", []),
+            "special_events": game_state.get("special_events", []),
+            "seasonal_events": game_state.get("seasonal_events", [])
+        },
+        
+        # Victory conditions and objectives
+        "victory_data": {
+            "victory_conditions_met": game_state.get("victory_progress", {}),
+            "objective_completion": game_state.get("objectives", {}),
+            "ending_requirements": game_state.get("ending_status", {}),
+            "achievement_progress": game_state.get("achievement_progress", {}),
+            "milestone_tracking": game_state.get("milestones", [])
+        },
+        
+        # Game settings and preferences
+        "settings_data": {
+            "difficulty_settings": game_state.get("difficulty_settings", {}),
+            "gameplay_options": game_state.get("gameplay_options", {}),
+            "ui_preferences": game_state.get("ui_settings", {}),
+            "auto_save_enabled": game_state.get("auto_save", True),
+            "notification_settings": game_state.get("notifications", {}),
+            "accessibility_options": game_state.get("accessibility", {})
+        }
+    }
+    
+    # Update save count in game state
+    game_state["save_count"] = comprehensive_save_data["save_metadata"]["save_count"]
 
     try:
         with open(save_path, 'w', encoding='utf-8') as f:
-            json.dump(save_data, f, indent=4)
-        print_message(f"Game saved to slot {choice}.", "success")
+            json.dump(comprehensive_save_data, f, indent=4, ensure_ascii=False)
+        
+        print_message(f"Game comprehensively saved to slot {choice}.", "success")
+        print_colored(f"Saved: {comprehensive_save_data['player_stats']['player_nation']} - " +
+                     f"{comprehensive_save_data['game_state'].get('year', '????')}.{comprehensive_save_data['game_state'].get('month', '??')}", 
+                     Fore.CYAN)
+        print_colored(f"Total data preserved: {len(str(comprehensive_save_data))} characters", Fore.GREEN)
         return True
+        
     except (IOError, OSError, PermissionError, KeyError, TypeError, ValueError) as e:
         print_message(f"Error saving game: {e}", "error")
         return False
 
 def load_game() -> Any:
-    """Load a game state from a save file."""
+    """Load a game state from a save file with comprehensive data restoration."""
+    global game_state
+    
     if not os.path.exists(SAVE_FOLDER):
         print_message("No save folder found.", "error")
         return False
@@ -6648,10 +8053,21 @@ def load_game() -> Any:
             try:
                 with open(save_path, 'r', encoding='utf-8') as f:
                     save_data = json.load(f)
-                    save_time = save_data.get("save_time", "Unknown")
-                    player_nation = save_data.get("player_nation", "Unknown")
-                    game_date = f"{save_data.get('year', '????')}.{save_data.get('month', '??')}"
-                    save_info = f"{player_nation} - {game_date} ({save_time})"
+                    
+                    # Handle both old and new save formats
+                    if "save_metadata" in save_data:
+                        # New comprehensive format
+                        save_time = save_data["save_metadata"].get("save_time", "Unknown")
+                        player_nation = save_data["player_stats"].get("player_nation", "Unknown")
+                        game_date = f"{save_data['game_state'].get('year', '????')}.{save_data['game_state'].get('month', '??')}"
+                        save_info = f"{player_nation} - {game_date} ({save_time})"
+                    else:
+                        # Legacy format
+                        save_time = save_data.get("save_time", "Unknown")
+                        player_nation = save_data.get("player_nation", "Unknown")
+                        game_date = f"{save_data.get('year', '????')}.{save_data.get('month', '??')}"
+                        save_info = f"{player_nation} - {game_date} ({save_time})"
+                        
             except json.JSONDecodeError:
                 save_info = "Corrupted Save"
             except FileNotFoundError:
@@ -6688,12 +8104,147 @@ def load_game() -> Any:
         with open(save_path, 'r', encoding='utf-8') as f:
             save_data = json.load(f)
 
-        # Update game state
-        for key, value in save_data.items():
-            game_state[key] = value
+        # Clear current game state
+        game_state.clear()
+        
+        # Handle comprehensive save format
+        if "save_metadata" in save_data and "game_state" in save_data:
+            # Load core game state
+            for key, value in save_data["game_state"].items():
+                game_state[key] = value
+            
+            # Restore comprehensive data sections
+            if "nations_data" in save_data:
+                nations_data = save_data["nations_data"]
+                game_state.update({
+                    "nations": nations_data.get("all_nations", {}),
+                    "nation_relationships": nations_data.get("nation_relationships", {}),
+                    "trade_agreements": nations_data.get("trade_agreements", {}),
+                    "alliances": nations_data.get("alliance_data", {}),
+                    "puppet_states": nations_data.get("puppet_states", {}),
+                    "factions": nations_data.get("faction_memberships", {}),
+                    "territorial_history": nations_data.get("territorial_changes", [])
+                })
+            
+            if "military_data" in save_data:
+                military_data = save_data["military_data"]
+                game_state.update({
+                    "active_wars": military_data.get("active_wars", {}),
+                    "war_history": military_data.get("war_history", []),
+                    "battle_results": military_data.get("battle_results", []),
+                    "military_units": military_data.get("military_units", {}),
+                    "fortifications": military_data.get("fortifications", {}),
+                    "naval_power": military_data.get("naval_status", {}),
+                    "air_force": military_data.get("air_force_data", {}),
+                    "nuclear_arsenal": military_data.get("nuclear_weapons", {})
+                })
+            
+            if "economic_data" in save_data:
+                economic_data = save_data["economic_data"]
+                game_state.update({
+                    "industrial_capacity": economic_data.get("industrial_capacity", {}),
+                    "resources": economic_data.get("resource_production", {}),
+                    "trade_routes": economic_data.get("trade_routes", {}),
+                    "economic_policies": economic_data.get("economic_policies", {}),
+                    "infrastructure": economic_data.get("infrastructure", {}),
+                    "technology": economic_data.get("technology_level", {}),
+                    "research": economic_data.get("research_progress", {}),
+                    "construction": economic_data.get("construction_projects", {})
+                })
+            
+            if "political_data" in save_data:
+                political_data = save_data["political_data"]
+                game_state.update({
+                    "government": political_data.get("government_type", "Unknown"),
+                    "political_parties": political_data.get("political_parties", {}),
+                    "stability": political_data.get("stability_level", 50),
+                    "war_support": political_data.get("war_support", 50),
+                    "advisors": political_data.get("political_advisors", {}),
+                    "focus_progress": political_data.get("focus_tree_progress", {}),
+                    "completed_focuses": political_data.get("completed_focuses", []),
+                    "ideology": political_data.get("ideology_support", {}),
+                    "resistance": political_data.get("resistance_movements", {})
+                })
+            
+            if "diplomatic_data" in save_data:
+                diplomatic_data = save_data["diplomatic_data"]
+                game_state.update({
+                    "diplomacy": diplomatic_data.get("diplomatic_relations", {}),
+                    "embassies": diplomatic_data.get("embassy_network", {}),
+                    "agreements": diplomatic_data.get("international_agreements", {}),
+                    "espionage": diplomatic_data.get("spy_networks", {}),
+                    "intelligence": diplomatic_data.get("intelligence_reports", {}),
+                    "missions": diplomatic_data.get("diplomatic_missions", {}),
+                    "reputation": diplomatic_data.get("international_reputation", 0)
+                })
+            
+            if "events_data" in save_data:
+                events_data = save_data["events_data"]
+                game_state.update({
+                    "events_triggered": events_data.get("historical_events", []),
+                    "random_events": events_data.get("random_events", []),
+                    "decisions_made": events_data.get("decision_history", []),
+                    "crisis_events": events_data.get("crisis_management", []),
+                    "special_events": events_data.get("special_events", []),
+                    "seasonal_events": events_data.get("seasonal_events", [])
+                })
+            
+            if "victory_data" in save_data:
+                victory_data = save_data["victory_data"]
+                game_state.update({
+                    "victory_progress": victory_data.get("victory_conditions_met", {}),
+                    "objectives": victory_data.get("objective_completion", {}),
+                    "ending_status": victory_data.get("ending_requirements", {}),
+                    "achievement_progress": victory_data.get("achievement_progress", {}),
+                    "milestones": victory_data.get("milestone_tracking", [])
+                })
+            
+            if "player_stats" in save_data:
+                player_stats = save_data["player_stats"]
+                game_state.update({
+                    "wars_fought": player_stats.get("total_wars_fought", 0),
+                    "victories": player_stats.get("victories_achieved", 0),
+                    "defeats": player_stats.get("defeats_suffered", 0),
+                    "diplomatic_history": player_stats.get("diplomatic_actions", []),
+                    "economic_progress": player_stats.get("economic_milestones", {}),
+                    "military_history": player_stats.get("military_campaigns", []),
+                    "achievements": player_stats.get("achievements_unlocked", []),
+                    "tutorial_completed": player_stats.get("tutorial_completed", False)
+                })
+            
+            if "settings_data" in save_data:
+                settings_data = save_data["settings_data"]
+                game_state.update({
+                    "difficulty_settings": settings_data.get("difficulty_settings", {}),
+                    "gameplay_options": settings_data.get("gameplay_options", {}),
+                    "ui_settings": settings_data.get("ui_preferences", {}),
+                    "auto_save": settings_data.get("auto_save_enabled", True),
+                    "notifications": settings_data.get("notification_settings", {}),
+                    "accessibility": settings_data.get("accessibility_options", {})
+                })
+            
+            # Load metadata
+            if "save_metadata" in save_data:
+                metadata = save_data["save_metadata"]
+                game_state.update({
+                    "save_count": metadata.get("save_count", 0),
+                    "total_playtime": metadata.get("total_playtime", 0),
+                    "creation_date": metadata.get("creation_date", datetime.now().isoformat())
+                })
+            
+            print_message(f"Comprehensive game data loaded from slot {choice}.", "success")
+            print_colored(f"Loaded: {save_data['player_stats'].get('player_nation', 'Unknown')} - " +
+                         f"{save_data['game_state'].get('year', '????')}.{save_data['game_state'].get('month', '??')}", 
+                         Fore.CYAN)
+            print_colored(f"Data sections restored: {len([k for k in save_data.keys() if k.endswith('_data')])}", Fore.GREEN)
+        else:
+            # Handle legacy save format
+            for key, value in save_data.items():
+                game_state[key] = value
+            print_message(f"Legacy game data loaded from slot {choice}.", "success")
 
-        print_message(f"Game loaded from slot {choice}.", "success")
         return True
+        
     except (IOError, OSError, PermissionError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
         print_message(f"Error loading game: {e}", "error")
         return False
@@ -9162,6 +10713,624 @@ def calculate_national_strength(nation_key: Any) -> Any:
 
     return military_strength + industrial_strength
 
+def conduct_battle(attacker_key: Any, defender_key: Any, battle_type: str = "infantry_assault") -> dict:
+    """Conduct a dynamic battle between two nations."""
+    attacker = game_state["nations"][attacker_key]
+    defender = game_state["nations"][defender_key]
+    battle_info = BATTLE_TYPES[battle_type]
+    
+    # Calculate base combat strength
+    def calculate_combat_strength(nation, bonuses):
+        strength = 0
+        equipment = nation["army"]["equipment"]
+        
+        # Infantry strength
+        infantry_str = equipment.get("infantry_equipment", 0) * bonuses.get("infantry", 1.0)
+        strength += infantry_str * 0.5
+        
+        # Artillery strength
+        artillery_str = equipment.get("artillery", 0) * bonuses.get("artillery", 1.0)
+        strength += artillery_str * 2
+        
+        # Tank strength
+        tank_str = equipment.get("tanks", 0) * bonuses.get("tanks", 1.0)
+        strength += tank_str * 5
+        
+        # Air support
+        air_str = (nation["air_force"]["fighters"] + nation["air_force"]["bombers"]) * 10
+        strength += air_str
+        
+        # Morale factors
+        morale = (nation["stability"] + nation["war_support"]) / 100
+        strength *= morale
+        
+        return strength
+    
+    attacker_strength = calculate_combat_strength(attacker, battle_info["attacker_bonus"])
+    defender_strength = calculate_combat_strength(defender, battle_info["defender_bonus"])
+    
+    # Add randomness (±25%)
+    attacker_strength *= random.uniform(0.75, 1.25)
+    defender_strength *= random.uniform(0.75, 1.25)
+    
+    # Determine winner
+    attacker_wins = attacker_strength > defender_strength
+    casualty_ratio = min(attacker_strength, defender_strength) / max(attacker_strength, defender_strength)
+    
+    # Calculate casualties
+    def apply_casualties(nation, casualty_rate):
+        equipment = nation["army"]["equipment"]
+        equipment["infantry_equipment"] = max(0, int(equipment["infantry_equipment"] * (1 - casualty_rate)))
+        equipment["artillery"] = max(0, int(equipment["artillery"] * (1 - casualty_rate)))
+        equipment["tanks"] = max(0, int(equipment["tanks"] * (1 - casualty_rate)))
+        nation["army"]["manpower"] = max(0, int(nation["army"]["manpower"] * (1 - casualty_rate)))
+    
+    if attacker_wins:
+        winner_casualties = casualty_ratio * 0.1
+        loser_casualties = casualty_ratio * 0.3
+        apply_casualties(attacker, winner_casualties)
+        apply_casualties(defender, loser_casualties)
+        territory_change = random.uniform(0.05, 0.15)
+    else:
+        winner_casualties = casualty_ratio * 0.1
+        loser_casualties = casualty_ratio * 0.3
+        apply_casualties(defender, winner_casualties)
+        apply_casualties(attacker, loser_casualties)
+        territory_change = 0
+    
+    return {
+        "winner": attacker_key if attacker_wins else defender_key,
+        "loser": defender_key if attacker_wins else attacker_key,
+        "battle_type": battle_type,
+        "attacker_strength": int(attacker_strength),
+        "defender_strength": int(defender_strength),
+        "territory_change": territory_change,
+        "winner_casualties": winner_casualties,
+        "loser_casualties": loser_casualties
+    }
+
+def check_peace_offer(nation_key: Any) -> bool:
+    """Check if a nation should offer peace based on territorial losses."""
+    if nation_key not in game_state["active_wars"]:
+        return False
+    
+    territorial_losses = 0
+    
+    for war_id, war_info in game_state["active_wars"].items():
+        if nation_key in war_info.get("participants", []):
+            territorial_losses = war_info.get("territorial_losses", {}).get(nation_key, 0)
+            break
+    
+    # Offer peace if lost 45-60% of territory
+    peace_threshold = random.uniform(0.45, 0.60)
+    return territorial_losses >= peace_threshold
+
+def check_surrender_conditions(nation_key: Any) -> bool:
+    """Check if a nation should surrender and become a puppet."""
+    if nation_key not in game_state["active_wars"]:
+        return False
+    
+    territorial_losses = 0
+    war_info = None
+    
+    for war_id, war_data in game_state["active_wars"].items():
+        if nation_key in war_data.get("participants", []):
+            territorial_losses = war_data.get("territorial_losses", {}).get(nation_key, 0)
+            war_info = war_data
+            break
+    
+    if war_info is None:
+        return False
+    
+    # Surrender if lost 70%+ of territory or critically low on resources
+    military_strength = calculate_national_strength(nation_key)
+    original_strength = war_info.get("original_strength", {}).get(nation_key, military_strength)
+    strength_ratio = military_strength / max(1, original_strength)
+    
+    return territorial_losses >= 0.70 or strength_ratio <= 0.2
+
+def create_puppet_state(master_key: Any, puppet_key: Any, puppet_type: str = "vassal_state") -> None:
+    """Create a puppet state relationship."""
+    master = game_state["nations"][master_key]
+    puppet = game_state["nations"][puppet_key]
+    
+    # Set puppet relationship
+    if "puppet_states" not in master:
+        master["puppet_states"] = []
+    master["puppet_states"].append(puppet_key)
+    
+    puppet["puppet_master"] = master_key
+    puppet["puppet_type"] = puppet_type
+    
+    # Puppet types and their effects
+    puppet_effects = {
+        "colony": {
+            "autonomy": 10, 
+            "resource_share": 0.7, 
+            "manpower_share": 0.4,
+            "factory_share": 0.5,
+            "description": "Direct colonial rule with maximum resource extraction"
+        },
+        "vassal_state": {
+            "autonomy": 35, 
+            "resource_share": 0.4, 
+            "manpower_share": 0.25,
+            "factory_share": 0.3,
+            "description": "Semi-autonomous state owing allegiance and tribute"
+        },
+        "protectorate": {
+            "autonomy": 60, 
+            "resource_share": 0.2, 
+            "manpower_share": 0.15,
+            "factory_share": 0.1,
+            "description": "Protected state maintaining internal autonomy"
+        }
+    }
+    
+    effects = puppet_effects[puppet_type]
+    puppet["autonomy"] = effects["autonomy"]
+    puppet["puppet_description"] = effects["description"]
+    
+    # Transfer resources based on puppet type
+    for resource in ["steel", "oil", "aluminum", "rubber", "tungsten", "chromium"]:
+        transfer_amount = int(puppet["resources"][resource] * effects["resource_share"])
+        puppet["resources"][resource] -= transfer_amount
+        master["resources"][resource] = master["resources"].get(resource, 0) + transfer_amount
+    
+    # Transfer manpower
+    manpower_transfer = int(puppet["army"]["manpower"] * effects["manpower_share"])
+    puppet["army"]["manpower"] -= manpower_transfer
+    master["army"]["manpower"] += manpower_transfer
+    
+    # Transfer industrial capacity for colonies and vassal states
+    if puppet_type in ["colony", "vassal_state"]:
+        factory_transfer = int(puppet["industry"]["civilian_factories"] * effects["factory_share"])
+        puppet["industry"]["civilian_factories"] -= factory_transfer
+        master["industry"]["civilian_factories"] += factory_transfer
+        
+        military_factory_transfer = int(puppet["industry"]["military_factories"] * effects["factory_share"])
+        puppet["industry"]["military_factories"] -= military_factory_transfer
+        master["industry"]["military_factories"] += military_factory_transfer
+    
+    # Reduce puppet's stability and war support due to subjugation
+    puppet["stability"] = max(10, puppet["stability"] - (70 - effects["autonomy"]))
+    puppet["war_support"] = max(0, puppet["war_support"] - 20)
+    
+    add_message(f"{master['name']} has established {puppet['name']} as a {puppet_type.replace('_', ' ')}", "puppet")
+
+def manage_puppet_autonomy(puppet_key: Any, autonomy_change: int) -> None:
+    """Manage puppet state autonomy levels."""
+    puppet = game_state["nations"][puppet_key]
+    
+    if "puppet_master" not in puppet:
+        return
+    
+    current_autonomy = puppet.get("autonomy", 35)
+    new_autonomy = max(0, min(100, current_autonomy + autonomy_change))
+    puppet["autonomy"] = new_autonomy
+    
+    # Check for autonomy level changes
+    if new_autonomy >= 80 and puppet.get("puppet_type") != "protectorate":
+        # Upgrade to protectorate
+        upgrade_puppet_status(puppet_key, "protectorate")
+    elif new_autonomy <= 20 and puppet.get("puppet_type") != "colony":
+        # Downgrade to colony
+        downgrade_puppet_status(puppet_key, "colony")
+    elif 20 < new_autonomy < 80 and puppet.get("puppet_type") != "vassal_state":
+        # Set as vassal state
+        change_puppet_status(puppet_key, "vassal_state")
+
+def upgrade_puppet_status(puppet_key: Any, new_type: str) -> None:
+    """Upgrade puppet to higher autonomy status."""
+    puppet = game_state["nations"][puppet_key]
+    master_key = puppet["puppet_master"]
+    master = game_state["nations"][master_key]
+    
+    old_type = puppet.get("puppet_type", "vassal_state")
+    puppet["puppet_type"] = new_type
+    
+    # Return some resources and factories based on upgrade
+    if old_type == "colony" and new_type in ["vassal_state", "protectorate"]:
+        # Return some industrial capacity
+        factory_return = master["industry"]["civilian_factories"] // 10
+        master["industry"]["civilian_factories"] -= factory_return
+        puppet["industry"]["civilian_factories"] += factory_return
+        
+        # Improve stability
+        puppet["stability"] = min(100, puppet["stability"] + 15)
+    
+    add_message(f"{puppet['name']} has been upgraded to {new_type.replace('_', ' ')} status", "puppet")
+
+def downgrade_puppet_status(puppet_key: Any, new_type: str) -> None:
+    """Downgrade puppet to lower autonomy status."""
+    puppet = game_state["nations"][puppet_key]
+    master_key = puppet["puppet_master"]
+    master = game_state["nations"][master_key]
+    
+    old_type = puppet.get("puppet_type", "vassal_state")
+    puppet["puppet_type"] = new_type
+    
+    # Transfer more resources to master
+    if old_type in ["vassal_state", "protectorate"] and new_type == "colony":
+        # Transfer more industrial capacity
+        factory_transfer = puppet["industry"]["civilian_factories"] // 3
+        puppet["industry"]["civilian_factories"] -= factory_transfer
+        master["industry"]["civilian_factories"] += factory_transfer
+        
+        # Reduce stability
+        puppet["stability"] = max(10, puppet["stability"] - 20)
+        puppet["war_support"] = max(0, puppet["war_support"] - 15)
+    
+    add_message(f"{puppet['name']} has been downgraded to {new_type.replace('_', ' ')} status", "puppet")
+
+def change_puppet_status(puppet_key: Any, new_type: str) -> None:
+    """Change puppet status to a different type."""
+    puppet = game_state["nations"][puppet_key]
+    puppet["puppet_type"] = new_type
+    
+    # Recalculate effects based on new type
+    create_puppet_state(puppet["puppet_master"], puppet_key, new_type)
+
+def show_puppet_management() -> None:
+    """Display puppet state management interface."""
+    clear_screen()
+    print_header("PUPPET STATE MANAGEMENT")
+    
+    player_nation = game_state["nations"][game_state["player_nation"]]
+    puppet_states = player_nation.get("puppet_states", [])
+    
+    if not puppet_states:
+        print_colored("You have no puppet states.", Fore.YELLOW)
+        print()
+        print_menu_option("0", "Return to Main Menu")
+        choice = input_colored("Select option: ")
+        return
+    
+    print_colored("Your Puppet States:", Fore.CYAN)
+    print()
+    
+    for i, puppet_key in enumerate(puppet_states, 1):
+        if puppet_key in game_state["nations"]:
+            puppet = game_state["nations"][puppet_key]
+            puppet_type = puppet.get("puppet_type", "vassal_state")
+            autonomy = puppet.get("autonomy", 35)
+            
+            print_colored(f"{i}. {puppet['name']}", Fore.WHITE + Style.BRIGHT)
+            print_colored(f"   Type: {puppet_type.replace('_', ' ').title()}", Fore.WHITE)
+            print_colored(f"   Autonomy: {autonomy}%", Fore.WHITE)
+            print_colored(f"   Stability: {puppet['stability']}%", Fore.WHITE)
+            print_colored(f"   War Support: {puppet['war_support']}%", Fore.WHITE)
+            print()
+    
+    print_menu_option("1", "Manage Puppet Autonomy")
+    print_menu_option("2", "Change Puppet Type")
+    print_menu_option("3", "Extract Resources")
+    print_menu_option("4", "Release Puppet")
+    print_menu_option("0", "Return to Main Menu")
+    
+    choice = input_colored("Select option: ")
+    
+    if choice == "1":
+        manage_puppet_autonomy_interface()
+    elif choice == "2":
+        change_puppet_type_interface()
+    elif choice == "3":
+        extract_puppet_resources_interface()
+    elif choice == "4":
+        release_puppet_interface()
+
+def manage_puppet_autonomy_interface() -> None:
+    """Interface for managing puppet autonomy."""
+    clear_screen()
+    print_header("MANAGE PUPPET AUTONOMY")
+    
+    puppet_states = game_state["nations"][game_state["player_nation"]].get("puppet_states", [])
+    
+    for i, puppet_key in enumerate(puppet_states, 1):
+        if puppet_key in game_state["nations"]:
+            puppet = game_state["nations"][puppet_key]
+            print_menu_option(str(i), f"{puppet['name']} (Autonomy: {puppet.get('autonomy', 35)}%)")
+    
+    try:
+        choice = int(input_colored("Select puppet to manage: ")) - 1
+        if 0 <= choice < len(puppet_states):
+            puppet_key = puppet_states[choice]
+            
+            print_colored("\nAutonomy Actions:", Fore.YELLOW)
+            print_menu_option("1", "Increase Autonomy (+10)")
+            print_menu_option("2", "Decrease Autonomy (-10)")
+            print_menu_option("3", "Grant Self-Government (+25)")
+            print_menu_option("4", "Tighten Control (-25)")
+            
+            action = input_colored("Select action: ")
+            
+            if action == "1":
+                manage_puppet_autonomy(puppet_key, 10)
+            elif action == "2":
+                manage_puppet_autonomy(puppet_key, -10)
+            elif action == "3":
+                manage_puppet_autonomy(puppet_key, 25)
+            elif action == "4":
+                manage_puppet_autonomy(puppet_key, -25)
+                
+    except (ValueError, IndexError):
+        print_colored("Invalid choice.", Fore.RED)
+    
+    wait_for_input()
+
+def change_puppet_type_interface() -> None:
+    """Interface for changing puppet types."""
+    clear_screen()
+    print_header("CHANGE PUPPET TYPE")
+    
+    puppet_states = game_state["nations"][game_state["player_nation"]].get("puppet_states", [])
+    
+    for i, puppet_key in enumerate(puppet_states, 1):
+        if puppet_key in game_state["nations"]:
+            puppet = game_state["nations"][puppet_key]
+            print_menu_option(str(i), f"{puppet['name']} (Current: {puppet.get('puppet_type', 'vassal_state').replace('_', ' ').title()})")
+    
+    try:
+        choice = int(input_colored("Select puppet to change: ")) - 1
+        if 0 <= choice < len(puppet_states):
+            puppet_key = puppet_states[choice]
+            
+            print_colored("\nPuppet Types:", Fore.YELLOW)
+            print_menu_option("1", "Colony - Maximum control and resource extraction")
+            print_menu_option("2", "Vassal State - Moderate control with tribute")
+            print_menu_option("3", "Protectorate - Light control, internal autonomy")
+            
+            type_choice = input_colored("Select new type: ")
+            
+            type_mapping = {
+                "1": "colony",
+                "2": "vassal_state", 
+                "3": "protectorate"
+            }
+            
+            if type_choice in type_mapping:
+                new_type = type_mapping[type_choice]
+                change_puppet_status(puppet_key, new_type)
+                print_colored(f"Changed {game_state['nations'][puppet_key]['name']} to {new_type.replace('_', ' ')}", Fore.GREEN)
+                
+    except (ValueError, IndexError):
+        print_colored("Invalid choice.", Fore.RED)
+    
+    wait_for_input()
+
+def extract_puppet_resources_interface() -> None:
+    """Interface for extracting additional resources from puppets."""
+    clear_screen()
+    print_header("EXTRACT PUPPET RESOURCES")
+    
+    puppet_states = game_state["nations"][game_state["player_nation"]].get("puppet_states", [])
+    
+    for i, puppet_key in enumerate(puppet_states, 1):
+        if puppet_key in game_state["nations"]:
+            puppet = game_state["nations"][puppet_key]
+            print_menu_option(str(i), f"{puppet['name']} (Autonomy: {puppet.get('autonomy', 35)}%)")
+    
+    try:
+        choice = int(input_colored("Select puppet to extract from: ")) - 1
+        if 0 <= choice < len(puppet_states):
+            puppet_key = puppet_states[choice]
+            puppet = game_state["nations"][puppet_key]
+            master = game_state["nations"][game_state["player_nation"]]
+            
+            # Extract resources (reduces autonomy and stability)
+            extraction_rate = 0.15  # Extract 15% of resources
+            total_extracted = 0
+            
+            for resource in ["steel", "oil", "aluminum", "rubber", "tungsten", "chromium"]:
+                extract_amount = int(puppet["resources"][resource] * extraction_rate)
+                puppet["resources"][resource] -= extract_amount
+                master["resources"][resource] = master["resources"].get(resource, 0) + extract_amount
+                total_extracted += extract_amount
+            
+            # Penalties for extraction
+            manage_puppet_autonomy(puppet_key, -15)
+            puppet["stability"] = max(10, puppet["stability"] - 10)
+            
+            print_colored(f"Extracted {total_extracted} total resources from {puppet['name']}", Fore.GREEN)
+            print_colored("Autonomy decreased by 15%, stability decreased by 10%", Fore.YELLOW)
+                
+    except (ValueError, IndexError):
+        print_colored("Invalid choice.", Fore.RED)
+    
+    wait_for_input()
+
+def release_puppet_interface() -> None:
+    """Interface for releasing puppet states."""
+    clear_screen()
+    print_header("RELEASE PUPPET STATE")
+    
+    puppet_states = game_state["nations"][game_state["player_nation"]].get("puppet_states", [])
+    
+    for i, puppet_key in enumerate(puppet_states, 1):
+        if puppet_key in game_state["nations"]:
+            puppet = game_state["nations"][puppet_key]
+            print_menu_option(str(i), f"{puppet['name']} ({puppet.get('puppet_type', 'vassal_state').replace('_', ' ').title()})")
+    
+    try:
+        choice = int(input_colored("Select puppet to release: ")) - 1
+        if 0 <= choice < len(puppet_states):
+            puppet_key = puppet_states[choice]
+            puppet = game_state["nations"][puppet_key]
+            
+            print_colored(f"\nAre you sure you want to release {puppet['name']}?", Fore.YELLOW)
+            print_colored("This will grant them full independence.", Fore.WHITE)
+            
+            confirm = input_colored("Confirm release (y/N): ").lower()
+            
+            if confirm == 'y':
+                # Release puppet
+                master = game_state["nations"][game_state["player_nation"]]
+                master["puppet_states"].remove(puppet_key)
+                
+                # Remove puppet status
+                if "puppet_master" in puppet:
+                    del puppet["puppet_master"]
+                if "puppet_type" in puppet:
+                    del puppet["puppet_type"]
+                if "autonomy" in puppet:
+                    del puppet["autonomy"]
+                
+                # Restore some stability and change faction to non-aligned
+                puppet["stability"] = min(100, puppet["stability"] + 30)
+                puppet["faction"] = "non_aligned"
+                
+                add_message(f"Released {puppet['name']} as an independent nation", "puppet")
+                print_colored(f"{puppet['name']} has been granted independence!", Fore.GREEN)
+                
+    except (ValueError, IndexError):
+        print_colored("Invalid choice.", Fore.RED)
+    
+    wait_for_input()
+
+def process_trade_agreements() -> None:
+    """Process active trade agreements between nations."""
+    for nation_key, nation in game_state["nations"].items():
+        if "trade_agreements" not in nation:
+            continue
+            
+        for partner_key in nation["trade_agreements"]:
+            if partner_key not in game_state["nations"]:
+                continue
+                
+            partner = game_state["nations"][partner_key]
+            
+            # Calculate trade benefits
+            trade_value = 0
+            for resource in TRADE_GOODS:
+                export_amount = min(5, nation["resources"].get(resource, 0) // 10)
+                import_demand = max(0, 10 - partner["resources"].get(resource, 0))
+                actual_trade = min(export_amount, import_demand)
+                
+                if actual_trade > 0:
+                    trade_value += actual_trade * TRADE_GOODS[resource]["base_value"]
+                    
+                    # Transfer resources
+                    nation["resources"][resource] -= actual_trade
+                    partner["resources"][resource] += actual_trade
+            
+            # Add political power and stability from trade
+            if trade_value > 0:
+                nation["stability"] = min(100, nation["stability"] + trade_value // 100)
+
+def manage_faction_dynamics() -> None:
+    """Manage faction membership and relationships."""
+    for faction_key, faction in game_state["factions"].items():
+        # Check for new faction joiners
+        for nation_key, nation in game_state["nations"].items():
+            if nation.get("faction") == faction_key and nation_key not in faction["members"]:
+                faction["members"].append(nation_key)
+                add_message(f"{nation['name']} has joined the {faction['name']}", "faction")
+        
+        # Remove nations that changed factions
+        faction["members"] = [member for member in faction["members"] 
+                           if game_state["nations"].get(member, {}).get("faction") == faction_key]
+    
+    # Update faction strength and influence
+    for faction_key, faction in game_state["factions"].items():
+        total_strength = sum(calculate_national_strength(member) for member in faction["members"] 
+                           if member in game_state["nations"])
+        faction["total_strength"] = total_strength
+
+def process_war_dynamics() -> None:
+    """Process ongoing wars with dynamic battles and territorial changes."""
+    wars_to_end = []
+    
+    for war_id, war_info in game_state["active_wars"].items():
+        attackers = war_info["attackers"]
+        defenders = war_info["defenders"]
+        
+        # Conduct random battles
+        if random.random() < 0.3:  # 30% chance of battle each turn
+            attacker = random.choice(attackers)
+            defender = random.choice(defenders)
+            battle_type = random.choice(list(BATTLE_TYPES.keys()))
+            
+            battle_result = conduct_battle(attacker, defender, battle_type)
+            
+            # Update territorial control
+            loser = battle_result["loser"]
+            territory_loss = battle_result["territory_change"]
+            
+            if "territorial_losses" not in war_info:
+                war_info["territorial_losses"] = {}
+            
+            war_info["territorial_losses"][loser] = war_info["territorial_losses"].get(loser, 0) + territory_loss
+            
+            add_message(f"Battle of {battle_result['battle_type']}: {game_state['nations'][battle_result['winner']]['name']} defeats {game_state['nations'][loser]['name']}", "war")
+            
+            # Check for peace offers
+            if check_peace_offer(loser):
+                game_state["peace_negotiations"][loser] = {
+                    "target": battle_result["winner"],
+                    "terms": "white_peace",
+                    "initiated": game_state["year"]
+                }
+                add_message(f"{game_state['nations'][loser]['name']} seeks peace with {game_state['nations'][battle_result['winner']]['name']}", "diplomacy")
+            
+            # Check for surrender
+            if check_surrender_conditions(loser):
+                create_puppet_state(battle_result["winner"], loser)
+                wars_to_end.append(war_id)
+                add_message(f"{game_state['nations'][loser]['name']} has surrendered and become a puppet of {game_state['nations'][battle_result['winner']]['name']}", "war")
+    
+    # End wars where a side has been defeated
+    for war_id in wars_to_end:
+        if war_id in game_state["active_wars"]:
+            del game_state["active_wars"][war_id]
+
+def show_faction_management() -> None:
+    """Display faction management interface."""
+    clear_screen()
+    print_header("FACTION MANAGEMENT")
+    
+    player_nation = game_state["nations"][game_state["player_nation"]]
+    player_faction = player_nation.get("faction", "none")
+    
+    print_colored(f"Current Faction: {player_faction.title()}", Fore.CYAN)
+    print()
+    
+    # Show all factions
+    for faction_key, faction in game_state["factions"].items():
+        faction_color = faction.get("color", Fore.WHITE)
+        print_colored(f"{faction['name']}", faction_color + Style.BRIGHT)
+        print_colored(f"  Leader: {faction.get('leader', 'None')}", Fore.WHITE)
+        print_colored(f"  Ideology: {faction['ideology']}", Fore.WHITE)
+        print_colored(f"  Members: {', '.join([game_state['nations'][m]['name'] for m in faction['members'] if m in game_state['nations']])}", Fore.WHITE)
+        print_colored(f"  Total Strength: {faction.get('total_strength', 0):,}", Fore.WHITE)
+        print()
+    
+    print_menu_option("1", "Leave Current Faction")
+    print_menu_option("2", "Request to Join Faction")
+    print_menu_option("3", "Create New Faction")
+    print_menu_option("0", "Return to Main Menu")
+    
+    choice = input_colored("Select option: ")
+    
+    if choice == "1" and player_faction != "none":
+        player_nation["faction"] = "non_aligned"
+        add_message(f"{player_nation['name']} has left the {player_faction}", "faction")
+    elif choice == "2":
+        print_colored("\nAvailable Factions:", Fore.YELLOW)
+        faction_list = [f for f in game_state["factions"].keys() if f != player_faction]
+        for i, faction_key in enumerate(faction_list, 1):
+            print_menu_option(str(i), f"Join {game_state['factions'][faction_key]['name']}")
+        
+        try:
+            faction_choice = int(input_colored("Select faction: ")) - 1
+            if 0 <= faction_choice < len(faction_list):
+                target_faction = faction_list[faction_choice]
+                player_nation["faction"] = target_faction
+                add_message(f"{player_nation['name']} has joined the {game_state['factions'][target_faction]['name']}", "faction")
+        except (ValueError, IndexError):
+            print_colored("Invalid choice.", Fore.RED)
+    
+    wait_for_input()
+
 def add_message(text: Any, message_type: str = "info") -> None:
     """Add a message to the message log."""
     if "message_log" not in game_state:
@@ -9967,10 +12136,12 @@ def show_game_menu() -> bool:
     print_colored("3. Production", Fore.CYAN)
     print_colored("4. Construction", Fore.CYAN)
     print_colored("5. Diplomacy", Fore.CYAN)
-    print_colored("6. Nation Info", Fore.CYAN)
-    print_colored("7. Message Log", Fore.CYAN)
-    print_colored("8. Advance Time (1 Month)", Fore.GREEN)
-    print_colored("9. Save Game", Fore.MAGENTA)
+    print_colored("6. Faction Management", Fore.CYAN)
+    print_colored("7. Puppet Management", Fore.CYAN)
+    print_colored("8. Nation Info", Fore.CYAN)
+    print_colored("9. Message Log", Fore.CYAN)
+    print_colored("10. Advance Time (1 Month)", Fore.GREEN)
+    print_colored("11. Save Game", Fore.MAGENTA)
     print_colored("H. Help", Fore.MAGENTA)
     print_colored("0. Exit to Main Menu", Fore.RED)
 
@@ -9988,18 +12159,25 @@ def show_game_menu() -> bool:
     elif choice == "5":
         show_diplomacy()
     elif choice == "6":
-        show_nation_info()
+        show_faction_management()
     elif choice == "7":
-        show_message_log()
+        show_puppet_management()
     elif choice == "8":
+        show_nation_info()
+    elif choice == "9":
+        show_message_log()
+    elif choice == "10":
         # Advance time by one month
         advance_time()
-        # Also process research, production, and construction
+        # Process all dynamic systems
         process_research()
         process_production()
         process_construction()
+        process_trade_agreements()
+        manage_faction_dynamics()
+        process_war_dynamics()
         print_message(f"Advanced to {game_state['year']}.{game_state['month']}", "info")
-    elif choice == "9":
+    elif choice == "11":
         save_game()
     elif choice.lower() == "h":
         show_help()
