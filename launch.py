@@ -4,6 +4,9 @@ import subprocess
 import sys
 import time
 import json
+import shutil
+import platform
+from pathlib import Path
 from colorama import init, Fore, Style
 
 # Initialize colorama
@@ -91,39 +94,39 @@ def launch_game(file_name: Any, data: Any) -> Any:
         for frame in frames:
             print(color_text(f"█ Loading {frame}", Fore.BLUE), end='\r')
             time.sleep(0.2)
-        
+
         # Track game statistics
         if game_name not in data['game_statistics']:
             data['game_statistics'][game_name] = {'launches': 0, 'total_time': 0, 'last_played': None}
-        
+
         data['game_statistics'][game_name]['launches'] += 1
         data['game_statistics'][game_name]['last_played'] = time.time()
         data['last_played'] = game_name
-        
+
         # Set environment variable to indicate the game was launched from launcher
         os.environ["LAUNCHED_FROM_LAUNCHER"] = "1"
-        
+
         # Track launch time
         start_time = time.time()
-        
+
         # Run the game
         subprocess.run([sys.executable, file_name], check=True)
-        
+
         # Calculate session time
         end_time = time.time()
         session_time = end_time - start_time
         data['game_statistics'][game_name]['total_time'] += session_time
         data['total_playtime'] += session_time
-        
+
         # Award achievements for playtime
         check_playtime_achievements(data, game_name, session_time)
-        
+
         # Clear the environment variable when game exits
         if "LAUNCHED_FROM_LAUNCHER" in os.environ:
             del os.environ["LAUNCHED_FROM_LAUNCHER"]
-            
+
         return session_time
-        
+
     except subprocess.CalledProcessError as e:
         print(color_text(f"█ Crash: Game exited with error {e.returncode}", Fore.RED))
         return 0
@@ -134,7 +137,7 @@ def launch_game(file_name: Any, data: Any) -> Any:
 def check_playtime_achievements(data: Any, game_name: str, session_time: float) -> None:
     """Check and award achievements based on playtime"""
     achievements = []
-    
+
     # Session-based achievements
     if session_time >= 300:  # 5 minutes
         achievements.append("Dedicated Player")
@@ -142,23 +145,23 @@ def check_playtime_achievements(data: Any, game_name: str, session_time: float) 
         achievements.append("Marathon Gamer")
     if session_time >= 3600:  # 1 hour
         achievements.append("Epic Session")
-    
+
     # Total playtime achievements
     total_time = data['total_playtime']
     if total_time >= 3600 and "Gaming Enthusiast" not in data['achievements']:
         achievements.append("Gaming Enthusiast")
     if total_time >= 18000 and "ChronoTale Master" not in data['achievements']:
         achievements.append("ChronoTale Master")
-    
+
     # Game-specific achievements
     game_stats = data['game_statistics'].get(game_name, {})
     if game_stats.get('launches', 0) >= 5 and f"{game_name} Veteran" not in data['achievements']:
         achievements.append(f"{game_name} Veteran")
-    
+
     # Collection achievements
     if len(data['purchased_games']) >= 3 and "Collector" not in data['achievements']:
         achievements.append("Collector")
-    
+
     # Award new achievements
     for achievement in achievements:
         if achievement not in data['achievements']:
@@ -299,6 +302,172 @@ def credits_menu() -> None:
     print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
     input(color_text("\n█ Press Enter to return to main menu...", Fore.YELLOW) + Style.RESET_ALL)
 
+def detect_virtual_env() -> Optional[str]:
+    """Detect if running in a virtual environment and return the activation command"""
+    if os.environ.get('VIRTUAL_ENV'):
+        venv_path = os.environ.get('VIRTUAL_ENV')
+        return venv_path
+    
+    # Check for common venv directories
+    possible_venvs = ['.venv', 'venv', 'env', '.env']
+    current_dir = os.getcwd()
+    
+    for venv_name in possible_venvs:
+        venv_path = os.path.join(current_dir, venv_name)
+        if os.path.exists(venv_path) and os.path.exists(os.path.join(venv_path, 'bin', 'activate')):
+            return venv_path
+    
+    return None
+
+def create_desktop_shortcut() -> bool:
+    """Create a desktop shortcut for ChronoTale launcher"""
+    try:
+        # Get the directory where launch.py is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        launcher_path = os.path.join(script_dir, 'launch.py')
+        
+        if not os.path.exists(launcher_path):
+            print(color_text("█ Error: launch.py not found!", Fore.RED))
+            return False
+        
+        # Get user's desktop directory
+        home_dir = Path.home()
+        desktop_dir = home_dir / "Desktop"
+        
+        if not desktop_dir.exists():
+            desktop_dir = home_dir / "desktop"  # lowercase variant
+            if not desktop_dir.exists():
+                print(color_text("█ Error: Desktop directory not found!", Fore.RED))
+                return False
+        
+        # Detect virtual environment
+        venv_path = detect_virtual_env()
+        
+        # Create .desktop file for Linux
+        if platform.system() == "Linux":
+            desktop_file_path = desktop_dir / "ChronoTale.desktop"
+            
+            if venv_path:
+                # Command with virtual environment activation
+                exec_command = f'bash -c "source {venv_path}/bin/activate && cd {script_dir} && python launch.py"'
+            else:
+                # Direct python execution
+                exec_command = f'bash -c "cd {script_dir} && python launch.py"'
+            
+            desktop_content = f"""[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ChronoTale Launcher
+Comment=Multidimensional Adventure Game Collection
+Exec=gnome-terminal -- {exec_command}
+Icon={script_dir}/icon.png
+Terminal=true
+Categories=Game;
+StartupNotify=false
+"""
+            
+            with open(desktop_file_path, 'w') as f:
+                f.write(desktop_content)
+            
+            # Make executable
+            os.chmod(desktop_file_path, 0o755)
+            
+            print(color_text("█ Desktop shortcut created successfully!", Fore.GREEN))
+            return True
+            
+        else:
+            print(color_text("█ Desktop shortcuts currently supported on Linux only!", Fore.YELLOW))
+            return False
+            
+    except Exception as e:
+        print(color_text(f"█ Error creating desktop shortcut: {str(e)}", Fore.RED))
+        return False
+
+def create_command_alias() -> bool:
+    """Create a command alias for ChronoTale launcher"""
+    try:
+        # Get the directory where launch.py is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        launcher_path = os.path.join(script_dir, 'launch.py')
+        
+        if not os.path.exists(launcher_path):
+            print(color_text("█ Error: launch.py not found!", Fore.RED))
+            return False
+        
+        # Detect virtual environment
+        venv_path = detect_virtual_env()
+        home_dir = Path.home()
+        
+        # Create bash script in user's bin directory
+        user_bin = home_dir / ".local" / "bin"
+        user_bin.mkdir(parents=True, exist_ok=True)
+        
+        script_path = user_bin / "chronotale"
+        
+        if venv_path:
+            # Script with virtual environment activation
+            script_content = f"""#!/bin/bash
+source {venv_path}/bin/activate
+cd {script_dir}
+python launch.py
+deactivate
+"""
+        else:
+            # Direct execution script
+            script_content = f"""#!/bin/bash
+cd {script_dir}
+python launch.py
+"""
+        
+        with open(script_path, 'w') as f:
+            f.write(script_content)
+        
+        # Make executable
+        os.chmod(script_path, 0o755)
+        
+        # Check if ~/.local/bin is in PATH
+        path_env = os.environ.get('PATH', '')
+        if str(user_bin) not in path_env:
+            # Add to bashrc if not in PATH
+            bashrc_path = home_dir / ".bashrc"
+            with open(bashrc_path, 'a') as f:
+                f.write(f'\n# ChronoTale launcher command\nexport PATH="$HOME/.local/bin:$PATH"\n')
+            
+            print(color_text("█ Command alias 'chronotale' created!", Fore.GREEN))
+            print(color_text("█ Run 'source ~/.bashrc' or restart terminal to use it", Fore.YELLOW))
+        else:
+            print(color_text("█ Command alias 'chronotale' created and ready to use!", Fore.GREEN))
+        
+        return True
+        
+    except Exception as e:
+        print(color_text(f"█ Error creating command alias: {str(e)}", Fore.RED))
+        return False
+
+def install_system_integration() -> bool:
+    """Install ChronoTale system integration"""
+    try:
+        success_count = 0
+        
+        print(color_text("█ Creating desktop shortcut...", Fore.CYAN))
+        if create_desktop_shortcut():
+            success_count += 1
+        
+        print(color_text("█ Creating command alias...", Fore.CYAN))
+        if create_command_alias():
+            success_count += 1
+        
+        if success_count > 0:
+            print(color_text(f"█ System integration completed! ({success_count}/2 features installed)", Fore.GREEN))
+            return True
+        else:
+            print(color_text("█ System integration failed!", Fore.RED))
+            return False
+            
+    except Exception as e:
+        print(color_text(f"█ Error during system integration: {str(e)}", Fore.RED))
+        return False
+
 def statistics_menu(data: Any) -> Any:
     """Display comprehensive statistics and achievements"""
     while True:
@@ -306,7 +475,7 @@ def statistics_menu(data: Any) -> Any:
         display_banner()
         print(color_text("█ CHRONOTALE STATISTICS & ACHIEVEMENTS", Fore.MAGENTA))
         print("\n" + "═" * 80 + "\n")
-        
+
         # Overall Statistics
         print(color_text("📊 OVERALL STATISTICS", Fore.CYAN))
         print(color_text(f"Total Games Launched: {data['plays']}", Fore.WHITE))
@@ -315,7 +484,7 @@ def statistics_menu(data: Any) -> Any:
         print(color_text(f"Games Owned: {len(data['purchased_games']) + 5}", Fore.WHITE))  # 5 base games
         if data['last_played']:
             print(color_text(f"Last Played: {data['last_played']}", Fore.WHITE))
-        
+
         # Game Statistics
         print(color_text("\n🎮 GAME STATISTICS", Fore.CYAN))
         if data['game_statistics']:
@@ -325,7 +494,7 @@ def statistics_menu(data: Any) -> Any:
                 print(color_text(f"  {game_name}: {launches} launches, {playtime} played", Fore.WHITE))
         else:
             print(color_text("  No game statistics yet - start playing to see data!", Fore.YELLOW))
-        
+
         # Achievements
         print(color_text("\n🏆 ACHIEVEMENTS", Fore.CYAN))
         if data['achievements']:
@@ -333,7 +502,7 @@ def statistics_menu(data: Any) -> Any:
                 print(color_text(f"  ✓ {achievement}", Fore.GREEN))
         else:
             print(color_text("  No achievements unlocked yet - keep playing!", Fore.YELLOW))
-        
+
         # Achievement Progress Hints
         print(color_text("\n💡 ACHIEVEMENT HINTS", Fore.CYAN))
         hints = []
@@ -343,13 +512,13 @@ def statistics_menu(data: Any) -> Any:
             hints.append("Buy 3 games to become a Collector")
         if not any("Veteran" in achievement for achievement in data['achievements']):
             hints.append("Launch any game 5 times to become a Veteran")
-        
+
         for hint in hints[:3]:  # Show max 3 hints
             print(color_text(f"  • {hint}", Fore.YELLOW))
-        
+
         print(color_text("\n█ [1] Back to Main Menu", Fore.RED))
         choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
-        
+
         if choice == '1':
             return
         else:
@@ -357,13 +526,42 @@ def statistics_menu(data: Any) -> Any:
             time.sleep(1)
 
 def settings_menu(data: Any) -> Any:
-    """Display settings"""
+    """Display enhanced settings with system integration features"""
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         display_banner()
-        print(color_text("█ Settings:", Fore.CYAN))
+        
+        # Detect current environment status
+        venv_detected = detect_virtual_env()
+        venv_status = color_text("Detected", Fore.GREEN) if venv_detected else color_text("Not Detected", Fore.YELLOW)
+        
+        print(color_text("█ Settings & System Integration:", Fore.CYAN))
+        print(color_text("█" + "="*50, Fore.CYAN))
+        
+        # Display settings
         print(color_text(f"█ [1] Toggle Colors: {'ON' if data['settings']['colors_enabled'] else 'OFF'}", Fore.CYAN))
-        print(color_text("█ [2] Back to Main Menu", Fore.RED))
+        print(color_text(f"█ [2] Toggle Auto-Save: {'ON' if data['settings'].get('auto_save', True) else 'OFF'}", Fore.CYAN))
+        
+        # System Integration section
+        print(color_text("\n█ System Integration:", Fore.MAGENTA))
+        print(color_text("█ [3] Create Desktop Shortcut", Fore.GREEN))
+        print(color_text("█ [4] Install Command Alias (chronotale)", Fore.GREEN))
+        print(color_text("█ [5] Full System Integration", Fore.YELLOW))
+        
+        # Environment info
+        print(color_text("\n█ Environment Status:", Fore.BLUE))
+        print(color_text(f"█     Virtual Environment: {venv_status}", Fore.WHITE))
+        if venv_detected:
+            print(color_text(f"█     VEnv Path: {venv_detected}", Fore.WHITE))
+        print(color_text(f"█     Platform: {platform.system()}", Fore.WHITE))
+        print(color_text(f"█     Python: {sys.version.split()[0]}", Fore.WHITE))
+        
+        # Additional settings
+        print(color_text("\n█ Advanced:", Fore.MAGENTA))
+        print(color_text("█ [6] Reset All Settings", Fore.RED))
+        print(color_text("█ [7] Export Game Data", Fore.BLUE))
+        print(color_text("█ [8] Back to Main Menu", Fore.RED))
+        
         print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
 
         choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
@@ -372,9 +570,71 @@ def settings_menu(data: Any) -> Any:
             data['settings']['colors_enabled'] = not data['settings']['colors_enabled']
             save_game_data(data)
             print(color_text(f"█ Colors {'enabled' if data['settings']['colors_enabled'] else 'disabled'}!", Fore.GREEN))
-            time.sleep(1)
+            time.sleep(2)
+            
         elif choice == '2':
+            data['settings']['auto_save'] = not data['settings'].get('auto_save', True)
+            save_game_data(data)
+            print(color_text(f"█ Auto-save {'enabled' if data['settings']['auto_save'] else 'disabled'}!", Fore.GREEN))
+            time.sleep(2)
+            
+        elif choice == '3':
+            print(color_text("█ Creating desktop shortcut...", Fore.CYAN))
+            if create_desktop_shortcut():
+                print(color_text("█ Desktop shortcut created successfully!", Fore.GREEN))
+                if venv_detected:
+                    print(color_text("█ Shortcut configured with virtual environment support!", Fore.GREEN))
+            else:
+                print(color_text("█ Failed to create desktop shortcut!", Fore.RED))
+            input(color_text("\n█ Press Enter to continue...", Fore.YELLOW))
+            
+        elif choice == '4':
+            print(color_text("█ Installing command alias...", Fore.CYAN))
+            if create_command_alias():
+                print(color_text("█ Command alias 'chronotale' installed!", Fore.GREEN))
+                if venv_detected:
+                    print(color_text("█ Alias configured with virtual environment support!", Fore.GREEN))
+                print(color_text("█ You can now run 'chronotale' from anywhere!", Fore.CYAN))
+            else:
+                print(color_text("█ Failed to create command alias!", Fore.RED))
+            input(color_text("\n█ Press Enter to continue...", Fore.YELLOW))
+            
+        elif choice == '5':
+            print(color_text("█ Installing full system integration...", Fore.MAGENTA))
+            print(color_text("█ This will create both desktop shortcut and command alias", Fore.CYAN))
+            confirm = input(color_text("█ Continue? (y/N): ", Fore.YELLOW))
+            if confirm.lower() == 'y':
+                if install_system_integration():
+                    print(color_text("█ Full system integration completed successfully!", Fore.GREEN))
+                    if venv_detected:
+                        print(color_text("█ All features configured with virtual environment support!", Fore.GREEN))
+                    print(color_text("█ ChronoTale is now fully integrated with your system!", Fore.CYAN))
+                else:
+                    print(color_text("█ System integration failed!", Fore.RED))
+            input(color_text("\n█ Press Enter to continue...", Fore.YELLOW))
+            
+        elif choice == '6':
+            print(color_text("█ This will reset all settings to default values!", Fore.RED))
+            confirm = input(color_text("█ Are you sure? (y/N): ", Fore.YELLOW))
+            if confirm.lower() == 'y':
+                data['settings'] = {'colors_enabled': True, 'auto_save': True}
+                save_game_data(data)
+                print(color_text("█ All settings reset to defaults!", Fore.GREEN))
+            time.sleep(2)
+            
+        elif choice == '7':
+            try:
+                export_path = f"chronotale_export_{int(time.time())}.json"
+                with open(export_path, 'w') as f:
+                    json.dump(data, f, indent=2)
+                print(color_text(f"█ Game data exported to: {export_path}", Fore.GREEN))
+            except Exception as e:
+                print(color_text(f"█ Export failed: {str(e)}", Fore.RED))
+            input(color_text("\n█ Press Enter to continue...", Fore.YELLOW))
+            
+        elif choice == '8':
             return
+            
         else:
             print(color_text("█ Invalid input!", Fore.RED))
             time.sleep(1)
