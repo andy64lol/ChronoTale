@@ -334,18 +334,36 @@ def create_desktop_shortcut() -> bool:
         home_dir = Path.home()
         desktop_dir = home_dir / "Desktop"
         
-        if not desktop_dir.exists():
-            desktop_dir = home_dir / "desktop"  # lowercase variant
-            if not desktop_dir.exists():
-                print(color_text("█ Error: Desktop directory not found!", Fore.RED))
-                return False
+        # Try multiple common desktop directory names
+        possible_desktop_dirs = [
+            home_dir / "Desktop",
+            home_dir / "desktop", 
+            home_dir / "Bureau",  # French
+            home_dir / "Escritorio",  # Spanish
+            home_dir / "デスクトップ",  # Japanese
+            home_dir / "桌面"  # Chinese
+        ]
+        
+        desktop_dir = None
+        for dir_path in possible_desktop_dirs:
+            if dir_path.exists():
+                desktop_dir = dir_path
+                break
+        
+        # If no desktop directory found, create one or use alternative location
+        if desktop_dir is None:
+            print(color_text("█ Warning: No Desktop directory found. Creating shortcut in home directory...", Fore.YELLOW))
+            desktop_dir = home_dir
+            shortcut_name = "ChronoTale_Launcher.desktop"
+        else:
+            shortcut_name = "ChronoTale.desktop"
         
         # Detect virtual environment
         venv_path = detect_virtual_env()
         
         # Create .desktop file for Linux
         if platform.system() == "Linux":
-            desktop_file_path = desktop_dir / "ChronoTale.desktop"
+            desktop_file_path = desktop_dir / shortcut_name
             
             if venv_path:
                 # Command with virtual environment activation
@@ -372,15 +390,34 @@ StartupNotify=false
             # Make executable
             os.chmod(desktop_file_path, 0o755)
             
-            print(color_text("█ Desktop shortcut created successfully!", Fore.GREEN))
+            print(color_text(f"█ Desktop shortcut created successfully at: {desktop_file_path}", Fore.GREEN))
             return True
             
         else:
             print(color_text("█ Desktop shortcuts currently supported on Linux only!", Fore.YELLOW))
-            return False
+            # For non-Linux systems, create a simple launcher script
+            try:
+                launcher_script = desktop_dir / "start_chronotale.bat" if platform.system() == "Windows" else desktop_dir / "start_chronotale.sh"
+                if platform.system() == "Windows":
+                    script_content = f'@echo off\ncd /d "{script_dir}"\npython launch.py\npause'
+                else:
+                    script_content = f'#!/bin/bash\ncd "{script_dir}"\npython3 launch.py'
+                
+                with open(launcher_script, 'w') as f:
+                    f.write(script_content)
+                
+                if platform.system() != "Windows":
+                    os.chmod(launcher_script, 0o755)
+                
+                print(color_text(f"█ Launcher script created at: {launcher_script}", Fore.GREEN))
+                return True
+            except Exception as script_error:
+                print(color_text(f"█ Could not create launcher script: {str(script_error)}", Fore.YELLOW))
+                return False
             
     except Exception as e:
         print(color_text(f"█ Error creating desktop shortcut: {str(e)}", Fore.RED))
+        print(color_text("█ You can still launch ChronoTale by running 'python launch.py' in the ChronoTale directory", Fore.CYAN))
         return False
 
 def create_command_alias() -> bool:
