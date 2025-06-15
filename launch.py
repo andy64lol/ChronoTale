@@ -8,12 +8,20 @@ import shutil
 import platform
 from pathlib import Path
 from colorama import init, Fore, Style
+import locale
+
+# Set UTF-8 encoding for better compatibility
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+os.environ['LC_ALL'] = 'C.UTF-8'
+os.environ['LANG'] = 'C.UTF-8'
 
 # Initialize colorama
 init(autoreset=True)
 
 # Constants
 VERSION = "2.0.0"
+
+
 
 # Game data persistence
 def load_game_data() -> Any:
@@ -319,8 +327,68 @@ def detect_virtual_env() -> Optional[str]:
     
     return None
 
+def detect_desktop_environment() -> str:
+    """Detect the desktop environment and return appropriate terminal command"""
+    # Check environment variables for desktop environment
+    desktop_env = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
+    session_desktop = os.environ.get('DESKTOP_SESSION', '').lower()
+    
+    # Detect Crostini (Chrome OS Linux container)
+    if os.path.exists('/opt/google/cros-containers'):
+        return 'crostini'
+    
+    # Common desktop environments
+    if 'gnome' in desktop_env or 'gnome' in session_desktop:
+        return 'gnome'
+    elif 'kde' in desktop_env or 'plasma' in desktop_env:
+        return 'kde'
+    elif 'xfce' in desktop_env:
+        return 'xfce'
+    elif 'lxde' in desktop_env or 'lxqt' in desktop_env:
+        return 'lxde'
+    elif 'mate' in desktop_env:
+        return 'mate'
+    elif 'cinnamon' in desktop_env:
+        return 'cinnamon'
+    
+    return 'generic'
+
+def get_terminal_command(desktop_env: str) -> str:
+    """Get the appropriate terminal command for the desktop environment"""
+    terminal_commands = {
+        'crostini': 'x-terminal-emulator',
+        'gnome': 'gnome-terminal',
+        'kde': 'konsole',
+        'xfce': 'xfce4-terminal',
+        'lxde': 'lxterminal',
+        'mate': 'mate-terminal',
+        'cinnamon': 'gnome-terminal',
+        'generic': 'x-terminal-emulator'
+    }
+    
+    terminal_cmd = terminal_commands.get(desktop_env, 'x-terminal-emulator')
+    
+    # Check if the terminal exists, fallback to alternatives
+    fallback_terminals = [
+        'x-terminal-emulator',
+        'gnome-terminal',
+        'konsole',
+        'xfce4-terminal',
+        'lxterminal',
+        'mate-terminal',
+        'xterm',
+        'terminator',
+        'tilix'
+    ]
+    
+    for term in [terminal_cmd] + fallback_terminals:
+        if shutil.which(term):
+            return term
+    
+    return 'xterm'  # Last resort
+
 def create_desktop_shortcut() -> bool:
-    """Create a desktop shortcut for ChronoTale launcher"""
+    """Create a desktop shortcut for ChronoTale launcher with improved Linux compatibility"""
     try:
         # Get the directory where launch.py is located
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -332,31 +400,43 @@ def create_desktop_shortcut() -> bool:
         
         # Get user's desktop directory
         home_dir = Path.home()
-        desktop_dir = home_dir / "Desktop"
         
-        # Try multiple common desktop directory names
+        # Try multiple common desktop directory names (including Crostini variations)
         possible_desktop_dirs = [
             home_dir / "Desktop",
             home_dir / "desktop", 
             home_dir / "Bureau",  # French
             home_dir / "Escritorio",  # Spanish
             home_dir / "デスクトップ",  # Japanese
-            home_dir / "桌面"  # Chinese
+            home_dir / "桌面",  # Chinese
+            home_dir / ".local" / "share" / "applications"  # Applications directory
         ]
         
         desktop_dir = None
+        shortcut_name = "ChronoTale.desktop"
+        
         for dir_path in possible_desktop_dirs:
             if dir_path.exists():
                 desktop_dir = dir_path
                 break
         
-        # If no desktop directory found, create one or use alternative location
+        # If no desktop directory found, create applications directory or use home
         if desktop_dir is None:
-            print(color_text("█ Warning: No Desktop directory found. Creating shortcut in home directory...", Fore.YELLOW))
-            desktop_dir = home_dir
-            shortcut_name = "ChronoTale_Launcher.desktop"
-        else:
-            shortcut_name = "ChronoTale.desktop"
+            # Try to create applications directory
+            apps_dir = home_dir / ".local" / "share" / "applications"
+            try:
+                apps_dir.mkdir(parents=True, exist_ok=True)
+                desktop_dir = apps_dir
+                print(color_text("█ Creating shortcut in applications directory...", Fore.CYAN))
+            except:
+                # Fall back to home directory
+                desktop_dir = home_dir
+                shortcut_name = "ChronoTale_Launcher.desktop"
+                print(color_text("█ Creating shortcut in home directory...", Fore.YELLOW))
+        
+        # Detect desktop environment and get appropriate terminal
+        desktop_env = detect_desktop_environment()
+        terminal_cmd = get_terminal_command(desktop_env)
         
         # Detect virtual environment
         venv_path = detect_virtual_env()
@@ -365,23 +445,41 @@ def create_desktop_shortcut() -> bool:
         if platform.system() == "Linux":
             desktop_file_path = desktop_dir / shortcut_name
             
+            # Build command based on environment
             if venv_path:
-                # Command with virtual environment activation
-                exec_command = f'bash -c "source {venv_path}/bin/activate && cd {script_dir} && python launch.py"'
+                base_command = f'source {venv_path}/bin/activate && cd "{script_dir}" && python launch.py'
             else:
-                # Direct python execution
-                exec_command = f'bash -c "cd {script_dir} && python launch.py"'
+                base_command = f'cd "{script_dir}" && python3 launch.py'
+            
+            # Handle different terminal command formats
+            if terminal_cmd in ['gnome-terminal', 'mate-terminal']:
+                exec_command = f'{terminal_cmd} -- bash -c "{base_command}; read -p \\"Press Enter to close...\\""'
+            elif terminal_cmd == 'konsole':
+                exec_command = f'{terminal_cmd} -e bash -c "{base_command}; read -p \\"Press Enter to close...\\""'
+            elif terminal_cmd in ['xfce4-terminal', 'lxterminal']:
+                exec_command = f'{terminal_cmd} -e "bash -c \\"{base_command}; read -p \\"Press Enter to close...\\"\\"'
+            else:
+                # Generic fallback
+                exec_command = f'{terminal_cmd} -e bash -c "{base_command}; read -p \\"Press Enter to close...\\""'
+            
+            # Create icon path (try to find or create a simple icon)
+            icon_path = os.path.join(script_dir, 'icon.png')
+            if not os.path.exists(icon_path):
+                # Use system game icon as fallback
+                icon_path = 'applications-games'
             
             desktop_content = f"""[Desktop Entry]
 Version=1.0
 Type=Application
 Name=ChronoTale Launcher
-Comment=Multidimensional Adventure Game Collection
-Exec=gnome-terminal -- {exec_command}
-Icon={script_dir}/icon.png
-Terminal=true
-Categories=Game;
-StartupNotify=false
+Comment=Multidimensional Adventure Game Collection for {desktop_env.title()}
+Exec={exec_command}
+Icon={icon_path}
+Terminal=false
+Categories=Game;Adventure;
+StartupNotify=true
+Keywords=game;adventure;story;interactive;
+MimeType=
 """
             
             with open(desktop_file_path, 'w') as f:
@@ -390,7 +488,14 @@ StartupNotify=false
             # Make executable
             os.chmod(desktop_file_path, 0o755)
             
-            print(color_text(f"█ Desktop shortcut created successfully at: {desktop_file_path}", Fore.GREEN))
+            print(color_text(f"█ Desktop shortcut created for {desktop_env.title()} at: {desktop_file_path}", Fore.GREEN))
+            print(color_text(f"█ Using terminal: {terminal_cmd}", Fore.CYAN))
+            
+            # For Crostini, provide additional instructions
+            if desktop_env == 'crostini':
+                print(color_text("█ Crostini detected - shortcut optimized for Chrome OS", Fore.CYAN))
+                print(color_text("█ You can also run from terminal: python3 launch.py", Fore.YELLOW))
+            
             return True
             
         else:
@@ -716,6 +821,21 @@ def main_menu() -> None:
 if __name__ == "__main__":
     try:
         main_menu()
+    except UnicodeDecodeError as e:
+        print("\n█ Input encoding error detected. Restarting with safe mode...")
+        print("█ If this persists, try running with: PYTHONIOENCODING=utf-8 python launch.py")
+        # Restart with simpler encoding
+        os.environ['LC_ALL'] = 'C.UTF-8'
+        os.environ['LANG'] = 'C.UTF-8'
+        try:
+            main_menu()
+        except:
+            print("█ Please restart the launcher or contact support.")
+            sys.exit(1)
     except KeyboardInterrupt:
         print(color_text("\n█ Force quit!", Fore.YELLOW))
         sys.exit(0)
+    except Exception as e:
+        print(f"█ Unexpected error: {e}")
+        print("█ Please restart the launcher.")
+        sys.exit(1)
