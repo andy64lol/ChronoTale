@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
+My Last Days Here - An Enhanced Interactive Story Game
+Part of the ChronoTale Collection
 
-My Last Days Here
-
+A deeply emotional narrative adventure about the final days of high school,
+graduation, friendships, and the transition to adulthood.
+Features comprehensive save/load system and extended storyline.
 """
 
 import os
@@ -270,6 +273,7 @@ class GameState:
     """Manages the current state of the game"""
     
     def __init__(self):
+        # Core game state
         self.player_name: str = ""
         self.selected_character: str = ""
         self.character_background: Dict[str, Any] = {}
@@ -289,6 +293,70 @@ class GameState:
         self.achievements: List[str] = []
         self.endings_unlocked: List[str] = []
         self.start_time: float = time.time()
+        
+        # Enhanced attributes for comprehensive save system
+        self.total_sessions: int = 1
+        self.character_growth: Dict[str, Any] = {}
+        self.personality_traits: Dict[str, Any] = {}
+        self.emotional_states: Dict[str, Any] = {}
+        self.character_arc: Dict[str, Any] = {}
+        self.skills: Dict[str, Any] = {}
+        self.confidence: Dict[str, Any] = {}
+        self.maturity: Dict[str, Any] = {}
+        self.friendship_levels: Dict[str, Any] = {}
+        self.completed_scenes: List[str] = []
+        self.unlocked_scenes: List[str] = []
+        self.optional_scenes: List[str] = []
+        self.dialogue_history: List[str] = []
+        self.narrative_branches: Dict[str, Any] = {}
+        self.story_flags: Dict[str, Any] = {}
+        self.chapter_times: Dict[str, float] = {}
+        self.emotional_moments: List[str] = []
+        self.memorable_quotes: List[str] = []
+        self.relationship_history: Dict[str, Any] = {}
+        self.friendship_milestones: Dict[str, Any] = {}
+        self.romantic_progress: Dict[str, Any] = {}
+        self.social_dynamics: Dict[str, Any] = {}
+        self.group_scenes: List[str] = []
+        self.conflicts_resolved: List[str] = []
+        self.trust_levels: Dict[str, Any] = {}
+        self.shared_memories: Dict[str, Any] = {}
+        self.play_style: Dict[str, Any] = {}
+        self.choice_patterns: Dict[str, Any] = {}
+        self.favorite_characters: List[str] = []
+        self.emotional_responses: Dict[str, Any] = {}
+        self.reading_speed: str = "normal"
+        self.accessibility: Dict[str, Any] = {}
+        self.language_settings: Dict[str, Any] = {}
+        self.content_warnings: List[str] = []
+        self.achievement_progress: Dict[str, Any] = {}
+        self.hidden_achievements: List[str] = []
+        self.completion_rate: float = 0.0
+        self.perfectionist_data: Dict[str, Any] = {}
+        self.speedrun_stats: Dict[str, Any] = {}
+        self.replay_stats: Dict[str, Any] = {}
+        self.exploration_rate: float = 0.0
+        self.memory_fragments: Dict[str, Any] = {}
+        self.photos: List[str] = []
+        self.diary_entries: List[str] = []
+        self.letters: List[str] = []
+        self.mementos: List[str] = []
+        self.scrapbook: List[str] = []
+        self.voice_messages: List[str] = []
+        self.words_read: int = 0
+        self.scenes_count: int = 0
+        self.dialogue_count: int = 0
+        self.emotional_peaks: int = 0
+        self.emotional_impact: int = 0
+        self.humor_moments: int = 0
+        self.heartfelt_count: int = 0
+        self.interaction_count: Dict[str, int] = {}
+        self.last_errors: List[str] = []
+        self.performance: Dict[str, Any] = {}
+        self.feature_flags: Dict[str, bool] = {}
+        self.debug_mode: bool = False
+        self.compatibility: Dict[str, Any] = {}
+        self.backup_saves: List[str] = []
         
     def add_choice(self, chapter: int, choice_text: str, choice_id: str, impact: Dict[str, int]):
         """Record a choice made by the player"""
@@ -312,11 +380,11 @@ class GameState:
             self.playtime = time.time() - self.start_time
 
 class SaveManager:
-    """Handles saving and loading game data"""
+    """Handles comprehensive saving and loading of all game data"""
     
     @staticmethod
     def save_game(game_state: GameState, save_name: Optional[str] = None) -> bool:
-        """Save the current game state"""
+        """Save the current game state with comprehensive data preservation"""
         try:
             game_state.update_playtime()
             
@@ -329,26 +397,140 @@ class SaveManager:
             
             save_path = os.path.join(SAVE_DIR, save_name)
             
-            save_data = {
-                "player_name": game_state.player_name,
-                "selected_character": game_state.selected_character,
-                "character_background": game_state.character_background,
-                "current_chapter": game_state.current_chapter,
-                "choices_made": game_state.choices_made,
-                "character_stats": game_state.character_stats,
-                "inventory": game_state.inventory,
-                "discovered_memories": game_state.discovered_memories,
-                "relationships": game_state.relationships,
-                "playtime": game_state.playtime,
-                "save_count": game_state.save_count + 1,
-                "achievements": game_state.achievements,
-                "endings_unlocked": game_state.endings_unlocked,
-                "save_timestamp": datetime.now().isoformat(),
-                "game_version": "2.0.0"
+            # Create comprehensive save data structure
+            comprehensive_save_data = {
+                # Core game state
+                "core_game_state": {
+                    "player_name": game_state.player_name,
+                    "selected_character": game_state.selected_character,
+                    "character_background": game_state.character_background,
+                    "current_chapter": game_state.current_chapter,
+                    "choices_made": game_state.choices_made,
+                    "character_stats": game_state.character_stats,
+                    "inventory": game_state.inventory,
+                    "discovered_memories": game_state.discovered_memories,
+                    "relationships": game_state.relationships,
+                    "achievements": game_state.achievements,
+                    "endings_unlocked": game_state.endings_unlocked
+                },
+                
+                # Save metadata and timing
+                "save_metadata": {
+                    "save_timestamp": datetime.now().isoformat(),
+                    "game_version": "3.0_enhanced",
+                    "save_count": game_state.save_count + 1,
+                    "playtime": game_state.playtime,
+                    "session_start_time": getattr(game_state, 'start_time', time.time()),
+                    "total_sessions": getattr(game_state, 'total_sessions', 1),
+                    "save_file_name": save_name,
+                    "platform": platform.system(),
+                    "python_version": platform.python_version()
+                },
+                
+                # Character progression and development
+                "character_progression": {
+                    "character_growth_points": getattr(game_state, 'character_growth', {}),
+                    "personality_traits": getattr(game_state, 'personality_traits', {}),
+                    "emotional_states": getattr(game_state, 'emotional_states', {}),
+                    "character_arc_progress": getattr(game_state, 'character_arc', {}),
+                    "skill_development": getattr(game_state, 'skills', {}),
+                    "confidence_levels": getattr(game_state, 'confidence', {}),
+                    "maturity_indicators": getattr(game_state, 'maturity', {}),
+                    "friendship_depths": getattr(game_state, 'friendship_levels', {})
+                },
+                
+                # Story and narrative tracking
+                "story_data": {
+                    "completed_scenes": getattr(game_state, 'completed_scenes', []),
+                    "unlocked_scenes": getattr(game_state, 'unlocked_scenes', []),
+                    "optional_scenes_encountered": getattr(game_state, 'optional_scenes', []),
+                    "dialogue_choices_history": getattr(game_state, 'dialogue_history', []),
+                    "narrative_branches": getattr(game_state, 'narrative_branches', {}),
+                    "story_flags": getattr(game_state, 'story_flags', {}),
+                    "chapter_completion_times": getattr(game_state, 'chapter_times', {}),
+                    "emotional_moments": getattr(game_state, 'emotional_moments', []),
+                    "memorable_quotes": getattr(game_state, 'memorable_quotes', [])
+                },
+                
+                # Relationship and social dynamics
+                "relationship_data": {
+                    "detailed_relationships": game_state.relationships,
+                    "relationship_history": getattr(game_state, 'relationship_history', {}),
+                    "friendship_milestones": getattr(game_state, 'friendship_milestones', {}),
+                    "romantic_interests": getattr(game_state, 'romantic_progress', {}),
+                    "social_dynamics": getattr(game_state, 'social_dynamics', {}),
+                    "group_interactions": getattr(game_state, 'group_scenes', []),
+                    "conflict_resolutions": getattr(game_state, 'conflicts_resolved', []),
+                    "trust_levels": getattr(game_state, 'trust_levels', {}),
+                    "shared_memories": getattr(game_state, 'shared_memories', {})
+                },
+                
+                # Player experience and preferences
+                "player_data": {
+                    "play_style_preferences": getattr(game_state, 'play_style', {}),
+                    "choice_patterns": getattr(game_state, 'choice_patterns', {}),
+                    "favorite_characters": getattr(game_state, 'favorite_characters', []),
+                    "emotional_responses": getattr(game_state, 'emotional_responses', {}),
+                    "reading_speed": getattr(game_state, 'reading_speed', 'normal'),
+                    "accessibility_settings": getattr(game_state, 'accessibility', {}),
+                    "language_preferences": getattr(game_state, 'language_settings', {}),
+                    "content_warnings_seen": getattr(game_state, 'content_warnings', [])
+                },
+                
+                # Achievement and completion tracking
+                "achievement_data": {
+                    "unlocked_achievements": game_state.achievements,
+                    "achievement_progress": getattr(game_state, 'achievement_progress', {}),
+                    "hidden_achievements": getattr(game_state, 'hidden_achievements', []),
+                    "completion_percentage": getattr(game_state, 'completion_rate', 0.0),
+                    "perfectionist_flags": getattr(game_state, 'perfectionist_data', {}),
+                    "speedrun_data": getattr(game_state, 'speedrun_stats', {}),
+                    "replay_statistics": getattr(game_state, 'replay_stats', {}),
+                    "exploration_completeness": getattr(game_state, 'exploration_rate', 0.0)
+                },
+                
+                # Memory and collectibles system
+                "memory_system": {
+                    "discovered_memories": game_state.discovered_memories,
+                    "memory_fragments": getattr(game_state, 'memory_fragments', {}),
+                    "photo_collection": getattr(game_state, 'photos', []),
+                    "diary_entries": getattr(game_state, 'diary_entries', []),
+                    "letter_collection": getattr(game_state, 'letters', []),
+                    "memento_items": getattr(game_state, 'mementos', []),
+                    "scrapbook_pages": getattr(game_state, 'scrapbook', []),
+                    "voice_messages": getattr(game_state, 'voice_messages', [])
+                },
+                
+                # Game statistics and analytics
+                "statistics": {
+                    "total_choices_made": len(game_state.choices_made),
+                    "words_read": getattr(game_state, 'words_read', 0),
+                    "scenes_completed": getattr(game_state, 'scenes_count', 0),
+                    "dialogues_participated": getattr(game_state, 'dialogue_count', 0),
+                    "emotional_peaks": getattr(game_state, 'emotional_peaks', 0),
+                    "tears_shed": getattr(game_state, 'emotional_impact', 0),
+                    "laughs_shared": getattr(game_state, 'humor_moments', 0),
+                    "heartfelt_moments": getattr(game_state, 'heartfelt_count', 0),
+                    "character_interactions": getattr(game_state, 'interaction_count', {})
+                },
+                
+                # Technical and debug information
+                "technical_data": {
+                    "game_state_size": len(str(game_state.__dict__)),
+                    "last_error_log": getattr(game_state, 'last_errors', []),
+                    "performance_metrics": getattr(game_state, 'performance', {}),
+                    "feature_flags": getattr(game_state, 'feature_flags', {}),
+                    "debug_mode": getattr(game_state, 'debug_mode', False),
+                    "compatibility_settings": getattr(game_state, 'compatibility', {}),
+                    "backup_data": getattr(game_state, 'backup_saves', [])
+                }
             }
             
+            # Update save count
+            game_state.save_count = comprehensive_save_data["save_metadata"]["save_count"]
+            
             with open(save_path, 'w', encoding='utf-8') as f:
-                json.dump(save_data, f, indent=2, ensure_ascii=False)
+                json.dump(comprehensive_save_data, f, indent=2, ensure_ascii=False)
             
             return True
             
@@ -358,7 +540,7 @@ class SaveManager:
     
     @staticmethod
     def load_game(save_name: Optional[str] = None) -> Optional[GameState]:
-        """Load a game state from file"""
+        """Load a game state from file with comprehensive data restoration"""
         try:
             if not save_name:
                 saves = SaveManager.list_saves()
@@ -382,20 +564,142 @@ class SaveManager:
                 save_data = json.load(f)
             
             game_state = GameState()
-            game_state.player_name = save_data.get("player_name", "")
-            game_state.selected_character = save_data.get("selected_character", "")
-            game_state.character_background = save_data.get("character_background", {})
-            game_state.current_chapter = save_data.get("current_chapter", 1)
-            game_state.choices_made = save_data.get("choices_made", [])
-            game_state.character_stats = save_data.get("character_stats", {})
-            game_state.inventory = save_data.get("inventory", [])
-            game_state.discovered_memories = save_data.get("discovered_memories", [])
-            game_state.relationships = save_data.get("relationships", {})
-            game_state.playtime = save_data.get("playtime", 0.0)
-            game_state.save_count = save_data.get("save_count", 0)
-            game_state.achievements = save_data.get("achievements", [])
-            game_state.endings_unlocked = save_data.get("endings_unlocked", [])
-            game_state.start_time = time.time() - game_state.playtime
+            
+            # Handle comprehensive save format
+            if "core_game_state" in save_data:
+                # Load core game state
+                core_data = save_data["core_game_state"]
+                game_state.player_name = core_data.get("player_name", "")
+                game_state.selected_character = core_data.get("selected_character", "")
+                game_state.character_background = core_data.get("character_background", {})
+                game_state.current_chapter = core_data.get("current_chapter", 1)
+                game_state.choices_made = core_data.get("choices_made", [])
+                game_state.character_stats = core_data.get("character_stats", {})
+                game_state.inventory = core_data.get("inventory", [])
+                game_state.discovered_memories = core_data.get("discovered_memories", [])
+                game_state.relationships = core_data.get("relationships", {})
+                game_state.achievements = core_data.get("achievements", [])
+                game_state.endings_unlocked = core_data.get("endings_unlocked", [])
+                
+                # Load metadata
+                if "save_metadata" in save_data:
+                    metadata = save_data["save_metadata"]
+                    game_state.playtime = metadata.get("playtime", 0.0)
+                    game_state.save_count = metadata.get("save_count", 0)
+                    game_state.start_time = time.time() - game_state.playtime
+                    
+                    # Restore extended metadata
+                    game_state.total_sessions = metadata.get("total_sessions", 1)
+                
+                # Restore character progression
+                if "character_progression" in save_data:
+                    progression = save_data["character_progression"]
+                    game_state.character_growth = progression.get("character_growth_points", {})
+                    game_state.personality_traits = progression.get("personality_traits", {})
+                    game_state.emotional_states = progression.get("emotional_states", {})
+                    game_state.character_arc = progression.get("character_arc_progress", {})
+                    game_state.skills = progression.get("skill_development", {})
+                    game_state.confidence = progression.get("confidence_levels", {})
+                    game_state.maturity = progression.get("maturity_indicators", {})
+                    game_state.friendship_levels = progression.get("friendship_depths", {})
+                
+                # Restore story data
+                if "story_data" in save_data:
+                    story = save_data["story_data"]
+                    game_state.completed_scenes = story.get("completed_scenes", [])
+                    game_state.unlocked_scenes = story.get("unlocked_scenes", [])
+                    game_state.optional_scenes = story.get("optional_scenes_encountered", [])
+                    game_state.dialogue_history = story.get("dialogue_choices_history", [])
+                    game_state.narrative_branches = story.get("narrative_branches", {})
+                    game_state.story_flags = story.get("story_flags", {})
+                    game_state.chapter_times = story.get("chapter_completion_times", {})
+                    game_state.emotional_moments = story.get("emotional_moments", [])
+                    game_state.memorable_quotes = story.get("memorable_quotes", [])
+                
+                # Restore relationship data
+                if "relationship_data" in save_data:
+                    relationships = save_data["relationship_data"]
+                    game_state.relationship_history = relationships.get("relationship_history", {})
+                    game_state.friendship_milestones = relationships.get("friendship_milestones", {})
+                    game_state.romantic_progress = relationships.get("romantic_interests", {})
+                    game_state.social_dynamics = relationships.get("social_dynamics", {})
+                    game_state.group_scenes = relationships.get("group_interactions", [])
+                    game_state.conflicts_resolved = relationships.get("conflict_resolutions", [])
+                    game_state.trust_levels = relationships.get("trust_levels", {})
+                    game_state.shared_memories = relationships.get("shared_memories", {})
+                
+                # Restore player data
+                if "player_data" in save_data:
+                    player = save_data["player_data"]
+                    game_state.play_style = player.get("play_style_preferences", {})
+                    game_state.choice_patterns = player.get("choice_patterns", {})
+                    game_state.favorite_characters = player.get("favorite_characters", [])
+                    game_state.emotional_responses = player.get("emotional_responses", {})
+                    game_state.reading_speed = player.get("reading_speed", "normal")
+                    game_state.accessibility = player.get("accessibility_settings", {})
+                    game_state.language_settings = player.get("language_preferences", {})
+                    game_state.content_warnings = player.get("content_warnings_seen", [])
+                
+                # Restore achievement data
+                if "achievement_data" in save_data:
+                    achievements = save_data["achievement_data"]
+                    game_state.achievement_progress = achievements.get("achievement_progress", {})
+                    game_state.hidden_achievements = achievements.get("hidden_achievements", [])
+                    game_state.completion_rate = achievements.get("completion_percentage", 0.0)
+                    game_state.perfectionist_data = achievements.get("perfectionist_flags", {})
+                    game_state.speedrun_stats = achievements.get("speedrun_data", {})
+                    game_state.replay_stats = achievements.get("replay_statistics", {})
+                    game_state.exploration_rate = achievements.get("exploration_completeness", 0.0)
+                
+                # Restore memory system
+                if "memory_system" in save_data:
+                    memory = save_data["memory_system"]
+                    game_state.memory_fragments = memory.get("memory_fragments", {})
+                    game_state.photos = memory.get("photo_collection", [])
+                    game_state.diary_entries = memory.get("diary_entries", [])
+                    game_state.letters = memory.get("letter_collection", [])
+                    game_state.mementos = memory.get("memento_items", [])
+                    game_state.scrapbook = memory.get("scrapbook_pages", [])
+                    game_state.voice_messages = memory.get("voice_messages", [])
+                
+                # Restore statistics
+                if "statistics" in save_data:
+                    stats = save_data["statistics"]
+                    game_state.words_read = stats.get("words_read", 0)
+                    game_state.scenes_count = stats.get("scenes_completed", 0)
+                    game_state.dialogue_count = stats.get("dialogues_participated", 0)
+                    game_state.emotional_peaks = stats.get("emotional_peaks", 0)
+                    game_state.emotional_impact = stats.get("tears_shed", 0)
+                    game_state.humor_moments = stats.get("laughs_shared", 0)
+                    game_state.heartfelt_count = stats.get("heartfelt_moments", 0)
+                    game_state.interaction_count = stats.get("character_interactions", {})
+                
+                # Restore technical data
+                if "technical_data" in save_data:
+                    technical = save_data["technical_data"]
+                    game_state.last_errors = technical.get("last_error_log", [])
+                    game_state.performance = technical.get("performance_metrics", {})
+                    game_state.feature_flags = technical.get("feature_flags", {})
+                    game_state.debug_mode = technical.get("debug_mode", False)
+                    game_state.compatibility = technical.get("compatibility_settings", {})
+                    game_state.backup_saves = technical.get("backup_data", [])
+                
+            else:
+                # Handle legacy save format
+                game_state.player_name = save_data.get("player_name", "")
+                game_state.selected_character = save_data.get("selected_character", "")
+                game_state.character_background = save_data.get("character_background", {})
+                game_state.current_chapter = save_data.get("current_chapter", 1)
+                game_state.choices_made = save_data.get("choices_made", [])
+                game_state.character_stats = save_data.get("character_stats", {})
+                game_state.inventory = save_data.get("inventory", [])
+                game_state.discovered_memories = save_data.get("discovered_memories", [])
+                game_state.relationships = save_data.get("relationships", {})
+                game_state.playtime = save_data.get("playtime", 0.0)
+                game_state.save_count = save_data.get("save_count", 0)
+                game_state.achievements = save_data.get("achievements", [])
+                game_state.endings_unlocked = save_data.get("endings_unlocked", [])
+                game_state.start_time = time.time() - game_state.playtime
             
             return game_state
             
@@ -405,7 +709,7 @@ class SaveManager:
     
     @staticmethod
     def list_saves() -> List[Dict[str, Any]]:
-        """List all available save files"""
+        """List all available save files with comprehensive information"""
         saves = []
         try:
             if not os.path.exists(SAVE_DIR):
@@ -418,14 +722,42 @@ class SaveManager:
                         with open(filepath, 'r', encoding='utf-8') as f:
                             save_data = json.load(f)
                         
-                        save_info = {
-                            "filename": filename,
-                            "character": save_data.get("selected_character", "Unknown"),
-                            "chapter": save_data.get("current_chapter", 1),
-                            "playtime": save_data.get("playtime", 0),
-                            "timestamp": save_data.get("save_timestamp", "Unknown"),
-                            "player_name": save_data.get("player_name", "Unknown")
-                        }
+                        # Handle comprehensive save format
+                        if "core_game_state" in save_data and "save_metadata" in save_data:
+                            core_data = save_data["core_game_state"]
+                            metadata = save_data["save_metadata"]
+                            
+                            save_info = {
+                                "filename": filename,
+                                "character": core_data.get("selected_character", "Unknown"),
+                                "chapter": core_data.get("current_chapter", 1),
+                                "playtime": metadata.get("playtime", 0),
+                                "timestamp": metadata.get("save_timestamp", "Unknown"),
+                                "player_name": core_data.get("player_name", "Unknown"),
+                                "game_version": metadata.get("game_version", "3.0_enhanced"),
+                                "save_count": metadata.get("save_count", 0),
+                                "total_sessions": metadata.get("total_sessions", 1),
+                                "achievements_count": len(core_data.get("achievements", [])),
+                                "relationships_count": len(core_data.get("relationships", {})),
+                                "memories_count": len(core_data.get("discovered_memories", []))
+                            }
+                        else:
+                            # Handle legacy save format
+                            save_info = {
+                                "filename": filename,
+                                "character": save_data.get("selected_character", "Unknown"),
+                                "chapter": save_data.get("current_chapter", 1),
+                                "playtime": save_data.get("playtime", 0),
+                                "timestamp": save_data.get("save_timestamp", "Unknown"),
+                                "player_name": save_data.get("player_name", "Unknown"),
+                                "game_version": save_data.get("game_version", "2.0.0"),
+                                "save_count": save_data.get("save_count", 0),
+                                "total_sessions": 1,
+                                "achievements_count": len(save_data.get("achievements", [])),
+                                "relationships_count": len(save_data.get("relationships", {})),
+                                "memories_count": len(save_data.get("discovered_memories", []))
+                            }
+                        
                         saves.append(save_info)
                         
                     except Exception:
