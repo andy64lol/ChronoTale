@@ -451,38 +451,30 @@ def create_desktop_shortcut() -> bool:
             else:
                 base_command = f'cd "{script_dir}" && python3 launch.py'
             
-            # Create a wrapper script that keeps terminal open
+            # Create a simple wrapper script that keeps terminal open
             wrapper_script = os.path.join(script_dir, 'launch_wrapper.sh')
             wrapper_content = f'''#!/bin/bash
+set -e
 cd "{script_dir}"
-echo "Starting ChronoTale Launcher..."
-echo "=========================="
-{base_command}
+clear
+echo "==============================================="
+echo "    ChronoTale Launcher - Starting..."
+echo "==============================================="
 echo ""
-echo "Game session ended."
-echo "Press Enter to close this window..."
-read
+python3 launch.py
+echo ""
+echo "==============================================="
+echo "Game session ended. Press Enter to close..."
+echo "==============================================="
+read -p ""
 '''
             
             with open(wrapper_script, 'w') as f:
                 f.write(wrapper_content)
             os.chmod(wrapper_script, 0o755)
             
-            # Handle different terminal command formats with wrapper script
-            if terminal_cmd in ['gnome-terminal', 'mate-terminal']:
-                exec_command = f'{terminal_cmd} --wait -- bash "{wrapper_script}"'
-            elif terminal_cmd == 'konsole':
-                exec_command = f'{terminal_cmd} --hold -e bash "{wrapper_script}"'
-            elif terminal_cmd in ['xfce4-terminal']:
-                exec_command = f'{terminal_cmd} --hold -e bash "{wrapper_script}"'
-            elif terminal_cmd in ['lxterminal']:
-                exec_command = f'{terminal_cmd} --command="bash {wrapper_script}"'
-            elif terminal_cmd == 'x-terminal-emulator':
-                # For Crostini and generic systems
-                exec_command = f'{terminal_cmd} -e "bash {wrapper_script}"'
-            else:
-                # Generic fallback with hold option
-                exec_command = f'{terminal_cmd} -hold -e bash "{wrapper_script}"'
+            # Simplified terminal command that should work universally
+            exec_command = f'{terminal_cmd} -e {wrapper_script}'
             
             # Create icon path (try to find or create a simple icon)
             icon_path = os.path.join(script_dir, 'icon.png')
@@ -497,12 +489,11 @@ Name=ChronoTale Launcher
 Comment=Multidimensional Adventure Game Collection for {desktop_env.title()}
 Exec={exec_command}
 Icon={icon_path}
-Terminal=false
+Terminal=true
 Categories=Game;Adventure;
 StartupNotify=false
 Keywords=game;adventure;story;interactive;
-MimeType=
-X-Terminal-Options=--hold
+Path={script_dir}
 """
             
             with open(desktop_file_path, 'w') as f:
@@ -511,22 +502,31 @@ X-Terminal-Options=--hold
             # Make executable
             os.chmod(desktop_file_path, 0o755)
             
+            # Also create a simple backup launcher
+            simple_launcher = os.path.join(script_dir, 'chronotale_start.sh')
+            simple_content = f'''#!/bin/bash
+cd "{script_dir}"
+python3 launch.py
+echo "Press Enter to exit..."
+read
+'''
+            with open(simple_launcher, 'w') as f:
+                f.write(simple_content)
+            os.chmod(simple_launcher, 0o755)
+            
             print(color_text(f"█ Desktop shortcut created for {desktop_env.title()} at: {desktop_file_path}", Fore.GREEN))
             print(color_text(f"█ Using terminal: {terminal_cmd}", Fore.CYAN))
             print(color_text(f"█ Wrapper script created at: {wrapper_script}", Fore.CYAN))
-            print(color_text(f"█ Execute command: {exec_command}", Fore.YELLOW))
+            print(color_text(f"█ Simple launcher created at: {simple_launcher}", Fore.CYAN))
             
             # For Crostini, provide additional instructions
             if desktop_env == 'crostini':
                 print(color_text("█ Crostini detected - shortcut optimized for Chrome OS", Fore.CYAN))
-                print(color_text("█ You can also run from terminal: python3 launch.py", Fore.YELLOW))
             
-            # Test the wrapper script
-            print(color_text("█ Testing wrapper script creation...", Fore.CYAN))
-            if os.path.exists(wrapper_script):
-                print(color_text("█ Wrapper script created successfully", Fore.GREEN))
-            else:
-                print(color_text("█ Warning: Wrapper script creation failed", Fore.RED))
+            print(color_text("█ Alternative launch methods:", Fore.YELLOW))
+            print(color_text(f"█ 1. Double-click the desktop shortcut", Fore.CYAN))
+            print(color_text(f"█ 2. Run in terminal: ./chronotale_start.sh", Fore.CYAN))
+            print(color_text(f"█ 3. Direct launch: python3 launch.py", Fore.CYAN))
             
             return True
             
