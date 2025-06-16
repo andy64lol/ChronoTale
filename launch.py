@@ -83,7 +83,7 @@ def color_text(text: Any, color: Any) -> Any:
     return text
 
 def create_box(content: str, width: int = 80, title: str = "") -> str:
-    """Create a beautiful bordered box for content"""
+    """Create a beautiful bordered box for content with proper text wrapping"""
     lines = content.split('\n')
     box = []
     
@@ -102,10 +102,14 @@ def create_box(content: str, width: int = 80, title: str = "") -> str:
                    BORDER_CHARS['top_right'])
     box.append(top_line)
     
-    # Content lines
+    # Content lines with proper wrapping
+    content_width = width - 4  # Account for borders and padding
     for line in lines:
         if line.strip():
-            padded_line = f"{BORDER_CHARS['vertical']} {line:<{width-4}} {BORDER_CHARS['vertical']}"
+            # Truncate or wrap long lines
+            if len(line) > content_width:
+                line = line[:content_width-3] + "..."
+            padded_line = f"{BORDER_CHARS['vertical']} {line:<{content_width}} {BORDER_CHARS['vertical']}"
         else:
             padded_line = f"{BORDER_CHARS['vertical']}{' ' * (width-2)}{BORDER_CHARS['vertical']}"
         box.append(padded_line)
@@ -334,9 +338,20 @@ def games_menu(data: Any) -> Any:
             else:
                 status_info = "(Never played)"
             
-            games_content += f"{icon} [{idx}] {name:<35} - {desc}\n      {status_info}\n\n"
+            # Format game entry to fit within box width (76 chars max content)
+            game_line = f"{icon} [{idx}] {name}"
+            if len(game_line) + len(desc) + 3 <= 72:  # 3 for " - "
+                games_content += f"{game_line} - {desc}\n"
+            else:
+                # Truncate description if too long
+                available_space = 72 - len(game_line) - 3
+                truncated_desc = desc[:available_space-3] + "..." if len(desc) > available_space else desc
+                games_content += f"{game_line} - {truncated_desc}\n"
+            
+            games_content += f"     {status_info}\n\n"
 
-        games_content += f"🔙 [{len(all_games) + 1}] Return to Main Menu"
+        games_content = games_content.rstrip('\n')  # Remove trailing newline
+        games_content += f"\n🔙 [{len(all_games) + 1}] Return to Main Menu"
         
         print(color_text(create_box(games_content, 80, "SELECT A GAME"), Fore.WHITE))
         
@@ -384,19 +399,31 @@ def shop_menu(data: Any) -> Any:
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         display_banner()
-        print(color_text("█ Welcome to the Token Shop!", Fore.CYAN))
-        print(color_text("█ Available Items:\n", Fore.YELLOW))
+        
+        # Shop header with balance
+        shop_info = f"Token Balance: {data['tokens']} | Available Games: {len([g for g in purchasable_games if not any(pg[0] == g['name'] for pg in data['purchased_games'])])}"
+        print(color_text(create_box(shop_info, 80, "TOKEN SHOP"), Fore.CYAN))
 
-        # Display purchasable games
+        # Display purchasable games in enhanced format
+        shop_content = ""
         for idx, game in enumerate(purchasable_games, 1):
             purchased = any(g[0] == game["name"] and g[1] == game["file"] for g in data['purchased_games'])
-            status = color_text("Purchased", Fore.GREEN) if purchased else color_text(f"Cost: {game['cost']} Tokens", Fore.YELLOW)
-            print(color_text(f"█ [{idx}] {game['name']} - {status}", Fore.CYAN))
+            
+            if purchased:
+                status = "✓ OWNED"
+                game_line = f"🎮 [{idx}] {game['name']:<30} - {status}"
+            else:
+                status = f"{game['cost']} Tokens"
+                icon = "🛒" if data['tokens'] >= game['cost'] else "🔒"
+                game_line = f"{icon} [{idx}] {game['name']:<30} - {status}"
+            
+            shop_content += f"{game_line}\n"
 
-        print(color_text(f"█ [{len(purchasable_games)+1}] Back to Main Menu", Fore.RED))
-        print(color_text(f"\n█ Your current balance: {data['tokens']} Tokens", Fore.CYAN))
-
-        choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
+        shop_content += f"\n🔙 [{len(purchasable_games)+1}] Return to Main Menu"
+        
+        print(color_text(create_box(shop_content, 80, "AVAILABLE GAMES"), Fore.WHITE))
+        
+        choice = input(color_text("\n🛒 Enter your choice (1-{}): ".format(len(purchasable_games)+1), Fore.MAGENTA) + Style.RESET_ALL)
 
         try:
             choice_int = int(choice)
@@ -427,13 +454,26 @@ def shop_menu(data: Any) -> Any:
             time.sleep(1)
 
 def credits_menu() -> None:
-    """Display credits"""
+    """Display credits with enhanced UI"""
     os.system('cls' if os.name == 'nt' else 'clear')
     display_banner()
-    print(color_text("█ Credits:", Fore.CYAN))
-    print(color_text("█ Developed by andy64lol", Fore.GREEN))
-    print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
-    input(color_text("\n█ Press Enter to return to main menu...", Fore.YELLOW) + Style.RESET_ALL)
+    
+    credits_content = f"""Development Team:
+👨‍💻 Lead Developer: andy64lol
+🎨 UI Design: ChronoTale Team
+🎮 Game Collection: Community Contributors
+
+Framework Information:
+🐍 Python Runtime with Colorama
+🎯 Version: {VERSION}
+📅 Build Date: 2024
+
+Special Thanks:
+🌟 Beta Testers and Community
+🚀 Replit Platform Support"""
+
+    print(color_text(create_box(credits_content, 80, "CHRONOTALE CREDITS"), Fore.CYAN))
+    input(color_text("\n🔙 Press Enter to return to main menu...", Fore.YELLOW) + Style.RESET_ALL)
 
 def statistics_menu(data: Any) -> Any:
     """Display comprehensive statistics and achievements"""
@@ -493,26 +533,37 @@ def statistics_menu(data: Any) -> Any:
             time.sleep(1)
 
 def settings_menu(data: Any) -> Any:
-    """Display settings"""
+    """Display settings with enhanced UI"""
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         display_banner()
-        print(color_text("█ Settings:", Fore.CYAN))
-        print(color_text(f"█ [1] Toggle Colors: {'ON' if data['settings']['colors_enabled'] else 'OFF'}", Fore.CYAN))
-        print(color_text("█ [2] Back to Main Menu", Fore.RED))
-        print(color_text(f"\n█ Version: {VERSION}", Fore.YELLOW))
+        
+        # Settings header
+        settings_info = f"Current Configuration | Version: {VERSION}"
+        print(color_text(create_box(settings_info, 80, "LAUNCHER SETTINGS"), Fore.CYAN))
+        
+        # Settings options
+        color_status = "✓ ENABLED" if data['settings']['colors_enabled'] else "✗ DISABLED"
+        settings_content = f"""⚙️ [1] Color Theme: {color_status}
+      Toggle colorful text display throughout the launcher
 
-        choice = input(color_text("\n█ Select: ", Fore.YELLOW) + Style.RESET_ALL)
+🔙 [2] Return to Main Menu
+      Save settings and return to the main menu"""
+
+        print(color_text(create_box(settings_content, 80, "CONFIGURATION OPTIONS"), Fore.WHITE))
+
+        choice = input(color_text("\n⚙️ Select setting to modify (1-2): ", Fore.MAGENTA) + Style.RESET_ALL)
 
         if choice == '1':
             data['settings']['colors_enabled'] = not data['settings']['colors_enabled']
             save_game_data(data)
-            print(color_text(f"█ Colors {'enabled' if data['settings']['colors_enabled'] else 'disabled'}!", Fore.GREEN))
-            time.sleep(1)
+            status = "enabled" if data['settings']['colors_enabled'] else "disabled"
+            print(color_text(f"\n✓ Color theme {status} successfully!", Fore.GREEN))
+            time.sleep(1.5)
         elif choice == '2':
             return
         else:
-            print(color_text("█ Invalid input!", Fore.RED))
+            print(color_text("\n❌ Invalid selection!", Fore.RED))
             time.sleep(1)
 
 def main_menu() -> None:
