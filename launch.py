@@ -82,6 +82,26 @@ def color_text(text: Any, color: Any) -> Any:
         return color + text + Style.RESET_ALL
     return text
 
+def get_display_width(text: str) -> int:
+    """Calculate the display width of text, accounting for Unicode characters"""
+    # Simple approximation: count emojis and special chars as 2 spaces
+    width = 0
+    for char in text:
+        if ord(char) > 127:  # Non-ASCII character
+            width += 2
+        else:
+            width += 1
+    return width
+
+def pad_text_to_width(text: str, target_width: int) -> str:
+    """Pad text to exact display width, accounting for Unicode"""
+    display_width = get_display_width(text)
+    if display_width >= target_width:
+        return text
+    
+    padding_needed = target_width - display_width
+    return text + (' ' * padding_needed)
+
 def create_box(content: str, width: int = 80, title: str = "") -> str:
     """Create a properly aligned bordered box for content"""
     lines = content.split('\n')
@@ -93,12 +113,15 @@ def create_box(content: str, width: int = 80, title: str = "") -> str:
     # Top border with title
     if title:
         title_padded = f" {title} "
-        if len(title_padded) >= width - 2:
-            # Title too long, truncate
-            title_padded = f" {title[:width-6]}... "
+        title_display_width = get_display_width(title_padded)
         
-        title_start = (width - 2 - len(title_padded)) // 2
-        remaining_chars = width - 2 - title_start - len(title_padded)
+        if title_display_width >= width - 2:
+            # Title too long, truncate
+            title_padded = f" {title[:width-8]}... "
+            title_display_width = get_display_width(title_padded)
+        
+        title_start = (width - 2 - title_display_width) // 2
+        remaining_chars = width - 2 - title_start - title_display_width
         
         top_line = (BORDER_CHARS['top_left'] + 
                    BORDER_CHARS['horizontal'] * title_start +
@@ -119,11 +142,21 @@ def create_box(content: str, width: int = 80, title: str = "") -> str:
             padded_line = f"{BORDER_CHARS['vertical']}{' ' * (width-2)}{BORDER_CHARS['vertical']}"
         else:
             # Handle long lines by truncating
-            if len(line) > content_width:
-                line = line[:content_width-3] + "..."
+            line_display_width = get_display_width(line)
+            if line_display_width > content_width:
+                # Truncate carefully to account for display width
+                truncated = ""
+                current_width = 0
+                for char in line:
+                    char_width = 2 if ord(char) > 127 else 1
+                    if current_width + char_width > content_width - 3:
+                        break
+                    truncated += char
+                    current_width += char_width
+                line = truncated + "..."
             
             # Pad line to exact content width
-            padded_content = f"{line:<{content_width}}"
+            padded_content = pad_text_to_width(line, content_width)
             padded_line = f"{BORDER_CHARS['vertical']} {padded_content} {BORDER_CHARS['vertical']}"
         
         box.append(padded_line)
