@@ -432,10 +432,10 @@ def games_menu(data: Any) -> Any:
         
         # Game library header
         library_info = f"Total Games: {len(all_games)} | Sessions Played: {data['plays']} | Tokens Available: {data['tokens']}"
-        print(color_text(create_box(library_info, 80, "GAMES LIBRARY"), Fore.CYAN))
+        print(color_text(f"█ GAMES LIBRARY: {library_info}", Fore.CYAN))
+        print("\n" + "═" * 80 + "\n")
 
         # Display games in enhanced format
-        games_content = ""
         for idx, (name, file, icon, desc) in enumerate(all_games, 1):
             # Get game statistics if available
             game_stats = data['game_statistics'].get(os.path.splitext(os.path.basename(file))[0], {})
@@ -449,22 +449,10 @@ def games_menu(data: Any) -> Any:
             else:
                 status_info = "(Never played)"
             
-            # Format game entry to fit within box width (76 chars max content)
-            game_line = f"{icon} [{idx}] {name}"
-            if len(game_line) + len(desc) + 3 <= 72:  # 3 for " - "
-                games_content += f"{game_line} - {desc}\n"
-            else:
-                # Truncate description if too long
-                available_space = 72 - len(game_line) - 3
-                truncated_desc = desc[:available_space-3] + "..." if len(desc) > available_space else desc
-                games_content += f"{game_line} - {truncated_desc}\n"
-            
-            games_content += f"     {status_info}\n\n"
+            print(color_text(f"█ {icon} [{idx}] {name} - {desc}", Fore.WHITE))
+            print(color_text(f"     {status_info}", Fore.YELLOW))
 
-        games_content = games_content.rstrip('\n')  # Remove trailing newline
-        games_content += f"\n🔙 [{len(all_games) + 1}] Return to Main Menu"
-        
-        print(color_text(create_box(games_content, 80, "SELECT A GAME"), Fore.WHITE))
+        print(color_text(f"\n█ 🔙 [{len(all_games) + 1}] Return to Main Menu", Fore.RED))
         
         choice = input(color_text("\n🎮 Choose your adventure (1-{}): ".format(len(all_games) + 1), Fore.MAGENTA) + Style.RESET_ALL)
 
@@ -513,26 +501,22 @@ def shop_menu(data: Any) -> Any:
         
         # Shop header with balance
         shop_info = f"Token Balance: {data['tokens']} | Available Games: {len([g for g in purchasable_games if not any(pg[0] == g['name'] for pg in data['purchased_games'])])}"
-        print(color_text(create_box(shop_info, 80, "TOKEN SHOP"), Fore.CYAN))
+        print(color_text(f"█ TOKEN SHOP: {shop_info}", Fore.CYAN))
+        print("\n" + "═" * 80 + "\n")
 
         # Display purchasable games in enhanced format
-        shop_content = ""
         for idx, game in enumerate(purchasable_games, 1):
             purchased = any(g[0] == game["name"] and g[1] == game["file"] for g in data['purchased_games'])
             
             if purchased:
                 status = "✓ OWNED"
-                game_line = f"🎮 [{idx}] {game['name']:<30} - {status}"
+                print(color_text(f"█ 🎮 [{idx}] {game['name']:<30} - {status}", Fore.GREEN))
             else:
                 status = f"{game['cost']} Tokens"
                 icon = "🛒" if data['tokens'] >= game['cost'] else "🔒"
-                game_line = f"{icon} [{idx}] {game['name']:<30} - {status}"
-            
-            shop_content += f"{game_line}\n"
+                print(color_text(f"█ {icon} [{idx}] {game['name']:<30} - {status}", Fore.WHITE))
 
-        shop_content += f"\n🔙 [{len(purchasable_games)+1}] Return to Main Menu"
-        
-        print(color_text(create_box(shop_content, 80, "AVAILABLE GAMES"), Fore.WHITE))
+        print(color_text(f"\n█ 🔙 [{len(purchasable_games)+1}] Return to Main Menu", Fore.RED))
         
         choice = input(color_text("\n🛒 Enter your choice (1-{}): ".format(len(purchasable_games)+1), Fore.MAGENTA) + Style.RESET_ALL)
 
@@ -569,21 +553,21 @@ def credits_menu() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
     display_banner()
     
-    credits_content = f"""Development Team:
-👨‍💻 Lead Developer: andy64lol
-🎨 UI Design: ChronoTale Team
-🎮 Game Collection: Community Contributors
-
-Framework Information:
-🐍 Python Runtime with Colorama
-🎯 Version: {VERSION}
-📅 Build Date: 2025
-
-Special Thanks:
-🌟 Beta Testers and Community
-🚀 Replit Platform Support"""
-
-    print(color_text(create_box(credits_content, 80, "CHRONOTALE CREDITS"), Fore.CYAN))
+    print(color_text("█ CHRONOTALE CREDITS:", Fore.CYAN))
+    print("\n" + "═" * 80 + "\n")
+    print(color_text("█ Development Team:", Fore.MAGENTA))
+    print(color_text("█ 👨‍💻 Lead Developer: andy64lol", Fore.GREEN))
+    print(color_text("█ 🎨 UI Design: ChronoTale Team", Fore.GREEN))
+    print(color_text("█ 🎮 Game Collection: Community Contributors", Fore.GREEN))
+    print()
+    print(color_text("█ Framework Information:", Fore.MAGENTA))
+    print(color_text("█ 🐍 Python Runtime with Colorama", Fore.WHITE))
+    print(color_text(f"█ 🎯 Version: {VERSION}", Fore.WHITE))
+    print(color_text("█ 📅 Build Date: 2025", Fore.WHITE))
+    print()
+    print(color_text("█ Special Thanks:", Fore.MAGENTA))
+    print(color_text("█ 🌟 Beta Testers and Community", Fore.WHITE))
+    print(color_text("█ 🚀 Replit Platform Support", Fore.WHITE))
     input(color_text("\n🔙 Press Enter to return to main menu...", Fore.YELLOW) + Style.RESET_ALL)
 
 def statistics_menu(data: Any) -> Any:
@@ -651,21 +635,20 @@ def settings_menu(data: Any) -> Any:
         
         # Settings header
         settings_info = f"Current Configuration | Version: {VERSION}"
-        print(color_text(create_box(settings_info, 80, "LAUNCHER SETTINGS"), Fore.CYAN))
+        print(color_text(f"█ LAUNCHER SETTINGS: {settings_info}", Fore.CYAN))
+        print("\n" + "═" * 80 + "\n")
         
         # Settings options
         color_status = "✓ ENABLED" if data['settings']['colors_enabled'] else "✗ DISABLED"
         
-        settings_content = f"""⚙️ [1] Color Theme: {color_status}
-      Toggle colorful text display throughout the launcher
-
-📜 [2] Generate Terminal Shortcut
-      Create a shell command to launch ChronoTale from anywhere
-
-🔙 [3] Return to Main Menu
-      Save settings and return to the main menu"""
-
-        print(color_text(create_box(settings_content, 80, "CONFIGURATION OPTIONS"), Fore.WHITE))
+        print(color_text(f"█ ⚙️ [1] Color Theme: {color_status}", Fore.WHITE))
+        print(color_text("     Toggle colorful text display throughout the launcher", Fore.YELLOW))
+        print()
+        print(color_text("█ 📜 [2] Generate Terminal Shortcut", Fore.WHITE))
+        print(color_text("     Create a shell command to launch ChronoTale from anywhere", Fore.YELLOW))
+        print()
+        print(color_text("█ 🔙 [3] Return to Main Menu", Fore.RED))
+        print(color_text("     Save settings and return to the main menu", Fore.YELLOW))
 
         choice = input(color_text("\n⚙️ Select setting to modify (1-3): ", Fore.MAGENTA) + Style.RESET_ALL)
 
@@ -682,7 +665,9 @@ def settings_menu(data: Any) -> Any:
             
             # Display instructions
             instructions = generate_shell_command_instructions()
-            print(color_text(create_box(instructions, 80, "TERMINAL SHORTCUT SETUP"), Fore.CYAN))
+            print(color_text("█ TERMINAL SHORTCUT SETUP:", Fore.CYAN))
+            print("\n" + "═" * 80 + "\n")
+            print(color_text(instructions, Fore.WHITE))
             
             # Ask if user wants to generate the script file
             generate = input(color_text("\nGenerate 'chronotale' script file? (y/n): ", Fore.YELLOW) + Style.RESET_ALL)
@@ -716,21 +701,21 @@ def main_menu() -> None:
         if data['last_played']:
             status_content += f" | Last Played: {data['last_played']}"
         
-        print(color_text(create_box(status_content, 80, "PLAYER STATUS"), Fore.CYAN))
+        print(color_text(f"█ PLAYER STATUS: {status_content}", Fore.CYAN))
+        print("\n" + "═" * 80 + "\n")
         
         # Enhanced main menu with icons and descriptions
-        menu_content = """🎮 [1] Games Library           - Browse and launch your game collection
-🛒 [2] Token Shop              - Purchase new games with earned tokens  
-📊 [3] Statistics & Achievements - View your gaming progress and unlocks
-👨‍💻 [4] Credits                 - Meet the development team
-⚙️  [5] Settings               - Customize your launcher experience
-❌ [6] Exit Launcher           - Close the ChronoTale launcher"""
-
-        print(color_text(create_box(menu_content, 80, "MAIN MENU"), Fore.WHITE))
+        print(color_text("█ MAIN MENU:", Fore.MAGENTA))
+        print(color_text("█ 🎮 [1] Games Library           - Browse and launch your game collection", Fore.WHITE))
+        print(color_text("█ 🛒 [2] Token Shop              - Purchase new games with earned tokens", Fore.WHITE))
+        print(color_text("█ 📊 [3] Statistics & Achievements - View your gaming progress and unlocks", Fore.WHITE))
+        print(color_text("█ 👨‍💻 [4] Credits                 - Meet the development team", Fore.WHITE))
+        print(color_text("█ ⚙️  [5] Settings               - Customize your launcher experience", Fore.WHITE))
+        print(color_text("█ ❌ [6] Exit Launcher           - Close the ChronoTale launcher", Fore.WHITE))
         
         # Random tip display
         tip = get_random_tip()
-        print(color_text(create_box(tip, 80, "DAILY TIP"), Fore.YELLOW))
+        print(color_text(f"\n█ DAILY TIP: {tip}", Fore.YELLOW))
         
         choice = input(color_text("\n🎯 Enter your choice (1-6): ", Fore.MAGENTA) + Style.RESET_ALL)
 
