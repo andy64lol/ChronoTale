@@ -82,26 +82,6 @@ def color_text(text: Any, color: Any) -> Any:
         return color + text + Style.RESET_ALL
     return text
 
-def get_display_width(text: str) -> int:
-    """Calculate the display width of text, accounting for Unicode characters"""
-    # Simple approximation: count emojis and special chars as 2 spaces
-    width = 0
-    for char in text:
-        if ord(char) > 127:  # Non-ASCII character
-            width += 2
-        else:
-            width += 1
-    return width
-
-def pad_text_to_width(text: str, target_width: int) -> str:
-    """Pad text to exact display width, accounting for Unicode"""
-    display_width = get_display_width(text)
-    if display_width >= target_width:
-        return text
-    
-    padding_needed = target_width - display_width
-    return text + (' ' * padding_needed)
-
 def create_box(content: str, width: int = 80, title: str = "") -> str:
     """Create a properly aligned bordered box for content"""
     lines = content.split('\n')
@@ -113,15 +93,16 @@ def create_box(content: str, width: int = 80, title: str = "") -> str:
     # Top border with title
     if title:
         title_padded = f" {title} "
-        title_display_width = get_display_width(title_padded)
+        # Use simple length for title positioning
+        title_len = len(title_padded)
         
-        if title_display_width >= width - 2:
+        if title_len >= width - 2:
             # Title too long, truncate
             title_padded = f" {title[:width-8]}... "
-            title_display_width = get_display_width(title_padded)
+            title_len = len(title_padded)
         
-        title_start = (width - 2 - title_display_width) // 2
-        remaining_chars = width - 2 - title_start - title_display_width
+        title_start = (width - 2 - title_len) // 2
+        remaining_chars = width - 2 - title_start - title_len
         
         top_line = (BORDER_CHARS['top_left'] + 
                    BORDER_CHARS['horizontal'] * title_start +
@@ -141,22 +122,16 @@ def create_box(content: str, width: int = 80, title: str = "") -> str:
             # Empty line
             padded_line = f"{BORDER_CHARS['vertical']}{' ' * (width-2)}{BORDER_CHARS['vertical']}"
         else:
-            # Handle long lines by truncating
-            line_display_width = get_display_width(line)
-            if line_display_width > content_width:
-                # Truncate carefully to account for display width
-                truncated = ""
-                current_width = 0
-                for char in line:
-                    char_width = 2 if ord(char) > 127 else 1
-                    if current_width + char_width > content_width - 3:
-                        break
-                    truncated += char
-                    current_width += char_width
-                line = truncated + "..."
+            # Simple truncation based on character count, not display width
+            if len(line) > content_width:
+                line = line[:content_width-3] + "..."
             
-            # Pad line to exact content width
-            padded_content = pad_text_to_width(line, content_width)
+            # Simple padding - let terminal handle Unicode display
+            spaces_needed = content_width - len(line)
+            if spaces_needed < 0:
+                spaces_needed = 0
+            
+            padded_content = line + (' ' * spaces_needed)
             padded_line = f"{BORDER_CHARS['vertical']} {padded_content} {BORDER_CHARS['vertical']}"
         
         box.append(padded_line)
@@ -602,7 +577,7 @@ def credits_menu() -> None:
 Framework Information:
 🐍 Python Runtime with Colorama
 🎯 Version: {VERSION}
-📅 Build Date: 2024
+📅 Build Date: 2025
 
 Special Thanks:
 🌟 Beta Testers and Community
