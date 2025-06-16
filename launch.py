@@ -83,35 +83,49 @@ def color_text(text: Any, color: Any) -> Any:
     return text
 
 def create_box(content: str, width: int = 80, title: str = "") -> str:
-    """Create a beautiful bordered box for content with proper text wrapping"""
+    """Create a properly aligned bordered box for content"""
     lines = content.split('\n')
     box = []
     
-    # Top border
+    # Calculate exact content width (total width minus 2 border chars minus 2 padding spaces)
+    content_width = width - 4
+    
+    # Top border with title
     if title:
         title_padded = f" {title} "
-        title_start = (width - len(title_padded)) // 2
+        if len(title_padded) >= width - 2:
+            # Title too long, truncate
+            title_padded = f" {title[:width-6]}... "
+        
+        title_start = (width - 2 - len(title_padded)) // 2
+        remaining_chars = width - 2 - title_start - len(title_padded)
+        
         top_line = (BORDER_CHARS['top_left'] + 
                    BORDER_CHARS['horizontal'] * title_start +
                    title_padded +
-                   BORDER_CHARS['horizontal'] * (width - title_start - len(title_padded) - 1) +
+                   BORDER_CHARS['horizontal'] * remaining_chars +
                    BORDER_CHARS['top_right'])
     else:
         top_line = (BORDER_CHARS['top_left'] + 
                    BORDER_CHARS['horizontal'] * (width - 2) + 
                    BORDER_CHARS['top_right'])
+    
     box.append(top_line)
     
-    # Content lines with proper wrapping
-    content_width = width - 4  # Account for borders and padding
+    # Process content lines
     for line in lines:
-        if line.strip():
-            # Truncate or wrap long lines
+        if line.strip() == "":
+            # Empty line
+            padded_line = f"{BORDER_CHARS['vertical']}{' ' * (width-2)}{BORDER_CHARS['vertical']}"
+        else:
+            # Handle long lines by truncating
             if len(line) > content_width:
                 line = line[:content_width-3] + "..."
-            padded_line = f"{BORDER_CHARS['vertical']} {line:<{content_width}} {BORDER_CHARS['vertical']}"
-        else:
-            padded_line = f"{BORDER_CHARS['vertical']}{' ' * (width-2)}{BORDER_CHARS['vertical']}"
+            
+            # Pad line to exact content width
+            padded_content = f"{line:<{content_width}}"
+            padded_line = f"{BORDER_CHARS['vertical']} {padded_content} {BORDER_CHARS['vertical']}"
+        
         box.append(padded_line)
     
     # Bottom border
@@ -155,6 +169,95 @@ def get_random_tip() -> str:
         "💡 Tip: Settings can be customized to your preference!"
     ]
     return random.choice(tips)
+
+def create_terminal_shortcut() -> str:
+    """Create a terminal shortcut script for ChronoTale launcher"""
+    script_content = '''#!/bin/bash
+
+# ChronoTale Launcher Terminal Shortcut
+# This script automatically navigates to ChronoTale directory, activates venv, and runs the launcher
+
+# Store the current directory to return to later
+ORIGINAL_DIR=$(pwd)
+
+# Function to handle cleanup on exit
+cleanup() {
+    echo "Cleaning up..."
+    cd "$ORIGINAL_DIR"
+    if [[ "$VIRTUAL_ENV" != "" ]]; then
+        deactivate 2>/dev/null
+    fi
+    echo "Returned to original directory and deactivated virtual environment."
+}
+
+# Set trap to call cleanup function on script exit
+trap cleanup EXIT
+
+# Navigate to ChronoTale directory
+if [[ -d "ChronoTale" ]]; then
+    cd ChronoTale
+    echo "Navigated to ChronoTale directory"
+elif [[ -d "../ChronoTale" ]]; then
+    cd ../ChronoTale
+    echo "Navigated to ChronoTale directory"
+else
+    echo "ChronoTale directory not found. Please run this script from the project root or ChronoTale directory."
+    exit 1
+fi
+
+# Check if virtual environment exists and activate it
+if [[ -d "venv" ]]; then
+    echo "Activating virtual environment..."
+    source venv/bin/activate
+    echo "Virtual environment activated"
+elif [[ -d "../venv" ]]; then
+    echo "Activating virtual environment..."
+    source ../venv/bin/activate
+    echo "Virtual environment activated"
+else
+    echo "Virtual environment not found. Running without venv."
+fi
+
+# Run the ChronoTale launcher
+echo "Starting ChronoTale Launcher..."
+python launch.py
+
+# Cleanup will be handled automatically by the trap
+'''
+    return script_content
+
+def generate_shell_command_instructions() -> str:
+    """Generate instructions for setting up the terminal shortcut"""
+    instructions = """Terminal Shortcut Setup Instructions:
+
+1. Create the shortcut script:
+   Create a file called 'chronotale' (without extension) with the script content
+
+2. Make it executable:
+   chmod +x chronotale
+
+3. Move to system PATH (choose one option):
+   
+   Option A - User-only (recommended):
+   mkdir -p ~/.local/bin
+   mv chronotale ~/.local/bin/
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+   source ~/.bashrc
+
+   Option B - System-wide (requires sudo):
+   sudo mv chronotale /usr/local/bin/
+
+4. Usage:
+   From anywhere in terminal, just type: chronotale
+
+Features:
+• Automatically navigates to ChronoTale directory
+• Activates virtual environment if present
+• Runs the launcher
+• Returns to original directory on exit
+• Deactivates venv automatically on cleanup"""
+    
+    return instructions
 
 # Core functions
 def display_banner() -> None:
@@ -544,15 +647,19 @@ def settings_menu(data: Any) -> Any:
         
         # Settings options
         color_status = "✓ ENABLED" if data['settings']['colors_enabled'] else "✗ DISABLED"
+        
         settings_content = f"""⚙️ [1] Color Theme: {color_status}
       Toggle colorful text display throughout the launcher
 
-🔙 [2] Return to Main Menu
+📜 [2] Generate Terminal Shortcut
+      Create a shell command to launch ChronoTale from anywhere
+
+🔙 [3] Return to Main Menu
       Save settings and return to the main menu"""
 
         print(color_text(create_box(settings_content, 80, "CONFIGURATION OPTIONS"), Fore.WHITE))
 
-        choice = input(color_text("\n⚙️ Select setting to modify (1-2): ", Fore.MAGENTA) + Style.RESET_ALL)
+        choice = input(color_text("\n⚙️ Select setting to modify (1-3): ", Fore.MAGENTA) + Style.RESET_ALL)
 
         if choice == '1':
             data['settings']['colors_enabled'] = not data['settings']['colors_enabled']
@@ -561,6 +668,29 @@ def settings_menu(data: Any) -> Any:
             print(color_text(f"\n✓ Color theme {status} successfully!", Fore.GREEN))
             time.sleep(1.5)
         elif choice == '2':
+            # Generate terminal shortcut
+            os.system('cls' if os.name == 'nt' else 'clear')
+            display_banner()
+            
+            # Display instructions
+            instructions = generate_shell_command_instructions()
+            print(color_text(create_box(instructions, 80, "TERMINAL SHORTCUT SETUP"), Fore.CYAN))
+            
+            # Ask if user wants to generate the script file
+            generate = input(color_text("\nGenerate 'chronotale' script file? (y/n): ", Fore.YELLOW) + Style.RESET_ALL)
+            
+            if generate.lower() == 'y':
+                script_content = create_terminal_shortcut()
+                try:
+                    with open('chronotale', 'w') as f:
+                        f.write(script_content)
+                    print(color_text("✓ Generated 'chronotale' script file!", Fore.GREEN))
+                    print(color_text("Run 'chmod +x chronotale' to make it executable", Fore.YELLOW))
+                except Exception as e:
+                    print(color_text(f"❌ Error creating script: {e}", Fore.RED))
+                
+                input(color_text("\nPress Enter to continue...", Fore.YELLOW) + Style.RESET_ALL)
+        elif choice == '3':
             return
         else:
             print(color_text("\n❌ Invalid selection!", Fore.RED))
