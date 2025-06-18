@@ -234,36 +234,44 @@ python launch.py
 '''
     return script_content
 
+def auto_install_shortcut():
+    """Automatically install the terminal shortcut using the installer script"""
+    try:
+        import subprocess
+        result = subprocess.run(['python3', 'install_shortcut.py'], 
+                              capture_output=True, text=True, cwd=os.getcwd())
+        
+        if result.returncode == 0:
+            print(color_text("✅ Terminal shortcut installed successfully!", Fore.GREEN))
+            print(color_text(result.stdout, Fore.WHITE))
+            return True
+        else:
+            print(color_text("❌ Installation failed:", Fore.RED))
+            print(color_text(result.stderr, Fore.RED))
+            return False
+    except Exception as e:
+        print(color_text(f"❌ Error during installation: {e}", Fore.RED))
+        return False
+
 def generate_shell_command_instructions() -> str:
     """Generate instructions for setting up the terminal shortcut"""
-    instructions = """Terminal Shortcut Setup Instructions:
+    instructions = """Automatic Terminal Shortcut Installation:
 
-1. Create the shortcut script:
-   Create a file called 'chronotale' (without extension) with the script content
+The installer will:
+🔹 Create the 'chronotale' command script
+🔹 Install it to ~/.local/bin/chronotale
+🔹 Update your shell profile (bashrc/zshrc) 
+🔹 Make it executable automatically
+🔹 Test the installation
 
-2. Make it executable:
-   chmod +x chronotale
-
-3. Move to system PATH (choose one option):
-   
-   Option A - User-only (recommended):
-   mkdir -p ~/.local/bin
-   mv chronotale ~/.local/bin/
-   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-   source ~/.bashrc
-
-   Option B - System-wide (requires sudo):
-   sudo mv chronotale /usr/local/bin/
-
-4. Usage:
-   From anywhere in terminal, just type: chronotale
+After installation, use:
+$ chronotale
 
 Features:
 • Automatically navigates to ChronoTale directory
 • Activates virtual environment if present
-• Runs the launcher
-• Returns to original directory on exit
-• Deactivates venv automatically on cleanup"""
+• Runs the launcher with full cleanup
+• Returns to original directory on exit"""
     
     return instructions
 
@@ -644,8 +652,8 @@ def settings_menu(data: Any) -> Any:
         print(color_text(f"█ ⚙️ [1] Color Theme: {color_status}", Fore.WHITE))
         print(color_text("     Toggle colorful text display throughout the launcher", Fore.YELLOW))
         print()
-        print(color_text("█ 📜 [2] Generate Terminal Shortcut", Fore.WHITE))
-        print(color_text("     Create a shell command to launch ChronoTale from anywhere", Fore.YELLOW))
+        print(color_text("█ 📜 [2] Complete Automated Setup", Fore.WHITE))
+        print(color_text("     Full automation: dependencies, global command, PATH configuration", Fore.YELLOW))
         print()
         print(color_text("█ 🔙 [3] Return to Main Menu", Fore.RED))
         print(color_text("     Save settings and return to the main menu", Fore.YELLOW))
@@ -659,30 +667,48 @@ def settings_menu(data: Any) -> Any:
             print(color_text(f"\n✓ Color theme {status} successfully!", Fore.GREEN))
             time.sleep(1.5)
         elif choice == '2':
-            # Generate terminal shortcut
+            # Complete automated setup
             os.system('cls' if os.name == 'nt' else 'clear')
             display_banner()
             
-            # Display instructions
-            instructions = generate_shell_command_instructions()
-            print(color_text("█ TERMINAL SHORTCUT SETUP:", Fore.CYAN))
+            print(color_text("█ COMPLETE AUTOMATED SETUP:", Fore.CYAN))
             print("\n" + "═" * 80 + "\n")
-            print(color_text(instructions, Fore.WHITE))
+            print(color_text("This will automatically:", Fore.WHITE))
+            print(color_text("• Install dependencies", Fore.WHITE))
+            print(color_text("• Create global chronotale command", Fore.WHITE))
+            print(color_text("• Update PATH environment", Fore.WHITE))
+            print(color_text("• Configure shell profiles", Fore.WHITE))
+            print(color_text("• Make command immediately available", Fore.WHITE))
             
-            # Ask if user wants to generate the script file
-            generate = input(color_text("\nGenerate 'chronotale' script file? (y/n): ", Fore.YELLOW) + Style.RESET_ALL)
+            install = input(color_text("\nRun complete automated setup? (y/n): ", Fore.YELLOW) + Style.RESET_ALL)
             
-            if generate.lower() == 'y':
-                script_content = create_terminal_shortcut()
+            if install.lower() in ['y', 'yes']:
+                print(color_text("\nStarting complete automation...", Fore.CYAN))
                 try:
-                    with open('chronotale', 'w') as f:
-                        f.write(script_content)
-                    print(color_text("✓ Generated 'chronotale' script file!", Fore.GREEN))
-                    print(color_text("Run 'chmod +x chronotale' to make it executable", Fore.YELLOW))
+                    import subprocess
+                    result = subprocess.run([sys.executable, 'setup.py'], 
+                                          capture_output=True, text=True, cwd=os.getcwd())
+                    
+                    if result.returncode == 0:
+                        print(color_text("Setup completed successfully!", Fore.GREEN))
+                        print(color_text(result.stdout, Fore.WHITE))
+                        
+                        # Update current process PATH
+                        import pathlib
+                        local_bin = pathlib.Path.home() / ".local" / "bin"
+                        current_path = os.environ.get('PATH', '')
+                        os.environ['PATH'] = f"{local_bin}:{current_path}"
+                        
+                        print(color_text("chronotale command is now available in this session!", Fore.GREEN))
+                    else:
+                        print(color_text("Setup encountered issues:", Fore.RED))
+                        print(color_text(result.stderr, Fore.RED))
                 except Exception as e:
-                    print(color_text(f"❌ Error creating script: {e}", Fore.RED))
-                
-                input(color_text("\nPress Enter to continue...", Fore.YELLOW) + Style.RESET_ALL)
+                    print(color_text(f"Setup error: {e}", Fore.RED))
+            else:
+                print(color_text("Setup cancelled.", Fore.YELLOW))
+            
+            input(color_text("\nPress Enter to return to settings...", Fore.YELLOW) + Style.RESET_ALL)
         elif choice == '3':
             return
         else:
