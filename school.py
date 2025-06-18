@@ -804,7 +804,7 @@ class AdvancedNameGenerator:
     """Enhanced name generation system with sophisticated patterns"""
     
     @staticmethod
-    def generate_random_name(nationality: str = None, gender: str = None, style: str = "normal") -> Dict[str, str]:
+    def generate_random_name(nationality: Optional[str] = None, gender: Optional[str] = None, style: str = "normal") -> Dict[str, str]:
         """Generate a random name with enhanced variety and cultural authenticity
         
         Args:
@@ -866,7 +866,7 @@ class AdvancedNameGenerator:
         }
     
     @staticmethod
-    def generate_teacher_name(subject: str = None) -> Dict[str, str]:
+    def generate_teacher_name(subject: Optional[str] = None) -> Dict[str, str]:
         """Generate appropriate teacher names with sensei honorifics"""
         # Teachers are primarily Japanese with some international faculty
         if random.random() < 0.85:  # 85% Japanese teachers
@@ -893,7 +893,7 @@ class AdvancedNameGenerator:
         return name_info
     
     @staticmethod
-    def generate_student_batch(count: int, year_level: int = None) -> List[Dict[str, Any]]:
+    def generate_student_batch(count: int, year_level: Optional[int] = None) -> List[Dict[str, Any]]:
         """Generate a batch of students with diverse backgrounds and realistic distribution"""
         students = []
         
@@ -12181,7 +12181,8 @@ def show_alignment_status() -> Any:
     
     print(f"{Fore.WHITE}{create_alignment_bar(alignment['good_bad'], 'Evil', 'Good')}{Style.RESET_ALL}")
     print(f"{Fore.WHITE}{create_alignment_bar(alignment['selfish_selfless'], 'Selfish', 'Selfless')}{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}{create_alignment_bar(alignment['teacher_student'], 'Rebel', 'Teacher\'s Pet')}{Style.RESET_ALL}")
+    teachers_pet_label = "Teacher's Pet"
+    print(f"{Fore.WHITE}{create_alignment_bar(alignment['teacher_student'], 'Rebel', teachers_pet_label)}{Style.RESET_ALL}")
     
     print(f"\n{Fore.YELLOW}Overall Character: {get_alignment_description()}{Style.RESET_ALL}")
     
