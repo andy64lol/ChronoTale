@@ -15,7 +15,7 @@ import time
 import json
 import re
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Union, Set, Tuple
+from typing import Tuple
 from colorama import init, Fore, Style, Back
 
 # Initialize colorama for cross-platform colored terminal output
@@ -1266,7 +1266,6 @@ class NovaSecInterpreter(CodeInterpreter):
         self.control_stack = []  # For if/else/loop control flow
         self.code_blocks = {}  # For storing code blocks
         self.current_scope = "global"  # Track current scope for variables
-        self.output = []
 
         # Specialization benefits
         self.has_data_analysis = False
