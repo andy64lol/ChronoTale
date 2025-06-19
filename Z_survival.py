@@ -9,7 +9,7 @@ Use /help to see available commands.
 """
 
 import random
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Any, Optional
 import time
 import os
 import json
@@ -20,8 +20,6 @@ from colorama import init, Fore, Style
 
 # Initialize colorama for cross-platform colored terminal output
 init(autoreset=True)
-
-# Python3 restriction removed
 
 # Create saves directory if it doesn't exist
 SAVES_FOLDER = "saves"
@@ -5116,10 +5114,14 @@ Tips:
         print(Colors.colorize("\n=== CHARACTER STATUS ===", Colors.BOLD + Colors.YELLOW))
         print(f"Name: {Colors.colorize(self.player['name'], Colors.GREEN)}")
         print(f"Level: {Colors.colorize(str(self.player['level']), Colors.CYAN)}")
-        print(f"Health: {Colors.colorize(f"{self.player['health']}/{MAX_HEALTH}", Colors.health_color(self.player['health'], MAX_HEALTH))}")
-        print(f"Stamina: {Colors.colorize(f"{self.player['stamina']}/{MAX_STAMINA}", Colors.health_color(self.player['stamina'], MAX_STAMINA))}")
+        health_str = f"{self.player['health']}/{MAX_HEALTH}"
+        stamina_str = f"{self.player['stamina']}/{MAX_STAMINA}"
+        print(f"Health: {Colors.colorize(health_str, Colors.health_color(self.player['health'], MAX_HEALTH))}")
+        print(f"Stamina: {Colors.colorize(stamina_str, Colors.health_color(self.player['stamina'], MAX_STAMINA))}")
         print(f"Day: {Colors.colorize(str(self.player['day']), Colors.YELLOW)}")
-        print(f"Time: {Colors.colorize(f"{self.player['hour']:02d}:00", Colors.YELLOW)}")
+        hour_str = f"{self.player['hour']:02d}"
+        time_str = f"{hour_str}:00"
+        print(f"Time: {Colors.colorize(time_str, Colors.YELLOW)}")
         print(f"Location: {Colors.colorize(self.player['location'].replace('_', ' ').title(), Colors.CYAN)}")
     
     def _show_inventory(self) -> Any:
@@ -6376,7 +6378,7 @@ Tips:
             return True
         return False
 
-    def add_to_inventory(self, item_id: Any, count: int = 1) -> None:
+    def add_to_inventory(self, item_id: Any, count: int = 1) -> bool:
         """Add an item to player's inventory."""
         if len(self.player["inventory"]) >= MAX_INVENTORY_SLOTS:
             print("Your inventory is full! Drop something first.")
@@ -6403,7 +6405,7 @@ Tips:
             return True
         return False
 
-    def remove_from_inventory(self, item_idx: Any, count: int = 1) -> None:
+    def remove_from_inventory(self, item_idx: Any, count: int = 1) -> bool:
         """Remove an item from player's inventory."""
         if 0 <= item_idx < len(self.player["inventory"]):
             item = self.player["inventory"][item_idx]
@@ -6708,6 +6710,8 @@ Tips:
                         and zombie_type == "stalker"
                     ):
                         self.complete_mission(mission_id)
+        
+        return False
 
     def complete_mission(self, mission_id: Any) -> Any:
         """Complete a mission and give rewards."""
@@ -6808,6 +6812,8 @@ Tips:
             print("\n*** NEW MISSION AVAILABLE: Town Terror ***")
             print(MISSIONS["town_terror"]["description"])
             print("WARNING: This mission involves a powerful boss zombie!")
+        
+        return True
 
     # Command functions
     def cmd_help(self, *args: Any) -> Any:
@@ -7245,11 +7251,9 @@ Tips:
         # Looking around consumes time
         self.advance_time("look")
 
-    def update_survival_stats(self, hours: int = 1) -> None:
+    def update_survival_stats(self, hours: float = 1) -> None:
         """Update hunger, thirst, sleep and other stats as time passes."""
-        # Convert hours to int if it's a float
-        hours = int(hours) if isinstance(hours, float) else hours
-        # Convert hours to float if it's not already (for handling decimal hours)
+        # Ensure hours is a float for calculations
         hours = float(hours)
         hardcore_mode = self.player.get("hardcore_mode", False)
 
@@ -16367,4 +16371,7 @@ if __name__ == "__main__":
     else:
         print(f"{Fore.RED}This game should be launched through the launch.py launcher.")
         print(f"{Fore.YELLOW}Please run 'python launch.py' to access all games.")
-        input("Press Enter to exit...")
+        try:
+            input("Press Enter to exit...")
+        except (EOFError, KeyboardInterrupt):
+            pass
