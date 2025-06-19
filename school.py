@@ -1518,7 +1518,7 @@ ASCII_ART = """    {}____________________________
    |{}                            {}|
    |{}    My First Day Here:      {}|
    |{}    Campus Life Edition     {}|
-   |____________________________| {}""".format(Fore.MAGENTA, Fore.CYAN, Fore.WHITE, Style.RESET_ALL)
+   |{}____________________________{}|""".format(Fore.MAGENTA, Fore.CYAN, Fore.WHITE, Fore.CYAN, Fore.WHITE, Fore.CYAN, Fore.WHITE, Fore.MAGENTA, Style.RESET_ALL)
 
 # Weather system variables
 WEATHER_TYPES = ["sunny", "cloudy", "rainy", "stormy", "foggy", "snowy", "windy"]
