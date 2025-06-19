@@ -13,10 +13,23 @@ from colorama import init, Fore, Back, Style
 os.environ["FORCE_COLOR"] = "1"  # Force colors in certain environments
 os.environ["TERM"] = os.environ.get("TERM", "xterm-256color")  # Set terminal type if not defined
 
-if platform.system() == "Windows":
-    init(autoreset=True, convert=True)
-else:
-    init(autoreset=False, strip=False)  # Don't auto-reset for better color control
+# Initialize colorama with proper settings for all environments
+init(autoreset=True, convert=True, strip=False)
+
+# Color handling utility functions
+def safe_color_print(text: str, color: str = Fore.WHITE, style: str = "", end: str = "\n") -> None:
+    """Safely print colored text with proper ANSI handling"""
+    try:
+        formatted_text = f"{style}{color}{text}{Style.RESET_ALL}"
+        print(formatted_text, end=end)
+    except Exception:
+        print(text, end=end)
+
+def strip_ansi_codes(text: str) -> str:
+    """Remove ANSI escape codes from text"""
+    import re
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)
 
 # Game Settings
 game_settings = {
@@ -1034,17 +1047,17 @@ def content_settings_menu() -> Any:
     while True:
         print(f"\n{Fore.CYAN}===== CONTENT SETTINGS ====={Style.RESET_ALL}")
         print(
-            "1. Allow Bullying Events: {0}".format(
+            "1. Allow Bullying Events: {}".format(
                 "Yes" if game_settings["allow_bullying"] else "No"
             )
         )
         print(
-            "2. Allow Cuss Words: {0}".format(
+            "2. Allow Cuss Words: {}".format(
                 "Yes" if game_settings["allow_cuss_words"] else "No"
             )
         )
         print(
-            "3. {0}Allow Anime-Style Family Relationships:{1} {2}".format(
+            "3. {}Allow Anime-Style Family Relationships:{} {}".format(
                 Fore.MAGENTA,
                 Style.RESET_ALL,
                 f"{Fore.GREEN}Yes{Style.RESET_ALL}"
@@ -1053,14 +1066,14 @@ def content_settings_menu() -> Any:
             )
         )
         print(
-            "4. Family Romance Type: {0}{1}{2}".format(
+            "4. Family Romance Type: {}{}{}".format(
                 Fore.MAGENTA,
                 game_settings["cross_family_romance_type"].capitalize(),
                 Style.RESET_ALL
             )
         )
         print(
-            "5. NSFW Content Level: {0}{1}{2}".format(
+            "5. NSFW Content Level: {}{}{}".format(
                 Fore.RED,
                 game_settings["nsfw_level"].capitalize(),
                 Style.RESET_ALL
@@ -1073,14 +1086,14 @@ def content_settings_menu() -> Any:
         if choice == "1":
             game_settings["allow_bullying"] = not game_settings["allow_bullying"]
             print(
-                "Bullying events {0}.".format(
+                "Bullying events {}.".format(
                     "enabled" if game_settings["allow_bullying"] else "disabled"
                 )
             )
         elif choice == "2":
             game_settings["allow_cuss_words"] = not game_settings["allow_cuss_words"]
             print(
-                "Cuss words {0}.".format(
+                "Cuss words {}.".format(
                     "enabled" if game_settings["allow_cuss_words"] else "disabled"
                 )
             )
@@ -1090,7 +1103,7 @@ def content_settings_menu() -> Any:
             ]
             if game_settings["allow_cross_family_love"]:
                 print(
-                    "{0}Anime-style family relationships enabled!{1}".format(
+                    "{}Anime-style family relationships enabled!{}".format(
                         Fore.MAGENTA, Style.RESET_ALL
                     )
                 )
@@ -1152,7 +1165,7 @@ def toggle_setting(setting_name: Any, options) -> Any:
     next_index = (current_index + 1) % len(options)
     game_settings[setting_name] = options[next_index]
     print(
-        "{0} set to {1}".format(
+        "{} set to {}".format(
             setting_name.capitalize(), game_settings[setting_name].capitalize()
         )
     )
@@ -1165,7 +1178,7 @@ def save_settings() -> Any:
         with open("game_settings.json", "w") as file:
             json.dump(game_settings, file)
     except Exception as e:
-        print("Error saving settings: {0}".format(e))
+        print("Error saving settings: {}".format(e))
 
 
 def load_settings() -> Any:
@@ -1176,7 +1189,7 @@ def load_settings() -> Any:
                 loaded_settings = json.load(file)
                 game_settings.update(loaded_settings)
     except Exception as e:
-        print("Error loading settings: {0}".format(e))
+        print("Error loading settings: {}".format(e))
 
 
 def reset_settings() -> Any:
@@ -1424,29 +1437,29 @@ def check_relationship_compatibility(person1: Any, person2) -> bool:
 
         # Low NSFW level messages (mild suggestions)
         low_nsfw_messages = [
-            '{0}"It\'s not like I think of you as just a {1} or anything..."{2}',
-            '{0}"W-what if someone finds out about us? Not that I care!"{2}',
-            '{0}"We may be related, but my heart wants what it wants..."{2}',
-            '{0}"I\'ve always felt this special connection with you..."{2}',
-            '{0}"Maybe this was destined to happen all along..."{2}',
+            '{}"It\'s not like I think of you as just a {} or anything..."{}',
+            '{}"W-what if someone finds out about us? Not that I care!"{}',
+            '{}"We may be related, but my heart wants what it wants..."{}',
+            '{}"I\'ve always felt this special connection with you..."{}',
+            '{}"Maybe this was destined to happen all along..."{}',
         ]
 
         # Medium NSFW level messages (more romantic)
         medium_nsfw_messages = [
-            '{0}"When we\'re alone like this, I forget we\'re supposed to be {1}s..."{2}',
-            '{0}"My heart races whenever you\'re close to me, despite our family ties..."{2}',
-            '{0}"I know it\'s taboo, but I can\'t help feeling this way about you..."{2}',
-            '{0}"Let\'s keep this between us... our special secret relationship..."{2}',
-            '{0}"I\'ve always watched you from afar, wishing we weren\'t related..."{2}',
+            '{}"When we\'re alone like this, I forget we\'re supposed to be {}s..."{}',
+            '{}"My heart races whenever you\'re close to me, despite our family ties..."{}',
+            '{}"I know it\'s taboo, but I can\'t help feeling this way about you..."{}',
+            '{}"Let\'s keep this between us... our special secret relationship..."{}',
+            '{}"I\'ve always watched you from afar, wishing we weren\'t related..."{}',
         ]
 
         # High NSFW level messages (more direct)
         high_nsfw_messages = [
-            '{0}"Being your {1} makes this even more exciting somehow..."{2}',
-            '{0}"When we\'re behind closed doors, family titles don\'t matter..."{2}',
-            '{0}"No one understands our bond - it goes beyond normal family relations..."{2}',
-            '{0}"I\'ve dreamed of you holding me like this, even though we\'re family..."{2}',
-            '{0}"The forbidden nature of our feelings makes them stronger, don\'t you think?"{2}',
+            '{}"Being your {} makes this even more exciting somehow..."{}',
+            '{}"When we\'re behind closed doors, family titles don\'t matter..."{}',
+            '{}"No one understands our bond - it goes beyond normal family relations..."{}',
+            '{}"I\'ve dreamed of you holding me like this, even though we\'re family..."{}',
+            '{}"The forbidden nature of our feelings makes them stronger, don\'t you think?"{}',
         ]
 
         # Choose appropriate message set based on NSFW level
@@ -1461,7 +1474,7 @@ def check_relationship_compatibility(person1: Any, person2) -> bool:
 
         # Show the special romance message
         slow_print(
-            "{0}A special bond forms between you and your {1}...{2}".format(
+            "{}A special bond forms between you and your {}...{}".format(
                 Fore.MAGENTA, relation_description, Style.RESET_ALL
             ),
             delay=0.04,
@@ -1481,7 +1494,7 @@ def check_relationship_compatibility(person1: Any, person2) -> bool:
         if achievement_name not in player["achievements"]:
             player["achievements"].append(achievement_name)
             slow_print(
-                "{0}Achievement unlocked: {1}{2}".format(
+                "{}Achievement unlocked: {}{}".format(
                     Fore.YELLOW, achievement_name, Style.RESET_ALL
                 )
             )
@@ -1501,11 +1514,11 @@ def check_relationship_compatibility(person1: Any, person2) -> bool:
 # Game Title
 TITLE = "My First Day Here: Campus Life Edition"
 # Define ASCII art with line-by-line strings for better readability
-ASCII_ART = """    {0}____________________________
-   |{1}                            {0}|
-   |{2}    My First Day Here:      {0}|
-   |{2}    Campus Life Edition     {0}|
-   |____________________________| {3}""".format(Fore.MAGENTA, Fore.CYAN, Fore.WHITE, Style.RESET_ALL)
+ASCII_ART = """    {}____________________________
+   |{}                            {}|
+   |{}    My First Day Here:      {}|
+   |{}    Campus Life Edition     {}|
+   |____________________________| {}""".format(Fore.MAGENTA, Fore.CYAN, Fore.WHITE, Style.RESET_ALL)
 
 # Weather system variables
 WEATHER_TYPES = ["sunny", "cloudy", "rainy", "stormy", "foggy", "snowy", "windy"]
@@ -4780,20 +4793,41 @@ def slow_print(text: Any, delay: Optional[Any] = None, color: Any = Fore.WHITE, 
         style_prefix += style
     style_prefix += color
 
-    # Print with delay (with style before and reset after)
-    if delay > 0.01 and not os.environ.get("REPLIT_ENVIRONMENT", False):  
-        # Character-by-character for slower speeds, but only outside Replit
-        print(style_prefix, end="", flush=True)
-        for char in filtered_text:
-            print(char, end="", flush=True)
-            time.sleep(delay)
-        print(Style.RESET_ALL)
-    else:
-        # Fast print - use this always in Replit for better color support
-        print(f"{style_prefix}{filtered_text}{Style.RESET_ALL}")
-        # Brief delay to simulate the typing effect
-        if delay > 0:
-            time.sleep(min(len(filtered_text) * delay * 0.2, 0.5))
+    # Enhanced color handling for better display
+    try:
+        # Check environment and terminal capabilities
+        is_replit = bool(os.environ.get("REPLIT_ENVIRONMENT") or 
+                        os.environ.get("REPL_ID") or 
+                        "replit" in os.environ.get("REPLIT_CLUSTER", "").lower())
+        
+        # Always use fast printing for better color support in all environments
+        if is_replit or delay <= 0.01 or not sys.stdout.isatty():
+            # Enhanced formatting that works better across platforms
+            if style_prefix:
+                formatted_text = f"{style_prefix}{filtered_text}{Style.RESET_ALL}"
+            else:
+                formatted_text = filtered_text
+            
+            print(formatted_text, flush=True)
+            if delay > 0:
+                time.sleep(min(len(filtered_text) * delay * 0.05, 0.2))
+        else:
+            # Character-by-character for terminals that support it
+            if style_prefix:
+                print(style_prefix, end="", flush=True)
+            for char in filtered_text:
+                print(char, end="", flush=True)
+                time.sleep(delay)
+            if style_prefix:
+                print(Style.RESET_ALL, flush=True)
+            else:
+                print()
+    except Exception:
+        # Robust fallback
+        try:
+            print(strip_ansi_codes(filtered_text))
+        except Exception:
+            print(str(filtered_text))
 
 
 def update_ranks() -> None:
@@ -8778,7 +8812,7 @@ def random_school_event() -> Any:
         severity = bullying_event["severity"]
 
         slow_print(
-            "\n{0}Event:{1} {2}".format(
+            "\n{}Event:{} {}".format(
                 Fore.YELLOW, Style.RESET_ALL, filter_text(event_text, ["bullying"])
             )
         )
@@ -12724,9 +12758,9 @@ def add_special_event_cutscenes() -> dict:
 
 def show_help() -> None:
     help_text = """
-{0}=== AVAILABLE COMMANDS ==={1}
+{}=== AVAILABLE COMMANDS ==={}
 
-{2}Basic Commands:{1}
+{}Basic Commands:{}
 /help               - Show this help message
 /exit               - Quit the game
 /save [slot_name]   - Save your progress
@@ -12737,7 +12771,7 @@ def show_help() -> None:
 /schedule           - Show the school schedule
 /settings           - Modify game settings (content filters, difficulty, text speed)
 
-{2}Status Commands:{1}
+{}Status Commands:{}
 /me                 - Show your complete profile with all stats
 /status             - View your current status
 /homework           - Check your homework
@@ -12751,20 +12785,20 @@ def show_help() -> None:
 /student list       - Show all students in the school (500-600 NPCs)
 /npc list [tag]     - Show NPCs filtered by tag category
 
-{2}Location Commands:{1}
+{}Location Commands:{}
 /go [location]      - Move to a location
 /sleep              - Sleep in your room or bedroom to advance to the next day
 /dinner             - Have dinner at Kitchen or Cafeteria during dinner hours
 /look               - Inspect your current location in detail
 /who_is_here        - See who is currently in the same location as you
 
-{2}Academic Commands:{1}
+{}Academic Commands:{}
 /study [subject]    - Study a subject
 /teachers           - See a list of your teachers
 /students           - See a list of your classmates
 /complete_quest [id]- Complete a quest
 
-{2}Social Commands:{1}
+{}Social Commands:{}
 /interact [student] - Interact with a student
 /clubs              - See available clubs
 /join_club [name]   - Join a club
@@ -12772,13 +12806,13 @@ def show_help() -> None:
 /romance            - Check your romantic relationship
 /date [date_type]    - Go on a date with your romantic interest (at valid locations)
 
-{2}Activities Commands:{1}
+{}Activities Commands:{}
 /work [job_name]    - Work at a part-time job
 /jobs               - List available jobs
 /eat [food_name]    - Eat food at the cafeteria
 /relax              - Reduce stress by relaxing
 
-{2}Narrative Enhancement Commands:{1}
+{}Narrative Enhancement Commands:{}
 /look_around        - Get detailed atmospheric description of your current location
 /mingle             - Actively seek out social interactions and trigger cutscenes
 /scenario           - View today's campus atmosphere and background events
@@ -13135,9 +13169,7 @@ def sleep_command(args: Optional[Any] = None) -> Any:
         )
 
 
-def dinner_command() -> Any:
-    """Have dinner at appropriate locations (Kitchen at home or Cafeteria at school)"""
-    have_dinner()
+
 
 
 def have_dinner() -> Any:
@@ -14719,14 +14751,35 @@ def show_relationship() -> None:
 def study_subject(args) -> Any:
     if not args:
         print("Usage: /study [subject]")
+        print("\nAvailable subjects:")
+        for subject in subjects.keys():
+            print(f"  - {subject}")
         return
-    subject = " ".join(args).capitalize()
-    if subject in subjects:
-        homework[subject] = True
-        slow_print(f"You studied {subject} and finished the homework!")
+    
+    input_subject = " ".join(args)
+    
+    # Find matching subject with flexible matching
+    matched_subject = None
+    for subject in subjects.keys():
+        if (input_subject.lower() in subject.lower() or 
+            subject.lower() in input_subject.lower() or
+            input_subject.lower() == subject.lower()):
+            matched_subject = subject
+            break
+    
+    if matched_subject:
+        homework[matched_subject] = True
+        slow_print(f"You studied {matched_subject} and finished the homework!")
         player["charisma"]["academic"] += 1
+        
+        # Improve grade based on study effort
+        if matched_subject in player["grades"]:
+            improve_subject_grade(matched_subject, 5)
     else:
-        print("Unknown subject.")
+        print(f"Unknown subject: {input_subject}")
+        print("\nAvailable subjects:")
+        for subject in subjects.keys():
+            print(f"  - {subject}")
 
 
 def show_status() -> None:
@@ -15715,12 +15768,12 @@ def pe_class_challenge() -> Any:
 
     # Display challenge info with enhanced formatting
     slow_print(
-        "\n{0}Today's Challenge: {1}{2}".format(
+        "\n{}Today's Challenge: {}{}".format(
             Fore.CYAN, challenge["name"], Style.RESET_ALL
         )
     )
     slow_print(
-        "{0}Description: {1}{2}".format(
+        "{}Description: {}{}".format(
             Fore.CYAN, challenge["description"], Style.RESET_ALL
         )
     )
@@ -15811,7 +15864,7 @@ def pe_class_challenge() -> Any:
     if result == "great_success":
         # Show great success narrative
         for line in challenge["great_success_narrative"]:
-            slow_print("{0}{1}{2}".format(Fore.GREEN, line, Style.RESET_ALL))
+            slow_print("{}{}{}".format(Fore.GREEN, line, Style.RESET_ALL))
             time.sleep(0.3)
 
         # Apply great success effects
@@ -15828,11 +15881,11 @@ def pe_class_challenge() -> Any:
 
         # Show rewards summary
         slow_print(
-            "\n{0}=== Challenge Rewards ==={1}".format(Fore.YELLOW, Style.RESET_ALL)
+            "\n{}=== Challenge Rewards ==={}".format(Fore.YELLOW, Style.RESET_ALL)
         )
-        slow_print("• Student Reputation: +{0}".format(reputation_gain_students))
-        slow_print("• Teacher Reputation: +{0}".format(reputation_gain_teachers))
-        slow_print("• Social Charisma: +{0}".format(charisma_gain))
+        slow_print("• Student Reputation: +{}".format(reputation_gain_students))
+        slow_print("• Teacher Reputation: +{}".format(reputation_gain_teachers))
+        slow_print("• Social Charisma: +{}".format(charisma_gain))
         slow_print("• PE Grade: A")
         slow_print("• PE Technique: +1")
         slow_print("• PE Stamina: +1")
@@ -15841,7 +15894,7 @@ def pe_class_challenge() -> Any:
         if "PE Champion" not in player["achievements"]:
             player["achievements"].append("PE Champion")
             slow_print(
-                "\n{0}Achievement unlocked: PE Champion{1}".format(
+                "\n{}Achievement unlocked: PE Champion{}".format(
                     Fore.YELLOW, Style.RESET_ALL
                 )
             )
@@ -15849,7 +15902,7 @@ def pe_class_challenge() -> Any:
     elif result == "success":
         # Show success narrative
         for line in challenge["success_narrative"]:
-            slow_print("{0}{1}{2}".format(Fore.CYAN, line, Style.RESET_ALL))
+            slow_print("{}{}{}".format(Fore.CYAN, line, Style.RESET_ALL))
             time.sleep(0.3)
 
         # Apply success effects
@@ -15863,11 +15916,11 @@ def pe_class_challenge() -> Any:
 
         # Show rewards summary
         slow_print(
-            "\n{0}=== Challenge Rewards ==={1}".format(Fore.YELLOW, Style.RESET_ALL)
+            "\n{}=== Challenge Rewards ==={}".format(Fore.YELLOW, Style.RESET_ALL)
         )
-        slow_print("• Student Reputation: +{0}".format(reputation_gain_students))
-        slow_print("• Teacher Reputation: +{0}".format(reputation_gain_teachers))
-        slow_print("• Social Charisma: +{0}".format(charisma_gain))
+        slow_print("• Student Reputation: +{}".format(reputation_gain_students))
+        slow_print("• Teacher Reputation: +{}".format(reputation_gain_teachers))
+        slow_print("• Social Charisma: +{}".format(charisma_gain))
 
         # Random chance to improve a PE stat
         if random.random() < 0.5:
@@ -15882,12 +15935,12 @@ def pe_class_challenge() -> Any:
             current_grade = player["grades"].get("PE", "C")
             new_grade = chr(max(ord(current_grade) - 1, ord("A")))
             player["grades"]["PE"] = new_grade
-            slow_print("• PE Grade improved to {0}".format(new_grade))
+            slow_print("• PE Grade improved to {}".format(new_grade))
 
     else:  # failure
         # Show failure narrative
         for line in challenge["failure_narrative"]:
-            slow_print("{0}{1}{2}".format(Fore.RED, line, Style.RESET_ALL))
+            slow_print("{}{}{}".format(Fore.RED, line, Style.RESET_ALL))
             time.sleep(0.3)
 
         # Apply failure effects
@@ -15896,17 +15949,17 @@ def pe_class_challenge() -> Any:
 
         # Show effects summary
         slow_print(
-            "\n{0}=== Challenge Effects ==={1}".format(Fore.YELLOW, Style.RESET_ALL)
+            "\n{}=== Challenge Effects ==={}".format(Fore.YELLOW, Style.RESET_ALL)
         )
         if reputation_loss > 0:
-            slow_print("• Student Reputation: -{0}".format(reputation_loss))
+            slow_print("• Student Reputation: -{}".format(reputation_loss))
 
         # PE grade might decrease if not already F
         if player["grades"].get("PE", "C") != "F":
             current_grade = player["grades"].get("PE", "C")
             new_grade = chr(min(ord(current_grade) + 1, ord("F")))
             player["grades"]["PE"] = new_grade
-            slow_print("• PE Grade dropped to {0}".format(new_grade))
+            slow_print("• PE Grade dropped to {}".format(new_grade))
 
         # Small chance to still improve stamina from the effort
         if random.random() < 0.3:
@@ -15923,27 +15976,27 @@ def pe_class_challenge() -> Any:
     player["stress"] = min(100, player["stress"] + stress_change)
 
     slow_print(
-        "\n{0}The challenge was physically demanding:{1}".format(
+        "\n{}The challenge was physically demanding:{}".format(
             Fore.CYAN, Style.RESET_ALL
         )
     )
-    slow_print("• Energy: -{0}".format(energy_cost))
-    slow_print("• Hunger: -{0}".format(hunger_cost))
-    slow_print("• Stress: +{0}".format(stress_change))
+    slow_print("• Energy: -{}".format(energy_cost))
+    slow_print("• Hunger: -{}".format(hunger_cost))
+    slow_print("• Stress: +{}".format(stress_change))
 
     # Chance for a special interaction with another student
     if random.random() < 0.3:  # 30% chance
         slow_print(
-            "\n{0}=== After the Challenge ==={1}".format(Fore.MAGENTA, Style.RESET_ALL)
+            "\n{}=== After the Challenge ==={}".format(Fore.MAGENTA, Style.RESET_ALL)
         )
 
         random_student = random.choice(students)
         student_name = random_student["name"]
 
         if result == "great_success":
-            slow_print("{0} approaches you after class.".format(student_name))
+            slow_print("{} approaches you after class.".format(student_name))
             slow_print(
-                '"That was amazing! Do you play {0} outside of school too?"'.format(
+                '"That was amazing! Do you play {} outside of school too?"'.format(
                     challenge["name"].lower()
                 )
             )
@@ -15955,11 +16008,11 @@ def pe_class_challenge() -> Any:
             else:
                 relationship[student_name] = min(100, relationship[student_name] + 10)
 
-            slow_print("You've made a good impression on {0}!".format(student_name))
+            slow_print("You've made a good impression on {}!".format(student_name))
 
         elif result == "success":
             slow_print(
-                "You notice {0} giving you an approving nod after the challenge.".format(
+                "You notice {} giving you an approving nod after the challenge.".format(
                     student_name
                 )
             )
@@ -15971,7 +16024,7 @@ def pe_class_challenge() -> Any:
                 relationship[student_name] = min(100, relationship[student_name] + 5)
 
         else:  # failure
-            slow_print("{0} comes over and pats you on the back.".format(student_name))
+            slow_print("{} comes over and pats you on the back.".format(student_name))
             slow_print(
                 "\"Don't worry about it. We all have off days. You'll do better next time!\""
             )
@@ -15982,7 +16035,7 @@ def pe_class_challenge() -> Any:
             else:
                 relationship[student_name] = min(100, relationship[student_name] + 8)
 
-            slow_print("You appreciate {0}'s encouragement.".format(student_name))
+            slow_print("You appreciate {}'s encouragement.".format(student_name))
 
     update_ranks()
 
@@ -16208,7 +16261,7 @@ def romance_opportunity() -> Any:
 def play_festival_minigame(minigame_type) -> Any:
     """Play a festival-specific minigame"""
     slow_print(
-        "\n{0}=== Festival Minigame: {1} ==={2}".format(
+        "\n{}=== Festival Minigame: {} ==={}".format(
             Fore.CYAN, minigame_type.replace("_", " ").title(), Style.RESET_ALL
         )
     )
@@ -16298,8 +16351,8 @@ def play_festival_minigame(minigame_type) -> Any:
             verb2=poem_words[3],
         )
 
-        slow_print("\n{0}Your poem:{1}".format(Fore.YELLOW, Style.RESET_ALL))
-        slow_print("{0}{1}{2}".format(Fore.CYAN, final_poem, Style.RESET_ALL))
+        slow_print("\n{}Your poem:{}".format(Fore.YELLOW, Style.RESET_ALL))
+        slow_print("{}{}{}".format(Fore.CYAN, final_poem, Style.RESET_ALL))
 
         # Judge poem based on theme
         theme_words = {
@@ -19342,7 +19395,7 @@ def switch_active_partner(args) -> Any:
     """
     if "harem_enabled" not in player or not player["harem_enabled"]:
         slow_print(
-            "{0}You don't have multiple romantic partners in this playthrough.{1}".format(
+            "{}You don't have multiple romantic partners in this playthrough.{}".format(
                 Fore.RED, Style.RESET_ALL
             )
         )
@@ -19350,7 +19403,7 @@ def switch_active_partner(args) -> Any:
 
     if "romantic_partners" not in player or not player["romantic_partners"]:
         slow_print(
-            "{0}You don't have any romantic partners yet.{1}".format(
+            "{}You don't have any romantic partners yet.{}".format(
                 Fore.RED, Style.RESET_ALL
             )
         )
@@ -19759,162 +19812,162 @@ def date_narratives(date_type: Any, partner_name: Any, personality) -> Any:
     narratives = {
         "Coffee Shop": [
             "You arrive at the café early and choose a cozy corner with comfortable seating.",
-            "As {0} walks in, they spot you and their face brightens with a warm smile.",
+            "As {} walks in, they spot you and their face brightens with a warm smile.",
             "The coffee shop has a gentle ambience - soft music plays while the aroma of freshly ground beans fills the air.",
-            "You and {0} order your favorite drinks and find yourselves lost in conversation about dreams and aspirations.",
+            "You and {} order your favorite drinks and find yourselves lost in conversation about dreams and aspirations.",
             "Time seems to flow differently here, each moment stretched into a perfect blend of comfort and connection.",
             "The barista occasionally glances your way, perhaps noticing the chemistry between you two.",
         ],
         "Movie": [
-            "You meet {0} outside the cinema, both excited about the film you've chosen together.",
+            "You meet {} outside the cinema, both excited about the film you've chosen together.",
             "While waiting in line for tickets, you discuss your favorite movies and discover shared tastes.",
             "Inside the darkened theater, you find perfect seats - not too close, not too far from the screen.",
-            "As the film begins, you're aware of {0}'s presence beside you, the occasional brush of arms on the shared armrest.",
+            "As the film begins, you're aware of {}'s presence beside you, the occasional brush of arms on the shared armrest.",
             "During intense or emotional scenes, you exchange glances, forming a silent connection through your reactions.",
             "After the movie ends, you linger in the lobby, animatedly discussing your favorite moments from the film.",
         ],
         "Dinner": [
             "The restaurant has a lovely ambiance with soft lighting and elegant decor that creates an intimate setting.",
-            "The host leads you to a secluded table where you pull out a chair for {0}, earning an appreciative smile.",
-            "Candlelight dances across {0}'s features as you browse the menu together, suggesting favorites to each other.",
+            "The host leads you to a secluded table where you pull out a chair for {}, earning an appreciative smile.",
+            "Candlelight dances across {}'s features as you browse the menu together, suggesting favorites to each other.",
             "Your conversation flows effortlessly between light-hearted stories and deeper topics that reveal new sides of each other.",
             "The delicious food becomes a backdrop to the connection forming between you, each shared dish bringing you closer.",
-            "As the evening progresses, you notice how {0}'s laugh makes the surrounding conversations fade into the background.",
+            "As the evening progresses, you notice how {}'s laugh makes the surrounding conversations fade into the background.",
         ],
         "Picnic": [
-            "You've carefully prepared a picnic basket with an assortment of treats, hoping to impress {0}.",
+            "You've carefully prepared a picnic basket with an assortment of treats, hoping to impress {}.",
             "Together you find the perfect spot in the park - under a blossoming tree with dappled sunlight filtering through.",
-            "As you spread the blanket and arrange the food, {0} helps with genuine enthusiasm for your thoughtful preparation.",
+            "As you spread the blanket and arrange the food, {} helps with genuine enthusiasm for your thoughtful preparation.",
             "Birds sing overhead while you share stories and enjoy the simple pleasure of eating outdoors together.",
             "The gentle breeze carries the scent of flowers, adding to the romantic atmosphere of your carefully planned date.",
             "Time seems to stand still in this peaceful bubble you've created together, away from the bustle of campus life.",
         ],
         "Amusement Park": [
-            "The colorful entrance of the amusement park welcomes you and {0} with promises of excitement and joy.",
+            "The colorful entrance of the amusement park welcomes you and {} with promises of excitement and joy.",
             "You map out a strategy together for which rides to try first, your hands occasionally brushing as you point at the park map.",
-            "On the roller coaster, {0} grips your hand tightly during the drops, screaming and laughing with uninhibited excitement.",
-            "Between thrilling rides, you win a small prize at a game booth and present it to {0}, who accepts it with delighted surprise.",
+            "On the roller coaster, {} grips your hand tightly during the drops, screaming and laughing with uninhibited excitement.",
+            "Between thrilling rides, you win a small prize at a game booth and present it to {}, who accepts it with delighted surprise.",
             "Cotton candy and other treats are shared between you, the sweetness matching the lightness in your hearts.",
             "As evening falls, the park transforms with twinkling lights, creating a magical atmosphere for the end of your date.",
         ],
         "Beach Day": [
-            "The beach stretches before you like a canvas of possibilities as you and {0} find the perfect spot to set up.",
+            "The beach stretches before you like a canvas of possibilities as you and {} find the perfect spot to set up.",
             "Waves create a rhythmic soundtrack to your date while seagulls circle overhead in the clear blue sky.",
             "You wade into the water together, splashing playfully and feeling the connection that comes from shared joy.",
             "Later, you walk along the shoreline collecting interesting shells, your footprints forming parallel paths in the wet sand.",
             "The setting sun paints the sky in magnificent colors, silhouetting your figures as you sit close on the beach towel.",
-            "There's something about the vastness of the ocean that makes your growing feelings for {0} seem both significant and natural.",
+            "There's something about the vastness of the ocean that makes your growing feelings for {} seem both significant and natural.",
         ],
         "Shopping": [
-            "The bustling shopping district offers countless possibilities as you and {0} decide where to explore first.",
-            "In a stylish boutique, {0} encourages you to try something you wouldn't normally wear, their eyes appreciative when you emerge.",
-            "You find yourself enjoying giving honest opinions about {0}'s choices, creating a playful back-and-forth of fashion advice.",
+            "The bustling shopping district offers countless possibilities as you and {} decide where to explore first.",
+            "In a stylish boutique, {} encourages you to try something you wouldn't normally wear, their eyes appreciative when you emerge.",
+            "You find yourself enjoying giving honest opinions about {}'s choices, creating a playful back-and-forth of fashion advice.",
             "A street performer catches your attention, and you pause to watch together, standing closer than strictly necessary.",
             "Over bubble tea at a small café, you compare your purchases and the stories behind why you chose each item.",
             "Shopping becomes less about the items bought and more about the shared experience of discovering each other's tastes.",
         ],
         "Karaoke": [
-            "The private karaoke room becomes your own world as you scroll through song options with {0}, shoulders touching.",
-            "When {0} first starts singing, you're captivated by this new side of them - confident, expressive, and completely in the moment.",
+            "The private karaoke room becomes your own world as you scroll through song options with {}, shoulders touching.",
+            "When {} first starts singing, you're captivated by this new side of them - confident, expressive, and completely in the moment.",
             "You join in for a duet, your voices finding harmony not just in the music but in the shared experience of vulnerability.",
             "Between songs, you share stories of music that defined important moments in your lives, building connections through melodies.",
             "The dimly lit room with its colorful flashing lights creates an atmosphere where inhibitions fade and authentic selves emerge.",
             "By the end of your session, your playlist has become a soundtrack to new memories, each song now carrying the echo of this date.",
         ],
         "Arcade": [
-            "Flashing lights and electronic sounds create an energetic backdrop as you enter the arcade with {0}.",
-            "You discover {0}'s competitive side at the racing games, their determination showing in their focused expression.",
+            "Flashing lights and electronic sounds create an energetic backdrop as you enter the arcade with {}.",
+            "You discover {}'s competitive side at the racing games, their determination showing in their focused expression.",
             "At the claw machine, you work together strategically to win a small plush toy, celebrating with high-fives when you succeed.",
             "The dance game draws a small crowd as you both show off your moves, laughing at missteps and cheering each other's combos.",
-            "You find yourself noticing the way {0}'s eyes light up with each victory, and how losing doesn't diminish their enjoyment.",
+            "You find yourself noticing the way {}'s eyes light up with each victory, and how losing doesn't diminish their enjoyment.",
             "In this playground of games, you're really playing a different game altogether - discovering the person behind the player.",
         ],
         "Fancy Date": [
             "The maître d' leads you to a table draped in crisp linen in one of the city's most prestigious restaurants.",
-            "You notice how particularly stunning {0} looks tonight, dressed elegantly for the occasion, their eyes reflecting the candlelight.",
+            "You notice how particularly stunning {} looks tonight, dressed elegantly for the occasion, their eyes reflecting the candlelight.",
             "The sommelier suggests a wine pairing that complements your carefully selected courses, adding sophistication to your dining experience.",
             "Between exquisite dishes, your conversation deepens beyond campus life to hopes, dreams, and philosophies.",
-            "There's a moment when time seems suspended - just you, {0}, and the invisible thread of connection strengthening between you.",
+            "There's a moment when time seems suspended - just you, {}, and the invisible thread of connection strengthening between you.",
             "As you leave the restaurant, the night air feels charged with possibility, the evening elevated beyond a simple dinner into something momentous.",
         ],
         "Stargazing": [
-            "You've researched the perfect spot, away from city lights, where the stars would be most visible for your date with {0}.",
+            "You've researched the perfect spot, away from city lights, where the stars would be most visible for your date with {}.",
             "Wrapped in blankets against the night chill, you lie side by side on a grassy hilltop, faces turned toward the infinite sky.",
             "Using a stargazing app, you take turns identifying constellations, your hushed voices enhancing the intimacy of the moment.",
             "A shooting star streaks across the darkness, and you both make silent wishes, exchanging knowing smiles afterward.",
             "The conversation turns philosophical under the vast canopy of stars, creating a deeper connection through shared wonder.",
-            "In this moment, the universe seems to have conspired to bring you and {0} together under its celestial watch.",
+            "In this moment, the universe seems to have conspired to bring you and {} together under its celestial watch.",
         ],
     }
 
     # Extended personality-specific reactions for deeper characterization
     personality_reactions = {
         "tsundere": [
-            "{0} pretends to be unimpressed by your date planning, but you catch them hiding a smile when they think you're not looking.",
-            "When you mention having a good time, {0} quickly looks away and mutters 'It's not like I planned my whole day around this or anything.'",
-            "As the date progresses, {0}'s prickly exterior softens noticeably, revealing glimpses of genuine warmth underneath.",
+            "{} pretends to be unimpressed by your date planning, but you catch them hiding a smile when they think you're not looking.",
+            "When you mention having a good time, {} quickly looks away and mutters 'It's not like I planned my whole day around this or anything.'",
+            "As the date progresses, {}'s prickly exterior softens noticeably, revealing glimpses of genuine warmth underneath.",
         ],
         "kuudere": [
-            "{0} maintains a calm, composed exterior throughout the date, but their eyes betray interest when you share personal stories.",
-            "You notice subtle changes in {0}'s expression - the barely perceptible smile, the attentive posture - signs they're enjoying themselves.",
-            "Near the end of your time together, {0} makes a quiet comment that shows they've been paying careful attention to everything you've said.",
+            "{} maintains a calm, composed exterior throughout the date, but their eyes betray interest when you share personal stories.",
+            "You notice subtle changes in {}'s expression - the barely perceptible smile, the attentive posture - signs they're enjoying themselves.",
+            "Near the end of your time together, {} makes a quiet comment that shows they've been paying careful attention to everything you've said.",
         ],
         "dandere": [
-            "At first, {0} seems nearly silent, responding with nods and short phrases, eyes often directed downward.",
-            "Gradually, when the conversation turns to topics they're passionate about, {0} begins to speak more, their voice growing animated.",
-            "By the end of the date, you're surprised at how much {0} has opened up, as if a different person emerged from behind their shyness.",
+            "At first, {} seems nearly silent, responding with nods and short phrases, eyes often directed downward.",
+            "Gradually, when the conversation turns to topics they're passionate about, {} begins to speak more, their voice growing animated.",
+            "By the end of the date, you're surprised at how much {} has opened up, as if a different person emerged from behind their shyness.",
         ],
         "deredere": [
-            "{0} approaches your date with unbridled enthusiasm, their affection and excitement evident in every gesture and smile.",
-            "Throughout your time together, {0} finds small ways to express their fondness - a touch on your arm, a compliment, a warm laugh at your jokes.",
+            "{} approaches your date with unbridled enthusiasm, their affection and excitement evident in every gesture and smile.",
+            "Throughout your time together, {} finds small ways to express their fondness - a touch on your arm, a compliment, a warm laugh at your jokes.",
             "Their authentic joy in spending time with you is contagious, making even ordinary moments feel special and cherished.",
         ],
         "yandere": [
-            "{0} watches you with an intensity that's both flattering and slightly unnerving, their attention never wavering.",
-            "When someone else briefly interrupts your date, you notice a flash of something possessive in {0}'s eyes before their smile returns.",
-            "Every detail you mention about yourself, {0} seems to memorize instantly, referencing them later with perfect recall.",
+            "{} watches you with an intensity that's both flattering and slightly unnerving, their attention never wavering.",
+            "When someone else briefly interrupts your date, you notice a flash of something possessive in {}'s eyes before their smile returns.",
+            "Every detail you mention about yourself, {} seems to memorize instantly, referencing them later with perfect recall.",
         ],
         "kind": [
-            "{0} shows thoughtfulness in small ways throughout your date - ensuring you're comfortable, listening attentively, remembering details from past conversations.",
-            "When a small mishap occurs, {0}'s response is so understanding and gentle that it turns an awkward moment into a pleasant memory.",
-            "You notice how {0} treats everyone around you with the same warmth they show you, revealing a genuinely compassionate nature.",
+            "{} shows thoughtfulness in small ways throughout your date - ensuring you're comfortable, listening attentively, remembering details from past conversations.",
+            "When a small mishap occurs, {}'s response is so understanding and gentle that it turns an awkward moment into a pleasant memory.",
+            "You notice how {} treats everyone around you with the same warmth they show you, revealing a genuinely compassionate nature.",
         ],
         "serious": [
-            "{0} approaches your date with the same thoughtfulness they bring to their studies, asking meaningful questions and considering their responses carefully.",
-            "Though {0} rarely laughs loudly, you learn to spot the subtle crinkle around their eyes that signals genuine amusement.",
-            "When the conversation turns serious, you appreciate how {0} engages with complex topics, showing depth of character and thought.",
+            "{} approaches your date with the same thoughtfulness they bring to their studies, asking meaningful questions and considering their responses carefully.",
+            "Though {} rarely laughs loudly, you learn to spot the subtle crinkle around their eyes that signals genuine amusement.",
+            "When the conversation turns serious, you appreciate how {} engages with complex topics, showing depth of character and thought.",
         ],
         "playful": [
-            "{0} transforms even ordinary moments into opportunities for fun, turning a walk into a game or finding humor in unexpected places.",
+            "{} transforms even ordinary moments into opportunities for fun, turning a walk into a game or finding humor in unexpected places.",
             "Their spontaneity is refreshing - suggesting an unplanned detour during your date that leads to one of the most memorable experiences.",
-            "You find yourself laughing more with {0} than you have in months, their playful nature bringing out a lighter side of yourself.",
+            "You find yourself laughing more with {} than you have in months, their playful nature bringing out a lighter side of yourself.",
         ],
         "ambitious": [
-            "When {0} speaks about their goals, their entire demeanor changes - eyes bright with purpose, voice confident and clear.",
-            "You're impressed by how {0} connects your casual date activities to their larger aspirations, showing how they integrate passion into daily life.",
-            "By the end of your time together, {0} has not only shared their dreams but expressed genuine interest in supporting yours.",
+            "When {} speaks about their goals, their entire demeanor changes - eyes bright with purpose, voice confident and clear.",
+            "You're impressed by how {} connects your casual date activities to their larger aspirations, showing how they integrate passion into daily life.",
+            "By the end of your time together, {} has not only shared their dreams but expressed genuine interest in supporting yours.",
         ],
         "mysterious": [
-            "{0} reveals information about themselves in carefully measured doses, each disclosure feeling like a specially granted privilege.",
-            "Just when you think you understand {0}, they share something surprising that reshapes your perception of them.",
+            "{} reveals information about themselves in carefully measured doses, each disclosure feeling like a specially granted privilege.",
+            "Just when you think you understand {}, they share something surprising that reshapes your perception of them.",
             "Their enigmatic smile when avoiding direct questions about their past makes you even more curious about the layers beneath their carefully maintained surface.",
         ],
         "shy": [
-            "{0} blushes noticeably when you offer a sincere compliment, their fingers fidgeting with the edge of their sleeve.",
-            "You notice how {0} becomes more animated when talking about subjects they love, briefly forgetting their self-consciousness.",
-            "By creating a comfortable space between you, you're rewarded with glimpses of the vibrant personality {0} usually keeps hidden.",
+            "{} blushes noticeably when you offer a sincere compliment, their fingers fidgeting with the edge of their sleeve.",
+            "You notice how {} becomes more animated when talking about subjects they love, briefly forgetting their self-consciousness.",
+            "By creating a comfortable space between you, you're rewarded with glimpses of the vibrant personality {} usually keeps hidden.",
         ],
         "energetic": [
-            "{0} approaches your date with boundless enthusiasm, suggesting multiple activities and barely pausing to catch their breath between topics.",
-            "Their expressive gestures and animated storytelling style draw attention from others nearby, but {0} seems focused entirely on your reaction.",
-            "Despite the whirlwind of energy {0} brings, you notice how they still manage to listen attentively when you speak, their excitement never overshadowing connection.",
+            "{} approaches your date with boundless enthusiasm, suggesting multiple activities and barely pausing to catch their breath between topics.",
+            "Their expressive gestures and animated storytelling style draw attention from others nearby, but {} seems focused entirely on your reaction.",
+            "Despite the whirlwind of energy {} brings, you notice how they still manage to listen attentively when you speak, their excitement never overshadowing connection.",
         ],
     }
 
     # Display the narrative with enhanced formatting
     if date_type in narratives:
         slow_print(
-            "\n{0}=== Your Date with {1} ===\n{2}".format(
+            "\n{}=== Your Date with {} ===\n{}".format(
                 Fore.CYAN, partner_name, Style.RESET_ALL
             )
         )
@@ -19927,14 +19980,14 @@ def date_narratives(date_type: Any, partner_name: Any, personality) -> Any:
         if isinstance(date_type, str) and "_" in date_type:
             date_location = date_type.replace("_", " ")
         slow_print(
-            "{0}Location: {1}{2}".format(Fore.YELLOW, date_location, Style.RESET_ALL)
+            "{}Location: {}{}".format(Fore.YELLOW, date_location, Style.RESET_ALL)
         )
         slow_print("")
 
         # Display the narrative with pauses between paragraphs for better pacing
         for line in narratives[date_type]:
             slow_print(
-                "{0}{1}{2}".format(
+                "{}{}{}".format(
                     Fore.WHITE, line.format(partner_name), Style.RESET_ALL
                 )
             )
@@ -19945,7 +19998,7 @@ def date_narratives(date_type: Any, partner_name: Any, personality) -> Any:
     # Add personality-specific reaction with special formatting
     if personality in personality_reactions:
         slow_print(
-            "{0}● {1}'s Reactions:{2}".format(
+            "{}● {}'s Reactions:{}".format(
                 Fore.MAGENTA, partner_name, Style.RESET_ALL
             )
         )
@@ -19955,56 +20008,56 @@ def date_narratives(date_type: Any, partner_name: Any, personality) -> Any:
             # Show all reactions in the list for extended narrative
             for reaction in personality_reactions[personality]:
                 if isinstance(reaction, str):
-                    slow_print("  {0}".format(reaction.format(partner_name)))
+                    slow_print("  {}".format(reaction.format(partner_name)))
                 else:
-                    slow_print("  {0}".format(str(reaction)))
+                    slow_print("  {}".format(str(reaction)))
                 time.sleep(0.2)  # Brief pause between reactions
         else:
             # If it's a single string, just show that
             reaction_text = personality_reactions[personality]
             if isinstance(reaction_text, str):
-                slow_print("  {0}".format(reaction_text.format(partner_name)))
+                slow_print("  {}".format(reaction_text.format(partner_name)))
             else:
-                slow_print("  {0}".format(str(reaction_text)))
+                slow_print("  {}".format(str(reaction_text)))
     else:
-        slow_print("{0} seems to be enjoying the date with you.".format(partner_name))
+        slow_print("{} seems to be enjoying the date with you.".format(partner_name))
 
     slow_print("")  # Empty line for separation
 
     # Add a special moment based on date type with enhanced formatting
     if date_type in ["Fancy Date", "Stargazing"]:
         slow_print(
-            "\n{0}✧ A special moment occurs between you and {1}... ✧{2}".format(
+            "\n{}✧ A special moment occurs between you and {}... ✧{}".format(
                 Fore.MAGENTA, partner_name, Style.RESET_ALL
             )
         )
 
         if date_type == "Fancy Date":
             slow_print(
-                "{0}As the evening comes to a close, you and {1} share a meaningful glance across the table.{2}".format(
+                "{}As the evening comes to a close, you and {} share a meaningful glance across the table.{}".format(
                     Fore.YELLOW, partner_name, Style.RESET_ALL
                 )
             )
             slow_print(
-                "{0}The connection between you feels stronger than ever.{1}".format(
+                "{}The connection between you feels stronger than ever.{}".format(
                     Fore.YELLOW, Style.RESET_ALL
                 )
             )
         else:  # Stargazing
             slow_print(
-                "{0}A shooting star streaks across the sky, and you both make silent wishes.{1}".format(
+                "{}A shooting star streaks across the sky, and you both make silent wishes.{}".format(
                     Fore.YELLOW, Style.RESET_ALL
                 )
             )
             slow_print(
-                "{0}In that perfect moment, you feel truly connected to {1}.{2}".format(
+                "{}In that perfect moment, you feel truly connected to {}.{}".format(
                     Fore.YELLOW, partner_name, Style.RESET_ALL
                 )
             )
 
         # Extra impact for memorable date
         slow_print(
-            "\n{0}This date will remain in your memories for a long time...{1}".format(
+            "\n{}This date will remain in your memories for a long time...{}".format(
                 Fore.CYAN, Style.RESET_ALL
             )
         )
@@ -20026,7 +20079,7 @@ def check_romance_stage_advancement(partner_name) -> bool:
         player["romance_stage"] = next_stage
         stage_name = ROMANCE_STAGES[next_stage]["name"]
         slow_print(
-            "\n{0}♥ Your relationship with {1} has advanced to '{2}'! ♥{3}".format(
+            "\n{}♥ Your relationship with {} has advanced to '{}'! ♥{}".format(
                 Fore.MAGENTA, partner_name, stage_name, Style.RESET_ALL
             )
         )
@@ -20034,13 +20087,13 @@ def check_romance_stage_advancement(partner_name) -> bool:
         # Special message based on new stage
         if next_stage == 3:
             slow_print(
-                "You and {0} have become close friends. You can feel a special connection developing.".format(
+                "You and {} have become close friends. You can feel a special connection developing.".format(
                     partner_name
                 )
             )
         elif next_stage == 4:
             slow_print(
-                "You realize you have deeper feelings for {0}. The way they look at you has changed too.".format(
+                "You realize you have deeper feelings for {}. The way they look at you has changed too.".format(
                     partner_name
                 )
             )
@@ -20052,10 +20105,10 @@ def check_romance_stage_advancement(partner_name) -> bool:
                     partner_name
                 ]  # Initialize with first partner
                 slow_print(
-                    "Your relationship with {0} is now official!".format(partner_name)
+                    "Your relationship with {} is now official!".format(partner_name)
                 )
                 slow_print(
-                    "{0}You sense that you might be able to maintain multiple romantic relationships in this playthrough...{1}".format(
+                    "{}You sense that you might be able to maintain multiple romantic relationships in this playthrough...{}".format(
                         Fore.YELLOW, Style.RESET_ALL
                     )
                 )
@@ -20068,10 +20121,10 @@ def check_romance_stage_advancement(partner_name) -> bool:
                     player["romantic_partners"].append(partner_name)
 
                 slow_print(
-                    "Your relationship with {0} is now official!".format(partner_name)
+                    "Your relationship with {} is now official!".format(partner_name)
                 )
                 slow_print(
-                    "{0}You now have {1} romantic partners.{2}".format(
+                    "{}You now have {} romantic partners.{}".format(
                         Fore.MAGENTA, len(player["romantic_partners"]), Style.RESET_ALL
                     )
                 )
@@ -20082,7 +20135,7 @@ def check_romance_stage_advancement(partner_name) -> bool:
                     and player["romantic_interest"] != partner_name
                 ):
                     slow_print(
-                        "{0}You've ended your relationship with {1} to be with {2}.{3}".format(
+                        "{}You've ended your relationship with {} to be with {}.{}".format(
                             Fore.RED,
                             player["romantic_interest"],
                             partner_name,
@@ -20092,7 +20145,7 @@ def check_romance_stage_advancement(partner_name) -> bool:
 
                 player["romantic_interest"] = partner_name
                 slow_print(
-                    "Your relationship with {0} is now official! You're dating exclusively.".format(
+                    "Your relationship with {} is now official! You're dating exclusively.".format(
                         partner_name
                     )
                 )
@@ -20101,7 +20154,7 @@ def check_romance_stage_advancement(partner_name) -> bool:
             if "Romance Expert" not in player["achievements"]:
                 player["achievements"].append("Romance Expert")
                 slow_print(
-                    "{0}Achievement unlocked: Romance Expert{1}".format(
+                    "{}Achievement unlocked: Romance Expert{}".format(
                         Fore.YELLOW, Style.RESET_ALL
                     )
                 )
@@ -20118,7 +20171,7 @@ def check_romance_stage_advancement(partner_name) -> bool:
                 if "Harem Master" not in player["achievements"]:
                     player["achievements"].append("Harem Master")
                     slow_print(
-                        "{0}Achievement unlocked: Harem Master{1}".format(
+                        "{}Achievement unlocked: Harem Master{}".format(
                             Fore.YELLOW, Style.RESET_ALL
                         )
                     )
@@ -20248,11 +20301,125 @@ def show_achievements() -> None:
             print(f"? {details['description']}")
             
 # Display player's collectibles
+def dinner_command(args: Optional[Any] = None) -> None:
+    """Have dinner at Kitchen or Cafeteria during dinner hours"""
+    current_hour = game_time.get("hour", 8)
+    current_location = player["current_location"]
+    
+    # Check if it's dinner time (6-8 PM)
+    if not (18 <= current_hour <= 20):
+        slow_print(f"{Fore.YELLOW}It's not dinner time yet. Dinner is served from 6:00 PM to 8:00 PM.{Style.RESET_ALL}")
+        return
+    
+    # Check if player is in appropriate location
+    valid_locations = ["Kitchen", "Cafeteria"]
+    if current_location not in valid_locations:
+        slow_print(f"{Fore.RED}You need to be in the Kitchen or Cafeteria to have dinner.{Style.RESET_ALL}")
+        slow_print(f"Current location: {current_location}")
+        return
+    
+    # Have dinner
+    slow_print(f"{Fore.GREEN}You enjoy a delicious dinner at the {current_location}.{Style.RESET_ALL}")
+    player["energy"] = min(100, player["energy"] + 20)
+    player["stress"] = max(0, player["stress"] - 10)
+    
+    # Advance time
+    game_time["hour"] += 1
+    slow_print(f"{Fore.CYAN}You feel refreshed after dinner. Energy +20, Stress -10.{Style.RESET_ALL}")
+
+def look_command(args: Optional[Any] = None) -> None:
+    """Inspect your current location in detail"""
+    current_location = player["current_location"]
+    
+    if not current_location:
+        slow_print("You're not in any specific location.")
+        return
+    
+    slow_print(f"\n{Fore.CYAN}=== Looking Around: {current_location} ==={Style.RESET_ALL}")
+    
+    # Get detailed location description
+    location_descriptions = {
+        "Classroom": "Rows of desks face a whiteboard. Sunlight streams through large windows. You can see textbooks, notebooks, and school supplies scattered around.",
+        "Library": "Tall shelves filled with books stretch to the ceiling. Study tables are occupied by focused students. The atmosphere is quiet and scholarly.",
+        "Cafeteria": "Long tables accommodate groups of chatting students. The smell of various foods fills the air. A serving area displays today's menu.",
+        "Gym": "Basketball hoops stand at either end of the polished wooden floor. Exercise equipment lines the walls. The space echoes with activity.",
+        "School Hallway": "Lockers line both sides of the corridor. Students pass by between classes. Bulletin boards display school announcements and club posters.",
+        "Your Bedroom": "Your personal space with a bed, desk, and closet. Posters and personal items reflect your personality. It's quiet and comfortable.",
+        "Living Room": "A cozy common area with sofas and a TV. Family photos and decorations create a warm atmosphere.",
+        "Kitchen": "Well-equipped with appliances and a dining table. The smell of home cooking often fills this space.",
+        "Apartment": "Your independent living space off-campus. Modern furnishings and a sense of freedom define this environment."
+    }
+    
+    description = location_descriptions.get(current_location, f"The {current_location} has its own unique atmosphere that changes throughout the day.")
+    slow_print(f"{Fore.WHITE}{description}{Style.RESET_ALL}")
+    
+    # Show people present
+    who_is_here_command([])
+
+def who_is_here_command(args: Optional[Any] = None) -> None:
+    """See who is currently in the same location as you"""
+    current_location = player["current_location"]
+    
+    if not current_location:
+        slow_print("You're not in any specific location.")
+        return
+    
+    # Generate people based on location and time
+    current_hour = game_time.get("hour", 8)
+    people_present = []
+    
+    # Location-based NPCs
+    if current_location == "Classroom" and 9 <= current_hour <= 15:
+        people_present.extend(["Teacher Yamamoto", "Classmate Yuki", "Classmate Akira"])
+    elif current_location == "Library":
+        people_present.extend(["Librarian Sato", "Study Group Leader"])
+    elif current_location == "Cafeteria" and 12 <= current_hour <= 13:
+        people_present.extend(["Cafeteria Staff", "Various Students"])
+    elif current_location == "Gym":
+        people_present.extend(["PE Teacher", "Athletic Students"])
+    elif current_location == "School Hallway":
+        people_present.extend(["Passing Students", "Hall Monitor"])
+    
+    if people_present:
+        slow_print(f"\n{Fore.GREEN}People in {current_location}:{Style.RESET_ALL}")
+        for person in people_present:
+            print(f"  - {person}")
+        slow_print(f"\n{Fore.YELLOW}Use /interact [name] to talk to someone.{Style.RESET_ALL}")
+    else:
+        slow_print(f"\n{Fore.YELLOW}No one else is currently in the {current_location}.{Style.RESET_ALL}")
+
 def show_collectibles() -> None:
     """Display the player's collection of campus souvenirs and collectibles"""
     if "collectibles" not in player or not player["collectibles"]:
         slow_print("You haven't found any collectibles yet. Explore the campus to find items!")
         return
+    
+    slow_print(f"\n{Fore.CYAN}=== Your Collectibles ==={Style.RESET_ALL}")
+    
+    # Sample collectibles that can be found around campus
+    collectible_descriptions = {
+        "Lucky Coin": "A shiny coin you found near the fountain. They say it brings good luck!",
+        "Rare Book": "An old book discovered in the library's restricted section.",
+        "School Badge": "A vintage school badge from decades past.",
+        "Cherry Blossom": "A perfectly preserved cherry blossom petal.",
+        "Photo Strip": "A photo booth strip with friends from the school festival.",
+        "Class Ring": "A class ring left behind by a previous student.",
+        "Love Letter": "A romantic letter you intercepted (and decided to keep).",
+        "Student ID": "An old student ID card from the 1990s.",
+        "Concert Ticket": "A ticket stub from the school's music concert.",
+        "Exam Paper": "A perfect score test paper worth keeping as a memento."
+    }
+    
+    for item in player["collectibles"]:
+        description = collectible_descriptions.get(item, "A mysterious item with unknown origins.")
+        slow_print(f"{Fore.YELLOW}• {item}{Style.RESET_ALL}: {description}")
+    
+    slow_print(f"\n{Fore.GREEN}Total Collectibles: {len(player['collectibles'])}{Style.RESET_ALL}")
+    
+    # Add collectible achievement
+    if len(player["collectibles"]) >= 5 and "Collector" not in player["achievements"]:
+        player["achievements"].append("Collector")
+        slow_print(f"{Fore.MAGENTA}Achievement Unlocked: Collector!{Style.RESET_ALL}")
         
     # Define collection categories
     collections = {
@@ -21727,13 +21894,13 @@ def test_color_display() -> Any:
     # Color code embedding tests
     print("\nColor code embedding tests:")
     slow_print(
-        "{0}Red text with {1}embedded cyan{0} and back to red{2}".format(
+        "{}Red text with {}embedded cyan{} and back to red{}".format(
             Fore.RED, Fore.CYAN, Style.RESET_ALL
         ),
         delay=0.01,
     )
     slow_print(
-        "{0}{1}Bright{2} and {3}Dim{2} in the same line{4}".format(
+        "{}{}Bright{} and {}Dim{} in the same line{}".format(
             Fore.YELLOW, Style.BRIGHT, Style.NORMAL, Style.DIM, Style.RESET_ALL
         ),
         delay=0.01,
@@ -21751,7 +21918,7 @@ def show_main_menu() -> bool:
     print(f"{Fore.GREEN}2. Continue game{Style.RESET_ALL}")
     print(f"{Fore.CYAN}3. Settings{Style.RESET_ALL}")
     print(
-        "{0}4. Student Templates (Password Required){1}".format(
+        "{}4. Student Templates (Password Required){}".format(
             Fore.MAGENTA, Style.RESET_ALL
         )
     )
@@ -21771,7 +21938,7 @@ def show_main_menu() -> bool:
         elif choice == "4":
             try:
                 password = input(
-                    "{0}Enter password (hint: complete a school year or graduate):{1} ".format(
+                    "{}Enter password (hint: complete a school year or graduate):{} ".format(
                         Fore.YELLOW, Style.RESET_ALL
                     )
                 ).strip()
@@ -21790,7 +21957,7 @@ def show_main_menu() -> bool:
                     return show_main_menu()  # Return to main menu
             else:
                 print(
-                    "{0}Incorrect password. Access denied.{1}".format(
+                    "{}Incorrect password. Access denied.{}".format(
                         Fore.RED, Style.RESET_ALL
                     )
                 )
@@ -21802,14 +21969,14 @@ def show_main_menu() -> bool:
             return test_color_display()
         else:
             print(
-                "{0}Invalid choice. Please select an option between 1 and 5.{1}".format(
+                "{}Invalid choice. Please select an option between 1 and 5.{}".format(
                     Fore.RED, Style.RESET_ALL
                 )
             )
             return show_main_menu()
     except EOFError:
         print(
-            "{0}Input error encountered. Please try again.{1}".format(
+            "{}Input error encountered. Please try again.{}".format(
                 Fore.RED, Style.RESET_ALL
             )
         )
@@ -21822,7 +21989,7 @@ def show_main_menu() -> bool:
 def show_schedule() -> None:
     print("\n--- School Schedule ---")
     for day, events in school_events.items():
-        print("{0}: {1}".format(day, ", ".join(events)))
+        print("{}: {}".format(day, ", ".join(events)))
 
 
 def main(non_interactive: bool = False) -> Any:
@@ -21884,17 +22051,17 @@ def main(non_interactive: bool = False) -> Any:
     while True:
         if current_date >= SCHOOL_YEAR_END:
             slow_print(
-                "{0}The school year has ended! Thanks for playing!{1}".format(
+                "{}The school year has ended! Thanks for playing!{}".format(
                     Fore.YELLOW, Style.RESET_ALL
                 )
             )
             print(
-                "\n{0}Congratulations on completing a full school year!{1}".format(
+                "\n{}Congratulations on completing a full school year!{}".format(
                     Fore.CYAN, Style.RESET_ALL
                 )
             )
             print(
-                "{0}You've unlocked the Student Templates feature.{1}".format(
+                "{}You've unlocked the Student Templates feature.{}".format(
                     Fore.GREEN, Style.RESET_ALL
                 )
             )
@@ -21936,7 +22103,7 @@ def main(non_interactive: bool = False) -> Any:
         else:
             # In interactive mode, get command input from player
             try:
-                command = input("\n{0}>>{1} ".format(Fore.GREEN, Style.RESET_ALL)).strip()
+                command = input("\n{}>>{} ".format(Fore.GREEN, Style.RESET_ALL)).strip()
             except EOFError:
                 print(f"{Fore.YELLOW}Input limitations detected. Switching to non-interactive mode...{Style.RESET_ALL}")
                 non_interactive = True
@@ -21960,6 +22127,8 @@ def main(non_interactive: bool = False) -> Any:
         # Basic commands
         if cmd == "help":
             show_help()
+        elif cmd == "collectibles":
+            show_collectibles()
         elif cmd == "exit":
             slow_print("\nThanks for playing! See you next time!")
             break
@@ -22034,6 +22203,12 @@ def main(non_interactive: bool = False) -> Any:
             go_location(args)
         elif cmd == "sleep":
             sleep_command(args)
+        elif cmd == "dinner":
+            dinner_command(args)
+        elif cmd == "look":
+            look_command(args)
+        elif cmd == "who_is_here":
+            who_is_here_command(args)
 
         # Academic commands
         elif cmd == "study":
@@ -22074,7 +22249,7 @@ def main(non_interactive: bool = False) -> Any:
         elif cmd == "jobs":
             print("\nAvailable Jobs:")
             for job, details in jobs.items():
-                print("{0}: ¥{1} per day".format(job, details["pay"]))
+                print("{}: ¥{} per day".format(job, details["pay"]))
         elif cmd == "eat":
             eat_command(args)
         elif cmd == "relax":
@@ -22735,7 +22910,7 @@ def check_class_time() -> bool:
 def apply_sanction(reason) -> Any:
     if reason == "missed_class":
         slow_print(
-            "{0}You missed a class! Your teacher is disappointed.{1}".format(
+            "{}You missed a class! Your teacher is disappointed.{}".format(
                 Fore.RED, Style.RESET_ALL
             )
         )
@@ -22743,14 +22918,14 @@ def apply_sanction(reason) -> Any:
         player["charisma"]["academic"] = max(player["charisma"]["academic"] - 1, 0)
     elif reason == "late_to_class":
         slow_print(
-            "{0}You were late to class! You lose some reputation.{1}".format(
+            "{}You were late to class! You lose some reputation.{}".format(
                 Fore.RED, Style.RESET_ALL
             )
         )
         player["reputation"]["teachers"] -= 5
     elif reason == "missed_homework":
         slow_print(
-            "{0}You didn't complete your homework! Your grade might suffer.{1}".format(
+            "{}You didn't complete your homework! Your grade might suffer.{}".format(
                 Fore.RED, Style.RESET_ALL
             )
         )
@@ -22759,7 +22934,7 @@ def apply_sanction(reason) -> Any:
         # First uniform violation is a warning
         if player.get("uniform_violations", 0) == 0:
             slow_print(
-                "{0}The teacher scolds you for not wearing the proper school uniform!{1}".format(
+                "{}The teacher scolds you for not wearing the proper school uniform!{}".format(
                     Fore.RED, Style.RESET_ALL
                 )
             )
@@ -22770,7 +22945,7 @@ def apply_sanction(reason) -> Any:
         # Second violation is detention
         elif player.get("uniform_violations", 0) == 1:
             slow_print(
-                "{0}This is your second uniform violation!{1}".format(
+                "{}This is your second uniform violation!{}".format(
                     Fore.RED, Style.RESET_ALL
                 )
             )
@@ -22787,7 +22962,7 @@ def apply_sanction(reason) -> Any:
         # Third violation is a meeting with parents/principal
         else:
             slow_print(
-                "{0}This is your third uniform violation! The principal is very disappointed.{1}".format(
+                "{}This is your third uniform violation! The principal is very disappointed.{}".format(
                     Fore.RED, Style.RESET_ALL
                 )
             )
@@ -22803,7 +22978,7 @@ def apply_sanction(reason) -> Any:
             player["uniform_violations"] = 0
     else:
         slow_print(
-            "{0}You received a sanction: {1}{2}".format(
+            "{}You received a sanction: {}{}".format(
                 Fore.RED, reason, Style.RESET_ALL
             )
         )
@@ -22863,15 +23038,15 @@ def take_exam(subject: str) -> Any:
 
     for i, q in enumerate(questions, 1):
         print(
-            "\n{0}Question {1}:{2} {3}".format(
+            "\n{}Question {}:{} {}".format(
                 Fore.CYAN, i, Style.RESET_ALL, q["question"]
             )
         )
         for j, option in enumerate(q["options"], 1):
-            print("{0}. {1}".format(j, option))
+            print("{}. {}".format(j, option))
 
         answer = input(
-            "\n{0}Your answer (1-{1}):{2} ".format(
+            "\n{}Your answer (1-{}):{} ".format(
                 Fore.GREEN, len(q["options"]), Style.RESET_ALL
             )
         )
@@ -22881,7 +23056,7 @@ def take_exam(subject: str) -> Any:
                 print(f"{Fore.GREEN}Correct!{Style.RESET_ALL}")
             else:
                 print(
-                    "{0}Incorrect! The answer was: {1}{2}".format(
+                    "{}Incorrect! The answer was: {}{}".format(
                         Fore.RED, q["answer"], Style.RESET_ALL
                     )
                 )
@@ -22925,7 +23100,7 @@ def check_monthly_exam() -> bool:
 
             player["grades"][subject] = new_grade
             print(
-                "\n{0} exam score: {1}/10 (Grade: {2})".format(
+                "\n{} exam score: {}/10 (Grade: {})".format(
                     subject, score, new_grade
                 )
             )
@@ -22939,7 +23114,7 @@ def check_monthly_exam() -> bool:
         reputation_gain = completed_homework * 2 + good_grades * 3
         player["reputation"]["teachers"] += reputation_gain
         print(
-            "\n{0}Teacher reputation increased by {1} points!{2}".format(
+            "\n{}Teacher reputation increased by {} points!{}".format(
                 Fore.CYAN, reputation_gain, Style.RESET_ALL
             )
         )
@@ -23172,12 +23347,12 @@ graduate_templates = {
 def show_graduate_templates() -> bool:
     """Display special graduate templates unlocked after completing the game"""
     print(
-        "\n{0}=== Graduate Templates (Special) ==={1}".format(
+        "\n{}=== Graduate Templates (Special) ==={}".format(
             Fore.MAGENTA, Style.RESET_ALL
         )
     )
     print(
-        "{0}These enhanced templates are unlocked by completing the game.{1}".format(
+        "{}These enhanced templates are unlocked by completing the game.{}".format(
             Fore.CYAN, Style.RESET_ALL
         )
     )
@@ -23186,37 +23361,37 @@ def show_graduate_templates() -> bool:
         year_names = {1: "Freshman", 2: "Sophomore", 3: "Junior", 4: "Senior"}
         year_name = year_names.get(
             template["stats"]["school_year"],
-            "Year {0}".format(template["stats"]["school_year"]),
+            "Year {}".format(template["stats"]["school_year"]),
         )
 
-        print("\n{0}. {1}{2}{3}".format(idx, Fore.GREEN, name, Style.RESET_ALL))
-        print("   Description: {0}".format(template["description"]))
+        print("\n{}. {}{}{}".format(idx, Fore.GREEN, name, Style.RESET_ALL))
+        print("   Description: {}".format(template["description"]))
         print(
-            "   Year: {0} (Year {1})".format(
+            "   Year: {} (Year {})".format(
                 year_name, template["stats"]["school_year"]
             )
         )
         print(
-            "   Academic Charisma: {0}".format(
+            "   Academic Charisma: {}".format(
                 template["stats"]["charisma"]["academic"]
             )
         )
-        print("   Social Charisma: {0}".format(template["stats"]["charisma"]["social"]))
-        print("   Starting Money: ¥{0}".format(template["stats"]["money"]))
-        print("   Starting GPA: {0}".format(template["stats"]["gpa"]))
+        print("   Social Charisma: {}".format(template["stats"]["charisma"]["social"]))
+        print("   Starting Money: ¥{}".format(template["stats"]["money"]))
+        print("   Starting GPA: {}".format(template["stats"]["gpa"]))
         if "achievements" in template["stats"]:
             print(
-                "   Starting Achievements: {0}".format(
+                "   Starting Achievements: {}".format(
                     ", ".join(template["stats"]["achievements"])
                 )
             )
         if "clubs" in template["stats"]:
             print(
-                "   Starting Clubs: {0}".format(", ".join(template["stats"]["clubs"]))
+                "   Starting Clubs: {}".format(", ".join(template["stats"]["clubs"]))
             )
 
     print(
-        "\n{0}Choose a template (1-{1}) or press Enter to go back:{2}".format(
+        "\n{}Choose a template (1-{}) or press Enter to go back:{}".format(
             Fore.YELLOW, len(graduate_templates), Style.RESET_ALL
         )
     )
@@ -23244,7 +23419,7 @@ def apply_graduate_template(template_name) -> Any:
     global homework
 
     if template_name not in graduate_templates:
-        print("Template {0} not found.".format(template_name))
+        print("Template {} not found.".format(template_name))
         return False
 
     template = graduate_templates[template_name]
@@ -23352,7 +23527,7 @@ def apply_graduate_template(template_name) -> Any:
     update_ranks()
 
     print(
-        "\n{0}Graduate Template '{1}' applied successfully!{2}".format(
+        "\n{}Graduate Template '{}' applied successfully!{}".format(
             Fore.MAGENTA, template_name, Style.RESET_ALL
         )
     )
@@ -23360,42 +23535,42 @@ def apply_graduate_template(template_name) -> Any:
 
     # Show template status summary
     slow_print(
-        "\n{0}=== Graduate Template Status Summary ==={1}".format(
+        "\n{}=== Graduate Template Status Summary ==={}".format(
             Fore.YELLOW, Style.RESET_ALL
         )
     )
-    slow_print("School Year: {0}".format(player["school_year"]))
-    slow_print("GPA: {0}".format(player["gpa"]))
-    slow_print("Electives: {0}".format(", ".join(player["electives"])))
-    slow_print("Money: ¥{0}".format(player["money"]))
-    slow_print("Social Charisma: {0}".format(player["charisma"]["social"]))
-    slow_print("Academic Charisma: {0}".format(player["charisma"]["academic"]))
+    slow_print("School Year: {}".format(player["school_year"]))
+    slow_print("GPA: {}".format(player["gpa"]))
+    slow_print("Electives: {}".format(", ".join(player["electives"])))
+    slow_print("Money: ¥{}".format(player["money"]))
+    slow_print("Social Charisma: {}".format(player["charisma"]["social"]))
+    slow_print("Academic Charisma: {}".format(player["charisma"]["academic"]))
 
     if player["clubs"]:
         club_info = []
         for club in player["clubs"]:
             position = player["club_positions"].get(club, "Member")
-            club_info.append("{0} ({1})".format(club, position))
-        slow_print("Clubs: {0}".format(", ".join(club_info)))
+            club_info.append("{} ({})".format(club, position))
+        slow_print("Clubs: {}".format(", ".join(club_info)))
 
     if "achievements" in stats and stats["achievements"]:
-        slow_print("Achievements: {0}".format(", ".join(stats["achievements"])))
+        slow_print("Achievements: {}".format(", ".join(stats["achievements"])))
 
     if "internships" in stats and stats["internships"]:
-        slow_print("Internships: {0}".format(", ".join(stats["internships"])))
+        slow_print("Internships: {}".format(", ".join(stats["internships"])))
 
     if player["romantic_interest"]:
         stage_name = ROMANCE_STAGES[player["romance_stage"]]["name"]
-        slow_print("Romance: {0} ({1})".format(player["romantic_interest"], stage_name))
+        slow_print("Romance: {} ({})".format(player["romantic_interest"], stage_name))
 
     # Special message for graduate templates
     slow_print(
-        "\n{0}As a special graduate template, you start with enhanced abilities and opportunities!{1}".format(
+        "\n{}As a special graduate template, you start with enhanced abilities and opportunities!{}".format(
             Fore.CYAN, Style.RESET_ALL
         )
     )
     slow_print(
-        "{0}Make the most of your campus life experience!{1}".format(
+        "{}Make the most of your campus life experience!{}".format(
             Fore.CYAN, Style.RESET_ALL
         )
     )
