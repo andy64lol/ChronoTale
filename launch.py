@@ -12,7 +12,7 @@ from colorama import init, Fore, Style
 init(autoreset=True)
 
 # Constants
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 LAUNCHER_NAME = "ChronoTale Launcher"
 
 # UI Enhancement constants
