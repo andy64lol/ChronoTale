@@ -12,18 +12,32 @@ from colorama import init, Fore, Back, Style
 # Enhanced setup for colorama to ensure colors work in various environments
 os.environ["FORCE_COLOR"] = "1"  # Force colors in certain environments
 os.environ["TERM"] = os.environ.get("TERM", "xterm-256color")  # Set terminal type if not defined
+os.environ["NO_COLOR"] = ""  # Ensure NO_COLOR is not set
 
 # Initialize colorama with proper settings for all environments
-init(autoreset=True, convert=True, strip=False)
+init(autoreset=True, convert=True, strip=False, wrap=True)
+
+# Clear screen function
+def clear() -> None:
+    """Clear the terminal screen"""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 # Color handling utility functions
 def safe_color_print(text: str, color: str = Fore.WHITE, style: str = "", end: str = "\n") -> None:
     """Safely print colored text with proper ANSI handling"""
     try:
-        formatted_text = f"{style}{color}{text}{Style.RESET_ALL}"
-        print(formatted_text, end=end)
+        # Always format with colors to ensure they display
+        if style and style != "":
+            formatted_text = f"{style}{color}{text}{Style.RESET_ALL}"
+        else:
+            formatted_text = f"{color}{text}{Style.RESET_ALL}"
+        print(formatted_text, end=end, flush=True)
     except Exception:
-        print(text, end=end)
+        # Fallback that still tries to preserve colors
+        try:
+            print(f"{color}{text}{Style.RESET_ALL}", end=end, flush=True)
+        except Exception:
+            print(text, end=end, flush=True)
 
 def strip_ansi_codes(text: str) -> str:
     """Remove ANSI escape codes from text"""
@@ -31,18 +45,21 @@ def strip_ansi_codes(text: str) -> str:
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     return ansi_escape.sub('', text)
 
+# Global game state for storing session data
+game_state: Dict[str, Any] = {}
+
 # Game Settings
 game_settings = {
-    "allow_nsfw": False,  # Controls mature/explicit content
-    "allow_bullying": False,  # Controls bullying events and interactions
-    "allow_cuss_words": False,  # Controls language filter
-    "allow_cross_family_love": False,  # Controls romantic options with step-siblings/family
-    "nsfw_level": "low",  # none, low, medium, high - Controls the detail level of NSFW content
-    "cross_family_romance_type": "none",  # none, step, all - Controls which family relationships can be romantic
-    "difficulty": "normal",  # easy, normal, hard
-    "text_speed": "normal",  # slow, normal, fast
-    "enable_cheats": False,  # Enable cheat commands
-    "show_tutorial": True,  # Show tutorial hints
+    "allow_nsfw": False,  
+    "allow_bullying": False, 
+    "allow_cuss_words": False,  
+    "allow_cross_family_love": False,
+    "nsfw_level": "low", 
+    "cross_family_romance_type": "none",  
+    "difficulty": "normal", 
+    "text_speed": "normal", 
+    "enable_cheats": False, 
+    "show_tutorial": True, 
 }
 
 # Initialize non-interactive mode flag
@@ -1212,8 +1229,8 @@ def reset_settings() -> Any:
 # Try to load settings at startup
 load_settings()
 
-# Tutorial system
-def show_tutorial(topic: Any, force: bool = False) -> Any:
+# In-game tutorial hints system
+def show_tutorial_hint(topic: Any, force: bool = False) -> Any:
     """
     Display tutorial messages to help new players
     Only shows if tutorial setting is enabled
@@ -1279,6 +1296,223 @@ def is_content_allowed(content_type) -> bool:
             allowed = game_settings.get("cross_family_romance_type", "none") != "none"
 
     return allowed
+
+# Bullying event system
+def trigger_bullying_event() -> None:
+    """Trigger a bullying event if content is allowed"""
+    if not is_content_allowed("bullying"):
+        return
+    
+    clear()
+    slow_print(f"{Back.RED}{Fore.WHITE}{Style.BRIGHT}═══ BULLYING INCIDENT ═══{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Random bullying scenarios
+    scenarios = [
+        "classroom_harassment",
+        "hallway_incident", 
+        "lunch_room_confrontation",
+        "cyber_bullying",
+        "exclusion_event"
+    ]
+    
+    scenario = random.choice(scenarios)
+    
+    if scenario == "classroom_harassment":
+        _classroom_harassment_event()
+    elif scenario == "hallway_incident":
+        _hallway_incident_event()
+    elif scenario == "lunch_room_confrontation":
+        _lunch_room_confrontation_event()
+    elif scenario == "cyber_bullying":
+        _cyber_bullying_event()
+    elif scenario == "exclusion_event":
+        _exclusion_event()
+
+def _classroom_harassment_event() -> None:
+    """Classroom bullying scenario"""
+    slow_print(f"{Fore.LIGHTBLUE_EX}During class, you notice a group of students making fun of{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTBLUE_EX}another student's appearance and academic performance.{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.RED}{Style.BRIGHT}Bully: \"Look at this loser, can't even answer a simple question!\"{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTCYAN_EX}Victim: *looks down embarrassed*{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Back.YELLOW}{Fore.BLACK}What do you do?{Style.RESET_ALL}")
+    slow_print(f"{Fore.GREEN}1. Speak up and defend the victim{Style.RESET_ALL}")
+    slow_print(f"{Fore.BLUE}2. Report it to the teacher privately{Style.RESET_ALL}") 
+    slow_print(f"{Fore.YELLOW}3. Do nothing and look away{Style.RESET_ALL}")
+    slow_print(f"{Fore.RED}4. Join in to avoid being targeted{Style.RESET_ALL}")
+    
+    choice = input("Choose (1-4): ").strip()
+    
+    if choice == "1":
+        slow_print(f"{Fore.LIGHTGREEN_EX}{Style.BRIGHT}You: \"Hey, that's not okay. Leave them alone.\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.RED}{Style.BRIGHT}Bully: \"What's it to you?\"{Style.RESET_ALL}")
+        slow_print(f"{Back.GREEN}{Fore.WHITE}You stand your ground and the bully eventually backs down.{Style.RESET_ALL}")
+        slow_print(f"{Fore.LIGHTCYAN_EX}The victim looks grateful for your intervention.{Style.RESET_ALL}")
+        # Positive consequences
+    elif choice == "2":
+        slow_print(f"{Fore.LIGHTBLUE_EX}You quietly inform the teacher about the situation.{Style.RESET_ALL}")
+        slow_print(f"{Fore.BLUE}{Style.BRIGHT}The teacher addresses it after class discretely.{Style.RESET_ALL}")
+        # Moderate positive consequences
+    elif choice == "3":
+        slow_print(f"{Fore.LIGHTYELLOW_EX}You look away and pretend not to notice.{Style.RESET_ALL}")
+        slow_print(f"{Back.YELLOW}{Fore.BLACK}The bullying continues unchecked.{Style.RESET_ALL}")
+        # Neutral consequences
+    elif choice == "4":
+        slow_print(f"{Fore.LIGHTRED_EX}You reluctantly join in with some mild teasing.{Style.RESET_ALL}")
+        slow_print(f"{Back.RED}{Fore.WHITE}You feel terrible about it afterward.{Style.RESET_ALL}")
+        # Negative consequences
+    
+    slow_print("")
+    input("Press Enter to continue...")
+
+def _hallway_incident_event() -> None:
+    """Hallway bullying scenario"""
+    slow_print(f"{Fore.WHITE}While walking to your next class, you witness someone{Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}being pushed around and having their books knocked down.{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.RED}Bully: \"Watch where you're going, nerd!\"{Style.RESET_ALL}")
+    slow_print(f"{Fore.CYAN}*Books scatter across the hallway floor*{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.YELLOW}What's your response?{Style.RESET_ALL}")
+    slow_print("1. Help pick up the books immediately")
+    slow_print("2. Confront the bully directly")
+    slow_print("3. Get a teacher or authority figure")
+    slow_print("4. Walk past quickly to avoid involvement")
+    
+    choice = input("Choose (1-4): ").strip()
+    
+    if choice == "1":
+        slow_print(f"{Fore.GREEN}You immediately help gather the scattered books.{Style.RESET_ALL}")
+        slow_print(f"{Fore.CYAN}Victim: \"Thank you so much, I really appreciate it.\"{Style.RESET_ALL}")
+    elif choice == "2":
+        slow_print(f"{Fore.RED}You: \"That was completely unnecessary!\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.RED}The bully turns their attention to you instead.{Style.RESET_ALL}")
+    elif choice == "3":
+        slow_print(f"{Fore.BLUE}You quickly find a teacher to report the incident.{Style.RESET_ALL}")
+        slow_print(f"{Fore.BLUE}They arrive to address the situation properly.{Style.RESET_ALL}")
+    elif choice == "4":
+        slow_print(f"{Fore.YELLOW}You hurry past, avoiding eye contact.{Style.RESET_ALL}")
+        slow_print(f"{Fore.YELLOW}The victim continues struggling alone.{Style.RESET_ALL}")
+    
+    slow_print("")
+    input("Press Enter to continue...")
+
+def _lunch_room_confrontation_event() -> None:
+    """Lunch room bullying scenario"""
+    slow_print(f"{Fore.WHITE}During lunch, you see a student sitting alone while{Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}others throw food and make cruel comments.{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.RED}Bully: \"Nobody wants to sit with you! I wonder why...\"{Style.RESET_ALL}")
+    slow_print(f"{Fore.CYAN}*Food hits the isolated student*{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.YELLOW}How do you handle this situation?{Style.RESET_ALL}")
+    slow_print("1. Invite the victim to sit with you")
+    slow_print("2. Tell the bullies to stop immediately")
+    slow_print("3. Report it to lunch supervisors")
+    slow_print("4. Ignore the situation completely")
+    
+    choice = input("Choose (1-4): ").strip()
+    
+    if choice == "1":
+        slow_print(f"{Fore.GREEN}You: \"Hey, want to sit with us?\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.GREEN}The bullying stops as you provide social support.{Style.RESET_ALL}")
+    elif choice == "2":
+        slow_print(f"{Fore.RED}You: \"Cut it out! That's not funny!\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.RED}You face potential retaliation but stand firm.{Style.RESET_ALL}")
+    elif choice == "3":
+        slow_print(f"{Fore.BLUE}You alert the lunch supervisors to the situation.{Style.RESET_ALL}")
+        slow_print(f"{Fore.BLUE}They quickly intervene and address the behavior.{Style.RESET_ALL}")
+    elif choice == "4":
+        slow_print(f"{Fore.YELLOW}You focus on your own lunch, avoiding involvement.{Style.RESET_ALL}")
+        slow_print(f"{Fore.YELLOW}The harassment continues unaddressed.{Style.RESET_ALL}")
+    
+    slow_print("")
+    input("Press Enter to continue...")
+
+def _cyber_bullying_event() -> None:
+    """Cyber bullying scenario"""
+    slow_print(f"{Fore.WHITE}You discover that someone in your class is being{Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}harassed online with mean comments and fake rumors.{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.RED}You see cruel posts about them on social media.{Style.RESET_ALL}")
+    slow_print(f"{Fore.CYAN}The victim seems withdrawn and upset lately.{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.YELLOW}What action do you take?{Style.RESET_ALL}")
+    slow_print("1. Send supportive messages to the victim")
+    slow_print("2. Report the cyber bullying to authorities")
+    slow_print("3. Confront the cyber bullies online")
+    slow_print("4. Stay out of online drama")
+    
+    choice = input("Choose (1-4): ").strip()
+    
+    if choice == "1":
+        slow_print(f"{Fore.GREEN}You send kind, supportive messages privately.{Style.RESET_ALL}")
+        slow_print(f"{Fore.GREEN}Your support helps them feel less alone.{Style.RESET_ALL}")
+    elif choice == "2":
+        slow_print(f"{Fore.BLUE}You report the harassment to school counselors.{Style.RESET_ALL}")
+        slow_print(f"{Fore.BLUE}They take appropriate action to address it.{Style.RESET_ALL}")
+    elif choice == "3":
+        slow_print(f"{Fore.RED}You call out the bullies in the comments.{Style.RESET_ALL}")
+        slow_print(f"{Fore.RED}This escalates the online conflict further.{Style.RESET_ALL}")
+    elif choice == "4":
+        slow_print(f"{Fore.YELLOW}You avoid getting involved in social media drama.{Style.RESET_ALL}")
+        slow_print(f"{Fore.YELLOW}The cyber bullying continues unchecked.{Style.RESET_ALL}")
+    
+    slow_print("")
+    input("Press Enter to continue...")
+
+def _exclusion_event() -> None:
+    """Social exclusion bullying scenario"""
+    slow_print(f"{Fore.WHITE}You notice a classmate being deliberately excluded{Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}from group activities and conversations.{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.RED}Popular Student: \"Sorry, this group is full.\"{Style.RESET_ALL}")
+    slow_print(f"{Fore.CYAN}*The excluded student looks hurt and confused*{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.YELLOW}How do you respond to this exclusion?{Style.RESET_ALL}")
+    slow_print("1. Invite them to join your group instead")
+    slow_print("2. Question why they're being excluded")
+    slow_print("3. Talk to a teacher about the pattern")
+    slow_print("4. Mind your own business")
+    
+    choice = input("Choose (1-4): ").strip()
+    
+    if choice == "1":
+        slow_print(f"{Fore.GREEN}You: \"Come join us, we'd love to have you!\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.GREEN}You help break the cycle of exclusion.{Style.RESET_ALL}")
+    elif choice == "2":
+        slow_print(f"{Fore.YELLOW}You: \"Why can't they join? There's room.\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.YELLOW}You challenge the exclusionary behavior.{Style.RESET_ALL}")
+    elif choice == "3":
+        slow_print(f"{Fore.BLUE}You discuss the ongoing exclusion with a counselor.{Style.RESET_ALL}")
+        slow_print(f"{Fore.BLUE}They plan interventions to address the pattern.{Style.RESET_ALL}")
+    elif choice == "4":
+        slow_print(f"{Fore.YELLOW}You stay focused on your own activities.{Style.RESET_ALL}")
+        slow_print(f"{Fore.YELLOW}The exclusion continues without intervention.{Style.RESET_ALL}")
+    
+    slow_print("")
+    input("Press Enter to continue...")
+
+def check_for_bullying_events() -> None:
+    """Randomly trigger bullying events during gameplay"""
+    if not is_content_allowed("bullying"):
+        return
+    
+    # 15% chance of bullying event occurring
+    if random.random() < 0.15:
+        trigger_bullying_event()
 
 
 def filter_text(text: Any, content_types: Optional[Any] = None) -> Any:
@@ -1512,12 +1746,12 @@ def check_relationship_compatibility(person1: Any, person2) -> bool:
 
 
 # Game Title
-TITLE = "My First Day Here: Campus Life Edition"
+TITLE = "My first day here: Campus Life - School life simulator"
 # Define ASCII art with line-by-line strings for better readability
 ASCII_ART = """    {}____________________________
    |{}                            {}|
    |{}    My First Day Here:      {}|
-   |{}    Campus Life Edition     {}|
+   |{}  Campus Life - School life simulator {}|
    |{}____________________________{}|""".format(Fore.MAGENTA, Fore.CYAN, Fore.WHITE, Fore.CYAN, Fore.WHITE, Fore.CYAN, Fore.WHITE, Fore.MAGENTA, Style.RESET_ALL)
 
 # Weather system variables
@@ -2551,7 +2785,7 @@ achievements = {
 }
 
 # ----- QUEST SYSTEM -----
-# Quest structure defined in setup_game(), here are just templates for different quest types
+# Quest structure defined during game initialization, here are just templates for different quest types
 QUEST_TEMPLATES = {
     "academic": {
         "description": "Study for {subject} exam",
@@ -3938,7 +4172,7 @@ def get_current_subjects() -> Any:
 
 
 # Update subjects when starting game or advancing year
-subjects = {}  # Will be filled during setup_game or year progression
+subjects = {}  # Will be filled during game initialization or year progression
 
 # Elective Subjects (subset of subjects for clarity)
 elective_subjects = ["Art", "Music", "Computer Science", "Drama", "Photography", "Creative Writing"]
@@ -4791,43 +5025,32 @@ def slow_print(text: Any, delay: Optional[Any] = None, color: Any = Fore.WHITE, 
         style_prefix += highlight
     if style:
         style_prefix += style
-    style_prefix += color
+    if color:
+        style_prefix += color
 
-    # Enhanced color handling for better display
+    # Robust color handling that always displays colors
     try:
-        # Check environment and terminal capabilities
-        is_replit = bool(os.environ.get("REPLIT_ENVIRONMENT") or 
-                        os.environ.get("REPL_ID") or 
-                        "replit" in os.environ.get("REPLIT_CLUSTER", "").lower())
-        
-        # Always use fast printing for better color support in all environments
-        if is_replit or delay <= 0.01 or not sys.stdout.isatty():
-            # Enhanced formatting that works better across platforms
-            if style_prefix:
-                formatted_text = f"{style_prefix}{filtered_text}{Style.RESET_ALL}"
-            else:
-                formatted_text = filtered_text
-            
-            print(formatted_text, flush=True)
-            if delay > 0:
-                time.sleep(min(len(filtered_text) * delay * 0.05, 0.2))
+        # Always apply colors if specified
+        if style_prefix:
+            # Full style prefix with all formatting
+            output_text = f"{style_prefix}{filtered_text}{Style.RESET_ALL}"
+        elif color and color != "":
+            # Just color without additional style
+            output_text = f"{color}{filtered_text}{Style.RESET_ALL}"
         else:
-            # Character-by-character for terminals that support it
-            if style_prefix:
-                print(style_prefix, end="", flush=True)
-            for char in filtered_text:
-                print(char, end="", flush=True)
-                time.sleep(delay)
-            if style_prefix:
-                print(Style.RESET_ALL, flush=True)
-            else:
-                print()
+            # No color specified, use default
+            output_text = filtered_text
+        
+        # Always use immediate printing for reliable color display
+        print(output_text, flush=True)
+        
+        # Add delay if needed without affecting colors
+        if delay > 0.01 and not _non_interactive:
+            time.sleep(min(len(filtered_text) * delay * 0.02, 0.5))
+            
     except Exception:
-        # Robust fallback
-        try:
-            print(strip_ansi_codes(filtered_text))
-        except Exception:
-            print(str(filtered_text))
+        # Fallback that preserves colors
+        print(f"{color or Fore.WHITE}{filtered_text}{Style.RESET_ALL}", flush=True)
 
 
 def update_ranks() -> None:
@@ -9425,10 +9648,9 @@ EX_PARTNER_STATUSES = {
     },
 }
 
-# Modified setup_game function
-def setup_game(non_interactive: bool = False) -> Any:
-    # Only need global for _non_interactive as we're reassigning it
-    # No need for player, subjects, homework, birthdays globals as we're only modifying their contents
+# This function is no longer used - all setup moved to tutorial
+def old_unused_setup_function(non_interactive: bool = False) -> Any:
+    """Start the main game loop after tutorial completion"""
     global _non_interactive
     _non_interactive = non_interactive
 
@@ -9977,9 +10199,9 @@ def reset_player() -> Any:
                 )
 
         # Show dormitory-specific tutorials
-        show_tutorial("new_game")
-        show_tutorial("sleep")
-        show_tutorial("clothing")
+        show_tutorial_hint("new_game")
+        show_tutorial_hint("sleep")
+        show_tutorial_hint("clothing")
 
     elif choice == "2":
         player["accommodation_type"] = "home"
@@ -10020,10 +10242,10 @@ def reset_player() -> Any:
             slow_print("You're an only child.")
 
         # Show home-specific tutorials
-        show_tutorial("new_game")
-        show_tutorial("relationships")
-        show_tutorial("sleep")
-        show_tutorial("clothing")
+        show_tutorial_hint("new_game")
+        show_tutorial_hint("relationships")
+        show_tutorial_hint("sleep")
+        show_tutorial_hint("clothing")
 
     # Get subject data for the first year
     subjects_data = get_subjects_for_year(player["school_year"])
@@ -10411,10 +10633,8 @@ def reset_player() -> Any:
     )
     slow_print("Type /help to see all available commands.")
 
-    # Show more tutorials
-    show_tutorial("quests")
-    show_tutorial("study")
-    show_tutorial("health")
+    # Check for random bullying events
+    check_for_bullying_events()
 
 
 # Handle holiday accommodation switching
@@ -10439,7 +10659,7 @@ def handle_holiday_accommodation() -> Any:
             player["current_location"] = "Living Room"
 
             # Show tutorial and notification
-            show_tutorial("holidays")
+            show_tutorial_hint("holidays")
             slow_print(f"\n{Fore.MAGENTA}=== Holiday Break ==={Style.RESET_ALL}")
             slow_print("You've returned to your family home for the holiday break.")
             slow_print(
@@ -12757,10 +12977,10 @@ def add_special_event_cutscenes() -> dict:
     return special_events
 
 def show_help() -> None:
-    help_text = """
-{}=== AVAILABLE COMMANDS ==={}
+    help_text = f"""
+{Fore.YELLOW}=== AVAILABLE COMMANDS ==={Style.RESET_ALL}
 
-{}Basic Commands:{}
+{Fore.CYAN}Basic Commands:{Style.RESET_ALL}
 /help               - Show this help message
 /exit               - Quit the game
 /save [slot_name]   - Save your progress
@@ -12771,7 +12991,7 @@ def show_help() -> None:
 /schedule           - Show the school schedule
 /settings           - Modify game settings (content filters, difficulty, text speed)
 
-{}Status Commands:{}
+{Fore.GREEN}Status Commands:{Style.RESET_ALL}
 /me                 - Show your complete profile with all stats
 /status             - View your current status
 /homework           - Check your homework
@@ -12785,20 +13005,20 @@ def show_help() -> None:
 /student list       - Show all students in the school (500-600 NPCs)
 /npc list [tag]     - Show NPCs filtered by tag category
 
-{}Location Commands:{}
+{Fore.MAGENTA}Location Commands:{Style.RESET_ALL}
 /go [location]      - Move to a location
 /sleep              - Sleep in your room or bedroom to advance to the next day
 /dinner             - Have dinner at Kitchen or Cafeteria during dinner hours
 /look               - Inspect your current location in detail
 /who_is_here        - See who is currently in the same location as you
 
-{}Academic Commands:{}
+{Fore.BLUE}Academic Commands:{Style.RESET_ALL}
 /study [subject]    - Study a subject
 /teachers           - See a list of your teachers
 /students           - See a list of your classmates
 /complete_quest [id]- Complete a quest
 
-{}Social Commands:{}
+{Fore.RED}Social Commands:{Style.RESET_ALL}
 /interact [student] - Interact with a student
 /clubs              - See available clubs
 /join_club [name]   - Join a club
@@ -12806,18 +13026,18 @@ def show_help() -> None:
 /romance            - Check your romantic relationship
 /date [date_type]    - Go on a date with your romantic interest (at valid locations)
 
-{}Activities Commands:{}
+{Fore.LIGHTGREEN_EX}Activities Commands:{Style.RESET_ALL}
 /work [job_name]    - Work at a part-time job
 /jobs               - List available jobs
 /eat [food_name]    - Eat food at the cafeteria
 /relax              - Reduce stress by relaxing
 
-{}Narrative Enhancement Commands:{}
+{Fore.LIGHTBLUE_EX}Narrative Enhancement Commands:{Style.RESET_ALL}
 /look_around        - Get detailed atmospheric description of your current location
 /mingle             - Actively seek out social interactions and trigger cutscenes
 /scenario           - View today's campus atmosphere and background events
 """
-    print(help_text.format(Fore.CYAN, Style.RESET_ALL, Fore.YELLOW))
+    print(help_text)
 
 
 def go_location(args) -> Any:
@@ -13062,7 +13282,7 @@ def sleep_command(args: Optional[Any] = None) -> Any:
 
     # Handle nap (skip ticks)
     if skip_ticks > 0:
-        show_tutorial("sleep")
+        show_tutorial_hint("sleep")
         slow_print(f"{Fore.CYAN}You take a {skip_ticks} hour nap...{Style.RESET_ALL}")
 
         # Skip the specified number of ticks (10 ticks = 1 hour)
@@ -13146,7 +13366,7 @@ def sleep_command(args: Optional[Any] = None) -> Any:
             slow_print(
                 "It's too early to sleep for the night. You can take a nap instead using '/sleep [hours]'."
             )
-            show_tutorial("sleep")
+            show_tutorial_hint("sleep")
             return
 
         # Report stress decrease
@@ -21822,113 +22042,327 @@ def show_templates() -> bool:
         return False
 
 
-# Function to test colors
-def test_color_display() -> Any:
-    """Test function to check if colors are displaying correctly"""
-    print("\n=== COLOR TEST MODE ===")
-    print("This is normal text (no color)")
+# Tutorial system
+def show_tutorial() -> None:
+    """Show comprehensive tutorial for new players"""
+    clear()
+    slow_print(f"{Back.CYAN}{Fore.WHITE}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    slow_print(f"{Back.YELLOW}{Fore.BLACK}{Style.BRIGHT}         MY FIRST DAY HERE: CAMPUS LIFE - SCHOOL LIFE SIMULATOR{Style.RESET_ALL}")
+    slow_print(f"{Back.MAGENTA}{Fore.WHITE}                               TUTORIAL GUIDE{Style.RESET_ALL}")
+    slow_print(f"{Back.CYAN}{Fore.WHITE}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.LIGHTGREEN_EX}{Style.BRIGHT}Welcome to your new school life adventure!{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTBLUE_EX}This tutorial will guide you through the basic mechanics of the game.{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Basic gameplay
+    slow_print(f"{Back.YELLOW}{Fore.BLACK}📚 BASIC GAMEPLAY:{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTCYAN_EX}• Navigate through your school day using numbered choices{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTGREEN_EX}• Build relationships with classmates and teachers{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTBLUE_EX}• Manage your academic performance and social life{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTYELLOW_EX}• Make choices that will affect your story{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Stats explanation
+    slow_print(f"{Back.BLUE}{Fore.WHITE}📊 YOUR STATS:{Style.RESET_ALL}")
+    slow_print(f"• {Fore.LIGHTGREEN_EX}{Style.BRIGHT}Social Charisma{Style.RESET_ALL}: Affects friendships and social interactions")
+    slow_print(f"• {Fore.LIGHTBLUE_EX}{Style.BRIGHT}Academic Performance{Style.RESET_ALL}: Your grades and study ability")
+    slow_print(f"• {Fore.LIGHTMAGENTA_EX}{Style.BRIGHT}Money{Style.RESET_ALL}: For buying items and activities")
+    slow_print(f"• {Fore.LIGHTRED_EX}{Style.BRIGHT}Reputation{Style.RESET_ALL}: How students and teachers view you")
+    slow_print("")
+    
+    # Relationships
+    slow_print(f"{Fore.YELLOW}💝 RELATIONSHIPS:{Style.RESET_ALL}")
+    slow_print("• Talk to different characters to build friendships")
+    slow_print("• Your choices affect how others feel about you")
+    slow_print("• Strong relationships unlock special events")
+    slow_print("• Each character has unique personality and storylines")
+    slow_print("")
+    
+    # Activities
+    slow_print(f"{Fore.YELLOW}🎯 ACTIVITIES:{Style.RESET_ALL}")
+    slow_print("• Study to improve your academic performance")
+    slow_print("• Join clubs and participate in school events")
+    slow_print("• Explore different locations around the school")
+    slow_print("• Complete daily activities to progress")
+    slow_print("")
+    
+    # Tips
+    slow_print(f"{Fore.YELLOW}💡 HELPFUL TIPS:{Style.RESET_ALL}")
+    slow_print("• Save your game regularly to preserve progress")
+    slow_print("• Balance your social life with academic responsibilities")
+    slow_print("• Explore all dialogue options to discover new storylines")
+    slow_print("• Your choices have consequences - choose wisely!")
+    slow_print("")
+    
+    slow_print(f"{Fore.GREEN}You're ready to begin your school adventure!{Style.RESET_ALL}")
+    slow_print(f"{Fore.CYAN}Good luck, and have fun exploring your new school life!{Style.RESET_ALL}")
+    slow_print("")
+    input("Press Enter to continue...")
 
-    # Basic color tests
-    print(f"{Fore.RED}This should be RED text{Style.RESET_ALL}")
-    print(f"{Fore.GREEN}This should be GREEN text{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}This should be YELLOW text{Style.RESET_ALL}")
-    print(f"{Fore.BLUE}This should be BLUE text{Style.RESET_ALL}")
-    print(f"{Fore.MAGENTA}This should be MAGENTA text{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}This should be CYAN text{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}This should be WHITE text{Style.RESET_ALL}")
+def show_friend_tutorial_with_setup(friend_name: str, friend_gender: str, player_gender: str) -> None:
+    """Complete tutorial and setup process with friend character interaction"""
+    global game_state, player
+    
+    # Initialize player data
+    player = {
+        "name": "",
+        "gender": player_gender,
+        "current_location": "dormitory",
+        "energy": 100,
+        "health": 100,
+        "money": 1000,
+        "reputation": {"students": 50, "teachers": 50},
+        "charisma": {"social": 50, "academic": 50},
+        "grades": {},
+        "relationships": {},
+        "inventory": []
+    }
+    
+    if friend_gender == "female":
+        friend_color = Fore.LIGHTMAGENTA_EX
+        friend_bg = Back.MAGENTA
+    else:
+        friend_color = Fore.LIGHTBLUE_EX
+        friend_bg = Back.BLUE
+    
+    clear()
+    slow_print(f"{friend_bg}{Fore.WHITE}═══ {friend_name.upper()}'S SCHOOL GUIDE ═══{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Get player name first
+    if friend_gender == "female":
+        slow_print(f"{friend_color}Akiko: \"Hey there! Before we start exploring, what should I call you?\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{friend_color}Hiroshi: \"Yo! Before we dive in, what's your name, dude?\"{Style.RESET_ALL}")
+    
+    while True:
+        try:
+            name = input(f"{Fore.CYAN}Enter your name: {Style.RESET_ALL}").strip()
+            if name and len(name) >= 2:
+                player["name"] = name
+                break
+            else:
+                if friend_gender == "female":
+                    slow_print(f"{friend_color}Akiko: \"Come on, give me a real name! At least 2 letters!\"{Style.RESET_ALL}")
+                else:
+                    slow_print(f"{friend_color}Hiroshi: \"Dude, I need at least 2 letters for a name!\"{Style.RESET_ALL}")
+        except (EOFError, KeyboardInterrupt):
+            player["name"] = "Student"
+            break
+    
+    clear()
+    if friend_gender == "female":
+        slow_print(f"{friend_color}Akiko: \"Nice to meet you, {player['name']}! I'm Akiko, and I'll be your guide today!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"I've been at this school for a while, so I know all the ins and outs.\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"Let me teach you everything you need to know to succeed here!\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{friend_color}Hiroshi: \"Cool name, {player['name']}! I'm Hiroshi, your unofficial school guide.\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"I've been around this place long enough to know what works.\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"Let me break down everything you need to know to rock this school!\"{Style.RESET_ALL}")
+    
+    slow_print("")
+    input("Press Enter to continue...")
+    
+    clear()
+    slow_print(f"{Back.YELLOW}{Fore.BLACK}📚 BASIC GAMEPLAY{Style.RESET_ALL}")
+    if friend_gender == "female":
+        slow_print(f"{friend_color}Akiko: \"Okay {player['name']}, here's how school life works:\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"You'll get numbered choices - just pick what feels right to you!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"Build friendships, study hard, and make choices that shape your story!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"Every choice you make will affect your relationships and future!\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{friend_color}Hiroshi: \"Alright {player['name']}, here's the deal with school life:\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"You'll get choices with numbers - just pick what feels right.\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"Make friends, hit the books, and see where your choices take you.\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"Trust me, every decision matters more than you think!\"{Style.RESET_ALL}")
+    
+    slow_print("")
+    input("Press Enter to learn about stats...")
+    
+    clear()
+    slow_print(f"{Back.BLUE}{Fore.WHITE}📊 YOUR STATS{Style.RESET_ALL}")
+    if friend_gender == "female":
+        slow_print(f"{friend_color}Akiko: \"Now {player['name']}, let me tell you about the important stuff to track:\"{Style.RESET_ALL}")
+        slow_print(f"• {Fore.LIGHTGREEN_EX}Social Charisma{Style.RESET_ALL}: Makes friends easier - I'll help you with this!")
+        slow_print(f"• {Fore.LIGHTBLUE_EX}Academic Performance{Style.RESET_ALL}: Your grades matter for your future!")
+        slow_print(f"• {Fore.LIGHTMAGENTA_EX}Money{Style.RESET_ALL}: For activities, food, and fun stuff!")
+        slow_print(f"• {Fore.LIGHTRED_EX}Reputation{Style.RESET_ALL}: How others see you - very important!")
+        slow_print("")
+        slow_print(f"{friend_color}Akiko: \"I started with good social skills, so I can teach you my secrets!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"Remember to balance everything - don't just focus on one thing!\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{friend_color}Hiroshi: \"Check it out {player['name']}, these are the key things to watch:\"{Style.RESET_ALL}")
+        slow_print(f"• {Fore.LIGHTGREEN_EX}Social Charisma{Style.RESET_ALL}: Helps with making friends - I'm pretty good at this!")
+        slow_print(f"• {Fore.LIGHTBLUE_EX}Academic Performance{Style.RESET_ALL}: Your grades count for getting into good schools!")
+        slow_print(f"• {Fore.LIGHTMAGENTA_EX}Money{Style.RESET_ALL}: You'll need this for stuff - trust me!")
+        slow_print(f"• {Fore.LIGHTRED_EX}Reputation{Style.RESET_ALL}: What people think of you matters!")
+        slow_print("")
+        slow_print(f"{friend_color}Hiroshi: \"I learned the hard way - balance is key, don't put all your eggs in one basket!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"Pro tip: Having a good friend like me helps a lot! *grins*\"{Style.RESET_ALL}")
+    
+    slow_print("")
+    input("Press Enter to finish setup...")
+    
+    # Add friend as relationship and complete setup
+    player["relationships"][friend_name] = {
+        "relationship_level": 80,  # High starting friendship
+        "relationship_type": "friend",
+        "interactions": 3
+    }
+    
+    game_state["intro_completed"] = True
+    game_state["tutorial_completed"] = True
+    
+    clear()
+    if friend_gender == "female":
+        slow_print(f"{friend_color}Akiko: \"Perfect! You're all set up, {player['name']}!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"I'm already your friend, so you've got a head start!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"Remember, I'm always here if you need advice or just want to chat!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Akiko: \"Now let's make this the best school year ever! 😊\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{friend_color}Hiroshi: \"Awesome! You're ready to go, {player['name']}!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"We're already buddies, so you're starting off strong!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"Hit me up whenever you need backup or want to hang out!\"{Style.RESET_ALL}")
+        slow_print(f"{friend_color}Hiroshi: \"Let's make this school year legendary, dude!\"{Style.RESET_ALL}")
+    
+    slow_print("")
+    slow_print(f"{Fore.GREEN}Welcome to your school life, {player['name']}!{Style.RESET_ALL}")
+    slow_print("Your adventure begins now...")
+    slow_print("")
+    
+    input("Press Enter to start your first day...")
+    
 
-    # Mixed color test
-    print("\nMixed color test:")
-    print(
-        "Normal {}Red{} Normal {}Green{} Normal".format(
-            Fore.RED, Style.RESET_ALL, Fore.GREEN, Style.RESET_ALL
-        )
-    )
 
-    # Background color test
-    print("\nBackground color test:")
-    print(
-        "{}{}White text on red background{}".format(
-            Back.RED, Fore.WHITE, Style.RESET_ALL
-        )
-    )
-    print(
-        "{}{}White text on blue background{}".format(
-            Back.BLUE, Fore.WHITE, Style.RESET_ALL
-        )
-    )
-    print(
-        "{}{}Black text on green background{}".format(
-            Back.GREEN, Fore.BLACK, Style.RESET_ALL
-        )
-    )
-
-    # Style test
-    print("\nStyle test:")
-    print(
-        "{}{}This should be BRIGHT yellow text{}".format(
-            Style.BRIGHT, Fore.YELLOW, Style.RESET_ALL
-        )
-    )
-    print(
-        "{}{}This should be DIM blue text{}".format(
-            Style.DIM, Fore.BLUE, Style.RESET_ALL
-        )
-    )
-
-    # Test slow_print function with colors
-    print("\nslow_print function test:")
-    slow_print("This uses default slow_print (white text)", delay=0.01)
-    slow_print("This should be cyan text with slow_print", color=Fore.CYAN, delay=0.01)
-    slow_print(
-        "This should be yellow bright text",
-        color=Fore.YELLOW,
-        style=Style.BRIGHT,
-        delay=0.01,
-    )
-    slow_print(
-        "{}This has embedded red{} in the text".format(Fore.RED, Style.RESET_ALL),
-        delay=0.01,
-    )
-
-    # Color code embedding tests
-    print("\nColor code embedding tests:")
-    slow_print(
-        "{}Red text with {}embedded cyan{} and back to red{}".format(
-            Fore.RED, Fore.CYAN, Style.RESET_ALL
-        ),
-        delay=0.01,
-    )
-    slow_print(
-        "{}{}Bright{} and {}Dim{} in the same line{}".format(
-            Fore.YELLOW, Style.BRIGHT, Style.NORMAL, Style.DIM, Style.RESET_ALL
-        ),
-        delay=0.01,
-    )
-
-    print(
-        "\nNote: If you don't see colors above, there may be compatibility issues with your terminal."
-    )
-    input("\nPress Enter to return to the main menu...")
-    return show_main_menu()
+def show_game_intro() -> None:
+    """Show opening intro for new games with friend introduction"""
+    clear()
+    slow_print(f"{Back.CYAN}{Fore.WHITE}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    slow_print(f"{Back.YELLOW}{Fore.BLACK}{Style.BRIGHT}         MY FIRST DAY HERE: CAMPUS LIFE - SCHOOL LIFE SIMULATOR{Style.RESET_ALL}")
+    slow_print(f"{Back.MAGENTA}{Fore.WHITE}                           A New Chapter Begins...{Style.RESET_ALL}")
+    slow_print(f"{Back.CYAN}{Fore.WHITE}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Character selection for player
+    slow_print(f"{Fore.LIGHTBLUE_EX}{Style.BRIGHT}Before we begin, let's determine your character...{Style.RESET_ALL}")
+    slow_print("")
+    slow_print(f"{Back.YELLOW}{Fore.BLACK}What's your gender?{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTCYAN_EX}1. Male{Style.RESET_ALL}")
+    slow_print(f"{Fore.LIGHTMAGENTA_EX}2. Female{Style.RESET_ALL}")
+    
+    while True:
+        try:
+            gender_choice = input("Choose (1-2): ").strip()
+            if gender_choice == "1":
+                player_gender = "male"
+                friend_gender = "female"
+                friend_name = "Akiko"
+                break
+            elif gender_choice == "2":
+                player_gender = "female"
+                friend_gender = "male"
+                friend_name = "Hiroshi"
+                break
+            else:
+                slow_print(f"{Fore.RED}Please choose 1 or 2.{Style.RESET_ALL}")
+        except (EOFError, KeyboardInterrupt):
+            slow_print(f"{Fore.RED}Input interrupted. Defaulting to male character.{Style.RESET_ALL}")
+            player_gender = "male"
+            friend_gender = "female"
+            friend_name = "Akiko"
+            break
+    
+    clear()
+    slow_print(f"{Fore.CYAN}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    slow_print(f"{Fore.YELLOW}{Style.BRIGHT}                          SCHOOL LIFE SIMULATOR{Style.RESET_ALL}")
+    slow_print(f"{Fore.CYAN}                           A New Chapter Begins...{Style.RESET_ALL}")
+    slow_print(f"{Fore.CYAN}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Opening scene
+    slow_print(f"{Fore.WHITE}The morning sun streams through your bedroom window as your alarm{Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}clock rings out. You stretch and yawn, feeling both nervous and excited.{Style.RESET_ALL}")
+    slow_print("")
+    
+    slow_print(f"{Fore.YELLOW}*BEEP BEEP* - Your phone buzzes with a text message.{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Friend's introduction text
+    if friend_gender == "female":
+        slow_print(f"{Back.MAGENTA}{Fore.WHITE}📱 Akiko: \"Hey! Ready for your first day? I'm waiting outside! 😊\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.LIGHTMAGENTA_EX}📱 Akiko: \"Don't worry, I'll show you around the school. We're gonna have fun!\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{Back.BLUE}{Fore.WHITE}📱 Hiroshi: \"Yo! First day, huh? I'm outside waiting for you.\"{Style.RESET_ALL}")
+        slow_print(f"{Fore.LIGHTBLUE_EX}📱 Hiroshi: \"I'll give you the grand tour. This school's pretty cool once you know your way around.\"{Style.RESET_ALL}")
+    
+    slow_print("")
+    slow_print(f"{Fore.WHITE}You quickly get dressed and grab your school bag. As you step outside,{Style.RESET_ALL}")
+    slow_print(f"{Fore.WHITE}you see {friend_name} waiting by the gate with a warm smile.{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Friend's greeting
+    if friend_gender == "female":
+        slow_print(f"{Fore.MAGENTA}Akiko: \"There you are! I was starting to think you chickened out!{Style.RESET_ALL}")
+        slow_print(f"{Fore.MAGENTA}Don't look so nervous - everyone's really nice here. Well, mostly.{Style.RESET_ALL}")
+        slow_print(f"{Fore.MAGENTA}Come on, let me show you around before classes start!\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{Fore.BLUE}Hiroshi: \"Finally! I thought you might've gotten lost already.{Style.RESET_ALL}")
+        slow_print(f"{Fore.BLUE}Look, I know starting at a new school can be intimidating, but you'll be fine.{Style.RESET_ALL}")
+        slow_print(f"{Fore.BLUE}I've got your back. Let's go check out your new kingdom!\"{Style.RESET_ALL}")
+    
+    slow_print("")
+    slow_print(f"{Fore.GREEN}As you walk toward the school building together, {friend_name} points out{Style.RESET_ALL}")
+    slow_print(f"{Fore.GREEN}different areas and introduces you to some students along the way.{Style.RESET_ALL}")
+    slow_print("")
+    
+    # School tour begins
+    slow_print(f"{Fore.YELLOW}Your school adventure is about to begin...{Style.RESET_ALL}")
+    slow_print("")
+    
+    if friend_gender == "female":
+        slow_print(f"{Fore.MAGENTA}Akiko: \"Ready to make some memories?\"{Style.RESET_ALL}")
+    else:
+        slow_print(f"{Fore.BLUE}Hiroshi: \"Let's make this year count!\"{Style.RESET_ALL}")
+    
+    slow_print("")
+    slow_print(f"{Fore.CYAN}Welcome to your school life adventure!{Style.RESET_ALL}")
+    slow_print("")
+    
+    # Store friend info for later use
+    global game_state
+    game_state["friend_name"] = friend_name
+    game_state["friend_gender"] = friend_gender
+    game_state["player_gender"] = player_gender
+    
+    input("Press Enter to begin your journey...")
+    
+    # Have the friend give a tutorial with full setup integrated
+    show_friend_tutorial_with_setup(friend_name, friend_gender, player_gender)
 
 
 def show_main_menu() -> bool:
-    print(f"\n{Fore.YELLOW}1. New game{Style.RESET_ALL}")
-    print(f"{Fore.GREEN}2. Continue game{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}3. Settings{Style.RESET_ALL}")
-    print(
-        "{}4. Student Templates (Password Required){}".format(
-            Fore.MAGENTA, Style.RESET_ALL
-        )
-    )
-    print(f"{Fore.BLUE}5. Test Colors (Debug){Style.RESET_ALL}")
+    clear()
+    print(f"{Back.CYAN}{Fore.WHITE}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    print(f"{Back.YELLOW}{Fore.BLACK}{Style.BRIGHT}         MY FIRST DAY HERE: CAMPUS LIFE - SCHOOL LIFE SIMULATOR{Style.RESET_ALL}")
+    print(f"{Back.MAGENTA}{Fore.WHITE}                              MAIN MENU{Style.RESET_ALL}")
+    print(f"{Back.CYAN}{Fore.WHITE}═══════════════════════════════════════════════════════════════════════{Style.RESET_ALL}")
+    print("")
+    
+    print(f"{Fore.LIGHTYELLOW_EX}{Style.BRIGHT}🎮 1. New game{Style.RESET_ALL} - Start your school adventure")
+    print(f"{Fore.LIGHTGREEN_EX}{Style.BRIGHT}📚 2. Continue game{Style.RESET_ALL} - Resume your progress")
+    print(f"{Fore.LIGHTBLUE_EX}{Style.BRIGHT}⚙️  3. Settings{Style.RESET_ALL} - Customize your experience")
+    print(f"{Fore.LIGHTMAGENTA_EX}{Style.BRIGHT}👨‍🎓 4. Student Templates (Password Required){Style.RESET_ALL}")
+    print(f"{Fore.LIGHTRED_EX}{Style.BRIGHT}❌ 5. Exit{Style.RESET_ALL} - Leave the game")
+    print("")
 
     try:
         choice = input(
-            f"\n{Fore.GREEN}Select an option (1-5):{Style.RESET_ALL} "
+            f"{Back.GREEN}{Fore.WHITE}Select an option (1-5):{Style.RESET_ALL} "
         ).strip()
         if choice == "1":
+            show_game_intro()  # Show intro with integrated tutorial and setup
             return False
         elif choice == "2":
             return display_save_slots()
@@ -21966,13 +22400,10 @@ def show_main_menu() -> bool:
                 )
                 return show_main_menu()
         elif choice == "5":
-            return test_color_display()
+            print(f"\n{Fore.CYAN}Thanks for playing My first day here: Campus Life!{Style.RESET_ALL}")
+            return True
         else:
-            print(
-                "{}Invalid choice. Please select an option between 1 and 5.{}".format(
-                    Fore.RED, Style.RESET_ALL
-                )
-            )
+            print(f"{Fore.RED}Invalid choice. Please select 1-5.{Style.RESET_ALL}")
             return show_main_menu()
     except EOFError:
         print(
@@ -21998,7 +22429,8 @@ def main(non_interactive: bool = False) -> Any:
     Arguments:
     non_interactive -- If True, skips interactive prompts and uses defaults
     """
-    global ticks, player, relationship, current_date, students
+    global ticks, player, relationship, current_date, students, _non_interactive
+    _non_interactive = non_interactive
 
     # Force color codes to work in environments like Replit
     os.environ["FORCE_COLOR"] = "1"
@@ -22021,39 +22453,27 @@ def main(non_interactive: bool = False) -> Any:
     print(f"{Fore.WHITE}{daily_scenario['description']}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Weather: {daily_scenario['weather'].capitalize()} | Campus Event: {daily_scenario['campus_event']}{Style.RESET_ALL}\n")
 
-    # If in non-interactive mode, skip the menu and go directly to setup
+    # If in non-interactive mode, show message and continue to menu
     if non_interactive:
         print(f"{Fore.YELLOW}Running in non-interactive mode with default choices.{Style.RESET_ALL}")
-        # Setup the game with defaults
-        setup_game(non_interactive=True)
-
-        # Display welcome message with instructions for non-interactive mode
-        print(f"\n{Fore.GREEN}Hello {player['name']}!{Style.RESET_ALL}")
         print(f"{Fore.CYAN}Welcome to Campus Life! Type {Fore.YELLOW}/help{Fore.CYAN} to see available commands.{Style.RESET_ALL}")
-        print(f"{Fore.MAGENTA}You're currently in {player['current_location']}.{Style.RESET_ALL}")
-        # Skip the menu and continue directly to main game loop
 
     # Otherwise, show the menu as usual
-    try:
-        if not show_main_menu():
-            setup_game()
-    except EOFError:
-        # If we get an EOF error, switch to non-interactive mode
-        print(f"{Fore.YELLOW}Switching to non-interactive mode due to input limitations.{Style.RESET_ALL}")
-        setup_game(non_interactive=True)
+    # Start the main game interface
+    show_main_menu()
 
-        # Display welcome message with consistent formatting using f-strings
-        print(f"\n{Fore.GREEN}Hello {player['name']}!{Style.RESET_ALL}")
-        print(f"{Fore.CYAN}Welcome to Campus Life! Type {Fore.YELLOW}/help{Fore.CYAN} to see available commands.{Style.RESET_ALL}")
-        print(f"{Fore.MAGENTA}You're currently in {player['current_location']}.{Style.RESET_ALL}")
+    # Main game loop starts after tutorial completion
+    main_game_loop()
 
-    # Main game loop
+def main_game_loop():
+    """Main game loop after setup is complete"""
+    # Initialize non_interactive as False for this scope
+    non_interactive = False
+    
     while True:
         if current_date >= SCHOOL_YEAR_END:
             slow_print(
-                "{}The school year has ended! Thanks for playing!{}".format(
-                    Fore.YELLOW, Style.RESET_ALL
-                )
+                f"{Fore.YELLOW}The school year has ended! Thanks for playing!{Style.RESET_ALL}"
             )
             print(
                 "\n{}Congratulations on completing a full school year!{}".format(
