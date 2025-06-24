@@ -227,6 +227,285 @@ VEHICLES = {
     "monster_truck": {"name": "Monster Truck", "speed": 2, "reliability": 80, "value": 3500, "spanish": "Monster Truck"}
 }
 
+# Street Racing Circuits
+RACING_CIRCUITS = {
+    "desert_highway": {
+        "name": "Desert Highway Circuit",
+        "spanish": "Circuito Carretera del Desierto",
+        "location": "Albuquerque",
+        "distance": "15 miles",
+        "difficulty": 3,
+        "entry_fee": 2000,
+        "max_prize": 10000,
+        "hazards": ["sand_storms", "police_checkpoints", "rival_racers"]
+    },
+    "mountain_pass": {
+        "name": "Mountain Pass Challenge",
+        "spanish": "Desafío del Paso de Montaña",
+        "location": "Santa Fe",
+        "distance": "12 miles",
+        "difficulty": 4,
+        "entry_fee": 3500,
+        "max_prize": 15000,
+        "hazards": ["sharp_turns", "cliff_edges", "weather_conditions"]
+    },
+    "border_run": {
+        "name": "Border Run",
+        "spanish": "Carrera Fronteriza",
+        "location": "Las Cruces",
+        "distance": "20 miles",
+        "difficulty": 5,
+        "entry_fee": 5000,
+        "max_prize": 25000,
+        "hazards": ["border_patrol", "cartel_interference", "smuggler_routes"]
+    },
+    "alien_highway": {
+        "name": "Alien Highway Sprint",
+        "spanish": "Sprint Carretera Alienígena",
+        "location": "Roswell",
+        "distance": "8 miles",
+        "difficulty": 2,
+        "entry_fee": 1000,
+        "max_prize": 6000,
+        "hazards": ["ufo_sightings", "military_presence", "desert_mirages"]
+    }
+}
+
+# Underground Fighting Tournaments
+FIGHTING_TOURNAMENTS = {
+    "warehouse_brawl": {
+        "name": "Warehouse Brawl",
+        "spanish": "Pelea de Almacén",
+        "location": "Albuquerque",
+        "entry_fee": 1500,
+        "rounds": 3,
+        "max_prize": 8000,
+        "opponents": ["street_fighter", "ex_boxer", "gang_enforcer"]
+    },
+    "cartel_championship": {
+        "name": "Cartel Championship",
+        "spanish": "Campeonato del Cartel",
+        "location": "Las Cruces",
+        "entry_fee": 4000,
+        "rounds": 5,
+        "max_prize": 20000,
+        "opponents": ["cartel_hitman", "prison_champion", "underground_legend"]
+    },
+    "desert_death_match": {
+        "name": "Desert Death Match",
+        "spanish": "Combate a Muerte del Desierto",
+        "location": "Santa Fe",
+        "entry_fee": 2500,
+        "rounds": 4,
+        "max_prize": 12000,
+        "opponents": ["desert_warrior", "mma_fighter", "bounty_hunter"]
+    }
+}
+
+# Property Investment System
+PROPERTIES = {
+    "safe_house": {
+        "name": "Safe House",
+        "spanish": "Casa de Seguridad",
+        "cost": 25000,
+        "monthly_upkeep": 500,
+        "benefits": {"heat_reduction": 10, "storage_space": 20},
+        "description": "A secure location to lay low and store items"
+    },
+    "warehouse": {
+        "name": "Criminal Warehouse",
+        "spanish": "Almacén Criminal",
+        "cost": 75000,
+        "monthly_upkeep": 1200,
+        "benefits": {"storage_space": 100, "smuggling_bonus": 15},
+        "description": "Large storage facility for contraband operations"
+    },
+    "nightclub": {
+        "name": "Nightclub",
+        "spanish": "Club Nocturno",
+        "cost": 150000,
+        "monthly_upkeep": 3000,
+        "benefits": {"daily_income": 2000, "reputation_boost": 5},
+        "description": "Legitimate front business with good income"
+    },
+    "luxury_mansion": {
+        "name": "Luxury Mansion",
+        "spanish": "Mansión de Lujo",
+        "cost": 500000,
+        "monthly_upkeep": 8000,
+        "benefits": {"prestige": 50, "gang_capacity": 15, "daily_income": 1000},
+        "description": "Ultimate status symbol and gang headquarters"
+    }
+}
+
+# Advanced NPC System
+NPCS = {
+    "informant": {
+        "name": "El Soplón / The Snitch",
+        "location": "Albuquerque",
+        "services": ["police_intel", "gang_info", "job_tips"],
+        "relationship": 0,
+        "trust_level": "neutral",
+        "dialogue": {
+            "greeting": "¿Qué necesitas saber? / What do you need to know?",
+            "friendly": "Siempre tengo información para mis amigos / I always have info for my friends",
+            "hostile": "No hablo con enemigos / I don't talk to enemies"
+        }
+    },
+    "mechanic": {
+        "name": "Miguel el Mecánico / Miguel the Mechanic",
+        "location": "Santa Fe",
+        "services": ["vehicle_upgrades", "custom_parts", "stolen_car_cleanup"],
+        "relationship": 0,
+        "trust_level": "neutral",
+        "dialogue": {
+            "greeting": "Necesitas arreglos? / Need repairs?",
+            "friendly": "Para ti, precios especiales / Special prices for you",
+            "hostile": "No trabajo con ratas / I don't work with rats"
+        }
+    },
+    "arms_dealer": {
+        "name": "Doña Carmen / Lady Carmen",
+        "location": "Las Cruces",
+        "services": ["rare_weapons", "ammunition", "explosives"],
+        "relationship": 0,
+        "trust_level": "neutral",
+        "dialogue": {
+            "greeting": "¿Qué armamento buscas? / What weapons are you looking for?",
+            "friendly": "Tengo las mejores armas para mis clientes leales / I have the best weapons for loyal customers",
+            "hostile": "Fuera de aquí / Get out of here"
+        }
+    }
+}
+
+# Random Events System
+RANDOM_EVENTS = [
+    {
+        "name": "police_checkpoint",
+        "spanish": "Control Policial",
+        "description": "Police checkpoint ahead",
+        "probability": 15,
+        "consequences": ["wanted_increase", "bribe_opportunity", "arrest_risk"]
+    },
+    {
+        "name": "rival_gang_encounter",
+        "spanish": "Encuentro con Pandilla Rival",
+        "description": "Rival gang members spotted",
+        "probability": 12,
+        "consequences": ["gang_war", "territory_dispute", "respect_challenge"]
+    },
+    {
+        "name": "drug_deal_gone_wrong",
+        "spanish": "Trato de Drogas Salió Mal",
+        "description": "A drug deal has gone sideways",
+        "probability": 8,
+        "consequences": ["money_loss", "heat_increase", "opportunity"]
+    },
+    {
+        "name": "federal_investigation",
+        "spanish": "Investigación Federal",
+        "description": "Federal agents are investigating your operations",
+        "probability": 5,
+        "consequences": ["major_heat", "asset_seizure", "informant_risk"]
+    },
+    {
+        "name": "cartel_invitation",
+        "spanish": "Invitación del Cartel",
+        "description": "A major cartel wants to meet",
+        "probability": 3,
+        "consequences": ["alliance_opportunity", "territory_expansion", "dangerous_mission"]
+    }
+]
+
+# Police Career System
+POLICE_RANKS = {
+    "cadet": {
+        "name": "Police Cadet / Cadete de Policía",
+        "spanish": "Cadete de Policía",
+        "salary": 500,
+        "requirements": {"corruption": 0, "arrests": 0},
+        "abilities": ["patrol", "traffic_stops"]
+    },
+    "officer": {
+        "name": "Police Officer / Oficial de Policía",
+        "spanish": "Oficial de Policía", 
+        "salary": 800,
+        "requirements": {"corruption": 0, "arrests": 5},
+        "abilities": ["patrol", "traffic_stops", "investigations", "drug_busts"]
+    },
+    "detective": {
+        "name": "Detective / Detective",
+        "spanish": "Detective",
+        "salary": 1200,
+        "requirements": {"corruption": 0, "arrests": 15},
+        "abilities": ["investigations", "undercover", "gang_raids", "interrogations"]
+    },
+    "sergeant": {
+        "name": "Sergeant / Sargento",
+        "spanish": "Sargento",
+        "salary": 1500,
+        "requirements": {"corruption": 0, "arrests": 30},
+        "abilities": ["team_leadership", "major_operations", "swat_coordination"]
+    },
+    "lieutenant": {
+        "name": "Lieutenant / Teniente",
+        "spanish": "Teniente",
+        "salary": 2000,
+        "requirements": {"corruption": 0, "arrests": 50},
+        "abilities": ["department_oversight", "federal_cooperation", "anti_cartel"]
+    },
+    "captain": {
+        "name": "Captain / Capitán",
+        "spanish": "Capitán",
+        "salary": 2500,
+        "requirements": {"corruption": 0, "arrests": 75},
+        "abilities": ["city_coordination", "budget_control", "political_liaison"]
+    }
+}
+
+POLICE_OPERATIONS = {
+    "patrol": {
+        "name": "Street Patrol / Patrulla Callejera",
+        "spanish": "Patrulla Callejera",
+        "time": 2,
+        "salary_bonus": 50,
+        "arrest_chance": 15,
+        "corruption_risk": 5
+    },
+    "traffic_stops": {
+        "name": "Traffic Enforcement / Control de Tráfico",
+        "spanish": "Control de Tráfico",
+        "time": 1,
+        "salary_bonus": 30,
+        "arrest_chance": 8,
+        "corruption_risk": 10
+    },
+    "drug_bust": {
+        "name": "Drug Bust / Operativo Antidrogas",
+        "spanish": "Operativo Antidrogas",
+        "time": 4,
+        "salary_bonus": 200,
+        "arrest_chance": 40,
+        "corruption_risk": 15
+    },
+    "gang_raid": {
+        "name": "Gang Raid / Redada de Pandillas",
+        "spanish": "Redada de Pandillas",
+        "time": 6,
+        "salary_bonus": 300,
+        "arrest_chance": 60,
+        "corruption_risk": 20
+    },
+    "undercover": {
+        "name": "Undercover Operation / Operación Encubierta",
+        "spanish": "Operación Encubierta",
+        "time": 8,
+        "salary_bonus": 500,
+        "arrest_chance": 80,
+        "corruption_risk": 25
+    }
+}
+
 WEAPONS = {
     "fists": {"name": "Puños / Fists", "damage": 10, "price": 0, "ammo": None, "spanish": "Puños", "type": "melee"},
     "knife": {"name": "Navaja / Knife", "damage": 25, "price": 50, "ammo": None, "spanish": "Navaja", "type": "melee"},
@@ -520,6 +799,28 @@ class Player:
         # Language preference system
         self.language_mode = "bilingual"  # "spanish", "english", or "bilingual"
         
+        # New extended attributes
+        self.properties = []  # Owned properties
+        self.racing_wins = 0
+        self.fighting_wins = 0
+        self.npc_relationships = {}  # NPC relationship tracking
+        self.special_items = []  # Rare/special items
+        self.achievements = []  # Achievement system
+        self.daily_activities_count = 0  # Track daily activity limits
+        self.last_activity_date = None  # Date tracking
+        self.prestige = 0  # Social standing in criminal world
+        
+        # Police Career System attributes
+        self.is_police = False
+        self.police_rank: Optional[str] = None
+        self.police_corruption = 0  # 0-100, higher = more corrupt
+        self.total_arrests = 0
+        self.police_salary = 0
+        self.police_operations_completed = 0
+        self.undercover_identity = None
+        self.good_deeds = 0  # Track helpful actions for police recruitment
+        self.criminals_stopped = 0  # Track criminals stopped by player
+        
         # Additional attributes for new features
         self.heat_level = 0
         self.prison_time = 0
@@ -737,10 +1038,16 @@ class GameEngine:
             print(f"\n{Fore.CYAN}=== GESTIÓN DEL JUEGO / GAME MANAGEMENT ==={Style.RESET_ALL}")
             print(f"13. {Fore.GREEN}Guardar juego / Save game{Style.RESET_ALL}")
             print(f"14. {Fore.BLUE}Cargar juego / Load game{Style.RESET_ALL}")
-            print(f"15. {Fore.RED}Salir del juego / Quit game{Style.RESET_ALL}")
+            print(f"15. {Fore.LIGHTMAGENTA_EX}Carreras callejeras / Street racing{Style.RESET_ALL}")
+            print(f"16. {Fore.LIGHTRED_EX}Torneos de pelea / Fighting tournaments{Style.RESET_ALL}")
+            print(f"17. {Fore.LIGHTGREEN_EX}Inversiones inmobiliarias / Property investments{Style.RESET_ALL}")
+            print(f"18. {Fore.LIGHTBLUE_EX}Relaciones con NPCs / NPC relationships{Style.RESET_ALL}")
+            print(f"19. {Fore.LIGHTYELLOW_EX}Centro de logros / Achievement center{Style.RESET_ALL}")
+            print(f"20. {Fore.LIGHTCYAN_EX}Carrera policial / Police career{Style.RESET_ALL}")
+            print(f"21. {Fore.RED}Salir del juego / Quit game{Style.RESET_ALL}")
             print()
             
-            choice = input(f"{Fore.CYAN}Elige tu opción / Enter your choice (1-15): {Style.RESET_ALL}").strip()
+            choice = input(f"{Fore.CYAN}Elige tu opción / Enter your choice (1-21): {Style.RESET_ALL}").strip()
             
             if choice == "1":
                 self.explore_city()
@@ -767,20 +1074,30 @@ class GameEngine:
             elif choice == "12":
                 self.gang_hierarchy_system()
             elif choice == "13":
-                self.character_status()
+                self.save_game()
             elif choice == "14":
-                self.allocate_skill_points()
+                self.load_game()
             elif choice == "15":
-                self.change_language()
+                self.street_racing_menu()
             elif choice == "16":
-                self.quit_game()
-            
-            # Auto police encounter check for 3+ wanted level after any action
-            if self.player.wanted_level >= 3 and choice not in ["13", "14", "15", "16"]:
-                self.police_encounter()
+                self.fighting_tournament_menu()
+            elif choice == "17":
+                self.property_investment_menu()
+            elif choice == "18":
+                self.npc_relationship_menu()
+            elif choice == "19":
+                self.achievement_center()
+            elif choice == "20":
+                self.police_career_menu()
+            elif choice == "21":
+                return False
             else:
-                print(f"{Fore.RED}{self.get_text('Opción inválida', 'Invalid choice')}. {self.get_text('Presiona Enter para continuar', 'Press Enter to continue')}...{Style.RESET_ALL}")
+                print(f"{Fore.RED}Opción inválida / Invalid choice. Presiona Enter para continuar...{Style.RESET_ALL}")
                 input()
+            
+            # Auto police encounter check for 3+ wanted level after any action (unless player is police)
+            if self.player.wanted_level >= 3 and choice not in ["13", "14", "19", "20", "21"] and not self.player.is_police:
+                self.police_encounter()
 
     def explore_city(self):
         """Explore the current city"""
@@ -795,11 +1112,14 @@ class GameEngine:
             self.police_patrol,
             self.drug_dealer,
             self.gang_member,
+            self.witness_crime,
+            self.help_citizen,
+            self.report_suspicious_activity,
             self.nothing_happens
         ]
         
         # Weight the encounters based on wanted level and location danger
-        weights = [20, 15, self.player.wanted_level * 10, 25, 20, 30]
+        weights = [20, 15, self.player.wanted_level * 10, 25, 20, 15, 15, 10, 30]
         encounter = random.choices(encounters, weights=weights)[0]
         encounter()
         
@@ -1303,7 +1623,7 @@ class GameEngine:
         
         if random.randint(1, 100) <= success_chance:
             # Abandon current vehicle if any
-            if self.player.vehicle:
+            if self.player.vehicle and self.player.vehicle in VEHICLES:
                 old_vehicle = VEHICLES[self.player.vehicle]["name"]
                 print(f"You abandon your {old_vehicle}.")
             
@@ -1406,12 +1726,16 @@ class GameEngine:
             print(f"{Fore.YELLOW}You don't have a vehicle.{Style.RESET_ALL}")
             print("Steal a car or buy one to get around faster.")
         else:
-            vehicle_info = VEHICLES[self.player.vehicle]
-            print(f"Current Vehicle: {vehicle_info['name']}")
-            print(f"Speed: {'★' * vehicle_info['speed']}")
-            print(f"Reliability: {vehicle_info['reliability']}%")
-            print(f"Value: ${vehicle_info['value']:,}")
-            print()
+            if self.player.vehicle in VEHICLES:
+                vehicle_info = VEHICLES[self.player.vehicle]
+                print(f"Current Vehicle: {vehicle_info['name']}")
+                print(f"Speed: {'★' * vehicle_info['speed']}")
+                print(f"Reliability: {vehicle_info['reliability']}%")
+                print(f"Value: ${vehicle_info['value']:,}")
+                print()
+            else:
+                print(f"{Fore.RED}Invalid vehicle data{Style.RESET_ALL}")
+                self.player.vehicle = None
             
             print(f"1. {Fore.GREEN}Sell vehicle{Style.RESET_ALL}")
             print(f"2. {Fore.YELLOW}Abandon vehicle{Style.RESET_ALL}")
@@ -1419,13 +1743,15 @@ class GameEngine:
             
             choice = input(f"\n{Fore.CYAN}Enter choice: {Style.RESET_ALL}").strip()
             
-            if choice == "1":
+            if choice == "1" and self.player.vehicle and self.player.vehicle in VEHICLES:
+                vehicle_info = VEHICLES[self.player.vehicle]
                 sell_price = vehicle_info['value'] // 2
                 self.player.add_money(sell_price)
                 vehicle_name = vehicle_info['name']
                 self.player.vehicle = None
                 print(f"{Fore.GREEN}Sold {vehicle_name} for ${sell_price}.{Style.RESET_ALL}")
-            elif choice == "2":
+            elif choice == "2" and self.player.vehicle and self.player.vehicle in VEHICLES:
+                vehicle_info = VEHICLES[self.player.vehicle]
                 vehicle_name = vehicle_info['name']
                 self.player.vehicle = None
                 print(f"{Fore.YELLOW}Abandoned {vehicle_name}.{Style.RESET_ALL}")
@@ -1686,7 +2012,7 @@ class GameEngine:
         print()
         
         # Vehicle
-        if self.player.vehicle:
+        if self.player.vehicle and self.player.vehicle in VEHICLES:
             vehicle_info = VEHICLES[self.player.vehicle]
             print(f"{Fore.YELLOW}Vehicle: {vehicle_info['name']}{Style.RESET_ALL}")
             print(f"Speed: {'★' * vehicle_info['speed']}")
@@ -1766,8 +2092,11 @@ class GameEngine:
             
             if choice == "1":
                 # Chase scene
-                vehicle_speed = VEHICLES[self.player.vehicle]["speed"]
-                escape_chance = 30 + (vehicle_speed * 15) + (self.player.skills["driving"] * 5)
+                if self.player.vehicle and self.player.vehicle in VEHICLES:
+                    vehicle_speed = VEHICLES[self.player.vehicle]["speed"]
+                    escape_chance = 30 + (vehicle_speed * 15) + (self.player.skills["driving"] * 5)
+                else:
+                    escape_chance = 20  # No vehicle or invalid vehicle
                 
                 if random.randint(1, 100) <= escape_chance:
                     print(f"{Fore.GREEN}You successfully outran the police!{Style.RESET_ALL}")
@@ -3145,7 +3474,7 @@ class GameEngine:
         driving_skill = self.player.skills.get("driving", 0)
         stealth_skill = self.player.skills.get("stealth", 0)
         
-        if self.player.vehicle:
+        if self.player.vehicle and self.player.vehicle in VEHICLES:
             vehicle_info = VEHICLES[self.player.vehicle]
             flee_chance = 40 + (driving_skill * 8) + (vehicle_info["speed"] * 5)
         else:
@@ -3885,6 +4214,1107 @@ class GameEngine:
         print("You can continue playing in free mode")
         
         input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def street_racing_menu(self):
+        """Street racing circuit menu"""
+        self.display_header()
+        print(f"{Fore.LIGHTMAGENTA_EX}CARRERAS CALLEJERAS / STREET RACING{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Victorias en carreras / Racing wins: {self.player.racing_wins}{Style.RESET_ALL}")
+        print()
+        
+        if not self.player.vehicle:
+            print(f"{Fore.RED}Necesitas un vehículo para participar en carreras / You need a vehicle to participate in races{Style.RESET_ALL}")
+            input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            return
+        
+        print(f"{Fore.CYAN}Circuitos Disponibles / Available Circuits:{Style.RESET_ALL}")
+        available_circuits = []
+        
+        for circuit_id, circuit in RACING_CIRCUITS.items():
+            if circuit["location"] == self.player.location or self.player.racing_wins >= 5:
+                available_circuits.append((circuit_id, circuit))
+        
+        if not available_circuits:
+            print(f"{Fore.YELLOW}No hay circuitos disponibles en esta ciudad / No circuits available in this city{Style.RESET_ALL}")
+            input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            return
+        
+        for i, (circuit_id, circuit) in enumerate(available_circuits, 1):
+            name = circuit["spanish"] if self.player.language_mode == "spanish" else circuit["name"]
+            print(f"{i}. {name}")
+            print(f"   Ubicación: {circuit['location']}")
+            print(f"   Distancia: {circuit['distance']}")
+            print(f"   Dificultad: {'★' * circuit['difficulty']}")
+            print(f"   Entrada: ${circuit['entry_fee']:,}")
+            print(f"   Premio máximo: ${circuit['max_prize']:,}")
+            print()
+        
+        print(f"{len(available_circuits) + 1}. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Elige un circuito / Choose a circuit: {Style.RESET_ALL}").strip()
+        
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(available_circuits):
+                circuit_id, circuit = available_circuits[choice_num - 1]
+                self.participate_in_race(circuit_id, circuit)
+        except ValueError:
+            pass
+        
+        input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def participate_in_race(self, circuit_id, circuit):
+        """Participate in a street race"""
+        if self.player.money < circuit["entry_fee"]:
+            print(f"{Fore.RED}No tienes suficiente dinero para la entrada / Not enough money for entry fee{Style.RESET_ALL}")
+            return
+        
+        self.player.remove_money(circuit["entry_fee"])
+        
+        print(f"\n{Fore.YELLOW}Preparándose para la carrera / Preparing for the race...{Style.RESET_ALL}")
+        
+        # Calculate racing performance
+        if not self.player.vehicle or self.player.vehicle not in VEHICLES:
+            print(f"{Fore.RED}Error: Vehículo no válido / Invalid vehicle{Style.RESET_ALL}")
+            return
+        
+        vehicle_info = VEHICLES[self.player.vehicle]
+        driving_skill = self.player.skills.get("driving", 0)
+        
+        performance = (vehicle_info["speed"] * 15) + (driving_skill * 10) + random.randint(1, 30)
+        
+        # Handle hazards
+        hazard_penalties = 0
+        for hazard in circuit["hazards"]:
+            if random.randint(1, 100) <= 25:
+                hazard_penalties += random.randint(5, 15)
+                if hazard == "police_checkpoints":
+                    print(f"{Fore.RED}¡Control policial! / Police checkpoint!{Style.RESET_ALL}")
+                    self.player.increase_wanted_level(1)
+                elif hazard == "sand_storms":
+                    print(f"{Fore.YELLOW}¡Tormenta de arena! / Sand storm!{Style.RESET_ALL}")
+                elif hazard == "sharp_turns":
+                    print(f"{Fore.YELLOW}¡Curvas peligrosas! / Dangerous turns!{Style.RESET_ALL}")
+        
+        final_performance = max(10, performance - hazard_penalties)
+        
+        # Determine race result
+        if final_performance >= 80:
+            # Victory
+            prize = circuit["max_prize"]
+            print(f"\n{Fore.GREEN}¡VICTORIA! / VICTORY!{Style.RESET_ALL}")
+            print("¡Ganaste la carrera! / You won the race!")
+            print(f"Premio: ${prize:,}")
+            
+            self.player.add_money(prize)
+            self.player.racing_wins += 1
+            self.player.add_respect(10)
+            self.player.add_experience(25)
+            
+            # Check for achievements
+            if self.player.racing_wins == 1:
+                self.unlock_achievement("Primer Piloto / First Racer")
+            elif self.player.racing_wins == 10:
+                self.unlock_achievement("Rey de la Carretera / King of the Road")
+            
+        elif final_performance >= 60:
+            # Second place
+            prize = circuit["max_prize"] // 2
+            print(f"\n{Fore.YELLOW}¡SEGUNDO LUGAR! / SECOND PLACE!{Style.RESET_ALL}")
+            print("Buen trabajo, pero no fue suficiente / Good job, but not enough")
+            print(f"Premio: ${prize:,}")
+            
+            self.player.add_money(prize)
+            self.player.add_respect(5)
+            self.player.add_experience(15)
+            
+        else:
+            # Loss
+            print(f"\n{Fore.RED}¡DERROTA! / DEFEAT!{Style.RESET_ALL}")
+            print("No lograste terminar entre los primeros / You didn't finish in the top positions")
+            
+            # Small consolation prize
+            consolation = circuit["entry_fee"] // 4
+            if consolation > 0:
+                print(f"Premio de consolación: ${consolation:,}")
+                self.player.add_money(consolation)
+            
+            self.player.add_experience(5)
+
+    def fighting_tournament_menu(self):
+        """Fighting tournament menu"""
+        self.display_header()
+        print(f"{Fore.LIGHTRED_EX}TORNEOS DE PELEA / FIGHTING TOURNAMENTS{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Victorias en torneos / Tournament wins: {self.player.fighting_wins}{Style.RESET_ALL}")
+        print()
+        
+        print(f"{Fore.CYAN}Torneos Disponibles / Available Tournaments:{Style.RESET_ALL}")
+        available_tournaments = []
+        
+        for tournament_id, tournament in FIGHTING_TOURNAMENTS.items():
+            if tournament["location"] == self.player.location or self.player.fighting_wins >= 3:
+                available_tournaments.append((tournament_id, tournament))
+        
+        if not available_tournaments:
+            print(f"{Fore.YELLOW}No hay torneos disponibles en esta ciudad / No tournaments available in this city{Style.RESET_ALL}")
+            input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            return
+        
+        for i, (tournament_id, tournament) in enumerate(available_tournaments, 1):
+            name = tournament["spanish"] if self.player.language_mode == "spanish" else tournament["name"]
+            print(f"{i}. {name}")
+            print(f"   Ubicación: {tournament['location']}")
+            print(f"   Rondas: {tournament['rounds']}")
+            print(f"   Entrada: ${tournament['entry_fee']:,}")
+            print(f"   Premio máximo: ${tournament['max_prize']:,}")
+            print()
+        
+        print(f"{len(available_tournaments) + 1}. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Elige un torneo / Choose a tournament: {Style.RESET_ALL}").strip()
+        
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(available_tournaments):
+                tournament_id, tournament = available_tournaments[choice_num - 1]
+                self.participate_in_tournament(tournament_id, tournament)
+        except ValueError:
+            pass
+        
+        input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def participate_in_tournament(self, tournament_id, tournament):
+        """Participate in a fighting tournament"""
+        if self.player.money < tournament["entry_fee"]:
+            print(f"{Fore.RED}No tienes suficiente dinero para la entrada / Not enough money for entry fee{Style.RESET_ALL}")
+            return
+        
+        self.player.remove_money(tournament["entry_fee"])
+        
+        print(f"\n{Fore.YELLOW}Entrando al torneo / Entering tournament...{Style.RESET_ALL}")
+        
+        # Tournament progression
+        strength_skill = self.player.skills.get("strength", 0)
+        current_health = self.player.health
+        rounds_won = 0
+        
+        for round_num in range(1, tournament["rounds"] + 1):
+            print(f"\n{Fore.CYAN}Ronda {round_num} / Round {round_num}{Style.RESET_ALL}")
+            
+            # Opponent strength increases each round
+            opponent_strength = 50 + (round_num * 15) + random.randint(1, 20)
+            player_strength = (strength_skill * 12) + (current_health * 0.5) + random.randint(1, 25)
+            
+            # Weapon bonus
+            weapon_bonus = 0
+            for weapon in self.player.inventory:
+                if weapon in WEAPONS and WEAPONS[weapon]["type"] == "melee":
+                    weapon_bonus += WEAPONS[weapon]["damage"] // 2
+            
+            player_strength += weapon_bonus
+            
+            print(f"Tu fuerza: {int(player_strength)}")
+            print(f"Fuerza del oponente: {int(opponent_strength)}")
+            
+            if player_strength > opponent_strength:
+                print(f"{Fore.GREEN}¡Ganaste la ronda! / You won the round!{Style.RESET_ALL}")
+                rounds_won += 1
+                damage_taken = random.randint(5, 15)
+            else:
+                print(f"{Fore.RED}Perdiste la ronda / You lost the round{Style.RESET_ALL}")
+                damage_taken = random.randint(20, 35)
+                break
+            
+            current_health -= damage_taken
+            print(f"Daño recibido: {damage_taken}")
+            
+            if current_health <= 20:
+                print(f"{Fore.RED}Estás muy herido para continuar / Too injured to continue{Style.RESET_ALL}")
+                break
+        
+        # Tournament results
+        if rounds_won == tournament["rounds"]:
+            # Victory
+            prize = tournament["max_prize"]
+            print(f"\n{Fore.GREEN}¡CAMPEÓN DEL TORNEO! / TOURNAMENT CHAMPION!{Style.RESET_ALL}")
+            print("¡Ganaste el torneo completo! / You won the entire tournament!")
+            print(f"Premio: ${prize:,}")
+            
+            self.player.add_money(prize)
+            self.player.fighting_wins += 1
+            self.player.add_respect(15)
+            self.player.add_experience(35)
+            
+            # Check for achievements
+            if self.player.fighting_wins == 1:
+                self.unlock_achievement("Primer Luchador / First Fighter")
+            elif self.player.fighting_wins == 5:
+                self.unlock_achievement("Campeón Invencible / Undefeated Champion")
+            
+        elif rounds_won >= tournament["rounds"] // 2:
+            # Partial victory
+            prize = tournament["max_prize"] // 3
+            print(f"\n{Fore.YELLOW}¡BUEN DESEMPEÑO! / GOOD PERFORMANCE!{Style.RESET_ALL}")
+            print("Llegaste lejos en el torneo / You made it far in the tournament")
+            print(f"Premio: ${prize:,}")
+            
+            self.player.add_money(prize)
+            self.player.add_respect(8)
+            self.player.add_experience(20)
+        else:
+            # Early elimination
+            print(f"\n{Fore.RED}ELIMINADO TEMPRANO / EARLY ELIMINATION{Style.RESET_ALL}")
+            print("Necesitas entrenar más / You need more training")
+            self.player.add_experience(10)
+        
+        # Apply health damage
+        health_loss = (tournament["rounds"] - rounds_won) * 8
+        self.player.take_damage(health_loss)
+
+    def property_investment_menu(self):
+        """Property investment and management menu"""
+        self.display_header()
+        print(f"{Fore.LIGHTGREEN_EX}INVERSIONES INMOBILIARIAS / PROPERTY INVESTMENTS{Style.RESET_ALL}")
+        print()
+        
+        # Show owned properties
+        if self.player.properties:
+            print(f"{Fore.CYAN}Propiedades Poseídas / Owned Properties:{Style.RESET_ALL}")
+            total_upkeep = 0
+            total_income = 0
+            
+            for prop_id in self.player.properties:
+                prop_info = PROPERTIES[prop_id]
+                name = prop_info["spanish"] if self.player.language_mode == "spanish" else prop_info["name"]
+                print(f"• {name}")
+                print(f"  Mantenimiento mensual: ${prop_info['monthly_upkeep']:,}")
+                total_upkeep += prop_info["monthly_upkeep"]
+                
+                if "daily_income" in prop_info["benefits"]:
+                    daily_income = prop_info["benefits"]["daily_income"]
+                    total_income += daily_income
+                    print(f"  Ingresos diarios: ${daily_income:,}")
+                
+                print()
+            
+            print(f"{Fore.GREEN}Ingresos diarios totales: ${total_income:,}{Style.RESET_ALL}")
+            print(f"{Fore.RED}Mantenimiento mensual total: ${total_upkeep:,}{Style.RESET_ALL}")
+            print()
+        
+        # Show available properties
+        print(f"{Fore.CYAN}Propiedades Disponibles / Available Properties:{Style.RESET_ALL}")
+        available_properties = []
+        
+        for prop_id, prop_info in PROPERTIES.items():
+            if prop_id not in self.player.properties:
+                available_properties.append((prop_id, prop_info))
+        
+        if not available_properties:
+            print(f"{Fore.YELLOW}Posees todas las propiedades disponibles / You own all available properties{Style.RESET_ALL}")
+        else:
+            for i, (prop_id, prop_info) in enumerate(available_properties, 1):
+                name = prop_info["spanish"] if self.player.language_mode == "spanish" else prop_info["name"]
+                print(f"{i}. {name}")
+                print(f"   Costo: ${prop_info['cost']:,}")
+                print(f"   Mantenimiento mensual: ${prop_info['monthly_upkeep']:,}")
+                print(f"   Descripción: {prop_info['description']}")
+                
+                # Show benefits
+                benefits = []
+                for benefit, value in prop_info["benefits"].items():
+                    if benefit == "heat_reduction":
+                        benefits.append(f"Reducción de calor: {value}")
+                    elif benefit == "storage_space":
+                        benefits.append(f"Espacio de almacenamiento: {value}")
+                    elif benefit == "daily_income":
+                        benefits.append(f"Ingresos diarios: ${value:,}")
+                    elif benefit == "reputation_boost":
+                        benefits.append(f"Aumento de reputación: {value}")
+                    elif benefit == "prestige":
+                        benefits.append(f"Prestigio: {value}")
+                    elif benefit == "gang_capacity":
+                        benefits.append(f"Capacidad de pandilla: {value}")
+                
+                print(f"   Beneficios: {', '.join(benefits)}")
+                print()
+        
+        print(f"{len(available_properties) + 1}. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué propiedad quieres comprar? / Which property do you want to buy?: {Style.RESET_ALL}").strip()
+        
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(available_properties):
+                prop_id, prop_info = available_properties[choice_num - 1]
+                self.buy_property(prop_id, prop_info)
+        except ValueError:
+            pass
+        
+        input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def buy_property(self, prop_id, prop_info):
+        """Buy a property"""
+        if self.player.money < prop_info["cost"]:
+            print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+            return
+        
+        name = prop_info["spanish"] if self.player.language_mode == "spanish" else prop_info["name"]
+        
+        print(f"\n¿Comprar {name} por ${prop_info['cost']:,}?")
+        if input("Confirmar compra (s/y or n): ").lower() in ['s', 'y']:
+            self.player.remove_money(prop_info["cost"])
+            self.player.properties.append(prop_id)
+            
+            # Apply benefits
+            for benefit, value in prop_info["benefits"].items():
+                if benefit == "prestige":
+                    self.player.prestige += value
+                elif benefit == "reputation_boost":
+                    self.player.add_respect(value)
+            
+            print(f"{Fore.GREEN}¡Propiedad comprada! / Property purchased!{Style.RESET_ALL}")
+            print(f"Ahora posees: {name}")
+            
+            # Check for achievements
+            if len(self.player.properties) == 1:
+                self.unlock_achievement("Primer Propietario / First Property Owner")
+            elif len(self.player.properties) == len(PROPERTIES):
+                self.unlock_achievement("Magnate Inmobiliario / Real Estate Magnate")
+
+    def npc_relationship_menu(self):
+        """NPC relationship management menu"""
+        self.display_header()
+        print(f"{Fore.LIGHTBLUE_EX}RELACIONES CON NPCs / NPC RELATIONSHIPS{Style.RESET_ALL}")
+        print()
+        
+        # Show current relationships
+        print(f"{Fore.CYAN}Relaciones Actuales / Current Relationships:{Style.RESET_ALL}")
+        
+        for npc_id, npc_info in NPCS.items():
+            relationship_level = self.player.npc_relationships.get(npc_id, 0)
+            
+            if relationship_level >= 75:
+                status = f"{Fore.GREEN}Aliado / Ally"
+            elif relationship_level >= 50:
+                status = f"{Fore.YELLOW}Amigo / Friend"
+            elif relationship_level >= 25:
+                status = f"{Fore.BLUE}Conocido / Acquaintance"
+            elif relationship_level <= -25:
+                status = f"{Fore.RED}Enemigo / Enemy"
+            else:
+                status = f"{Fore.WHITE}Neutral"
+            
+            print(f"• {npc_info['name']} ({npc_info['location']})")
+            print(f"  Estado: {status}{Style.RESET_ALL} ({relationship_level}/100)")
+            print()
+        
+        # NPC interaction options
+        print(f"{Fore.CYAN}NPCs Disponibles / Available NPCs:{Style.RESET_ALL}")
+        
+        # Filter NPCs by current location
+        available_npcs = []
+        for npc_id, npc_info in NPCS.items():
+            if npc_info["location"] == self.player.location:
+                available_npcs.append((npc_id, npc_info))
+        
+        if not available_npcs:
+            print(f"{Fore.YELLOW}No hay NPCs disponibles en esta ciudad / No NPCs available in this city{Style.RESET_ALL}")
+            input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            return
+        
+        for i, (npc_id, npc_info) in enumerate(available_npcs, 1):
+            relationship_level = self.player.npc_relationships.get(npc_id, 0)
+            print(f"{i}. {npc_info['name']}")
+            print(f"   Servicios: {', '.join(npc_info['services'])}")
+            print(f"   Relación: {relationship_level}/100")
+            print()
+        
+        print(f"{len(available_npcs) + 1}. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Con quién quieres interactuar? / Who do you want to interact with?: {Style.RESET_ALL}").strip()
+        
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(available_npcs):
+                npc_id, npc_info = available_npcs[choice_num - 1]
+                self.interact_with_npc(npc_id, npc_info)
+        except ValueError:
+            pass
+        
+        input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def interact_with_npc(self, npc_id, npc_info):
+        """Interact with an NPC"""
+        relationship_level = self.player.npc_relationships.get(npc_id, 0)
+        
+        print(f"\n{Fore.YELLOW}Interactuando con {npc_info['name']}{Style.RESET_ALL}")
+        
+        # Choose appropriate dialogue
+        if relationship_level >= 50:
+            dialogue = npc_info["dialogue"]["friendly"]
+        elif relationship_level <= -25:
+            dialogue = npc_info["dialogue"]["hostile"]
+        else:
+            dialogue = npc_info["dialogue"]["greeting"]
+        
+        print(f'"{dialogue}"')
+        print()
+        
+        # Interaction options
+        print(f"1. {Fore.GREEN}Conversar / Chat{Style.RESET_ALL}")
+        print(f"2. {Fore.BLUE}Solicitar servicios / Request services{Style.RESET_ALL}")
+        print(f"3. {Fore.YELLOW}Hacer regalo / Give gift{Style.RESET_ALL}")
+        print(f"4. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué quieres hacer? / What do you want to do?: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            self.chat_with_npc(npc_id, npc_info)
+        elif choice == "2" and relationship_level >= 0:
+            self.request_npc_services(npc_id, npc_info)
+        elif choice == "2":
+            print(f"{Fore.RED}Esta persona no confía en ti lo suficiente / This person doesn't trust you enough{Style.RESET_ALL}")
+        elif choice == "3":
+            self.give_gift_to_npc(npc_id, npc_info)
+
+    def chat_with_npc(self, npc_id, npc_info):
+        """Chat with an NPC to improve relationship"""
+        relationship_improvement = random.randint(2, 8)
+        
+        if npc_id not in self.player.npc_relationships:
+            self.player.npc_relationships[npc_id] = 0
+        
+        self.player.npc_relationships[npc_id] = min(100, self.player.npc_relationships[npc_id] + relationship_improvement)
+        
+        print(f"{Fore.GREEN}Tuviste una buena conversación / You had a good conversation{Style.RESET_ALL}")
+        print(f"Relación mejorada en {relationship_improvement} puntos")
+
+    def request_npc_services(self, npc_id, npc_info):
+        """Request services from an NPC"""
+        relationship_level = self.player.npc_relationships.get(npc_id, 0)
+        
+        print(f"{Fore.CYAN}Servicios Disponibles / Available Services:{Style.RESET_ALL}")
+        
+        for i, service in enumerate(npc_info["services"], 1):
+            cost = 500 + (i * 200)  # Variable cost based on service
+            
+            if relationship_level >= 50:
+                cost = int(cost * 0.7)  # Friend discount
+            
+            print(f"{i}. {service.replace('_', ' ').title()} - ${cost:,}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué servicio necesitas? / What service do you need?: {Style.RESET_ALL}").strip()
+        
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(npc_info["services"]):
+                service = npc_info["services"][choice_num - 1]
+                cost = 500 + (choice_num * 200)
+                
+                if relationship_level >= 50:
+                    cost = int(cost * 0.7)
+                
+                if self.player.money >= cost:
+                    self.player.remove_money(cost)
+                    self.provide_npc_service(service, npc_info)
+                else:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+        except ValueError:
+            pass
+
+    def provide_npc_service(self, service, npc_info):
+        """Provide the requested NPC service"""
+        if service == "police_intel":
+            if self.player.wanted_level > 0:
+                self.player.decrease_wanted_level(1)
+                print(f"{Fore.GREEN}Información policial obtenida - Nivel de búsqueda reducido{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.YELLOW}No hay actividad policial que reportar{Style.RESET_ALL}")
+        
+        elif service == "gang_info":
+            print(f"{Fore.BLUE}Información valiosa sobre pandillas rivales obtenida{Style.RESET_ALL}")
+            self.player.add_respect(5)
+        
+        elif service == "job_tips":
+            bonus_money = random.randint(200, 800)
+            self.player.add_money(bonus_money)
+            print(f"{Fore.GREEN}Consejo de trabajo útil - Ganaste ${bonus_money:,} extra{Style.RESET_ALL}")
+        
+        elif service == "vehicle_upgrades":
+            if self.player.vehicle:
+                print(f"{Fore.GREEN}Vehículo mejorado - Mejor rendimiento en carreras{Style.RESET_ALL}")
+                # Could add vehicle upgrade system here
+            else:
+                print(f"{Fore.YELLOW}No tienes vehículo para mejorar{Style.RESET_ALL}")
+        
+        elif service == "rare_weapons":
+            rare_weapon = random.choice(["katana", "desert_eagle", "combat_shotgun"])
+            if rare_weapon not in self.player.inventory:
+                self.player.inventory[rare_weapon] = 1
+                print(f"{Fore.GREEN}Arma rara obtenida: {WEAPONS[rare_weapon]['name']}{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.YELLOW}Ya posees esa arma{Style.RESET_ALL}")
+
+    def give_gift_to_npc(self, npc_id, npc_info):
+        """Give a gift to an NPC"""
+        if not self.player.inventory or len(self.player.inventory) == 0:
+            print(f"{Fore.YELLOW}No tienes objetos para regalar / You have no items to give{Style.RESET_ALL}")
+            return
+        
+        print(f"{Fore.CYAN}Objetos Disponibles / Available Items:{Style.RESET_ALL}")
+        
+        # Convert inventory dict to list for display
+        inventory_items = list(self.player.inventory.keys())
+        for i, item in enumerate(inventory_items, 1):
+            quantity = self.player.inventory[item]
+            print(f"{i}. {item} (x{quantity})")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué quieres regalar? / What do you want to give?: {Style.RESET_ALL}").strip()
+        
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(inventory_items):
+                item = inventory_items[choice_num - 1]
+                
+                # Calculate gift value
+                gift_value = random.randint(5, 20)
+                
+                if npc_id not in self.player.npc_relationships:
+                    self.player.npc_relationships[npc_id] = 0
+                
+                self.player.npc_relationships[npc_id] = min(100, self.player.npc_relationships[npc_id] + gift_value)
+                
+                # Remove one unit of the item or delete if only one left
+                if self.player.inventory[item] > 1:
+                    self.player.inventory[item] -= 1
+                else:
+                    del self.player.inventory[item]
+                
+                print(f"{Fore.GREEN}Regalo entregado / Gift given{Style.RESET_ALL}")
+                print(f"Relación mejorada en {gift_value} puntos")
+        except ValueError:
+            pass
+
+    def achievement_center(self):
+        """Achievement center to view unlocked achievements"""
+        self.display_header()
+        print(f"{Fore.LIGHTYELLOW_EX}CENTRO DE LOGROS / ACHIEVEMENT CENTER{Style.RESET_ALL}")
+        print()
+        
+        if not self.player.achievements:
+            print(f"{Fore.YELLOW}No has desbloqueado logros aún / You haven't unlocked any achievements yet{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.GREEN}Logros Desbloqueados / Unlocked Achievements:{Style.RESET_ALL}")
+            for i, achievement in enumerate(self.player.achievements, 1):
+                print(f"{i}. {achievement}")
+        
+        print(f"\n{Fore.CYAN}Logros Disponibles / Available Achievements:{Style.RESET_ALL}")
+        
+        # List potential achievements
+        potential_achievements = [
+            "Primer Piloto / First Racer - Gana tu primera carrera",
+            "Rey de la Carretera / King of the Road - Gana 10 carreras",
+            "Primer Luchador / First Fighter - Gana tu primer torneo",
+            "Campeón Invencible / Undefeated Champion - Gana 5 torneos",
+            "Primer Propietario / First Property Owner - Compra tu primera propiedad",
+            "Magnate Inmobiliario / Real Estate Magnate - Posee todas las propiedades",
+            "Diplomático / Diplomat - Alcanza nivel 75 con un NPC",
+            "Rey del Crimen / Crime King - Completa la historia principal",
+            "Agente de la Ley / Law Enforcement Officer - Únete a la policía",
+            "Policía Veterano / Veteran Officer - Realiza 10 arrestos",
+            "Azote del Crimen / Scourge of Crime - Realiza 50 arrestos",
+            "Capitán de Policía / Police Captain - Alcanza el rango de Capitán"
+        ]
+        
+        for achievement in potential_achievements:
+            status = "✓" if any(ach in achievement for ach in self.player.achievements) else "✗"
+            print(f"{status} {achievement}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def unlock_achievement(self, achievement):
+        """Unlock an achievement"""
+        if achievement not in self.player.achievements:
+            self.player.achievements.append(achievement)
+            print(f"\n{Fore.YELLOW}🏆 ¡LOGRO DESBLOQUEADO! / ACHIEVEMENT UNLOCKED!{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{achievement}{Style.RESET_ALL}")
+            
+            # Achievement rewards
+            self.player.add_money(1000)
+            self.player.add_respect(10)
+            print("Recompensa: $1,000 y 10 puntos de respeto")
+
+    def police_career_menu(self):
+        """Police career system menu"""
+        self.display_header()
+        print(f"{Fore.LIGHTCYAN_EX}CARRERA POLICIAL / POLICE CAREER{Style.RESET_ALL}")
+        print()
+        
+        if not self.player.is_police:
+            print(f"{Fore.YELLOW}No eres miembro de la policía / You are not a police officer{Style.RESET_ALL}")
+            print()
+            print(f"1. {Fore.GREEN}Unirse a la policía / Join the police force{Style.RESET_ALL}")
+            print(f"2. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+            
+            choice = input(f"\n{Fore.CYAN}¿Qué quieres hacer? / What do you want to do?: {Style.RESET_ALL}").strip()
+            
+            if choice == "1":
+                self.join_police_force()
+        else:
+            # Display police status
+            if not self.player.police_rank or self.player.police_rank not in POLICE_RANKS:
+                print(f"{Fore.RED}Error: Rango policial inválido / Invalid police rank{Style.RESET_ALL}")
+                self.player.is_police = False
+                self.player.police_rank = None
+                return
+            
+            rank_info = POLICE_RANKS[self.player.police_rank]
+            rank_name = rank_info["spanish"] if self.player.language_mode == "spanish" else rank_info["name"]
+            
+            print(f"{Fore.CYAN}Estado Policial / Police Status:{Style.RESET_ALL}")
+            print(f"Rango: {rank_name}")
+            print(f"Arrestos totales: {self.player.total_arrests}")
+            print(f"Salario base: ${rank_info['salary']:,}")
+            print(f"Nivel de corrupción: {self.player.police_corruption}/100")
+            print(f"Operaciones completadas: {self.player.police_operations_completed}")
+            print()
+            
+            print(f"1. {Fore.GREEN}Realizar operación policial / Conduct police operation{Style.RESET_ALL}")
+            print(f"2. {Fore.BLUE}Investigar crimen / Investigate crime{Style.RESET_ALL}")
+            print(f"3. {Fore.YELLOW}Solicitar ascenso / Request promotion{Style.RESET_ALL}")
+            print(f"4. {Fore.RED}Actividades corruptas / Corrupt activities{Style.RESET_ALL}")
+            print(f"5. {Fore.MAGENTA}Renunciar a la policía / Resign from police{Style.RESET_ALL}")
+            print(f"6. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+            
+            choice = input(f"\n{Fore.CYAN}¿Qué quieres hacer? / What do you want to do?: {Style.RESET_ALL}").strip()
+            
+            if choice == "1":
+                self.conduct_police_operation()
+            elif choice == "2":
+                self.investigate_crime()
+            elif choice == "3":
+                self.request_promotion()
+            elif choice == "4":
+                self.corrupt_activities()
+            elif choice == "5":
+                self.resign_from_police()
+        
+        input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def join_police_force(self):
+        """Join the police force by demonstrating good citizenship"""
+        print(f"\n{Fore.YELLOW}RECLUTAMIENTO POLICIAL / POLICE RECRUITMENT{Style.RESET_ALL}")
+        print()
+        
+        # Check eligibility
+        if self.player.wanted_level > 0:
+            print(f"{Fore.RED}No puedes unirte a la policía con antecedentes criminales{Style.RESET_ALL}")
+            print("Wanted level must be 0 to join the police force")
+            return
+        
+        if self.player.gang_affiliation or self.player.gang_name:
+            print(f"{Fore.RED}Debes abandonar tu pandilla primero{Style.RESET_ALL}")
+            print("You must leave your gang first")
+            return
+        
+        print("Requisitos para unirse a la policía:")
+        print("Requirements to join the police:")
+        print("- Sin antecedentes criminales / No criminal record")
+        print("- Sin afiliación a pandillas / No gang affiliation")
+        print("- Demostrar servicio a la comunidad / Demonstrate community service")
+        print("- Ayudar a detener criminales / Help stop criminals")
+        print()
+        
+        print("Tu progreso hacia el reclutamiento:")
+        print("Your progress toward recruitment:")
+        print(f"Buenas acciones realizadas: {self.player.good_deeds}/10")
+        print(f"Criminales detenidos: {self.player.criminals_stopped}/5")
+        print()
+        
+        # Check if player meets requirements
+        if self.player.good_deeds >= 10 and self.player.criminals_stopped >= 5:
+            print(f"{Fore.GREEN}¡Cumples todos los requisitos! / You meet all requirements!{Style.RESET_ALL}")
+            print()
+            
+            if input("¿Aceptar invitación para unirte a la policía? / Accept invitation to join police? (s/y or n): ").lower() in ['s', 'y']:
+                self.player.is_police = True
+                self.player.police_rank = "cadet"
+                self.player.police_corruption = 0
+                self.player.total_arrests = 0
+                self.player.police_operations_completed = 0
+                
+                # Clear criminal attributes
+                self.player.gang_affiliation = None
+                self.player.gang_name = None
+                self.player.gang_members = []
+                self.player.territory = []
+                self.player.businesses = []
+                self.player.heat_level = 0
+                
+                # Reward for good citizenship
+                self.player.add_money(2000)  # Signing bonus
+                
+                print(f"\n{Fore.GREEN}¡Felicitaciones! Te has unido a la policía{Style.RESET_ALL}")
+                print("Congratulations! You have joined the police force")
+                print("Rango inicial: Cadete de Policía / Police Cadet")
+                print("Bono de firma: $2,000")
+                
+                self.unlock_achievement("Agente de la Ley / Law Enforcement Officer")
+        else:
+            print(f"{Fore.YELLOW}Necesitas hacer más buenas acciones para calificar{Style.RESET_ALL}")
+            print("You need to do more good deeds to qualify")
+            print()
+            print("Formas de conseguir buenas acciones:")
+            print("Ways to earn good deeds:")
+            print("- Ayudar ciudadanos durante la exploración / Help citizens while exploring")
+            print("- Detener crímenes en progreso / Stop crimes in progress")
+            print("- Reportar actividad criminal / Report criminal activity")
+            print("- Rechazar participar en actividades criminales / Refuse criminal activities")
+
+    def conduct_police_operation(self):
+        """Conduct various police operations"""
+        self.display_header()
+        print(f"{Fore.LIGHTCYAN_EX}OPERACIONES POLICIALES / POLICE OPERATIONS{Style.RESET_ALL}")
+        print()
+        
+        if not self.player.police_rank or self.player.police_rank not in POLICE_RANKS:
+            print(f"{Fore.RED}Error: Rango policial inválido / Invalid police rank{Style.RESET_ALL}")
+            return
+        
+        rank_abilities = POLICE_RANKS[self.player.police_rank]["abilities"]
+        available_operations = []
+        
+        for op_id, operation in POLICE_OPERATIONS.items():
+            if any(ability in rank_abilities for ability in [op_id, op_id.replace("_", "")]):
+                available_operations.append((op_id, operation))
+        
+        if not available_operations:
+            print(f"{Fore.YELLOW}No hay operaciones disponibles para tu rango{Style.RESET_ALL}")
+            return
+        
+        print(f"{Fore.CYAN}Operaciones Disponibles / Available Operations:{Style.RESET_ALL}")
+        
+        for i, (op_id, operation) in enumerate(available_operations, 1):
+            name = operation["spanish"] if self.player.language_mode == "spanish" else operation["name"]
+            print(f"{i}. {name}")
+            print(f"   Duración: {operation['time']} horas")
+            print(f"   Bono salarial: ${operation['salary_bonus']:,}")
+            print(f"   Probabilidad de arresto: {operation['arrest_chance']}%")
+            print(f"   Riesgo de corrupción: {operation['corruption_risk']}%")
+            print()
+        
+        print(f"{len(available_operations) + 1}. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Elige una operación / Choose an operation: {Style.RESET_ALL}").strip()
+        
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(available_operations):
+                op_id, operation = available_operations[choice_num - 1]
+                self.execute_police_operation(op_id, operation)
+        except ValueError:
+            pass
+
+    def execute_police_operation(self, op_id, operation):
+        """Execute a specific police operation"""
+        print(f"\n{Fore.YELLOW}Ejecutando operación / Executing operation...{Style.RESET_ALL}")
+        
+        # Calculate success based on skills and rank
+        base_success = 60
+        skill_bonus = (self.player.skills.get("shooting", 0) + self.player.skills.get("stealth", 0)) * 3
+        if not self.player.police_rank:
+            rank_bonus = 0
+        else:
+            rank_bonus = list(POLICE_RANKS.keys()).index(self.player.police_rank) * 5
+        
+        success_chance = min(95, base_success + skill_bonus + rank_bonus)
+        
+        if random.randint(1, 100) <= success_chance:
+            # Successful operation
+            print(f"{Fore.GREEN}¡Operación exitosa! / Operation successful!{Style.RESET_ALL}")
+            
+            # Salary bonus
+            salary_bonus = operation["salary_bonus"]
+            self.player.add_money(salary_bonus)
+            print(f"Bono salarial: ${salary_bonus:,}")
+            
+            # Arrest chance
+            if random.randint(1, 100) <= operation["arrest_chance"]:
+                arrests_made = random.randint(1, 3)
+                self.player.total_arrests += arrests_made
+                print(f"Arrestos realizados: {arrests_made}")
+                
+                # Check for achievements
+                if self.player.total_arrests >= 10:
+                    self.unlock_achievement("Policía Veterano / Veteran Officer")
+                if self.player.total_arrests >= 50:
+                    self.unlock_achievement("Azote del Crimen / Scourge of Crime")
+            
+            # Experience and respect
+            self.player.add_experience(operation["time"] * 5)
+            self.player.add_respect(3)
+            self.player.police_operations_completed += 1
+            
+        else:
+            # Failed operation
+            print(f"{Fore.RED}Operación fallida / Operation failed{Style.RESET_ALL}")
+            
+            # Potential consequences
+            if random.randint(1, 100) <= 30:
+                damage = random.randint(10, 25)
+                self.player.take_damage(damage)
+                print(f"Herido en el servicio: -{damage} salud")
+        
+        # Corruption risk
+        if random.randint(1, 100) <= operation["corruption_risk"]:
+            corruption_increase = random.randint(1, 5)
+            self.player.police_corruption = min(100, self.player.police_corruption + corruption_increase)
+            print(f"{Fore.YELLOW}Exposición a la corrupción: +{corruption_increase}{Style.RESET_ALL}")
+
+    def investigate_crime(self):
+        """Investigate ongoing crimes"""
+        print(f"\n{Fore.BLUE}INVESTIGACIÓN CRIMINAL / CRIME INVESTIGATION{Style.RESET_ALL}")
+        print()
+        
+        # Generate random case
+        cases = [
+            {
+                "name": "Robo a mano armada / Armed robbery",
+                "difficulty": 2,
+                "reward": 300,
+                "arrests": 1
+            },
+            {
+                "name": "Tráfico de drogas / Drug trafficking", 
+                "difficulty": 3,
+                "reward": 500,
+                "arrests": 2
+            },
+            {
+                "name": "Actividad de pandillas / Gang activity",
+                "difficulty": 4,
+                "reward": 800,
+                "arrests": 3
+            },
+            {
+                "name": "Operación del cartel / Cartel operation",
+                "difficulty": 5,
+                "reward": 1200,
+                "arrests": 4
+            }
+        ]
+        
+        case = random.choice(cases)
+        
+        print(f"Caso asignado: {case['name']}")
+        print(f"Dificultad: {'★' * case['difficulty']}")
+        print(f"Recompensa: ${case['reward']:,}")
+        print()
+        
+        # Investigation choices
+        print(f"1. {Fore.GREEN}Investigación directa / Direct investigation{Style.RESET_ALL}")
+        print(f"2. {Fore.YELLOW}Trabajo encubierto / Undercover work{Style.RESET_ALL}")
+        print(f"3. {Fore.BLUE}Cooperar con informantes / Work with informants{Style.RESET_ALL}")
+        print(f"4. {Fore.CYAN}Cancelar / Cancel{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Método de investigación / Investigation method: {Style.RESET_ALL}").strip()
+        
+        success_chance = 50
+        corruption_risk = 0
+        
+        if choice == "1":
+            # Direct investigation
+            success_chance = 60 + (self.player.skills.get("charisma", 0) * 5)
+            corruption_risk = 5
+        elif choice == "2":
+            # Undercover work
+            success_chance = 70 + (self.player.skills.get("stealth", 0) * 5)
+            corruption_risk = 15
+        elif choice == "3":
+            # Work with informants
+            success_chance = 80 + (self.player.skills.get("charisma", 0) * 3)
+            corruption_risk = 25
+        else:
+            return
+        
+        # Account for case difficulty
+        success_chance -= case["difficulty"] * 10
+        success_chance = max(20, min(90, success_chance))
+        
+        if random.randint(1, 100) <= success_chance:
+            print(f"\n{Fore.GREEN}¡Investigación exitosa! / Investigation successful!{Style.RESET_ALL}")
+            self.player.add_money(case["reward"])
+            self.player.total_arrests += case["arrests"]
+            self.player.add_experience(case["difficulty"] * 10)
+            print(f"Recompensa: ${case['reward']:,}")
+            print(f"Arrestos: {case['arrests']}")
+        else:
+            print(f"\n{Fore.RED}Investigación fallida / Investigation failed{Style.RESET_ALL}")
+            print("El caso permanece sin resolver")
+        
+        # Corruption check
+        if corruption_risk > 0 and random.randint(1, 100) <= corruption_risk:
+            corruption_increase = random.randint(2, 8)
+            self.player.police_corruption = min(100, self.player.police_corruption + corruption_increase)
+            print(f"{Fore.YELLOW}Corrupción aumentada: +{corruption_increase}{Style.RESET_ALL}")
+
+    def request_promotion(self):
+        """Request a promotion to higher rank"""
+        print(f"\n{Fore.YELLOW}SOLICITUD DE ASCENSO / PROMOTION REQUEST{Style.RESET_ALL}")
+        print()
+        
+        if not self.player.police_rank:
+            print(f"{Fore.RED}Error: No tienes rango policial / No police rank{Style.RESET_ALL}")
+            return
+        
+        current_rank_index = list(POLICE_RANKS.keys()).index(self.player.police_rank)
+        
+        if current_rank_index >= len(POLICE_RANKS) - 1:
+            print(f"{Fore.YELLOW}Ya tienes el rango más alto / You already have the highest rank{Style.RESET_ALL}")
+            return
+        
+        next_rank_key = list(POLICE_RANKS.keys())[current_rank_index + 1]
+        next_rank = POLICE_RANKS[next_rank_key]
+        
+        rank_name = next_rank["spanish"] if self.player.language_mode == "spanish" else next_rank["name"]
+        
+        print(f"Rango objetivo: {rank_name}")
+        print(f"Salario: ${next_rank['salary']:,}")
+        print()
+        
+        print("Requisitos:")
+        can_promote = True
+        
+        for requirement, value in next_rank["requirements"].items():
+            if requirement == "corruption":
+                status = "✓" if self.player.police_corruption <= value else "✗"
+                print(f"{status} Corrupción máxima: {self.player.police_corruption} / {value}")
+                if self.player.police_corruption > value:
+                    can_promote = False
+            elif requirement == "arrests":
+                status = "✓" if self.player.total_arrests >= value else "✗"
+                print(f"{status} Arrestos mínimos: {self.player.total_arrests} / {value}")
+                if self.player.total_arrests < value:
+                    can_promote = False
+        
+        if can_promote:
+            print(f"\n{Fore.GREEN}¡Ascenso aprobado! / Promotion approved!{Style.RESET_ALL}")
+            self.player.police_rank = next_rank_key
+            print(f"Nuevo rango: {rank_name}")
+            print(f"Nuevo salario: ${next_rank['salary']:,}")
+            
+            # Achievement check
+            if next_rank_key == "captain":
+                self.unlock_achievement("Capitán de Policía / Police Captain")
+        else:
+            print(f"\n{Fore.RED}Ascenso denegado / Promotion denied{Style.RESET_ALL}")
+            print("No cumples todos los requisitos")
+
+    def corrupt_activities(self):
+        """Engage in corrupt police activities"""
+        print(f"\n{Fore.RED}ACTIVIDADES CORRUPTAS / CORRUPT ACTIVITIES{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}⚠️  Advertencia: Estas actividades aumentan tu corrupción{Style.RESET_ALL}")
+        print()
+        
+        print(f"1. {Fore.RED}Aceptar soborno / Accept bribe{Style.RESET_ALL}")
+        print(f"2. {Fore.RED}Vender evidencia / Sell evidence{Style.RESET_ALL}")
+        print(f"3. {Fore.RED}Proteger criminales / Protect criminals{Style.RESET_ALL}")
+        print(f"4. {Fore.RED}Robar del depósito / Steal from evidence{Style.RESET_ALL}")
+        print(f"5. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué actividad corrupta? / What corrupt activity?: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            # Accept bribe
+            bribe_amount = random.randint(500, 2000)
+            corruption_increase = random.randint(10, 20)
+            
+            print(f"Oferta de soborno: ${bribe_amount:,}")
+            print(f"Aumento de corrupción: +{corruption_increase}")
+            
+            if input("¿Aceptar soborno? / Accept bribe? (s/y or n): ").lower() in ['s', 'y']:
+                self.player.add_money(bribe_amount)
+                self.player.police_corruption = min(100, self.player.police_corruption + corruption_increase)
+                print(f"{Fore.GREEN}Soborno aceptado / Bribe accepted{Style.RESET_ALL}")
+        
+        elif choice == "2":
+            # Sell evidence
+            evidence_value = random.randint(800, 1500)
+            corruption_increase = random.randint(15, 25)
+            
+            print(f"Valor de la evidencia: ${evidence_value:,}")
+            print(f"Aumento de corrupción: +{corruption_increase}")
+            
+            if input("¿Vender evidencia? / Sell evidence? (s/y or n): ").lower() in ['s', 'y']:
+                self.player.add_money(evidence_value)
+                self.player.police_corruption = min(100, self.player.police_corruption + corruption_increase)
+                print(f"{Fore.GREEN}Evidencia vendida / Evidence sold{Style.RESET_ALL}")
+        
+        elif choice == "3":
+            # Protect criminals
+            protection_fee = random.randint(1000, 3000)
+            corruption_increase = random.randint(20, 30)
+            
+            print(f"Pago por protección: ${protection_fee:,}")
+            print(f"Aumento de corrupción: +{corruption_increase}")
+            
+            if input("¿Ofrecer protección? / Offer protection? (s/y or n): ").lower() in ['s', 'y']:
+                self.player.add_money(protection_fee)
+                self.player.police_corruption = min(100, self.player.police_corruption + corruption_increase)
+                print(f"{Fore.GREEN}Protección ofrecida / Protection offered{Style.RESET_ALL}")
+        
+        elif choice == "4":
+            # Steal from evidence
+            stolen_value = random.randint(300, 1000)
+            corruption_increase = random.randint(25, 35)
+            
+            print(f"Valor robado: ${stolen_value:,}")
+            print(f"Aumento de corrupción: +{corruption_increase}")
+            
+            if input("¿Robar del depósito? / Steal from evidence? (s/y or n): ").lower() in ['s', 'y']:
+                self.player.add_money(stolen_value)
+                self.player.police_corruption = min(100, self.player.police_corruption + corruption_increase)
+                print(f"{Fore.GREEN}Robo completado / Theft completed{Style.RESET_ALL}")
+        
+        # Check for corruption consequences
+        if self.player.police_corruption >= 80:
+            print(f"\n{Fore.RED}⚠️  ADVERTENCIA: Tu nivel de corrupción es muy alto{Style.RESET_ALL}")
+            print("Riesgo de investigación interna")
+
+    def resign_from_police(self):
+        """Resign from the police force"""
+        print(f"\n{Fore.YELLOW}RENUNCIA POLICIAL / POLICE RESIGNATION{Style.RESET_ALL}")
+        print()
+        
+        print("¿Estás seguro de que quieres renunciar a la policía?")
+        print("Are you sure you want to resign from the police?")
+        print()
+        print("Perderás:")
+        print("You will lose:")
+        print("- Rango policial / Police rank")
+        print("- Salario policial / Police salary")
+        print("- Acceso a operaciones / Access to operations")
+        print()
+        
+        if input("¿Confirmar renuncia? / Confirm resignation? (s/y or n): ").lower() in ['s', 'y']:
+            # Calculate severance pay based on rank and service
+            if not self.player.police_rank:
+                print(f"{Fore.RED}Error: No tienes rango policial / No police rank{Style.RESET_ALL}")
+                return
+            
+            rank_index = list(POLICE_RANKS.keys()).index(self.player.police_rank)
+            severance = (rank_index + 1) * 500 + (self.player.police_operations_completed * 50)
+            
+            self.player.add_money(severance)
+            
+            # Reset police attributes
+            self.player.is_police = False
+            self.player.police_rank = None
+            self.player.police_corruption = 0
+            
+            print(f"\n{Fore.GREEN}Renuncia procesada / Resignation processed{Style.RESET_ALL}")
+            print(f"Pago de liquidación: ${severance:,}")
+            print("Ahora eres un civil / You are now a civilian")
 
 def main():
     """Main entry point"""
