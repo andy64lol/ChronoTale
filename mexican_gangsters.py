@@ -740,6 +740,8 @@ TERRITORIES = {
 class Player:
     def __init__(self):
         self.name = ""
+        self.gender = "unknown"  # Will be set during character creation
+        self.age = 25
         self.health = 100
         self.max_health = 100
         self.money = 1000
@@ -941,6 +943,49 @@ class GameEngine:
                 self.player.name = name
                 break
             print(f"{Fore.RED}Por favor ingresa un nombre válido / Please enter a valid name.{Style.RESET_ALL}")
+        
+        # Gender selection
+        print(f"\n{Fore.YELLOW}Selecciona el género de tu personaje / Select your character's gender:{Style.RESET_ALL}")
+        print(f"1. {Fore.BLUE}Hombre / Male{Style.RESET_ALL}")
+        print(f"2. {Fore.MAGENTA}Mujer / Female{Style.RESET_ALL}")
+        print(f"3. {Fore.CYAN}No binario / Non-binary{Style.RESET_ALL}")
+        print(f"4. {Fore.WHITE}Prefiero no decir / Prefer not to say{Style.RESET_ALL}")
+        
+        while True:
+            gender_choice = input(f"{Fore.CYAN}Elige una opción (1-4) / Choose an option (1-4): {Style.RESET_ALL}").strip()
+            if gender_choice == "1":
+                self.player.gender = "male"
+                print(f"{Fore.GREEN}Género seleccionado: Hombre / Gender selected: Male{Style.RESET_ALL}")
+                break
+            elif gender_choice == "2":
+                self.player.gender = "female"
+                print(f"{Fore.GREEN}Género seleccionado: Mujer / Gender selected: Female{Style.RESET_ALL}")
+                break
+            elif gender_choice == "3":
+                self.player.gender = "non-binary"
+                print(f"{Fore.GREEN}Género seleccionado: No binario / Gender selected: Non-binary{Style.RESET_ALL}")
+                break
+            elif gender_choice == "4":
+                self.player.gender = "undisclosed"
+                print(f"{Fore.GREEN}Género: Prefiero no decir / Gender: Prefer not to say{Style.RESET_ALL}")
+                break
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid option. Elige 1-4 / Choose 1-4.{Style.RESET_ALL}")
+        
+        # Age selection
+        print(f"\n{Fore.YELLOW}Selecciona la edad de tu personaje / Select your character's age:{Style.RESET_ALL}")
+        while True:
+            try:
+                age_input = input(f"{Fore.CYAN}Edad (18-60) / Age (18-60): {Style.RESET_ALL}").strip()
+                age = int(age_input)
+                if 18 <= age <= 60:
+                    self.player.age = age
+                    print(f"{Fore.GREEN}Edad seleccionada: {age} años / Age selected: {age} years{Style.RESET_ALL}")
+                    break
+                else:
+                    print(f"{Fore.RED}La edad debe estar entre 18 y 60 años / Age must be between 18 and 60 years{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED}Por favor ingresa una edad válida / Please enter a valid age{Style.RESET_ALL}")
         
         # Choose starting city
         print(f"\n{Fore.YELLOW}Elige tu ciudad de inicio / Choose your starting city:{Style.RESET_ALL}")
@@ -1976,10 +2021,32 @@ class GameEngine:
         # Basic stats
         print(f"{Fore.YELLOW}Basic Information:{Style.RESET_ALL}")
         print(f"Name: {self.player.name}")
+        
+        # Display gender with appropriate translation
+        gender_display = {
+            "male": "Hombre / Male",
+            "female": "Mujer / Female", 
+            "non-binary": "No binario / Non-binary",
+            "undisclosed": "Prefiero no decir / Prefer not to say",
+            "unknown": "No especificado / Not specified"
+        }
+        print(f"Gender: {gender_display.get(self.player.gender, 'No especificado / Not specified')}")
+        print(f"Age: {self.player.age} años / years")
+        
         print(f"Health: {self.player.health}/{self.player.max_health}")
         print(f"Money: ${self.player.money:,}")
         print(f"Respect: {self.player.respect}")
         print(f"Wanted Level: {'★' * self.player.wanted_level}{'☆' * (5 - self.player.wanted_level)}")
+        
+        # Police career status
+        if self.player.is_police:
+            print(f"Police Career: {self.player.police_rank}")
+            print(f"Good Deeds: {self.player.good_deeds}")
+            print(f"Criminals Stopped: {self.player.criminals_stopped}")
+            print(f"Total Arrests: {self.player.total_arrests}")
+            if self.player.police_corruption > 0:
+                print(f"Corruption: {self.player.police_corruption}%")
+        
         print()
         
         # Skills
@@ -2251,6 +2318,8 @@ class GameEngine:
             game_data = {
                 "player": {
                     "name": self.player.name,
+                    "gender": self.player.gender,
+                    "age": self.player.age,
                     "health": self.player.health,
                     "max_health": self.player.max_health,
                     "money": self.player.money,
@@ -2264,7 +2333,15 @@ class GameEngine:
                     "vehicle": self.player.vehicle,
                     "gang_affiliation": self.player.gang_affiliation,
                     "stats": self.player.stats,
-                    "skills": self.player.skills
+                    "skills": self.player.skills,
+                    # Police career attributes
+                    "is_police": self.player.is_police,
+                    "police_rank": self.player.police_rank,
+                    "police_corruption": self.player.police_corruption,
+                    "total_arrests": self.player.total_arrests,
+                    "police_operations_completed": self.player.police_operations_completed,
+                    "good_deeds": self.player.good_deeds,
+                    "criminals_stopped": self.player.criminals_stopped
                 },
                 "game_time": self.game_time,
                 "save_timestamp": datetime.now().isoformat()
@@ -2294,6 +2371,8 @@ class GameEngine:
             # Restore player data
             player_data = game_data["player"]
             self.player.name = player_data["name"]
+            self.player.gender = player_data.get("gender", "unknown")
+            self.player.age = player_data.get("age", 25)
             self.player.health = player_data["health"]
             self.player.max_health = player_data["max_health"]
             self.player.money = player_data["money"]
@@ -2308,6 +2387,15 @@ class GameEngine:
             self.player.gang_affiliation = player_data["gang_affiliation"]
             self.player.stats = player_data["stats"]
             self.player.skills = player_data["skills"]
+            
+            # Restore police career attributes
+            self.player.is_police = player_data.get("is_police", False)
+            self.player.police_rank = player_data.get("police_rank", None)
+            self.player.police_corruption = player_data.get("police_corruption", 0)
+            self.player.total_arrests = player_data.get("total_arrests", 0)
+            self.player.police_operations_completed = player_data.get("police_operations_completed", 0)
+            self.player.good_deeds = player_data.get("good_deeds", 0)
+            self.player.criminals_stopped = player_data.get("criminals_stopped", 0)
             
             self.game_time = game_data["game_time"]
             self.language = game_data.get("language", "bilingual")
