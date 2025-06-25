@@ -4943,13 +4943,26 @@ class GameEngine:
                 self.player.total_arrests = 0
                 self.player.police_operations_completed = 0
                 
-                # Clear criminal attributes
+                # Clear criminal attributes and lose gang reputation
+                if self.player.gang_affiliation or self.player.gang_name:
+                    print(f"\n{Fore.YELLOW}CONSECUENCIAS DE UNIRSE A LA POLICÍA / CONSEQUENCES OF JOINING POLICE{Style.RESET_ALL}")
+                    print("Tu decisión de unirte a la policía tiene consecuencias:")
+                    print("Your decision to join the police has consequences:")
+                    print("- Pierdes toda reputación con pandillas / Lost all gang reputation")
+                    print("- Los criminales te consideran traidor / Criminals consider you a traitor")
+                    print("- Tus antiguos contactos te evitarán / Your old contacts will avoid you")
+                    
                 self.player.gang_affiliation = None
                 self.player.gang_name = None
                 self.player.gang_members = []
                 self.player.territory = []
                 self.player.businesses = []
                 self.player.heat_level = 0
+                
+                # Lose respect from criminal underworld
+                original_respect = self.player.respect
+                self.player.respect = max(0, self.player.respect - 50)
+                respect_lost = original_respect - self.player.respect
                 
                 # Reward for good citizenship
                 self.player.add_money(2000)  # Signing bonus
@@ -4958,6 +4971,10 @@ class GameEngine:
                 print("Congratulations! You have joined the police force")
                 print("Rango inicial: Cadete de Policía / Police Cadet")
                 print("Bono de firma: $2,000")
+                
+                if respect_lost > 0:
+                    print(f"{Fore.RED}Respeto perdido en el submundo: -{respect_lost}{Style.RESET_ALL}")
+                    print("Underworld respect lost due to joining law enforcement")
                 
                 self.unlock_achievement("Agente de la Ley / Law Enforcement Officer")
         else:
@@ -5315,6 +5332,260 @@ class GameEngine:
             print(f"\n{Fore.GREEN}Renuncia procesada / Resignation processed{Style.RESET_ALL}")
             print(f"Pago de liquidación: ${severance:,}")
             print("Ahora eres un civil / You are now a civilian")
+
+    def witness_crime(self):
+        """Witness a crime in progress and choose how to respond"""
+        crimes = [
+            "Ves a alguien robando un auto / You see someone stealing a car",
+            "Presencias un atraco a mano armada / You witness an armed robbery", 
+            "Observas tráfico de drogas / You observe drug trafficking",
+            "Ves vandalismo en progreso / You see vandalism in progress"
+        ]
+        
+        crime = random.choice(crimes)
+        print(f"\n{Fore.YELLOW}CRIMEN EN PROGRESO / CRIME IN PROGRESS{Style.RESET_ALL}")
+        print(crime)
+        print()
+        
+        print(f"1. {Fore.GREEN}Intervenir y detener el crimen / Intervene and stop the crime{Style.RESET_ALL}")
+        print(f"2. {Fore.BLUE}Llamar a la policía / Call the police{Style.RESET_ALL}")
+        print(f"3. {Fore.YELLOW}Ignorar y alejarse / Ignore and walk away{Style.RESET_ALL}")
+        print(f"4. {Fore.RED}Unirse a los criminales / Join the criminals{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué haces? / What do you do?: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            success_chance = 40 + (self.player.skills.get("strength", 0) * 8)
+            
+            if random.randint(1, 100) <= success_chance:
+                print(f"{Fore.GREEN}¡Detuviste el crimen! / You stopped the crime!{Style.RESET_ALL}")
+                print()
+                
+                # If player is police, show police options
+                if self.player.is_police:
+                    print("Como oficial de policía, ¿qué haces con el criminal?")
+                    print("As a police officer, what do you do with the criminal?")
+                    print()
+                    print(f"1. {Fore.GREEN}Detener al criminal / Detain the criminal{Style.RESET_ALL}")
+                    print(f"2. {Fore.YELLOW}Dejarlo ir / Let the criminal go{Style.RESET_ALL}")
+                    print(f"3. {Fore.RED}Pedir soborno para dejarlo ir / Ask for bribe to let them go{Style.RESET_ALL}")
+                    
+                    police_choice = input(f"\n{Fore.CYAN}¿Qué decides? / What do you decide?: {Style.RESET_ALL}").strip()
+                    
+                    if police_choice == "1":
+                        # Official arrest - good police work
+                        print(f"{Fore.GREEN}Arrestaste al criminal oficialmente / You officially arrested the criminal{Style.RESET_ALL}")
+                        self.player.good_deeds += 3
+                        self.player.criminals_stopped += 1
+                        self.player.total_arrests += 1
+                        reward = random.randint(300, 600)
+                        self.player.add_money(reward)
+                        print("Buenas acciones: +3, Arrestos: +1")
+                        print(f"Bono policial: ${reward:,}")
+                        
+                    elif police_choice == "2":
+                        # Let go - minimal good deed
+                        print(f"{Fore.YELLOW}Dejaste ir al criminal con una advertencia / You let the criminal go with a warning{Style.RESET_ALL}")
+                        self.player.good_deeds += 1
+                        print("Buenas acciones: +1")
+                        
+                    elif police_choice == "3":
+                        # Corruption attempt
+                        bribe_success = random.randint(1, 100)
+                        if bribe_success <= 60:  # 60% chance of success
+                            bribe_amount = random.randint(500, 1500)
+                            print(f"{Fore.YELLOW}El criminal aceptó pagar soborno / The criminal agreed to pay bribe{Style.RESET_ALL}")
+                            self.player.add_money(bribe_amount)
+                            self.player.police_corruption += 10
+                            print(f"Soborno recibido: ${bribe_amount:,}")
+                            print("Corrupción aumentada: +10")
+                            
+                            # Lose reputation with law enforcement community
+                            self.player.respect = max(0, self.player.respect - 5)
+                            print("Respeto perdido por corrupción: -5")
+                        else:
+                            # Criminal fights back
+                            print(f"{Fore.RED}¡El criminal se resistió y atacó! / The criminal resisted and attacked!{Style.RESET_ALL}")
+                            damage = random.randint(20, 35)
+                            self.player.take_damage(damage)
+                            self.player.police_corruption += 5
+                            print(f"Daño recibido: {damage}")
+                            print("Corrupción aumentada: +5")
+                else:
+                    # Civilian intervention
+                    self.player.good_deeds += 2
+                    self.player.criminals_stopped += 1
+                    self.player.add_respect(5)
+                    reward = random.randint(200, 500)
+                    self.player.add_money(reward)
+                    print("Buenas acciones: +2, Criminales detenidos: +1")
+                    print(f"Recompensa de la víctima: ${reward:,}")
+            else:
+                print(f"{Fore.RED}Los criminales te atacaron / The criminals attacked you{Style.RESET_ALL}")
+                damage = random.randint(15, 30)
+                self.player.take_damage(damage)
+                print(f"Daño recibido: {damage}")
+                
+        elif choice == "2":
+            print(f"{Fore.GREEN}Llamaste a la policía / You called the police{Style.RESET_ALL}")
+            self.player.good_deeds += 1
+            print("Buenas acciones: +1")
+            
+            if random.randint(1, 100) <= 60:
+                print("La policía llegó a tiempo y arrestó a los criminales")
+                self.player.criminals_stopped += 1
+                print("Criminales detenidos: +1")
+                
+                # If player is police, they get credit for the call
+                if self.player.is_police:
+                    print("Como oficial fuera de servicio, recibes reconocimiento")
+                    print("As an off-duty officer, you receive recognition")
+                    self.player.total_arrests += 1
+                    bonus = random.randint(100, 200)
+                    self.player.add_money(bonus)
+                    print(f"Bono policial: ${bonus:,}")
+                
+        elif choice == "3":
+            print(f"{Fore.YELLOW}Te alejaste sin hacer nada / You walked away without doing anything{Style.RESET_ALL}")
+            
+        elif choice == "4":
+            # Check if player is police - major consequences
+            if self.player.is_police:
+                print(f"{Fore.RED}¡GRAVE ERROR! Participaste en actividad criminal siendo policía{Style.RESET_ALL}")
+                print("SERIOUS MISCONDUCT! You participated in criminal activity as a police officer")
+                print()
+                
+                money_gained = random.randint(300, 800)
+                self.player.add_money(money_gained)
+                self.player.increase_wanted_level(2)  # Higher wanted level for corrupt cop
+                self.player.police_corruption += 25
+                self.player.heat_level += 20
+                
+                print(f"Dinero ganado: ${money_gained:,}")
+                print("Nivel de búsqueda aumentado: +2")
+                print("Corrupción policial aumentada: +25")
+                
+                # Chance of being discovered and fired
+                if random.randint(1, 100) <= 30:
+                    print(f"\n{Fore.RED}¡TU PARTICIPACIÓN FUE DESCUBIERTA!{Style.RESET_ALL}")
+                    print("YOUR PARTICIPATION WAS DISCOVERED!")
+                    print("Has sido expulsado de la fuerza policial")
+                    print("You have been expelled from the police force")
+                    
+                    self.player.is_police = False
+                    self.player.police_rank = None
+                    self.player.police_corruption = 0
+                    
+            else:
+                print(f"{Fore.RED}Te uniste a los criminales / You joined the criminals{Style.RESET_ALL}")
+                money_gained = random.randint(300, 800)
+                self.player.add_money(money_gained)
+                self.player.increase_wanted_level(1)
+                self.player.heat_level += 10
+                print(f"Dinero ganado: ${money_gained:,}")
+                print("Nivel de búsqueda aumentado")
+
+    def help_citizen(self):
+        """Help a citizen in need"""
+        situations = [
+            "Una persona mayor necesita ayuda con sus compras / An elderly person needs help with groceries",
+            "Alguien perdió su billetera / Someone lost their wallet",
+            "Un turista está perdido / A tourist is lost", 
+            "Un automóvil se averió en la carretera / A car broke down on the road"
+        ]
+        
+        situation = random.choice(situations)
+        print(f"\n{Fore.CYAN}CIUDADANO NECESITA AYUDA / CITIZEN NEEDS HELP{Style.RESET_ALL}")
+        print(situation)
+        print()
+        
+        print(f"1. {Fore.GREEN}Ayudar sin esperar nada / Help without expecting anything{Style.RESET_ALL}")
+        print(f"2. {Fore.YELLOW}Ayudar por dinero / Help for money{Style.RESET_ALL}")
+        print(f"3. {Fore.RED}Ignorar / Ignore{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué haces? / What do you do?: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            print(f"{Fore.GREEN}Ayudaste desinteresadamente / You helped selflessly{Style.RESET_ALL}")
+            self.player.good_deeds += 2
+            self.player.add_respect(3)
+            print("Buenas acciones: +2")
+            
+            if random.randint(1, 100) <= 30:
+                reward = random.randint(100, 300)
+                self.player.add_money(reward)
+                print(f"La persona te dio una propina: ${reward:,}")
+                
+        elif choice == "2":
+            print(f"{Fore.YELLOW}Ayudaste por una tarifa / You helped for a fee{Style.RESET_ALL}")
+            self.player.good_deeds += 1
+            payment = random.randint(50, 150)
+            self.player.add_money(payment)
+            print(f"Buenas acciones: +1, Pago: ${payment:,}")
+            
+        elif choice == "3":
+            print(f"{Fore.RED}Ignoraste a la persona / You ignored the person{Style.RESET_ALL}")
+
+    def report_suspicious_activity(self):
+        """Report suspicious activity to authorities"""
+        activities = [
+            "Ves personas sospechosas merodeando / You see suspicious people lurking",
+            "Notas actividad extraña en un edificio / You notice strange activity in a building",
+            "Observas un vehículo abandonado / You observe an abandoned vehicle",
+            "Escuchas ruidos sospechosos / You hear suspicious noises"
+        ]
+        
+        activity = random.choice(activities)
+        print(f"\n{Fore.YELLOW}ACTIVIDAD SOSPECHOSA / SUSPICIOUS ACTIVITY{Style.RESET_ALL}")
+        print(activity)
+        print()
+        
+        print(f"1. {Fore.GREEN}Reportar a las autoridades / Report to authorities{Style.RESET_ALL}")
+        print(f"2. {Fore.BLUE}Investigar por tu cuenta / Investigate yourself{Style.RESET_ALL}")
+        print(f"3. {Fore.YELLOW}Ignorar / Ignore{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}¿Qué haces? / What do you do?: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            print(f"{Fore.GREEN}Reportaste la actividad sospechosa / You reported the suspicious activity{Style.RESET_ALL}")
+            self.player.good_deeds += 1
+            print("Buenas acciones: +1")
+            
+            if random.randint(1, 100) <= 40:
+                print("Tu reporte llevó a arrestos importantes")
+                self.player.criminals_stopped += 1
+                reward = random.randint(200, 400)
+                self.player.add_money(reward)
+                print(f"Criminales detenidos: +1, Recompensa: ${reward:,}")
+                
+                # Police get additional credit
+                if self.player.is_police:
+                    self.player.total_arrests += 1
+                    bonus = random.randint(150, 300)
+                    self.player.add_money(bonus)
+                    print(f"Bono policial adicional: ${bonus:,}")
+                
+        elif choice == "2":
+            print(f"{Fore.BLUE}Decidiste investigar por tu cuenta / You decided to investigate yourself{Style.RESET_ALL}")
+            
+            investigation_success = 30 + (self.player.skills.get("stealth", 0) * 10)
+            
+            if random.randint(1, 100) <= investigation_success:
+                print(f"{Fore.GREEN}Descubriste una operación criminal / You discovered a criminal operation{Style.RESET_ALL}")
+                self.player.good_deeds += 2
+                self.player.criminals_stopped += 2
+                reward = random.randint(500, 1000)
+                self.player.add_money(reward)
+                print("Buenas acciones: +2, Criminales detenidos: +2")
+                print(f"Recompensa policial: ${reward:,}")
+            else:
+                print(f"{Fore.RED}Te descubrieron investigando / You were caught investigating{Style.RESET_ALL}")
+                damage = random.randint(10, 25)
+                self.player.take_damage(damage)
+                print(f"Daño recibido: {damage}")
+                
+        elif choice == "3":
+            print(f"{Fore.YELLOW}Decidiste ignorar la situación / You decided to ignore the situation{Style.RESET_ALL}")
 
 def main():
     """Main entry point"""
