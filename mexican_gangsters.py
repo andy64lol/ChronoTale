@@ -45,6 +45,91 @@ except ImportError:
 
 # Game configuration
 SAVE_FILE = "mexican_gangsters_save.json"
+
+# New enhanced systems
+SPECIAL_EVENTS = {
+    "cartel_meeting": {
+        "name": "Reunión del Cartel / Cartel Meeting",
+        "description": "Un alto jefe del cartel quiere reunirse contigo / A high-ranking cartel boss wants to meet you",
+        "requirements": {"respect": 75, "criminal_level": 3},
+        "rewards": {"money": 15000, "respect": 20, "special_mission": True},
+        "consequences": {"police_attention": 15}
+    },
+    "police_raid": {
+        "name": "Redada Policial / Police Raid", 
+        "description": "La policía está haciendo redadas en la ciudad / Police are conducting raids in the city",
+        "requirements": {"wanted_level": 3},
+        "effects": {"all_activities_dangerous": True, "escape_chance": 0.6},
+        "duration": 3  # days
+    },
+    "gang_war": {
+        "name": "Guerra de Pandillas / Gang War",
+        "description": "Las pandillas rivales están en guerra / Rival gangs are at war",
+        "requirements": {"gang_affiliation": True, "respect": 50},
+        "rewards": {"territory_control": True, "money": 25000},
+        "risks": {"death_chance": 0.3, "injury_chance": 0.6}
+    },
+    "corrupt_official": {
+        "name": "Oficial Corrupto / Corrupt Official",
+        "description": "Un oficial de policía corrupto ofrece sus servicios / A corrupt police officer offers services",
+        "requirements": {"money": 10000, "criminal_level": 2},
+        "benefits": {"reduced_wanted": True, "inside_info": True},
+        "cost": 5000
+    }
+}
+
+BUSINESS_VENTURES = {
+    "drug_lab": {
+        "name": "Laboratorio de Drogas / Drug Lab",
+        "spanish_name": "Laboratorio de Metanfetaminas",
+        "cost": 50000,
+        "daily_income": 3000,
+        "risk_level": 4,
+        "requirements": {"criminal_level": 3, "chemistry_skill": 5},
+        "upkeep": 1000,
+        "police_attention": 20
+    },
+    "chop_shop": {
+        "name": "Desguace / Chop Shop", 
+        "spanish_name": "Taller de Desguace",
+        "cost": 30000,
+        "daily_income": 1500,
+        "risk_level": 2,
+        "requirements": {"criminal_level": 2, "mechanics_skill": 4},
+        "upkeep": 500,
+        "police_attention": 10
+    },
+    "smuggling_route": {
+        "name": "Ruta de Contrabando / Smuggling Route",
+        "spanish_name": "Ruta de Contrabando Fronterizo", 
+        "cost": 75000,
+        "daily_income": 5000,
+        "risk_level": 5,
+        "requirements": {"criminal_level": 4, "connections": 3},
+        "upkeep": 2000,
+        "police_attention": 30
+    },
+    "money_laundering": {
+        "name": "Lavado de Dinero / Money Laundering",
+        "spanish_name": "Operación de Lavado",
+        "cost": 100000,
+        "daily_income": 2000,
+        "risk_level": 3,
+        "requirements": {"criminal_level": 4, "intelligence": 7},
+        "upkeep": 3000,
+        "police_attention": 25,
+        "special_ability": "clean_dirty_money"
+    }
+}
+
+REPUTATION_SYSTEM = {
+    "street_thug": {"min_respect": 0, "max_respect": 24, "title": "Matón Callejero / Street Thug"},
+    "small_time": {"min_respect": 25, "max_respect": 49, "title": "Delincuente Menor / Small-time Criminal"},
+    "enforcer": {"min_respect": 50, "max_respect": 74, "title": "Sicario / Enforcer"},
+    "lieutenant": {"min_respect": 75, "max_respect": 99, "title": "Lugarteniente / Lieutenant"},
+    "boss": {"min_respect": 100, "max_respect": 149, "title": "Jefe / Boss"},
+    "kingpin": {"min_respect": 150, "max_respect": 999, "title": "Capo / Kingpin"}
+}
 CITIES = {
     "Albuquerque": {
         "description": "La ciudad más grande de Nuevo México, perfecta para grandes golpes y tratos peligrosos",
@@ -828,6 +913,25 @@ class Player:
         self.prison_time = 0
         self.prison_contacts = []
         self.story_progress = 0
+        
+        # New business ventures
+        self.business_ventures = []
+        self.daily_income = 0
+        self.criminal_level = 1  # Progression through criminal ranks
+        
+        # Empire building system
+        self.empire = {
+            "territories": [],
+            "lieutenants": [],
+            "operations": [],
+            "influence": 0,
+            "daily_income": 0
+        }
+        self.current_special_event = None
+        
+        # Enhanced relationship system
+        for npc_id in NPCS.keys():
+            self.npc_relationships[npc_id] = 0
 
     def take_damage(self, damage: int) -> bool:
         """Take damage and return True if player dies"""
@@ -876,6 +980,91 @@ class Player:
     def decrease_wanted_level(self, amount: int = 1):
         """Decrease wanted level"""
         self.wanted_level = max(0, self.wanted_level - amount)
+    
+    def get_reputation_title(self) -> str:
+        """Get current reputation title"""
+        for level, data in REPUTATION_SYSTEM.items():
+            if data["min_respect"] <= self.respect <= data["max_respect"]:
+                return data["title"]
+        return "Unknown Criminal"
+    
+    def get_criminal_level(self) -> int:
+        """Calculate criminal level based on various factors"""
+        base_level = self.respect // 25
+        business_bonus = len(self.business_ventures)
+        territory_bonus = len(self.territory) * 2
+        return min(5, base_level + business_bonus + territory_bonus)
+    
+    def can_afford_business(self, business_id: str) -> bool:
+        """Check if player can afford a business venture"""
+        if business_id not in BUSINESS_VENTURES:
+            return False
+        business = BUSINESS_VENTURES[business_id]
+        return (self.money >= business["cost"] and 
+                self.criminal_level >= business["requirements"].get("criminal_level", 1))
+    
+    def add_business_venture(self, business_id: str) -> bool:
+        """Add a new business venture"""
+        if business_id in self.business_ventures:
+            return False
+        
+        business = BUSINESS_VENTURES[business_id]
+        if self.remove_money(business["cost"]):
+            self.business_ventures.append(business_id)
+            self.daily_income += business["daily_income"]
+            self.heat_level += business["police_attention"]
+            return True
+        return False
+    
+    def trigger_special_event(self) -> Optional[str]:
+        """Check for and trigger special events"""
+        if self.current_special_event:
+            return None  # Already in an event
+        
+        for event_id, event in SPECIAL_EVENTS.items():
+            # Check requirements
+            meets_requirements = True
+            for req, value in event["requirements"].items():
+                if req == "respect" and self.respect < value:
+                    meets_requirements = False
+                elif req == "criminal_level" and self.get_criminal_level() < value:
+                    meets_requirements = False
+                elif req == "wanted_level" and self.wanted_level < value:
+                    meets_requirements = False
+                elif req == "gang_affiliation" and not self.gang_affiliation:
+                    meets_requirements = False
+                elif req == "money" and self.money < value:
+                    meets_requirements = False
+            
+            if meets_requirements and random.random() < 0.15:  # 15% chance
+                self.current_special_event = event_id
+                return event_id
+        
+        return None
+    
+    def improve_npc_relationship(self, npc_id: str, amount: int):
+        """Improve relationship with an NPC"""
+        if npc_id in self.npc_relationships:
+            self.npc_relationships[npc_id] = min(100, self.npc_relationships[npc_id] + amount)
+    
+    def get_npc_trust_level(self, npc_id: str) -> str:
+        """Get trust level with NPC"""
+        if npc_id not in self.npc_relationships:
+            return "unknown"
+        
+        relationship = self.npc_relationships[npc_id]
+        if relationship >= 80:
+            return "trusted_ally"
+        elif relationship >= 60:
+            return "good_friend"
+        elif relationship >= 40:
+            return "friendly"
+        elif relationship >= 20:
+            return "neutral"
+        elif relationship >= 0:
+            return "suspicious"
+        else:
+            return "hostile"
 
 class GameEngine:
     def __init__(self):
@@ -1089,10 +1278,20 @@ class GameEngine:
             print(f"18. {Fore.LIGHTBLUE_EX}Relaciones con NPCs / NPC relationships{Style.RESET_ALL}")
             print(f"19. {Fore.LIGHTYELLOW_EX}Centro de logros / Achievement center{Style.RESET_ALL}")
             print(f"20. {Fore.LIGHTCYAN_EX}Carrera policial / Police career{Style.RESET_ALL}")
+            
+            # New Expansion Features
+            print(f"\n{Fore.CYAN}=== NUEVAS CARACTERÍSTICAS / NEW FEATURES ==={Style.RESET_ALL}")
+            print(f"22. {Fore.LIGHTMAGENTA_EX}Casino y apuestas / Casino & gambling{Style.RESET_ALL}")
+            print(f"23. {Fore.LIGHTYELLOW_EX}Mercado negro / Black market{Style.RESET_ALL}")
+            print(f"24. {Fore.LIGHTRED_EX}Misiones especiales / Special missions{Style.RESET_ALL}")
+            print(f"25. {Fore.LIGHTGREEN_EX}Construcción de imperio / Empire building{Style.RESET_ALL}")
+            print(f"26. {Fore.LIGHTBLUE_EX}Investigación privada / Private investigation{Style.RESET_ALL}")
+            print(f"27. {Fore.LIGHTCYAN_EX}Contrabando internacional / International smuggling{Style.RESET_ALL}")
+            print(f"28. {Fore.WHITE}Academia criminal / Criminal academy{Style.RESET_ALL}")
             print(f"21. {Fore.RED}Salir del juego / Quit game{Style.RESET_ALL}")
             print()
             
-            choice = input(f"{Fore.CYAN}Elige tu opción / Enter your choice (1-21): {Style.RESET_ALL}").strip()
+            choice = input(f"{Fore.CYAN}Elige tu opción / Enter your choice (1-28): {Style.RESET_ALL}").strip()
             
             if choice == "1":
                 self.explore_city()
@@ -1113,11 +1312,11 @@ class GameEngine:
             elif choice == "9":
                 self.cybercrime_operations()
             elif choice == "10":
-                self.story_missions()
+                self.character_status()
             elif choice == "11":
-                self.multiple_save_system()
+                self.allocate_skill_points()
             elif choice == "12":
-                self.gang_hierarchy_system()
+                self.language_menu()
             elif choice == "13":
                 self.save_game()
             elif choice == "14":
@@ -1127,15 +1326,29 @@ class GameEngine:
             elif choice == "16":
                 self.fighting_tournament_menu()
             elif choice == "17":
-                self.property_investment_menu()
+                self.enhanced_business_ventures_menu()
             elif choice == "18":
-                self.npc_relationship_menu()
+                self.special_events_system()
             elif choice == "19":
-                self.achievement_center()
+                self.enhanced_reputation_system()
             elif choice == "20":
                 self.police_career_menu()
             elif choice == "21":
                 return False
+            elif choice == "22":
+                self.casino_gambling_menu()
+            elif choice == "23":
+                self.black_market_menu()
+            elif choice == "24":
+                self.special_missions_menu()
+            elif choice == "25":
+                self.empire_building_menu()
+            elif choice == "26":
+                self.private_investigation_menu()
+            elif choice == "27":
+                self.international_smuggling_menu()
+            elif choice == "28":
+                self.criminal_academy_menu()
             else:
                 print(f"{Fore.RED}Opción inválida / Invalid choice. Presiona Enter para continuar...{Style.RESET_ALL}")
                 input()
@@ -2476,71 +2689,6 @@ class GameEngine:
             input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
         else:
             self.running = False
-
-    def allocate_skill_points(self):
-        """Allocate skill points to improve character abilities"""
-        self.display_header()
-        print(f"{Fore.LIGHTBLUE_EX}Asignación de Puntos de Habilidad / Skill Point Allocation{Style.RESET_ALL}")
-        print()
-        
-        if self.player.skill_points <= 0:
-            print(f"{Fore.YELLOW}No tienes puntos de habilidad disponibles / No skill points available.{Style.RESET_ALL}")
-            print("Gana experiencia completando misiones para obtener más puntos.")
-            input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
-            return
-        
-        print(f"Puntos disponibles / Available points: {Fore.GREEN}{self.player.skill_points}{Style.RESET_ALL}")
-        print(f"Nivel actual / Current level: {self.player.level}")
-        print(f"Experiencia / Experience: {self.player.experience}/{self.player.experience_to_next}")
-        print()
-        
-        print(f"{Fore.CYAN}Habilidades actuales / Current skills:{Style.RESET_ALL}")
-        skills_spanish = {
-            "shooting": "Tiro / Shooting",
-            "driving": "Conducción / Driving", 
-            "stealth": "Sigilo / Stealth",
-            "charisma": "Carisma / Charisma",
-            "strength": "Fuerza / Strength"
-        }
-        
-        for i, (skill, level) in enumerate(self.player.skills.items(), 1):
-            stars = "★" * level + "☆" * (10 - level)
-            print(f"{i}. {skills_spanish[skill]}: {stars} ({level}/10)")
-        
-        print(f"6. {Fore.CYAN}Volver / Back{Style.RESET_ALL}")
-        
-        choice = input(f"\n{Fore.CYAN}¿Qué habilidad mejorar? / Which skill to improve?: {Style.RESET_ALL}").strip()
-        
-        try:
-            choice_num = int(choice)
-            skill_names = list(self.player.skills.keys())
-            
-            if 1 <= choice_num <= 5:
-                skill_name = skill_names[choice_num - 1]
-                if self.player.skills[skill_name] >= 10:
-                    print(f"{Fore.RED}Esta habilidad ya está al máximo / This skill is already maxed out.{Style.RESET_ALL}")
-                else:
-                    self.player.skills[skill_name] += 1
-                    self.player.skill_points -= 1
-                    
-                    improvement_messages = [
-                        f"¡Habilidad de {skills_spanish[skill_name].split(' / ')[0]} mejorada!",
-                        f"Te sientes más hábil en {skills_spanish[skill_name].split(' / ')[0]}.",
-                        f"Tu entrenamiento en {skills_spanish[skill_name].split(' / ')[0]} da frutos."
-                    ]
-                    
-                    print(f"{Fore.GREEN}{random.choice(improvement_messages)}{Style.RESET_ALL}")
-                    print(f"{Fore.GREEN}{skills_spanish[skill_name]} improved to {self.player.skills[skill_name]}/10!{Style.RESET_ALL}")
-                    
-                    if self.player.skill_points > 0:
-                        if input("\n¿Mejorar otra habilidad? / Improve another skill? (s/y or n): ").lower() in ['s', 'y']:
-                            self.allocate_skill_points()
-            elif choice_num == 6:
-                return
-        except ValueError:
-            print(f"{Fore.RED}Opción inválida / Invalid choice.{Style.RESET_ALL}")
-        
-        input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
 
     def armed_robbery(self):
         """Armed robbery of various targets"""
@@ -5674,6 +5822,1631 @@ class GameEngine:
                 
         elif choice == "3":
             print(f"{Fore.YELLOW}Decidiste ignorar la situación / You decided to ignore the situation{Style.RESET_ALL}")
+
+    def enhanced_business_ventures_menu(self):
+        """Enhanced business ventures system with advanced criminal enterprises"""
+        self.display_header()
+        print(f"{Fore.LIGHTGREEN_EX}EMPRESAS CRIMINALES AVANZADAS / ADVANCED CRIMINAL ENTERPRISES{Style.RESET_ALL}")
+        print()
+        
+        # Show current ventures
+        if self.player.business_ventures:
+            print(f"{Fore.CYAN}Tus Empresas Actuales / Your Current Ventures:{Style.RESET_ALL}")
+            total_daily = 0
+            total_upkeep = 0
+            for venture_id in self.player.business_ventures:
+                venture = BUSINESS_VENTURES[venture_id]
+                name = venture["spanish_name"] if self.player.language_mode == "spanish" else venture["name"]
+                print(f"• {name}")
+                print(f"  Ingresos diarios: ${venture['daily_income']:,}")
+                print(f"  Mantenimiento: ${venture['upkeep']:,}")
+                print(f"  Nivel de riesgo: {'★' * venture['risk_level']}")
+                total_daily += venture["daily_income"]
+                total_upkeep += venture["upkeep"]
+                print()
+            
+            print(f"{Fore.GREEN}Ingresos diarios totales: ${total_daily:,}{Style.RESET_ALL}")
+            print(f"{Fore.RED}Gastos diarios totales: ${total_upkeep:,}{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Beneficio neto: ${total_daily - total_upkeep:,}{Style.RESET_ALL}")
+            print()
+        
+        # Show available ventures
+        print(f"{Fore.CYAN}Empresas Disponibles / Available Ventures:{Style.RESET_ALL}")
+        available_ventures = []
+        
+        for venture_id, venture in BUSINESS_VENTURES.items():
+            if venture_id not in self.player.business_ventures:
+                name = venture["spanish_name"] if self.player.language_mode == "spanish" else venture["name"]
+                
+                can_afford = self.player.money >= venture["cost"]
+                meets_level = self.player.get_criminal_level() >= venture["requirements"]["criminal_level"]
+                
+                color = Fore.GREEN if can_afford and meets_level else Fore.RED
+                
+                print(f"{color}{len(available_ventures) + 1}. {name}{Style.RESET_ALL}")
+                print(f"   Costo: ${venture['cost']:,}")
+                print(f"   Ingresos diarios: ${venture['daily_income']:,}")
+                print(f"   Mantenimiento: ${venture['upkeep']:,}")
+                print(f"   Nivel criminal requerido: {venture['requirements']['criminal_level']}")
+                print(f"   Nivel de riesgo: {'★' * venture['risk_level']}")
+                print()
+                
+                available_ventures.append(venture_id)
+        
+        if not available_ventures:
+            print(f"{Fore.YELLOW}Ya posees todas las empresas disponibles / You own all available ventures{Style.RESET_ALL}")
+            input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            return
+        
+        print(f"0. {Fore.YELLOW}Volver al menú principal / Back to main menu{Style.RESET_ALL}")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}Elige una empresa para comprar / Choose a venture to purchase: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(available_ventures):
+                venture_id = available_ventures[choice - 1]
+                venture = BUSINESS_VENTURES[venture_id]
+                
+                if self.player.money < venture["cost"]:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                elif self.player.get_criminal_level() < venture["requirements"]["criminal_level"]:
+                    print(f"{Fore.RED}Nivel criminal insuficiente / Criminal level too low{Style.RESET_ALL}")
+                else:
+                    name = venture["spanish_name"] if self.player.language_mode == "spanish" else venture["name"]
+                    
+                    print(f"\n{Fore.YELLOW}¿Confirmas la compra de {name} por ${venture['cost']:,}?{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}Confirm purchase of {name} for ${venture['cost']:,}?{Style.RESET_ALL}")
+                    
+                    confirm = input("(y/n): ").lower().strip()
+                    if confirm == 'y':
+                        if self.player.add_business_venture(venture_id):
+                            print(f"{Fore.GREEN}¡Empresa adquirida exitosamente! / Enterprise acquired successfully!{Style.RESET_ALL}")
+                            print(f"Atención policial aumentada en: +{venture['police_attention']}")
+                            
+                            if venture_id == "money_laundering":
+                                self.unlock_achievement("El Blanqueador / The Launderer")
+                            elif venture_id == "drug_lab":
+                                self.unlock_achievement("Químico Maestro / Master Chemist")
+                        else:
+                            print(f"{Fore.RED}Error al adquirir la empresa / Error acquiring enterprise{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid option{Style.RESET_ALL}")
+        
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def special_events_system(self):
+        """Handle special dynamic events"""
+        self.display_header()
+        print(f"{Fore.LIGHTMAGENTA_EX}EVENTOS ESPECIALES / SPECIAL EVENTS{Style.RESET_ALL}")
+        print()
+        
+        # Check for active event
+        if self.player.current_special_event:
+            event_id = self.player.current_special_event
+            event = SPECIAL_EVENTS[event_id]
+            
+            print(f"{Fore.YELLOW}{event['name']}{Style.RESET_ALL}")
+            print(event['description'])
+            print()
+            
+            if event_id == "cartel_meeting":
+                print(f"{Fore.GREEN}Evento del cartel en progreso / Cartel event in progress{Style.RESET_ALL}")
+            elif event_id == "police_raid":
+                print(f"{Fore.RED}Redada policial activa / Police raid active{Style.RESET_ALL}")
+            elif event_id == "gang_war":
+                print(f"{Fore.YELLOW}Guerra de pandillas / Gang war{Style.RESET_ALL}")
+            elif event_id == "corrupt_official":
+                print(f"{Fore.BLUE}Oficial corrupto disponible / Corrupt official available{Style.RESET_ALL}")
+            
+            return
+        
+        # Try to trigger new event
+        triggered_event = self.player.trigger_special_event()
+        
+        if triggered_event:
+            event = SPECIAL_EVENTS[triggered_event]
+            print(f"{Fore.YELLOW}EVENTO ACTIVADO / EVENT TRIGGERED{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}{event['name']}{Style.RESET_ALL}")
+            print(event['description'])
+            print()
+            
+            print(f"1. {Fore.GREEN}Participar / Participate{Style.RESET_ALL}")
+            print(f"2. {Fore.YELLOW}Ignorar / Ignore{Style.RESET_ALL}")
+            
+            choice = input(f"\n{Fore.CYAN}Tu decisión / Your choice: {Style.RESET_ALL}").strip()
+            
+            if choice == "1":
+                print(f"{Fore.GREEN}Decidiste participar en el evento / You decided to participate{Style.RESET_ALL}")
+                input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.YELLOW}Decidiste ignorar el evento / You decided to ignore the event{Style.RESET_ALL}")
+                self.player.current_special_event = None
+        else:
+            print(f"{Fore.CYAN}No hay eventos especiales disponibles en este momento{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}No special events available at this time{Style.RESET_ALL}")
+            print()
+            print(f"{Fore.YELLOW}Los eventos se activan basados en:{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Events are triggered based on:{Style.RESET_ALL}")
+            print("• Tu nivel de respeto / Your respect level")
+            print("• Tu nivel criminal / Your criminal level")
+            print("• Tu afiliación a pandillas / Your gang affiliation")
+            print("• Tu nivel de búsqueda / Your wanted level")
+            print("• Tu dinero disponible / Your available money")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def enhanced_reputation_system(self):
+        """Display enhanced reputation and standing"""
+        self.display_header()
+        print(f"{Fore.LIGHTCYAN_EX}SISTEMA DE REPUTACIÓN / REPUTATION SYSTEM{Style.RESET_ALL}")
+        print()
+        
+        # Current reputation
+        title = self.player.get_reputation_title()
+        criminal_level = self.player.get_criminal_level()
+        
+        print(f"{Fore.YELLOW}Tu Reputación Actual / Your Current Reputation:{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Título: {title}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}Nivel Criminal: {criminal_level}/5{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}Respeto: {self.player.respect}{Style.RESET_ALL}")
+        print(f"{Fore.BLUE}Prestigio: {self.player.prestige}{Style.RESET_ALL}")
+        print()
+        
+        # Show reputation levels
+        print(f"{Fore.CYAN}Niveles de Reputación / Reputation Levels:{Style.RESET_ALL}")
+        for level, data in REPUTATION_SYSTEM.items():
+            current = "👑" if data["min_respect"] <= self.player.respect <= data["max_respect"] else "  "
+            color = Fore.YELLOW if current == "👑" else Fore.WHITE
+            print(f"{current} {color}{data['title']} ({data['min_respect']}-{data['max_respect']} respeto){Style.RESET_ALL}")
+        
+        print()
+        
+        # Factors affecting reputation
+        print(f"{Fore.CYAN}Factores que Afectan la Reputación / Factors Affecting Reputation:{Style.RESET_ALL}")
+        print(f"• Misiones completadas: {self.player.stats['missions_completed']}")
+        print(f"• Personas eliminadas: {self.player.stats['people_killed']}")
+        print(f"• Atracos completados: {self.player.stats['heists_completed']}")
+        print(f"• Territorio controlado: {len(self.player.territory)}")
+        print(f"• Miembros de pandilla: {len(self.player.gang_members)}")
+        print(f"• Empresas criminales: {len(self.player.business_ventures)}")
+        
+        # Benefits of current level
+        print(f"\n{Fore.CYAN}Beneficios del Nivel Actual / Current Level Benefits:{Style.RESET_ALL}")
+        if criminal_level >= 2:
+            print("• Acceso a trabajos criminales de nivel medio")
+        if criminal_level >= 3:
+            print("• Puede liderar una pandilla")
+            print("• Acceso a laboratorios de drogas")
+        if criminal_level >= 4:
+            print("• Puede controlar territorio")
+            print("• Acceso a operaciones de contrabando")
+        if criminal_level >= 5:
+            print("• Acceso a todos los negocios criminales")
+            print("• Puede iniciar guerras de pandillas")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def language_menu(self):
+        """Language selection menu"""
+        self.display_header()
+        print(f"{Fore.LIGHTCYAN_EX}CONFIGURACIÓN DE IDIOMA / LANGUAGE SETTINGS{Style.RESET_ALL}")
+        print()
+        
+        current_mode = self.player.language_mode
+        print(f"{Fore.YELLOW}Modo actual / Current mode: {current_mode.title()}{Style.RESET_ALL}")
+        print()
+        
+        print(f"1. {Fore.GREEN}Español solamente / Spanish only{Style.RESET_ALL}")
+        print(f"2. {Fore.BLUE}English only{Style.RESET_ALL}")
+        print(f"3. {Fore.MAGENTA}Bilingüe / Bilingual{Style.RESET_ALL}")
+        print(f"4. {Fore.YELLOW}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Selecciona idioma / Select language (1-4): {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            self.player.language_mode = "spanish"
+            print(f"{Fore.GREEN}Idioma cambiado a español{Style.RESET_ALL}")
+        elif choice == "2":
+            self.player.language_mode = "english"
+            print(f"{Fore.GREEN}Language changed to English{Style.RESET_ALL}")
+        elif choice == "3":
+            self.player.language_mode = "bilingual"
+            print(f"{Fore.GREEN}Modo bilingüe activado / Bilingual mode activated{Style.RESET_ALL}")
+        elif choice == "4":
+            return
+        else:
+            print(f"{Fore.RED}Opción inválida / Invalid option{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def allocate_skill_points(self):
+        """Skill point allocation menu"""
+        self.display_header()
+        print(f"{Fore.LIGHTGREEN_EX}ASIGNACIÓN DE PUNTOS DE HABILIDAD / SKILL POINT ALLOCATION{Style.RESET_ALL}")
+        print()
+        
+        if self.player.skill_points <= 0:
+            print(f"{Fore.YELLOW}No tienes puntos de habilidad disponibles / No skill points available{Style.RESET_ALL}")
+            print("Gana experiencia para obtener más puntos / Gain experience to earn more points")
+            input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            return
+        
+        print(f"{Fore.CYAN}Puntos disponibles / Available points: {self.player.skill_points}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Nivel actual / Current level: {self.player.level}{Style.RESET_ALL}")
+        print()
+        
+        # Display current skills
+        print(f"{Fore.YELLOW}Habilidades actuales / Current skills:{Style.RESET_ALL}")
+        skill_list = []
+        for i, (skill, level) in enumerate(self.player.skills.items(), 1):
+            stars = "★" * level + "☆" * (10 - level)
+            print(f"{i}. {skill.capitalize()}: {stars} ({level}/10)")
+            skill_list.append(skill)
+        
+        print(f"\n0. {Fore.YELLOW}Volver / Back{Style.RESET_ALL}")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}Elige habilidad para mejorar / Choose skill to improve: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(skill_list):
+                skill = skill_list[choice - 1]
+                current_level = self.player.skills[skill]
+                
+                if current_level >= 10:
+                    print(f"{Fore.RED}Esta habilidad ya está al máximo / This skill is already at maximum{Style.RESET_ALL}")
+                else:
+                    self.player.skills[skill] += 1
+                    self.player.skill_points -= 1
+                    print(f"{Fore.GREEN}¡{skill.capitalize()} mejorado! / {skill.capitalize()} improved!{Style.RESET_ALL}")
+                    print(f"Nuevo nivel / New level: {self.player.skills[skill]}/10")
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid option{Style.RESET_ALL}")
+        
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def casino_gambling_menu(self):
+        """Advanced casino and gambling system"""
+        self.display_header()
+        print(f"{Fore.LIGHTMAGENTA_EX}🎰 CASINO EL DORADO 🎰{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}¡Bienvenido al casino más exclusivo de Nuevo México! / Welcome to New Mexico's most exclusive casino!{Style.RESET_ALL}")
+        print()
+        
+        # Check if player has enough money
+        if self.player.money < 100:
+            print(f"{Fore.RED}Necesitas al menos $100 para jugar / You need at least $100 to play{Style.RESET_ALL}")
+            input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+            return
+        
+        print(f"💰 Dinero disponible / Available money: ${self.player.money:,}")
+        print()
+        
+        print(f"1. {Fore.RED}Póker Texas Hold'em (Apuesta mínima: $500){Style.RESET_ALL}")
+        print(f"2. {Fore.BLACK}Blackjack (Apuesta mínima: $200){Style.RESET_ALL}")  
+        print(f"3. {Fore.GREEN}Ruleta (Apuesta mínima: $100){Style.RESET_ALL}")
+        print(f"4. {Fore.YELLOW}Máquinas tragamonedas / Slot machines ($50-$1000){Style.RESET_ALL}")
+        print(f"5. {Fore.BLUE}Carreras de caballos / Horse racing{Style.RESET_ALL}")
+        print(f"6. {Fore.MAGENTA}Pelea de gallos / Cockfighting{Style.RESET_ALL}")
+        print(f"7. {Fore.CYAN}Apuestas deportivas / Sports betting{Style.RESET_ALL}")
+        print(f"0. {Fore.WHITE}Salir / Exit{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Elige tu juego / Choose your game: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            self.play_poker()
+        elif choice == "2":
+            self.play_blackjack()
+        elif choice == "3":
+            self.play_roulette()
+        elif choice == "4":
+            self.play_slots()
+        elif choice == "5":
+            self.horse_racing()
+        elif choice == "6":
+            self.cockfighting()
+        elif choice == "7":
+            self.sports_betting()
+        elif choice == "0":
+            return
+        else:
+            print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+        
+        input(f"{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def play_poker(self):
+        """Texas Hold'em poker game"""
+        min_bet = 500
+        if self.player.money < min_bet:
+            print(f"{Fore.RED}No tienes suficiente dinero / Not enough money (Minimum: ${min_bet}){Style.RESET_ALL}")
+            return
+        
+        print(f"\n{Fore.RED}♠️ TEXAS HOLD'EM POKER ♠️{Style.RESET_ALL}")
+        print("Mesa VIP - Competición de alto nivel / VIP Table - High stakes competition")
+        
+        bet = min(min_bet * random.randint(1, 3), self.player.money // 2)
+        print(f"Tu apuesta / Your bet: ${bet:,}")
+        
+        # Simulate poker hand strength (1-10)
+        player_hand = random.randint(1, 10) + (self.player.skills.get("charisma", 1) // 2)
+        dealer_hand = random.randint(1, 10)
+        
+        hand_names = ["Par bajo", "Par medio", "Par alto", "Doble par", "Trío", 
+                     "Escalera", "Color", "Full house", "Póker", "Escalera real"]
+        
+        print(f"\nTu mano: {hand_names[min(player_hand-1, 9)]}")
+        print("Evaluando manos...")
+        
+        if player_hand > dealer_hand:
+            winnings = bet * random.randint(2, 4)
+            self.player.money += winnings
+            print(f"{Fore.GREEN}¡Ganaste! / You won! +${winnings:,}{Style.RESET_ALL}")
+            self.player.add_experience(50)
+        else:
+            self.player.money -= bet
+            print(f"{Fore.RED}Perdiste / You lost: -${bet:,}{Style.RESET_ALL}")
+
+    def play_blackjack(self):
+        """Blackjack card game"""
+        min_bet = 200
+        if self.player.money < min_bet:
+            print(f"{Fore.RED}No tienes suficiente dinero / Not enough money (Minimum: ${min_bet}){Style.RESET_ALL}")
+            return
+        
+        print(f"\n{Fore.BLACK}♣️ BLACKJACK 21 ♣️{Style.RESET_ALL}")
+        
+        bet = min(min_bet * random.randint(1, 2), self.player.money // 3)
+        print(f"Tu apuesta / Your bet: ${bet:,}")
+        
+        # Simple blackjack simulation
+        player_cards = random.randint(15, 21)  # Player gets decent cards
+        dealer_cards = random.randint(17, 22)   # Dealer might bust
+        
+        print(f"Tus cartas suman: {player_cards}")
+        print(f"Cartas del dealer: {dealer_cards}")
+        
+        if player_cards == 21:
+            winnings = bet * 2
+            self.player.money += winnings
+            print(f"{Fore.GREEN}¡BLACKJACK! ¡Ganaste! / BLACKJACK! You won! +${winnings:,}{Style.RESET_ALL}")
+        elif player_cards > 21:
+            self.player.money -= bet
+            print(f"{Fore.RED}Te pasaste / Bust! -${bet:,}{Style.RESET_ALL}")
+        elif dealer_cards > 21 or player_cards > dealer_cards:
+            winnings = bet
+            self.player.money += winnings
+            print(f"{Fore.GREEN}¡Ganaste! / You won! +${winnings:,}{Style.RESET_ALL}")
+        else:
+            self.player.money -= bet
+            print(f"{Fore.RED}Perdiste / You lost: -${bet:,}{Style.RESET_ALL}")
+
+    def play_roulette(self):
+        """Roulette game"""
+        min_bet = 100
+        if self.player.money < min_bet:
+            print(f"{Fore.RED}No tienes suficiente dinero / Not enough money (Minimum: ${min_bet}){Style.RESET_ALL}")
+            return
+        
+        print(f"\n{Fore.GREEN}🎯 RULETA EUROPEA 🎯{Style.RESET_ALL}")
+        print("1. Rojo/Negro (Paga 2:1)")
+        print("2. Par/Impar (Paga 2:1)")  
+        print("3. Número específico (Paga 35:1)")
+        
+        bet_type = input("Tipo de apuesta / Bet type (1-3): ").strip()
+        bet_amount = min(min_bet * random.randint(1, 5), self.player.money // 4)
+        
+        winning_number = random.randint(0, 36)
+        print(f"\n¡La bola cayó en: {winning_number}!")
+        
+        won = False
+        multiplier = 1
+        
+        if bet_type == "1":  # Color
+            color_choice = input("Rojo (r) o Negro (n)? / Red (r) or Black (n)?: ").lower()
+            is_red = winning_number in [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]
+            if (color_choice == "r" and is_red) or (color_choice == "n" and not is_red and winning_number != 0):
+                won = True
+                multiplier = 2
+        elif bet_type == "2":  # Even/Odd
+            parity = input("Par (p) o Impar (i)? / Even (e) or Odd (o)?: ").lower()
+            if (parity in ["p", "e"] and winning_number % 2 == 0 and winning_number != 0) or \
+               (parity in ["i", "o"] and winning_number % 2 == 1):
+                won = True
+                multiplier = 2
+        elif bet_type == "3":  # Specific number
+            try:
+                chosen_number = int(input("Número (0-36) / Number (0-36): "))
+                if chosen_number == winning_number:
+                    won = True
+                    multiplier = 35
+            except ValueError:
+                print("Número inválido / Invalid number")
+                return
+        
+        if won:
+            winnings = bet_amount * multiplier
+            self.player.money += winnings
+            print(f"{Fore.GREEN}¡Ganaste! / You won! +${winnings:,}{Style.RESET_ALL}")
+            self.player.add_experience(30)
+        else:
+            self.player.money -= bet_amount
+            print(f"{Fore.RED}Perdiste / You lost: -${bet_amount:,}{Style.RESET_ALL}")
+
+    def play_slots(self):
+        """Slot machine game"""
+        print(f"\n{Fore.YELLOW}🎰 MÁQUINAS TRAGAMONEDAS 🎰{Style.RESET_ALL}")
+        print("Elige tu máquina / Choose your machine:")
+        print("1. Clásica ($50-$200)")
+        print("2. Video Poker ($100-$500)")
+        print("3. Jackpot Progresivo ($500-$2000)")
+        
+        machine_choice = input("Máquina / Machine (1-3): ").strip()
+        
+        if machine_choice == "1":
+            bet_range = (50, 200)
+            jackpot_chance = 0.05
+        elif machine_choice == "2":
+            bet_range = (100, 500)
+            jackpot_chance = 0.03
+        elif machine_choice == "3":
+            bet_range = (500, 2000)
+            jackpot_chance = 0.01
+        else:
+            print("Opción inválida / Invalid choice")
+            return
+        
+        bet = min(random.randint(bet_range[0], bet_range[1]), self.player.money // 3)
+        if self.player.money < bet:
+            print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+            return
+        
+        print(f"\nApuesta: ${bet:,}")
+        print("🎰 Girando... / Spinning...")
+        print("🍒 🍋 🍊")
+        
+        luck = random.random()
+        if luck < jackpot_chance:
+            # Jackpot!
+            winnings = bet * random.randint(50, 100)
+            self.player.money += winnings
+            print(f"{Fore.YELLOW}🎉 ¡¡¡JACKPOT!!! 🎉 +${winnings:,}{Style.RESET_ALL}")
+            self.player.add_experience(100)
+        elif luck < 0.2:
+            # Small win
+            winnings = bet * random.randint(2, 5)
+            self.player.money += winnings
+            print(f"{Fore.GREEN}¡Ganaste! / You won! +${winnings:,}{Style.RESET_ALL}")
+        else:
+            # Loss
+            self.player.money -= bet
+            print(f"{Fore.RED}Perdiste / You lost: -${bet:,}{Style.RESET_ALL}")
+
+    def horse_racing(self):
+        """Horse racing betting"""
+        print(f"\n{Fore.BLUE}🐎 HIPÓDROMO SANTA FE 🐎{Style.RESET_ALL}")
+        
+        horses = [
+            {"name": "Rayo Plateado", "odds": "3:1", "chance": 0.25},
+            {"name": "Viento del Norte", "odds": "5:1", "chance": 0.15},
+            {"name": "Estrella Fugaz", "odds": "2:1", "chance": 0.30},
+            {"name": "Trueno Negro", "odds": "8:1", "chance": 0.10},
+            {"name": "Corazón Valiente", "odds": "4:1", "chance": 0.20}
+        ]
+        
+        print("Caballos en carrera / Horses racing:")
+        for i, horse in enumerate(horses, 1):
+            print(f"{i}. {horse['name']} - Cuotas: {horse['odds']}")
+        
+        try:
+            horse_choice = int(input("\nElige caballo / Choose horse (1-5): ")) - 1
+            bet = min(random.randint(200, 1000), self.player.money // 3)
+            
+            if horse_choice < 0 or horse_choice >= len(horses):
+                print("Caballo inválido / Invalid horse")
+                return
+            
+            if self.player.money < bet:
+                print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                return
+            
+            chosen_horse = horses[horse_choice]
+            print(f"\nApuesta: ${bet:,} en {chosen_horse['name']}")
+            print("🏁 ¡La carrera comienza! / The race begins!")
+            
+            # Race simulation
+            winner = random.choices(horses, weights=[h['chance'] for h in horses])[0]
+            
+            print(f"🏆 ¡Ganador: {winner['name']}!")
+            
+            if winner == chosen_horse:
+                multiplier = int(chosen_horse['odds'].split(':')[0])
+                winnings = bet * multiplier
+                self.player.money += winnings
+                print(f"{Fore.GREEN}¡Tu caballo ganó! / Your horse won! +${winnings:,}{Style.RESET_ALL}")
+                self.player.add_experience(40)
+            else:
+                self.player.money -= bet
+                print(f"{Fore.RED}Perdiste / You lost: -${bet:,}{Style.RESET_ALL}")
+                
+        except ValueError:
+            print("Entrada inválida / Invalid input")
+
+    def cockfighting(self):
+        """Cockfighting betting (cultural context)"""
+        print(f"\n{Fore.MAGENTA}🐓 PALENQUE TRADICIONAL 🐓{Style.RESET_ALL}")
+        print("Apuestas en peleas de gallos tradicionales / Traditional cockfighting bets")
+        
+        roosters = [
+            {"name": "El Guerrero", "strength": random.randint(70, 90)},
+            {"name": "Pluma de Oro", "strength": random.randint(60, 85)},
+            {"name": "Espolón de Acero", "strength": random.randint(75, 95)},
+            {"name": "Rey del Palenque", "strength": random.randint(65, 80)}
+        ]
+        
+        print("Gallos peleadores / Fighting roosters:")
+        for i, rooster in enumerate(roosters, 1):
+            print(f"{i}. {rooster['name']} - Fuerza estimada: {rooster['strength']}/100")
+        
+        try:
+            rooster_choice = int(input("\nElige gallo / Choose rooster (1-4): ")) - 1
+            bet = min(random.randint(300, 800), self.player.money // 4)
+            
+            if rooster_choice < 0 or rooster_choice >= len(roosters):
+                print("Gallo inválido / Invalid rooster")
+                return
+            
+            if self.player.money < bet:
+                print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                return
+            
+            chosen_rooster = roosters[rooster_choice]
+            opponent = random.choice([r for r in roosters if r != chosen_rooster])
+            
+            print(f"\n🥊 Pelea: {chosen_rooster['name']} vs {opponent['name']}")
+            print("¡La pelea comienza! / The fight begins!")
+            
+            # Fight simulation based on strength + luck
+            player_score = chosen_rooster['strength'] + random.randint(1, 30)
+            opponent_score = opponent['strength'] + random.randint(1, 30)
+            
+            if player_score > opponent_score:
+                winnings = bet * random.randint(2, 4)
+                self.player.money += winnings
+                print(f"{Fore.GREEN}¡{chosen_rooster['name']} ganó! / {chosen_rooster['name']} won! +${winnings:,}{Style.RESET_ALL}")
+                self.player.add_experience(30)
+            else:
+                self.player.money -= bet
+                print(f"{Fore.RED}¡{opponent['name']} ganó! Perdiste -${bet:,}{Style.RESET_ALL}")
+                
+        except ValueError:
+            print("Entrada inválida / Invalid input")
+
+    def sports_betting(self):
+        """Sports betting system"""
+        print(f"\n{Fore.CYAN}⚽ APUESTAS DEPORTIVAS ⚽{Style.RESET_ALL}")
+        
+        sports_events = [
+            {"sport": "Fútbol", "teams": "Chivas vs América", "odds": "2.5:1"},
+            {"sport": "Boxeo", "teams": "Canelo vs Golovkin", "odds": "1.8:1"},
+            {"sport": "Baseball", "teams": "Yankees vs Red Sox", "odds": "3:1"},
+            {"sport": "UFC", "teams": "Jones vs Cormier", "odds": "2:1"},
+            {"sport": "NBA", "teams": "Lakers vs Warriors", "odds": "2.2:1"}
+        ]
+        
+        print("Eventos disponibles / Available events:")
+        for i, event in enumerate(sports_events, 1):
+            print(f"{i}. {event['sport']}: {event['teams']} - Cuotas: {event['odds']}")
+        
+        try:
+            event_choice = int(input("\nElige evento / Choose event (1-5): ")) - 1
+            bet = min(random.randint(100, 600), self.player.money // 3)
+            
+            if event_choice < 0 or event_choice >= len(sports_events):
+                print("Evento inválido / Invalid event")
+                return
+            
+            if self.player.money < bet:
+                print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                return
+            
+            chosen_event = sports_events[event_choice]
+            print(f"\nApuesta: ${bet:,} en {chosen_event['teams']}")
+            
+            # Sports betting outcome
+            if random.random() < 0.4:  # 40% win chance
+                multiplier = float(chosen_event['odds'].split(':')[0])
+                winnings = int(bet * multiplier)
+                self.player.money += winnings
+                print(f"{Fore.GREEN}¡Ganaste la apuesta! / You won the bet! +${winnings:,}{Style.RESET_ALL}")
+                self.player.add_experience(25)
+            else:
+                self.player.money -= bet
+                print(f"{Fore.RED}Perdiste la apuesta / You lost the bet: -${bet:,}{Style.RESET_ALL}")
+                
+        except ValueError:
+            print("Entrada inválida / Invalid input")
+
+    def black_market_menu(self):
+        """Black market trading system"""
+        self.display_header()
+        print(f"{Fore.LIGHTYELLOW_EX}🏴‍☠️ MERCADO NEGRO DE ALBUQUERQUE 🏴‍☠️{Style.RESET_ALL}")
+        print(f"{Fore.RED}¡Cuidado! Operaciones ilegales de alto riesgo / Warning! High-risk illegal operations{Style.RESET_ALL}")
+        print()
+        
+        black_market_items = [
+            {"name": "Información clasificada del gobierno", "price": 50000, "risk": 4, "exp": 200},
+            {"name": "Drogas sintéticas experimentales", "price": 25000, "risk": 3, "exp": 150},
+            {"name": "Armas militares", "price": 75000, "risk": 5, "exp": 300},
+            {"name": "Documentos falsos premium", "price": 15000, "risk": 2, "exp": 100},
+            {"name": "Órganos humanos", "price": 100000, "risk": 5, "exp": 400},
+            {"name": "Plutonio enriquecido", "price": 200000, "risk": 5, "exp": 500},
+            {"name": "Secretos industriales", "price": 30000, "risk": 3, "exp": 120}
+        ]
+        
+        print(f"💰 Tu dinero: ${self.player.money:,}")
+        print(f"⭐ Nivel de respeto: {self.player.respect}")
+        print()
+        
+        print("Artículos disponibles / Available items:")
+        for i, item in enumerate(black_market_items, 1):
+            risk_stars = "💀" * item['risk']
+            print(f"{i}. {item['name']}")
+            print(f"   Precio: ${item['price']:,} | Riesgo: {risk_stars} | EXP: +{item['exp']}")
+        
+        print(f"\n0. {Fore.WHITE}Salir del mercado negro / Exit black market{Style.RESET_ALL}")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿Qué quieres comprar? / What do you want to buy?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(black_market_items):
+                item = black_market_items[choice - 1]
+                
+                if self.player.money < item['price']:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                    return
+                
+                if self.player.respect < item['risk'] * 500:
+                    print(f"{Fore.RED}Tu reputación no es suficiente para esta transacción / Your reputation isn't high enough{Style.RESET_ALL}")
+                    return
+                
+                print(f"\n{Fore.YELLOW}Realizando transacción peligrosa... / Conducting dangerous transaction...{Style.RESET_ALL}")
+                
+                # Risk calculation
+                success_chance = 0.6 + (self.player.skills.get("stealth", 1) * 0.05)
+                
+                if random.random() < success_chance:
+                    self.player.money -= item['price']
+                    self.player.add_experience(item['exp'])
+                    self.player.respect += item['risk'] * 100
+                    
+                    # Add to inventory (using quantity system)
+                    item_key = item['name'].lower().replace(' ', '_')
+                    if item_key not in self.player.inventory:
+                        self.player.inventory[item_key] = 1
+                    else:
+                        self.player.inventory[item_key] += 1
+                    
+                    print(f"{Fore.GREEN}¡Transacción exitosa! / Successful transaction!{Style.RESET_ALL}")
+                    print(f"Adquiriste: {item['name']}")
+                    print(f"Experiencia ganada: +{item['exp']}")
+                    print(f"Respeto ganado: +{item['risk'] * 100}")
+                else:
+                    # Failed transaction - police attention
+                    self.player.wanted_level = min(5, self.player.wanted_level + item['risk'])
+                    print(f"{Fore.RED}¡Transacción fallida! ¡La policía está en alerta! / Transaction failed! Police are alerted!{Style.RESET_ALL}")
+                    print(f"Nivel de búsqueda aumentó a: {self.player.wanted_level}")
+                    
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def special_missions_menu(self):
+        """Special high-stakes missions system"""
+        self.display_header()
+        print(f"{Fore.LIGHTRED_EX}🎯 MISIONES ESPECIALES DE ALTO RIESGO 🎯{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Misiones únicas con grandes recompensas / Unique missions with high rewards{Style.RESET_ALL}")
+        print()
+        
+        special_missions = [
+            {
+                "name": "Infiltración en la DEA",
+                "description": "Obtén información clasificada del gobierno",
+                "reward": 100000,
+                "exp": 500,
+                "risk": 5,
+                "requirements": {"respect": 5000, "stealth": 8}
+            },
+            {
+                "name": "Rescate del Jefe del Cartel",
+                "description": "Libera al líder capturado de prisión federal",
+                "reward": 200000,
+                "exp": 800,
+                "risk": 5,
+                "requirements": {"respect": 8000, "strength": 7, "shooting": 8}
+            },
+            {
+                "name": "Sabotaje Industrial",
+                "description": "Destruye instalaciones de la competencia",
+                "reward": 75000,
+                "exp": 400,
+                "risk": 4,
+                "requirements": {"respect": 3000, "hacking": 6}
+            },
+            {
+                "name": "Secuestro VIP",
+                "description": "Secuestra a un político importante",
+                "reward": 150000,
+                "exp": 600,
+                "risk": 5,
+                "requirements": {"respect": 6000, "charisma": 7, "stealth": 6}
+            }
+        ]
+        
+        print(f"💰 Tu dinero: ${self.player.money:,}")
+        print(f"⭐ Tu respeto: {self.player.respect}")
+        print()
+        
+        for i, mission in enumerate(special_missions, 1):
+            print(f"{i}. {Fore.LIGHTCYAN_EX}{mission['name']}{Style.RESET_ALL}")
+            print(f"   {mission['description']}")
+            print(f"   Recompensa: ${mission['reward']:,} | EXP: +{mission['exp']} | Riesgo: {'💀' * mission['risk']}")
+            
+            # Check requirements
+            can_do = True
+            req_text = "Requisitos: "
+            for req, value in mission['requirements'].items():
+                if req == "respect":
+                    if self.player.respect < value:
+                        can_do = False
+                        req_text += f"{req}: {value} (Tienes: {self.player.respect}) "
+                    else:
+                        req_text += f"{req}: {value} ✓ "
+                else:
+                    if self.player.skills.get(req, 1) < value:
+                        can_do = False
+                        req_text += f"{req}: {value} (Tienes: {self.player.skills.get(req, 1)}) "
+                    else:
+                        req_text += f"{req}: {value} ✓ "
+            
+            color = Fore.GREEN if can_do else Fore.RED
+            print(f"   {color}{req_text}{Style.RESET_ALL}")
+            print()
+        
+        print(f"0. {Fore.WHITE}Volver / Back{Style.RESET_ALL}")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿Qué misión aceptas? / Which mission do you accept?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(special_missions):
+                mission = special_missions[choice - 1]
+                
+                # Check if player meets requirements
+                can_do = True
+                for req, value in mission['requirements'].items():
+                    if req == "respect":
+                        if self.player.respect < value:
+                            can_do = False
+                    else:
+                        if self.player.skills.get(req, 1) < value:
+                            can_do = False
+                
+                if not can_do:
+                    print(f"{Fore.RED}No cumples con los requisitos para esta misión / You don't meet the requirements{Style.RESET_ALL}")
+                    return
+                
+                print(f"\n{Fore.YELLOW}Ejecutando: {mission['name']}...{Style.RESET_ALL}")
+                print(mission['description'])
+                
+                # Mission success calculation
+                success_chance = 0.4  # Base 40% chance
+                for req, value in mission['requirements'].items():
+                    if req == "respect":
+                        if self.player.respect > value * 1.5:
+                            success_chance += 0.1
+                    else:
+                        if self.player.skills.get(req, 1) > value:
+                            success_chance += 0.1
+                
+                success_chance = min(0.8, success_chance)  # Max 80% success
+                
+                if random.random() < success_chance:
+                    # Success
+                    self.player.money += mission['reward']
+                    self.player.add_experience(mission['exp'])
+                    self.player.respect += mission['risk'] * 200
+                    
+                    print(f"{Fore.GREEN}🎉 ¡MISIÓN COMPLETADA! / MISSION COMPLETED! 🎉{Style.RESET_ALL}")
+                    print(f"Recompensa: +${mission['reward']:,}")
+                    print(f"Experiencia: +{mission['exp']}")
+                    print(f"Respeto: +{mission['risk'] * 200}")
+                else:
+                    # Failure
+                    self.player.wanted_level = min(5, self.player.wanted_level + mission['risk'])
+                    self.player.respect -= mission['risk'] * 100
+                    
+                    print(f"{Fore.RED}💥 MISIÓN FALLIDA / MISSION FAILED 💥{Style.RESET_ALL}")
+                    print(f"Nivel de búsqueda: +{mission['risk']}")
+                    print(f"Respeto perdido: -{mission['risk'] * 100}")
+                    
+                    # Chance of injury
+                    if random.random() < 0.3:
+                        health_loss = random.randint(20, 50)
+                        self.player.health = max(10, self.player.health - health_loss)
+                        print(f"Salud perdida: -{health_loss}")
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def empire_building_menu(self):
+        """Advanced empire building and management system"""
+        self.display_header()
+        print(f"{Fore.LIGHTGREEN_EX}🏛️ CONSTRUCCIÓN DE IMPERIO CRIMINAL 🏛️{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Expande tu imperio a través de todo el suroeste / Expand your empire across the Southwest{Style.RESET_ALL}")
+        print()
+        
+        # Initialize empire data if not exists
+        if not hasattr(self.player, 'empire'):
+            self.player.empire = {
+                "territories": [],
+                "lieutenants": [],
+                "operations": [],
+                "influence": 0,
+                "daily_income": 0
+            }
+        
+        empire = self.player.empire
+        
+        print(f"💰 Dinero disponible: ${self.player.money:,}")
+        print(f"👑 Influencia total: {empire['influence']}")
+        print(f"💵 Ingresos diarios: ${empire['daily_income']:,}")
+        print(f"🗺️ Territorios controlados: {len(empire['territories'])}")
+        print(f"👥 Lugartenientes: {len(empire['lieutenants'])}")
+        print()
+        
+        print(f"1. {Fore.CYAN}Expandir territorio / Expand territory{Style.RESET_ALL}")
+        print(f"2. {Fore.YELLOW}Reclutar lugartenientes / Recruit lieutenants{Style.RESET_ALL}")  
+        print(f"3. {Fore.MAGENTA}Establecer operaciones / Establish operations{Style.RESET_ALL}")
+        print(f"4. {Fore.GREEN}Recolectar ingresos / Collect income{Style.RESET_ALL}")
+        print(f"5. {Fore.RED}Guerra territorial / Territorial war{Style.RESET_ALL}")
+        print(f"6. {Fore.BLUE}Ver estado del imperio / View empire status{Style.RESET_ALL}")
+        print(f"0. {Fore.WHITE}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Elige opción / Choose option: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            self.expand_territory()
+        elif choice == "2":
+            self.recruit_lieutenants()
+        elif choice == "3":
+            self.establish_operations()
+        elif choice == "4":
+            self.collect_empire_income()
+        elif choice == "5":
+            self.territorial_war()
+        elif choice == "6":
+            self.view_empire_status()
+        elif choice == "0":
+            return
+        else:
+            print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def expand_territory(self):
+        """Expand criminal empire to new territories"""
+        print(f"\n{Fore.CYAN}🗺️ EXPANSIÓN TERRITORIAL 🗺️{Style.RESET_ALL}")
+        
+        available_territories = [
+            {"name": "El Paso, Texas", "cost": 50000, "income": 5000, "difficulty": 3},
+            {"name": "Phoenix, Arizona", "cost": 75000, "income": 8000, "difficulty": 4},
+            {"name": "Denver, Colorado", "cost": 100000, "income": 12000, "difficulty": 5},
+            {"name": "Las Vegas, Nevada", "cost": 150000, "income": 20000, "difficulty": 5},
+            {"name": "Tijuana, México", "cost": 80000, "income": 15000, "difficulty": 4}
+        ]
+        
+        # Remove already controlled territories
+        controlled = [t["name"] for t in self.player.empire["territories"]]
+        available = [t for t in available_territories if t["name"] not in controlled]
+        
+        if not available:
+            print(f"{Fore.YELLOW}Ya controlas todos los territorios disponibles / You already control all available territories{Style.RESET_ALL}")
+            return
+        
+        print("Territorios disponibles para expansión / Available territories for expansion:")
+        for i, territory in enumerate(available, 1):
+            print(f"{i}. {territory['name']}")
+            print(f"   Costo: ${territory['cost']:,} | Ingresos: ${territory['income']:,}/día | Dificultad: {'⭐' * territory['difficulty']}")
+        
+        print("\n0. Cancelar / Cancel")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿Qué territorio quieres conquistar? / Which territory to conquer?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(available):
+                territory = available[choice - 1]
+                
+                if self.player.money < territory['cost']:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                    return
+                
+                print(f"\n{Fore.YELLOW}Conquistando {territory['name']}...{Style.RESET_ALL}")
+                
+                # Success based on difficulty and player stats
+                success_chance = 0.7 - (territory['difficulty'] * 0.1)
+                success_chance += (self.player.skills.get("shooting", 1) * 0.02)
+                success_chance += (self.player.skills.get("charisma", 1) * 0.02)
+                
+                if random.random() < success_chance:
+                    self.player.money -= territory['cost']
+                    self.player.empire["territories"].append(territory)
+                    self.player.empire["daily_income"] += territory['income']
+                    self.player.empire["influence"] += territory['difficulty'] * 100
+                    
+                    print(f"{Fore.GREEN}¡Territorio conquistado! / Territory conquered!{Style.RESET_ALL}")
+                    print(f"Nuevos ingresos diarios: +${territory['income']:,}")
+                    self.player.add_experience(territory['difficulty'] * 50)
+                else:
+                    # Failed expansion
+                    loss = territory['cost'] // 2
+                    self.player.money -= loss
+                    self.player.wanted_level = min(5, self.player.wanted_level + 1)
+                    
+                    print(f"{Fore.RED}¡Conquista fallida! / Conquest failed!{Style.RESET_ALL}")
+                    print(f"Perdiste: ${loss:,}")
+                    print("Nivel de búsqueda aumentó")
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+
+    def recruit_lieutenants(self):
+        """Recruit and manage criminal lieutenants"""
+        print(f"\n{Fore.YELLOW}👥 RECLUTAMIENTO DE LUGARTENIENTES 👥{Style.RESET_ALL}")
+        
+        available_lieutenants = [
+            {"name": "Miguel 'El Sombra'", "specialty": "Stealth", "cost": 25000, "bonus": 10},
+            {"name": "Carlos 'Manos de Hierro'", "specialty": "Strength", "cost": 20000, "bonus": 8},
+            {"name": "Ana 'La Computadora'", "specialty": "Hacking", "cost": 35000, "bonus": 15},
+            {"name": "Roberto 'El Tirador'", "specialty": "Shooting", "cost": 30000, "bonus": 12},
+            {"name": "Elena 'La Negociadora'", "specialty": "Charisma", "cost": 28000, "bonus": 11}
+        ]
+        
+        # Remove already recruited
+        recruited = [lt["name"] for lt in self.player.empire["lieutenants"]]
+        available = [lt for lt in available_lieutenants if lt["name"] not in recruited]
+        
+        if not available:
+            print(f"{Fore.YELLOW}Ya tienes todos los lugartenientes disponibles / You already have all available lieutenants{Style.RESET_ALL}")
+            return
+        
+        print("Lugartenientes disponibles / Available lieutenants:")
+        for i, lt in enumerate(available, 1):
+            print(f"{i}. {lt['name']} - Especialidad: {lt['specialty']}")
+            print(f"   Costo: ${lt['cost']:,} | Bonus de habilidad: +{lt['bonus']}%")
+        
+        print("\n0. Cancelar / Cancel")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿A quién quieres reclutar? / Who do you want to recruit?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(available):
+                lieutenant = available[choice - 1]
+                
+                if self.player.money < lieutenant['cost']:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                    return
+                
+                self.player.money -= lieutenant['cost']
+                self.player.empire["lieutenants"].append(lieutenant)
+                
+                print(f"{Fore.GREEN}¡{lieutenant['name']} se ha unido a tu organización!{Style.RESET_ALL}")
+                print(f"Bonus en {lieutenant['specialty']}: +{lieutenant['bonus']}%")
+                
+                self.player.add_experience(100)
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+
+    def establish_operations(self):
+        """Establish criminal operations in controlled territories"""
+        print(f"\n{Fore.MAGENTA}🏭 ESTABLECER OPERACIONES CRIMINALES 🏭{Style.RESET_ALL}")
+        
+        if not self.player.empire["territories"]:
+            print(f"{Fore.RED}Necesitas controlar territorios primero / You need to control territories first{Style.RESET_ALL}")
+            return
+        
+        operation_types = [
+            {"name": "Laboratorio de Drogas", "cost": 40000, "daily_income": 3000, "risk": 3},
+            {"name": "Red de Contrabando", "cost": 60000, "daily_income": 5000, "risk": 4},
+            {"name": "Casino Clandestino", "cost": 80000, "daily_income": 8000, "risk": 2},
+            {"name": "Taller de Falsificación", "cost": 35000, "daily_income": 2500, "risk": 2},
+            {"name": "Red de Trata", "cost": 100000, "daily_income": 12000, "risk": 5}
+        ]
+        
+        print("Tipos de operaciones / Operation types:")
+        for i, op in enumerate(operation_types, 1):
+            print(f"{i}. {op['name']}")
+            print(f"   Costo: ${op['cost']:,} | Ingresos: ${op['daily_income']:,}/día | Riesgo: {'⚠️' * op['risk']}")
+        
+        print("\n0. Cancelar / Cancel")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿Qué operación quieres establecer? / Which operation to establish?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(operation_types):
+                operation = operation_types[choice - 1].copy()
+                
+                if self.player.money < operation['cost']:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                    return
+                
+                # Choose territory
+                print("\nTeritorios disponibles / Available territories:")
+                for i, territory in enumerate(self.player.empire["territories"], 1):
+                    print(f"{i}. {territory['name']}")
+                
+                territory_choice = int(input("¿En qué territorio? / In which territory?: ")) - 1
+                
+                if 0 <= territory_choice < len(self.player.empire["territories"]):
+                    territory = self.player.empire["territories"][territory_choice]
+                    operation["territory"] = territory["name"]
+                    
+                    self.player.money -= operation['cost']
+                    self.player.empire["operations"].append(operation)
+                    self.player.empire["daily_income"] += operation['daily_income']
+                    
+                    print(f"{Fore.GREEN}¡Operación establecida en {territory['name']}!{Style.RESET_ALL}")
+                    print(f"Nuevos ingresos diarios: +${operation['daily_income']:,}")
+                    
+                    self.player.add_experience(operation['cost'] // 1000)
+                else:
+                    print(f"{Fore.RED}Territorio inválido / Invalid territory{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+
+    def collect_empire_income(self):
+        """Collect daily income from empire operations"""
+        print(f"\n{Fore.GREEN}💰 RECOLECCIÓN DE INGRESOS 💰{Style.RESET_ALL}")
+        
+        if self.player.empire["daily_income"] <= 0:
+            print(f"{Fore.YELLOW}No tienes ingresos diarios configurados / No daily income set up{Style.RESET_ALL}")
+            return
+        
+        # Calculate actual income (can be affected by various factors)
+        base_income = self.player.empire["daily_income"]
+        
+        # Lieutenant bonuses
+        business_bonus = 0
+        for lt in self.player.empire["lieutenants"]:
+            if lt["specialty"] == "Business":
+                business_bonus += lt["bonus"]
+        
+        # Wanted level penalty
+        wanted_penalty = self.player.wanted_level * 0.1
+        
+        final_income = int(base_income * (1 + business_bonus/100) * (1 - wanted_penalty))
+        
+        print(f"Ingresos base: ${base_income:,}")
+        if business_bonus > 0:
+            print(f"Bonus de lugartenientes: +{business_bonus}%")
+        if wanted_penalty > 0:
+            print(f"Penalización por búsqueda: -{wanted_penalty*100}%")
+        
+        print(f"\n{Fore.GREEN}Ingresos totales recolectados: ${final_income:,}{Style.RESET_ALL}")
+        
+        self.player.money += final_income
+        
+        # Random events during collection
+        if random.random() < 0.1:
+            event_type = random.choice(["raid", "bonus", "competitor"])
+            
+            if event_type == "raid":
+                loss = final_income // 3
+                self.player.money -= loss
+                print(f"\n{Fore.RED}¡Redada policial! Perdiste ${loss:,}{Style.RESET_ALL}")
+                self.player.wanted_level = min(5, self.player.wanted_level + 1)
+            elif event_type == "bonus":
+                bonus = final_income // 2
+                self.player.money += bonus
+                print(f"\n{Fore.YELLOW}¡Operación especial exitosa! Bonus: +${bonus:,}{Style.RESET_ALL}")
+            elif event_type == "competitor":
+                print(f"\n{Fore.CYAN}Un competidor quiere hacer un trato...{Style.RESET_ALL}")
+                if input("¿Aceptas negociar? (s/n): ").lower() == 's':
+                    if random.random() < 0.6:
+                        bonus = random.randint(10000, 50000)
+                        self.player.money += bonus
+                        print(f"{Fore.GREEN}¡Negociación exitosa! +${bonus:,}{Style.RESET_ALL}")
+                    else:
+                        print(f"{Fore.RED}¡Era una trampa! Te atacan...{Style.RESET_ALL}")
+                        self.player.health -= random.randint(10, 30)
+
+    def territorial_war(self):
+        """Engage in territorial warfare"""
+        print(f"\n{Fore.RED}⚔️ GUERRA TERRITORIAL ⚔️{Style.RESET_ALL}")
+        print("Declara la guerra a organizaciones rivales para expandir tu dominio")
+        
+        rival_organizations = [
+            {"name": "Cartel de Sinaloa", "strength": 80, "territories": 3, "reward": 100000},
+            {"name": "Los Zetas", "strength": 90, "territories": 4, "reward": 150000},
+            {"name": "Cartel del Golfo", "strength": 75, "territories": 2, "reward": 80000},
+            {"name": "Familia Michoacana", "strength": 70, "territories": 3, "reward": 120000}
+        ]
+        
+        print("Organizaciones rivales / Rival organizations:")
+        for i, org in enumerate(rival_organizations, 1):
+            print(f"{i}. {org['name']}")
+            print(f"   Fuerza: {org['strength']}/100 | Territorios: {org['territories']} | Recompensa: ${org['reward']:,}")
+        
+        print("\n0. Cancelar / Cancel")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿A quién quieres atacar? / Who do you want to attack?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(rival_organizations):
+                rival = rival_organizations[choice - 1]
+                
+                print(f"\n{Fore.RED}🔥 INICIANDO GUERRA CONTRA {rival['name'].upper()} 🔥{Style.RESET_ALL}")
+                
+                # Calculate player strength
+                player_strength = 50  # Base strength
+                player_strength += self.player.skills.get("shooting", 1) * 3
+                player_strength += self.player.skills.get("strength", 1) * 2
+                player_strength += len(self.player.empire["lieutenants"]) * 5
+                player_strength += len(self.player.empire["territories"]) * 3
+                
+                print(f"Tu fuerza: {player_strength}/100")
+                print(f"Fuerza rival: {rival['strength']}/100")
+                
+                # War simulation
+                if player_strength > rival['strength']:
+                    win_chance = 0.7
+                elif player_strength == rival['strength']:
+                    win_chance = 0.5
+                else:
+                    win_chance = 0.3
+                
+                print(f"\n{Fore.YELLOW}¡La guerra comienza!{Style.RESET_ALL}")
+                print("Desplegando fuerzas...")
+                print("Combate en progreso...")
+                
+                if random.random() < win_chance:
+                    # Victory
+                    self.player.money += rival['reward']
+                    self.player.empire["influence"] += rival['territories'] * 200
+                    self.player.respect += rival['strength'] * 10
+                    
+                    print(f"\n{Fore.GREEN}🏆 ¡VICTORIA! 🏆{Style.RESET_ALL}")
+                    print(f"Has derrotado a {rival['name']}")
+                    print(f"Recompensa: +${rival['reward']:,}")
+                    print(f"Influencia: +{rival['territories'] * 200}")
+                    print(f"Respeto: +{rival['strength'] * 10}")
+                    
+                    self.player.add_experience(rival['strength'] * 5)
+                else:
+                    # Defeat
+                    loss = min(self.player.money // 3, rival['reward'] // 2)
+                    self.player.money -= loss
+                    self.player.health -= random.randint(20, 40)
+                    self.player.respect -= rival['strength'] * 5
+                    
+                    print(f"\n{Fore.RED}💀 DERROTA 💀{Style.RESET_ALL}")  
+                    print(f"Has sido derrotado por {rival['name']}")
+                    print(f"Pérdidas: -${loss:,}")
+                    print(f"Salud perdida: -{40}")
+                    print(f"Respeto perdido: -{rival['strength'] * 5}")
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+
+    def view_empire_status(self):
+        """View detailed empire status and statistics"""
+        print(f"\n{Fore.BLUE}📊 ESTADO DEL IMPERIO 📊{Style.RESET_ALL}")
+        empire = self.player.empire
+        
+        print(f"👑 {Fore.YELLOW}INFORMACIÓN GENERAL{Style.RESET_ALL}")
+        print(f"Influencia total: {empire['influence']}")
+        print(f"Ingresos diarios: ${empire['daily_income']:,}")
+        print(f"Territorios controlados: {len(empire['territories'])}")
+        print(f"Lugartenientes reclutados: {len(empire['lieutenants'])}")
+        print(f"Operaciones activas: {len(empire['operations'])}")
+        
+        if empire['territories']:
+            print(f"\n🗺️ {Fore.CYAN}TERRITORIOS CONTROLADOS{Style.RESET_ALL}")
+            for territory in empire['territories']:
+                print(f"• {territory['name']} - Ingresos: ${territory['income']:,}/día")
+        
+        if empire['lieutenants']:
+            print(f"\n👥 {Fore.YELLOW}LUGARTENIENTES{Style.RESET_ALL}")
+            for lt in empire['lieutenants']:
+                print(f"• {lt['name']} - {lt['specialty']} (+{lt['bonus']}%)")
+        
+        if empire['operations']:
+            print(f"\n🏭 {Fore.MAGENTA}OPERACIONES ACTIVAS{Style.RESET_ALL}")
+            for op in empire['operations']:
+                print(f"• {op['name']} en {op['territory']} - ${op['daily_income']:,}/día")
+
+    def private_investigation_menu(self):
+        """Private investigation and intelligence gathering"""
+        self.display_header()
+        print(f"{Fore.LIGHTBLUE_EX}🔍 INVESTIGACIÓN PRIVADA 🔍{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Servicios de espionaje e inteligencia / Espionage and intelligence services{Style.RESET_ALL}")
+        print()
+        
+        print(f"1. {Fore.CYAN}Investigar rivales / Investigate rivals{Style.RESET_ALL}")
+        print(f"2. {Fore.YELLOW}Espionaje industrial / Industrial espionage{Style.RESET_ALL}")
+        print(f"3. {Fore.MAGENTA}Chantaje y extorsión / Blackmail and extortion{Style.RESET_ALL}")
+        print(f"4. {Fore.GREEN}Información del mercado / Market intelligence{Style.RESET_ALL}")
+        print(f"5. {Fore.RED}Eliminar evidencia / Eliminate evidence{Style.RESET_ALL}")
+        print(f"0. {Fore.WHITE}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Elige servicio / Choose service: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            self.investigate_rivals()
+        elif choice == "2":
+            self.industrial_espionage()
+        elif choice == "3":
+            self.blackmail_extortion()
+        elif choice == "4":
+            self.market_intelligence()
+        elif choice == "5":
+            self.eliminate_evidence()
+        elif choice == "0":
+            return
+        else:
+            print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def investigate_rivals(self):
+        """Investigate rival criminal organizations"""
+        print(f"\n{Fore.CYAN}🎯 INVESTIGACIÓN DE RIVALES 🎯{Style.RESET_ALL}")
+        
+        investigation_targets = [
+            {"name": "Los Hermanos García", "cost": 5000, "info_value": 2000, "risk": 2},
+            {"name": "Cartel del Norte", "cost": 15000, "info_value": 8000, "risk": 4},
+            {"name": "Organización Phantom", "cost": 25000, "info_value": 15000, "risk": 5},
+            {"name": "Red de Corrupción Política", "cost": 40000, "info_value": 30000, "risk": 5}
+        ]
+        
+        print("Objetivos de investigación / Investigation targets:")
+        for i, target in enumerate(investigation_targets, 1):
+            print(f"{i}. {target['name']}")
+            print(f"   Costo: ${target['cost']:,} | Valor de información: ${target['info_value']:,} | Riesgo: {'⚠️' * target['risk']}")
+        
+        print("\n0. Cancelar / Cancel")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿A quién investigar? / Who to investigate?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(investigation_targets):
+                target = investigation_targets[choice - 1]
+                
+                if self.player.money < target['cost']:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                    return
+                
+                print(f"\n{Fore.YELLOW}Investigando {target['name']}...{Style.RESET_ALL}")
+                
+                # Success chance based on stealth and hacking skills
+                success_chance = 0.6 + (self.player.skills.get("stealth", 1) * 0.03) + (self.player.skills.get("hacking", 1) * 0.02)
+                success_chance = min(0.9, success_chance)
+                
+                self.player.money -= target['cost']
+                
+                if random.random() < success_chance:
+                    # Successful investigation
+                    self.player.money += target['info_value']
+                    self.player.add_experience(target['risk'] * 20)
+                    
+                    print(f"{Fore.GREEN}¡Investigación exitosa! / Successful investigation!{Style.RESET_ALL}")
+                    print(f"Información valiosa obtenida: +${target['info_value']:,}")
+                    
+                    # Additional benefits
+                    info_types = ["Rutas de contrabando", "Contactos corruptos", "Planes futuros", "Puntos débiles", "Ubicaciones secretas"]
+                    discovered_info = random.choice(info_types)
+                    print(f"Información descubierta: {discovered_info}")
+                    
+                    if discovered_info in ["Contactos corruptos", "Puntos débiles"]:
+                        self.player.respect += target['risk'] * 50
+                        print(f"Respeto ganado: +{target['risk'] * 50}")
+                        
+                else:
+                    # Failed investigation
+                    print(f"{Fore.RED}¡Investigación detectada! / Investigation detected!{Style.RESET_ALL}")
+                    self.player.wanted_level = min(5, self.player.wanted_level + target['risk'] - 1)
+                    print("Nivel de búsqueda aumentó")
+                    
+                    # Chance of retaliation
+                    if random.random() < 0.3:
+                        damage = random.randint(10, 30)
+                        self.player.health -= damage
+                        print(f"Represalias enemigas: -{damage} salud")
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+
+    def international_smuggling_menu(self):
+        """International smuggling operations"""
+        self.display_header()
+        print(f"{Fore.LIGHTCYAN_EX}🌍 CONTRABANDO INTERNACIONAL 🌍{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Operaciones de contrabando a gran escala / Large-scale smuggling operations{Style.RESET_ALL}")
+        print()
+        
+        print(f"1. {Fore.CYAN}Contrabando México-USA / Mexico-USA smuggling{Style.RESET_ALL}")
+        print(f"2. {Fore.YELLOW}Tráfico de armas / Arms trafficking{Style.RESET_ALL}")
+        print(f"3. {Fore.MAGENTA}Contrabando de personas / Human trafficking{Style.RESET_ALL}")
+        print(f"4. {Fore.GREEN}Lavado de dinero offshore / Offshore money laundering{Style.RESET_ALL}")
+        print(f"5. {Fore.RED}Contrabando de órganos / Organ trafficking{Style.RESET_ALL}")
+        print(f"0. {Fore.WHITE}Volver / Back{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.CYAN}Elige operación / Choose operation: {Style.RESET_ALL}").strip()
+        
+        if choice == "1":
+            self.mexico_usa_smuggling()
+        elif choice == "2":
+            self.arms_trafficking()
+        elif choice == "3":
+            self.human_trafficking()
+        elif choice == "4":
+            self.offshore_laundering()
+        elif choice == "5":
+            self.organ_trafficking()
+        elif choice == "0":
+            return
+        else:
+            print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+        
+        input(f"\n{Fore.CYAN}Presiona Enter para continuar...{Style.RESET_ALL}")
+
+    def criminal_academy_menu(self):
+        """Criminal training academy system"""
+        self.display_header()
+        print(f"{Fore.WHITE}🎓 ACADEMIA CRIMINAL DE NUEVO MÉXICO 🎓{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Entrena y mejora tus habilidades criminales / Train and improve your criminal skills{Style.RESET_ALL}")
+        print()
+        
+        print(f"💰 Tu dinero: ${self.player.money:,}")
+        print(f"📊 Puntos de habilidad disponibles: {self.player.skill_points}")
+        print()
+        
+        training_courses = [
+            {"name": "Curso de Tiro Avanzado", "skill": "shooting", "cost": 10000, "improvement": 2, "duration": "3 días"},
+            {"name": "Entrenamiento de Sigilo", "skill": "stealth", "cost": 8000, "improvement": 2, "duration": "2 días"},
+            {"name": "Academia de Hacking", "skill": "hacking", "cost": 15000, "improvement": 3, "duration": "5 días"},
+            {"name": "Escuela de Negocios Criminales", "skill": "business", "cost": 12000, "improvement": 2, "duration": "4 días"},
+            {"name": "Gimnasio de Combate", "skill": "strength", "cost": 6000, "improvement": 1, "duration": "1 día"},
+            {"name": "Curso de Liderazgo Criminal", "skill": "charisma", "cost": 20000, "improvement": 3, "duration": "1 semana"},
+            {"name": "Entrenamiento de Conducción Extrema", "skill": "driving", "cost": 9000, "improvement": 2, "duration": "2 días"},
+            {"name": "Seminario de Intimidación", "skill": "intimidation", "cost": 7000, "improvement": 1, "duration": "1 día"}
+        ]
+        
+        print("Cursos disponibles / Available courses:")
+        for i, course in enumerate(training_courses, 1):
+            current_level = self.player.skills.get(course["skill"], 1)
+            max_level = 10
+            
+            if current_level >= max_level:
+                status = f"{Fore.RED}(Máximo alcanzado){Style.RESET_ALL}"
+            elif self.player.money >= course["cost"]:
+                status = f"{Fore.GREEN}(Disponible){Style.RESET_ALL}"
+            else:
+                status = f"{Fore.YELLOW}(Sin dinero suficiente){Style.RESET_ALL}"
+            
+            print(f"{i}. {course['name']} {status}")
+            print(f"   Habilidad: {course['skill'].capitalize()} (Actual: {current_level}/10)")
+            print(f"   Costo: ${course['cost']:,} | Mejora: +{course['improvement']} | Duración: {course['duration']}")
+            print()
+        
+        print(f"0. {Fore.WHITE}Salir de la academia / Exit academy{Style.RESET_ALL}")
+        
+        try:
+            choice = int(input(f"\n{Fore.CYAN}¿Qué curso quieres tomar? / Which course do you want to take?: {Style.RESET_ALL}"))
+            
+            if choice == 0:
+                return
+            elif 1 <= choice <= len(training_courses):
+                course = training_courses[choice - 1]
+                skill = course["skill"]
+                current_level = self.player.skills.get(skill, 1)
+                
+                if current_level >= 10:
+                    print(f"{Fore.RED}Ya tienes el nivel máximo en {skill} / You already have maximum level in {skill}{Style.RESET_ALL}")
+                    return
+                
+                if self.player.money < course["cost"]:
+                    print(f"{Fore.RED}No tienes suficiente dinero / Not enough money{Style.RESET_ALL}")
+                    return
+                
+                print(f"\n{Fore.YELLOW}Inscribiéndote en: {course['name']}...{Style.RESET_ALL}")
+                print(f"Duración del curso: {course['duration']}")
+                print("Entrenando...")
+                
+                # Training simulation
+                self.player.money -= course["cost"]
+                
+                # Success chance based on current level (harder to improve at higher levels)
+                success_chance = 0.9 - (current_level * 0.05)
+                
+                if random.random() < success_chance:
+                    # Successful training
+                    improvement = min(course["improvement"], 10 - current_level)
+                    self.player.skills[skill] = current_level + improvement
+                    
+                    print(f"\n{Fore.GREEN}¡Entrenamiento completado exitosamente!{Style.RESET_ALL}")
+                    print(f"{skill.capitalize()} mejorado: {current_level} → {self.player.skills[skill]}")
+                    
+                    # Bonus experience
+                    exp_gain = course["cost"] // 100
+                    self.player.add_experience(exp_gain)
+                    print(f"Experiencia ganada: +{exp_gain}")
+                    
+                    # Special bonuses for certain skills
+                    if skill == "shooting" and self.player.skills[skill] >= 8:
+                        print(f"{Fore.CYAN}¡Desbloqueaste nuevas armas en el mercado negro!{Style.RESET_ALL}")
+                    elif skill == "hacking" and self.player.skills[skill] >= 7:
+                        print(f"{Fore.CYAN}¡Ahora puedes hackear sistemas gubernamentales!{Style.RESET_ALL}")
+                    elif skill == "charisma" and self.player.skills[skill] >= 9:
+                        print(f"{Fore.CYAN}¡Puedes sobornar a oficiales de alto rango!{Style.RESET_ALL}")
+                        
+                else:
+                    # Failed training
+                    refund = course["cost"] // 2
+                    self.player.money += refund
+                    
+                    print(f"\n{Fore.RED}El entrenamiento no fue exitoso / Training was not successful{Style.RESET_ALL}")
+                    print(f"Reembolso parcial: ${refund:,}")
+                    
+                    # Still gain some experience
+                    exp_gain = course["cost"] // 200
+                    self.player.add_experience(exp_gain)
+            else:
+                print(f"{Fore.RED}Opción inválida / Invalid choice{Style.RESET_ALL}")
+                
+        except ValueError:
+            print(f"{Fore.RED}Entrada inválida / Invalid input{Style.RESET_ALL}")
+
+    def industrial_espionage(self):
+        """Industrial espionage operations"""
+        print(f"\n{Fore.YELLOW}🏭 ESPIONAJE INDUSTRIAL 🏭{Style.RESET_ALL}")
+        targets = [
+            {"name": "Petrolera Estatal", "reward": 25000, "risk": 3},
+            {"name": "Empresa Tecnológica", "reward": 40000, "risk": 4}
+        ]
+        
+        for i, target in enumerate(targets, 1):
+            print(f"{i}. {target['name']} - ${target['reward']:,}")
+        
+        try:
+            choice = int(input("\nObjetivo: ")) - 1
+            if 0 <= choice < len(targets):
+                target = targets[choice]
+                if random.random() < 0.6:
+                    self.player.money += target['reward']
+                    print(f"{Fore.GREEN}Éxito: +${target['reward']:,}{Style.RESET_ALL}")
+        except ValueError:
+            pass
+
+    def blackmail_extortion(self):
+        """Blackmail operations"""
+        print(f"\n{Fore.RED}💰 CHANTAJE 💰{Style.RESET_ALL}")
+        targets = [{"name": "Político corrupto", "payment": 15000}]
+        
+        for i, target in enumerate(targets, 1):
+            print(f"{i}. {target['name']} - ${target['payment']:,}")
+        
+        try:
+            choice = int(input("\nVíctima: ")) - 1
+            if 0 <= choice < len(targets):
+                self.player.money += targets[choice]['payment']
+                print(f"{Fore.GREEN}Cobrado{Style.RESET_ALL}")
+        except ValueError:
+            pass
+
+    def market_intelligence(self):
+        """Market intelligence"""
+        print(f"\n{Fore.BLUE}📊 INTELIGENCIA DE MERCADO 📊{Style.RESET_ALL}")
+        self.player.money += 10000
+        print(f"{Fore.GREEN}Información vendida: +$10,000{Style.RESET_ALL}")
+
+    def eliminate_evidence(self):
+        """Evidence elimination"""
+        print(f"\n{Fore.RED}🔥 ELIMINACIÓN DE EVIDENCIA 🔥{Style.RESET_ALL}")
+        if self.player.wanted_level > 0:
+            cost = self.player.wanted_level * 10000
+            if self.player.money >= cost:
+                self.player.money -= cost
+                self.player.wanted_level = max(0, self.player.wanted_level - 1)
+                print(f"{Fore.GREEN}Evidencia eliminada{Style.RESET_ALL}")
+
+    def mexico_usa_smuggling(self):
+        """Mexico-USA smuggling"""
+        print(f"\n{Fore.CYAN}🌎 CONTRABANDO MÉXICO-USA 🌎{Style.RESET_ALL}")
+        if random.random() < 0.7:
+            profit = random.randint(50000, 150000)
+            self.player.money += profit
+            print(f"{Fore.GREEN}Éxito: +${profit:,}{Style.RESET_ALL}")
+        else:
+            self.player.wanted_level += 2
+            print(f"{Fore.RED}Interceptado{Style.RESET_ALL}")
+
+    def arms_trafficking(self):
+        """Arms trafficking"""
+        print(f"\n{Fore.RED}🔫 TRÁFICO DE ARMAS 🔫{Style.RESET_ALL}")
+        if random.random() < 0.6:
+            profit = random.randint(30000, 80000)
+            self.player.money += profit
+            print(f"{Fore.GREEN}Venta exitosa: +${profit:,}{Style.RESET_ALL}")
+
+    def human_trafficking(self):
+        """Human trafficking (dark content)"""
+        print(f"\n{Fore.RED}⚠️ OPERACIÓN DE ALTO RIESGO ⚠️{Style.RESET_ALL}")
+        if random.random() < 0.4:
+            self.player.money += 75000
+            print(f"{Fore.GREEN}Operación completada{Style.RESET_ALL}")
+        else:
+            self.player.wanted_level = 5
+            print(f"{Fore.RED}Operación descubierta{Style.RESET_ALL}")
+
+    def offshore_laundering(self):
+        """Offshore money laundering"""
+        print(f"\n{Fore.GREEN}🏦 LAVADO OFFSHORE 🏦{Style.RESET_ALL}")
+        if self.player.money >= 50000:
+            amount = min(100000, self.player.money // 2)
+            fee = int(amount * 0.15)
+            self.player.money -= fee
+            print(f"{Fore.GREEN}Dinero lavado (Comisión: ${fee:,}){Style.RESET_ALL}")
+
+    def organ_trafficking(self):
+        """Organ trafficking (extreme content)"""
+        print(f"\n{Fore.RED}💀 OPERACIÓN EXTREMA 💀{Style.RESET_ALL}")
+        if random.random() < 0.3:
+            self.player.money += 100000
+            print(f"{Fore.GREEN}Operación completada{Style.RESET_ALL}")
+        else:
+            self.player.wanted_level = 5
+            self.player.health -= 20
+            print(f"{Fore.RED}Operación fallida{Style.RESET_ALL}")
 
 def main():
     """Main entry point"""
